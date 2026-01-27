@@ -1,4 +1,5 @@
 {
+  "id": "/earth-property/",
   "name": "Earth Property",
   "short_name": "EP",
   "description": "Global Property Listings 🌍 Buy, Sell & Rent Properties Near You",
@@ -22,6 +23,14 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable any"
+    }
+  ],
+
+  "screenshots": [
+    {
+      "src": "/earth-property/screenshot1.png",
+      "sizes": "1080x1920",
+      "type": "image/png"
     }
   ]
 }
