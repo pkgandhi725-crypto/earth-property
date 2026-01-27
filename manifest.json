@@ -1,5 +1,4 @@
 {
-  "id": "/earth-property/",
   "name": "Earth Property",
   "short_name": "EP",
   "description": "Global Property Listings 🌍 Buy, Sell & Rent Properties Near You",
@@ -16,21 +15,34 @@
       "src": "/earth-property/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any maskable"
     },
     {
       "src": "/earth-property/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any maskable"
     }
   ],
 
   "screenshots": [
     {
-      "src": "/earth-property/screenshot1.png",
-      "sizes": "1080x1920",
-      "type": "image/png"
+      "src": "/earth-property/login.jpg",
+      "sizes": "720x1280",
+      "type": "image/jpeg",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/earth-property/property.jpg",
+      "sizes": "720x1280",
+      "type": "image/jpeg",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/earth-property/Chat.jpg",
+      "sizes": "720x1280",
+      "type": "image/jpeg",
+      "form_factor": "narrow"
     }
   ]
 }
