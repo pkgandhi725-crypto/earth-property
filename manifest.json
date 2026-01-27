@@ -15,25 +15,25 @@
 
   "icons": [
     {
-      "src": "/earth-property/icon-192.png",
+      "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/earth-property/icon-192.png",
+      "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/earth-property/icon-512.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/earth-property/icon-512.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -42,21 +42,21 @@
 
   "screenshots": [
     {
-      "src": "/earth-property/login.jpg",
+      "src": "login.jpg",
       "sizes": "1080x1992",
       "type": "image/jpeg",
       "form_factor": "narrow",
       "label": "Login Page"
     },
     {
-      "src": "/earth-property/property.jpg",
+      "src": "property.jpg",
       "sizes": "1080x2117",
       "type": "image/jpeg",
       "form_factor": "narrow",
       "label": "Property Details"
     },
     {
-      "src": "/earth-property/chat.jpg",
+      "src": "chat.jpg",
       "sizes": "1080x2159",
       "type": "image/jpeg",
       "form_factor": "narrow",
