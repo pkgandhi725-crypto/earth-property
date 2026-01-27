@@ -2,13 +2,18 @@
   "name": "Earth Property",
   "short_name": "EP",
   "description": "Global Property Listings 🌍 Buy, Sell & Rent Properties Near You",
+
   "start_url": "/earth-property/index.html",
   "scope": "/earth-property/",
   "display": "standalone",
+
   "background_color": "#f2f2f2",
   "theme_color": "#2e7d32",
   "orientation": "portrait-primary",
   "lang": "en",
+  "dir": "ltr",
+
+  "categories": ["real-estate", "business", "shopping"],
 
   "icons": [
     {
@@ -28,19 +33,19 @@
   "screenshots": [
     {
       "src": "/earth-property/login.jpg",
-      "sizes": "720x1280",
+      "sizes": "1080x1992",
       "type": "image/jpeg",
       "form_factor": "narrow"
     },
     {
       "src": "/earth-property/property.jpg",
-      "sizes": "720x1280",
+      "sizes": "1080x2117",
       "type": "image/jpeg",
       "form_factor": "narrow"
     },
     {
-      "src": "/earth-property/Chat.jpg",
-      "sizes": "720x1280",
+      "src": "/earth-property/chat.jpg",
+      "sizes": "1080x2159",
       "type": "image/jpeg",
       "form_factor": "narrow"
     }
