@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Login - Earth Property</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{font-family:Arial;background:#f2f2f2;padding:10px;}
+header{background:#2e7d32;color:white;padding:15px;text-align:center;border-radius:10px;}
+input{width:100%;padding:10px;margin:8px 0;}
+button{background:#2e7d32;color:white;border:none;padding:10px;border-radius:20px;width:100%;}
+a{color:#2e7d32;text-decoration:none;}
+</style>
+
+<!-- 🔥 FIREBASE (COMPAT) -->
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+</head>
+
+<body>
+
+<header>
+<h2>🌍 Earth Property</h2>
+<p>Login</p>
+</header>
+
+<input id="email" type="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+
+<p style="text-align:center;">No account? <a href="signup.html">Sign Up</a></p>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
+  authDomain: "earth-properties-c3c56.firebaseapp.com",
+  projectId: "earth-properties-c3c56"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
+function login(){
+  const email = document.getElementById("email").value;
+  const pass = document.getElementById("password").value;
+
+  auth.signInWithEmailAndPassword(email, pass)
+  .then(()=>{
+    alert("Login Success ✅");
+    window.location.href = "index.html";
+  })
+  .catch(e=>{
+    alert("Error: " + e.message);
+  });
+}
+</script>
+
+</body>
+</html>

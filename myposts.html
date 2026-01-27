@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>My Properties - Earth Property</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{margin:0;font-family:Arial;background:#f2f2f2;}
+header{background:#2e7d32;color:white;padding:15px;text-align:center;}
+.card{background:white;margin:10px;padding:10px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.1);}
+img{width:100%;border-radius:8px;max-height:200px;object-fit:cover;}
+button{border:none;padding:8px 15px;border-radius:20px;margin:5px;color:white;}
+.edit{background:#1565c0;}
+.delete{background:#d32f2f;}
+.center{text-align:center;margin:10px;}
+</style>
+
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+
+</head>
+<body>
+
+<header>
+<h2>My Properties</h2>
+<p>Your posted listings</p>
+</header>
+
+<div class="center">
+<button onclick="location.href='index.html'">⬅ Back</button>
+</div>
+
+<div id="list"></div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
+  authDomain: "earth-properties-c3c56.firebaseapp.com",
+  projectId: "earth-properties-c3c56"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+auth.onAuthStateChanged(user=>{
+  if(!user){
+    alert("Login required");
+    window.location.href="login.html";
+  } else {
+    loadMyPosts(user.uid);
+  }
+});
+
+function loadMyPosts(uid){
+  db.collection("properties").where("uid","==",uid).get()
+  .then(qs=>{
+    const list=document.getElementById("list");
+    list.innerHTML="";
+    if(qs.empty){
+      list.innerHTML="<p style='text-align:center;'>No posts yet</p>";
+      return;
+    }
+    qs.forEach(doc=>{
+      const d=doc.data();
+      const img = (d.images && d.images[0]) ? d.images[0] : "https://via.placeholder.com/400x250?text=No+Image";
+      
+      list.innerHTML+=`
+      <div class="card">
+        <img src="${img}">
+        <h3>${d.title}</h3>
+        <p>📍 ${d.location}</p>
+        <p>💰 ${d.price}</p>
+        <button class="edit" onclick="editPost('${doc.id}')">✏ Edit</button>
+        <button class="delete" onclick="delPost('${doc.id}')">🗑 Delete</button>
+      </div>`;
+    });
+  });
+}
+
+function delPost(id){
+  if(!confirm("Delete this property?")) return;
+  db.collection("properties").doc(id).delete().then(()=>{
+    alert("Deleted");
+    location.reload();
+  });
+}
+
+function editPost(id){
+  localStorage.setItem("editPostId", id);
+  window.location.href="post.html";
+}
+</script>
+
+</body>
+</html>
