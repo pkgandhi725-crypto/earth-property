@@ -9,19 +9,19 @@
   "theme_color": "#2e7d32",
   "orientation": "portrait-primary",
   "lang": "en",
-  "dir": "ltr",
+
   "icons": [
     {
       "src": "/earth-property/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "maskable any"
     },
     {
       "src": "/earth-property/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "maskable any"
     }
   ]
 }
