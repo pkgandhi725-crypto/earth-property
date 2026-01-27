@@ -196,5 +196,15 @@ function loadMessages(){
  });
 }
 </script>
+
+<!-- 🔥 SERVICE WORKER REGISTER -->
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/earth-property/sw.js")
+    .then(reg => console.log("SW Registered:", reg.scope))
+    .catch(err => console.log("SW Failed:", err));
+}
+</script>
+
 </body>
 </html>
