@@ -1,258 +1,251 @@
-<!DOCTYPE html>    
-<html lang="en">    
-<head>    
-<meta charset="UTF-8">    
-<meta name="viewport" content="width=device-width, initial-scale=1">    
-<title>Earth Property</title>    
-    
-<!-- 🔥 PWA FIX FOR GITHUB PAGES -->    
-<link rel="manifest" href="/earth-property/manifest.json">    
-<meta name="theme-color" content="#2e7d32">    
-<meta name="apple-mobile-web-app-capable" content="yes">    
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">    
-    
-<style>    
-body{margin:0;font-family:system-ui,Arial;background:#f2f2f2;}    
-header{background:#2e7d32;color:white;padding:15px;display:flex;align-items:center;justify-content:space-between;}    
-#userBox{font-size:13px;opacity:.9;margin:0;}    
-.profile-img{width:40px;height:40px;border-radius:50%;cursor:pointer;border:2px solid rgba(255,255,255,0.3);}    
-    
-.card{    
-  position:relative;background:white;margin:12px;padding:12px;border-radius:14px;box-shadow:0 4px 12px rgba(0,0,0,0.08);}    
-img{width:100%;border-radius:12px;margin-bottom:8px;loading:lazy;}    
-.center{text-align:center;margin:10px;}    
-    
-.fav-badge{    
- position:absolute;top:10px;right:10px;background:white;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25);font-size:18px;cursor:pointer;z-index:2;}    
-    
-.action-row{display:flex;justify-content:space-between;gap:8px;margin-top:8px;}    
-.action{flex:1;height:56px;border:none;border-radius:14px;font-size:12px;color:#444;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f5f5f5;text-decoration:none;}    
-.action span{margin-top:2px;}    
-.action:active{background:#e0e0e0;}    
-.call{background:#e3f2fd;}    
-.whatsapp{background:#e8f5e9;}    
-.chat{background:#f3e5f5;}    
-.share{background:#e0f2f1;}    
-.report{background:#ffebee;}    
-    
-#chatBox{position:fixed;bottom:0;left:0;right:0;background:white;border-top:3px solid #2e7d32;display:none;box-shadow:0 -3px 15px rgba(0,0,0,.15);border-radius:15px 15px 0 0;max-height:70vh;}    
-#chatHeader{background:#2e7d32;color:white;padding:10px;display:flex;justify-content:space-between;align-items:center;}    
-#chatMessages{max-height:220px;overflow:auto;padding:10px;background:#fafafa;}    
-.msg{padding:8px 12px;background:#e0f2f1;border-radius:12px;margin:4px 0;max-width:80%;word-wrap:break-word;}    
-#chatInputBox{display:flex;border-top:1px solid #ddd;}    
-#chatInput{flex:1;border:none;padding:12px;font-size:15px;}    
-#sendBtn{background:#2e7d32;color:white;border:none;padding:0 20px;cursor:pointer;font-weight:500;}    
-#sendBtn:disabled{opacity:0.5;cursor:not-allowed;}    
-</style>    
-    
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>    
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>    
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>    
-</head>    
-    
-<body>    
-    
-<header>    
-  <div style="flex-shrink:0;">    
-    <h2 style="margin:0 0 5px 0;font-size:22px;">Earth Property</h2>    
-    <p id="userBox" style="margin:0;">Checking login...</p>    
-  </div>    
-    
-  <img id="profileBtn"    
-       src="https://via.placeholder.com/40/2e7d32/ffffff?text=👤"    
-       onclick="window.location.href='profile.html'"    
-       class="profile-img"    
-       alt="Profile">    
-</header>    
-    
-<div class="center">    
-<a href="post.html" style="background:#2e7d32;color:white;padding:12px 24px;border-radius:25px;text-decoration:none;font-weight:500;display:inline-block;">➕ Post Property</a>    
-<button onclick="logout()" style="background:#f44336;color:white;border:none;padding:12px 24px;border-radius:25px;margin-left:12px;cursor:pointer;font-weight:500;">Logout</button>    
-</div>    
-    
-<div id="list" style="min-height:200px;"></div>    
-    
-<div id="chatBox">    
- <div id="chatHeader">    
-   <span style="font-weight:500;">💬 Chat</span>    
-   <button onclick="closeChat()" style="background:none;border:none;color:white;font-size:20px;cursor:pointer;padding:0 5px;">✖</button>    
- </div>    
- <div id="chatMessages"></div>    
- <div id="chatInputBox">    
-   <input id="chatInput" placeholder="Type message..." onkeypress="handleEnter(event)">    
-   <button id="sendBtn" onclick="sendMsg()">Send</button>    
- </div>    
-</div>    
-    
-<script>    
-const firebaseConfig = {    
- apiKey:"AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",    
- authDomain:"earth-properties-c3c56.firebaseapp.com",    
- projectId:"earth-properties-c3c56"    
-};    
-firebase.initializeApp(firebaseConfig);    
-const db = firebase.firestore();    
-const auth = firebase.auth();    
-    
-let currentUser=null,currentChatId=null,chatUnsub=null;    
-    
-// 🔥 INSTAGRAM-LEVEL PROFILE PHOTO + PROPERTIES
-auth.onAuthStateChanged(async (user)=>{
- if(user){
-  currentUser=user;
-  const userBox = document.getElementById('userBox');
-  userBox.innerText="👤 "+user.email;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Earth Property</title>
 
-  // 🔥 Load real profile photo from Firestore users/{uid} → Auth fallback → Placeholder
-  try{
-    const doc = await db.collection("users").doc(user.uid).get();
-    if(doc.exists && doc.data().photoURL){
-      document.getElementById("profileBtn").src = doc.data().photoURL;
-    }else if(user.photoURL){
-      document.getElementById("profileBtn").src = user.photoURL;
-    }
-  }catch(e){ 
-    console.log("Profile photo load error:", e); 
+<link rel="manifest" href="/earth-property/manifest.json">
+<meta name="theme-color" content="#2e7d32">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<style>
+body{margin:0;font-family:system-ui,Arial;background:#f2f2f2; padding-bottom: 20px;}
+header{background:#2e7d32;color:white;padding:15px;display:flex;align-items:center;justify-content:space-between; position: sticky; top:0; z-index: 100;}
+#userBox{font-size:12px;opacity:.9;margin:0;}
+.profile-img{width:40px;height:40px;border-radius:50%;cursor:pointer;border:2px solid rgba(255,255,255,0.3); object-fit: cover;}
+
+.card{position:relative;background:white;margin:12px;padding:12px;border-radius:14px;box-shadow:0 4px 12px rgba(0,0,0,0.08);}
+.center{text-align:center;margin:10px;}
+
+/* 📸 Image Slider & Gallery */
+.slider{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:8px; scrollbar-width: none; margin-bottom: 10px;}
+.slider::-webkit-scrollbar { display: none; }
+.slider img{min-width:100%;scroll-snap-align:center;border-radius:12px;cursor:pointer;height:220px;object-fit:cover; background: #eee;}
+
+#gallery{position:fixed;inset:0;background:black;display:none;z-index:9999;}
+#gallerySlider{height:100vh;}
+#gallerySlider img{min-width:100%; height:100vh; object-fit:contain;}
+#galleryClose{position:absolute;top:25px;right:20px;background:rgba(255,255,255,.2);color:white;font-size:30px;border:none;width:45px;height:45px;border-radius:50%;z-index:10000;}
+
+.fav-badge{position:absolute;top:20px;right:20px;background:white;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25);font-size:18px;cursor:pointer;z-index:10;}
+
+/* ⚡ Action Buttons */
+.action-row{display:flex;justify-content:space-between;gap:6px;margin-top:12px; flex-wrap: wrap;}
+.action{flex:1; min-width: 65px; height:56px; border:none; border-radius:14px; font-size:11px; color:#444; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#f5f5f5; text-decoration:none;}
+.action span{margin-top:2px; font-weight: 600;}
+.call{background:#e3f2fd;} .whatsapp{background:#e8f5e9;} .chat{background:#f3e5f5;} .share{background:#e0f2f1;} .report{background:#ffebee;}
+
+/* 💬 Chat UI */
+#chatBox{position:fixed;bottom:0;left:0;right:0;background:white;border-top:3px solid #2e7d32;display:none;z-index:1000;border-radius:15px 15px 0 0; box-shadow: 0 -5px 15px rgba(0,0,0,0.1);}
+#chatHeader{background:#2e7d32;color:white;padding:12px;display:flex;justify-content:space-between;align-items:center;}
+#chatMessages{max-height:280px;overflow:auto;padding:12px; background: #f9f9f9;}
+.msg{padding:8px 12px;background:#e0f2f1;border-radius:12px;margin:5px 0;max-width:80%;font-size:14px; border-bottom-left-radius: 2px;}
+#chatInputBox{display:flex;border-top:1px solid #ddd; padding: 5px;}
+#chatInput{flex:1;border:none;padding:12px; outline: none;}
+#sendBtn{background:#2e7d32;color:white;border:none;padding:0 20px; border-radius: 10px; font-weight: 600;}
+</style>
+
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<header>
+  <div>
+    <h2 style="margin:0; font-size: 20px;">Earth Property</h2>
+    <p id="userBox">Connecting Auth...</p>
+  </div>
+  <img id="profileBtn" src="https://via.placeholder.com/40" class="profile-img" onclick="location.href='profile.html'">
+</header>
+
+<div class="center">
+  <a href="post.html" style="background:#2e7d32;color:white;padding:12px 24px;border-radius:25px;text-decoration:none; display:inline-block; font-weight:600;">➕ Post Property</a>
+  <button onclick="logout()" style="background:#f44336;color:white;border:none;padding:12px 24px;border-radius:25px;margin-left:8px; font-weight:600;">Logout</button>
+</div>
+
+<div id="list"></div>
+
+<div id="gallery">
+  <button id="galleryClose" onclick="closeGallery()">×</button>
+  <div id="gallerySlider" class="slider"></div>
+</div>
+
+<div id="chatBox">
+ <div id="chatHeader">
+   <span style="font-weight:600;">🗨 Real-time Chat</span>
+   <button onclick="closeChat()" style="color:white;background:none;border:none;font-size:24px;">×</button>
+ </div>
+ <div id="chatMessages"></div>
+ <div id="chatInputBox">
+   <input id="chatInput" placeholder="Write a message..." onkeypress="if(event.key==='Enter') sendMsg()">
+   <button id="sendBtn" onclick="sendMsg()">Send</button>
+ </div>
+</div>
+
+<script>
+const firebaseConfig={
+ apiKey:"AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
+ authDomain:"earth-properties-c3c56.firebaseapp.com",
+ projectId:"earth-properties-c3c56"
+};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+const auth=firebase.auth();
+
+let currentUser=null, currentChatId=null, chatUnsub=null;
+
+// 🟢 AUTH STATE
+auth.onAuthStateChanged(async u=>{
+ if(!u) {
+   window.location.href="login.html";
+ } else {
+  currentUser = u;
+  document.getElementById('userBox').innerText = "👤 " + u.email;
+  // Load Profile Image
+  const userDoc = await db.collection("users").doc(u.uid).get();
+  if(userDoc.exists && userDoc.data().photoURL) {
+      document.getElementById("profileBtn").src = userDoc.data().photoURL;
   }
+  loadProperties();
+ }
+});
 
-  try{await loadProperties();}catch(e){console.error('Load error:',e);}
- }else window.location.href="login.html";
-});    
-    
-function logout(){auth.signOut();}    
-    
-function getFavs(){return JSON.parse(localStorage.getItem("favs")||"[]");}    
-function toggleFav(id){    
- let f=getFavs();    
- f=f.includes(id)?f.filter(x=>x!==id):[...f,id];    
- localStorage.setItem("favs",JSON.stringify(f));    
- loadProperties();    
-}    
-    
-function sharePost(t,l,p){    
- const text=`🏠 ${t}
-📍 ${l}
-💰 Price: ${p}
+function logout(){ auth.signOut(); }
 
-Earth Property App`;    
- if(navigator.share){navigator.share({title:"Property Listing",text})}else{    
-  navigator.clipboard.writeText(text).then(()=>alert("📋 Copied to share!")).catch(()=>alert("Ready: "+text));    
- }    
-}    
+// 🖼️ GALLERY LOGIC
+function openGallery(imagesJson){
+ const images = JSON.parse(decodeURIComponent(imagesJson));
+ const s=document.getElementById("gallerySlider");
+ s.innerHTML="";
+ images.forEach(i=>{
+  const img=document.createElement("img");
+  img.src=i;
+  s.appendChild(img);
+ });
+ document.getElementById("gallery").style.display="block";
+ document.body.style.overflow = "hidden"; // Stop scrolling
+}
+function closeGallery(){
+  document.getElementById("gallery").style.display="none";
+  document.body.style.overflow = "auto";
+}
+
+// ❤️ FAVORITES LOGIC
+function getFavs(){return JSON.parse(localStorage.getItem("favs")||"[]");}
+function toggleFav(id){
+ let f=getFavs();
+ f=f.includes(id)?f.filter(x=>x!==id):[...f,id];
+ localStorage.setItem("favs",JSON.stringify(f));
+ loadProperties();
+}
+
+// 🏠 LOAD PROPERTIES
+async function loadProperties(){
+ const list=document.getElementById("list");
+ list.innerHTML='<div style="text-align:center; padding:50px;">🔄 Loading Listings...</div>';
+ 
+ try {
+   const favs=getFavs();
+   const qs=await db.collection("properties").orderBy("timestamp","desc").get();
+   list.innerHTML="";
+   
+   if(qs.empty) {
+     list.innerHTML = '<p class="center">No properties found. be the first!</p>';
+     return;
+   }
+
+   qs.forEach(doc=>{
+    const d=doc.data();
+    const imgs=d.images||[];
+    const isFav = favs.includes(doc.id) ? "❤️" : "🤍";
+    const imgsJson = encodeURIComponent(JSON.stringify(imgs));
     
-async function loadProperties(){    
- const list=document.getElementById('list');    
- list.innerHTML='<div style="text-align:center;padding:40px;color:#666;">🔄 Loading properties...</div>';    
- try{    
-  const qs=await db.collection("properties").orderBy("timestamp","desc").limit(50).get();    
-  list.innerHTML="";    
-  const favs=getFavs();    
-  if(qs.empty){    
-   list.innerHTML='<div style="text-align:center;padding:40px;color:#666;">📭 No properties yet. <a href="post.html">Be first to post!</a></div>';    
-   return;    
-  }    
-  qs.forEach(doc=>{    
-   const d=doc.data();    
-   const fav=favs.includes(doc.id)?"❤️":"🤍";    
-   const img=d.images?.[0]||"https://via.placeholder.com/400x250/2e7d32/ffffff?text=🏠";    
-   list.innerHTML+=`    
-   <div class="card">    
-    <div class="fav-badge" onclick="toggleFav('${doc.id}')">${fav}</div>    
-    <img src="${img}" alt="Property" loading="lazy">    
-    <h3 style="margin:8px 0 4px 0;font-size:18px;">${d.title||'No Title'}</h3>    
-    <p style="margin:0 0 8px 0;color:#666;font-size:14px;">${d.location||'No Location'} | <strong>₹${d.price||'N/A'}</strong></p>    
-    <div class="action-row">    
-      <a class="action call" href="tel:+${d.phone||0}">📞<span>Call</span></a>    
-      <a class="action whatsapp" href="https://api.whatsapp.com/send?phone=${d.phone||0}&text=Interested%20in%20your%20property">💬<span>Whatsapp</span></a>    
-      <button class="action chat" onclick="openChat('${doc.id}')">🗨<span>Chat</span></button>    
-      <button class="action share" onclick="sharePost('${d.title||''}','${d.location||''}','₹${d.price||''}')">📤<span>Share</span></button>    
-      <button class="action report" onclick="reportPost('${doc.id}')">🚩<span>Report</span></button>    
-    </div>    
-   </div>`;    
-  });    
- }catch(e){    
-  list.innerHTML='<div style="text-align:center;padding:40px;color:#666;">⚠️ Network error. Check connection.</div>';    
- }    
-}    
-    
+    let sliderHtml = `<div class="slider">` + 
+      imgs.map(i=>`<img src="${i}" onclick="openGallery('${imgsJson}')" loading="lazy">`).join("") + 
+      `</div>`;
+
+    list.innerHTML+=`
+     <div class="card">
+      <div class="fav-badge" onclick="toggleFav('${doc.id}')">${isFav}</div>
+      ${imgs.length ? sliderHtml : '<img src="https://via.placeholder.com/400x220?text=No+Image" style="width:100%; border-radius:12px;">'}
+      <h3 style="margin:10px 0 5px; font-size: 18px;">${d.title || 'Untitled'}</h3>
+      <p style="color:#666; font-size:14px; margin: 5px 0;">📍 ${d.location} | 💰 <strong>₹${d.price}</strong></p>
+      
+      <div class="action-row">
+        <a class="action call" href="tel:${d.phone}">📞<span>Call</span></a>
+        <a class="action whatsapp" href="https://wa.me/${d.phone}?text=Interested%20in%20${d.title}">💬<span>WA</span></a>
+        <button class="action chat" onclick="openChat('${doc.id}')">🗨<span>Chat</span></button>
+        <button class="action share" onclick="sharePost('${d.title}','${d.location}','${d.price}')">📤<span>Share</span></button>
+        <button class="action report" onclick="reportPost('${doc.id}')">🚩<span>Report</span></button>
+      </div>
+     </div>`;
+   });
+ } catch(err) {
+   list.innerHTML = '<p class="center" style="color:red;">Error loading properties.</p>';
+ }
+}
+
+// 📤 FULL SHARE LOGIC
+function sharePost(t,l,p){
+ const text=`🏠 *${t}*\n📍 Location: ${l}\n💰 Price: ₹${p}\n\nCheck this on *Earth Property* App!`;
+ if(navigator.share) {
+   navigator.share({ title: t, text: text });
+ } else {
+   navigator.clipboard.writeText(text).then(()=>alert("Details Copied to Clipboard!"));
+ }
+}
+
+// 🚩 REPORT LOGIC
 async function reportPost(id){    
+ if(!confirm("Report this post for fake info?")) return;
  try{    
   await db.collection("properties").doc(id).update({reports:firebase.firestore.FieldValue.increment(1)});    
-  alert("✅ Reported successfully");    
- }catch(e){alert("✅ Report sent");}    
-}    
-    
-function openChat(id){    
- currentChatId=id;    
- document.getElementById('chatBox').style.display="block";    
- document.body.style.paddingBottom="0";    
- loadMessages();    
-}    
-function closeChat(){    
- document.getElementById('chatBox').style.display="none";    
- document.body.style.paddingBottom="";    
- if(chatUnsub) chatUnsub();    
- currentChatId=null;    
-}    
-    
-async function sendMsg(){    
- const input=document.getElementById('chatInput');    
- const btn=document.getElementById('sendBtn');    
- const text=input.value.trim();    
- if(!text || !currentChatId) return;    
- btn.disabled=true;    
- try{    
-  await db.collection("chats").doc(currentChatId).collection("messages").add({    
-   text:text,    
-   time:Date.now(),    
-   user:currentUser.email    
-  });    
-  input.value="";    
- }catch(e){    
-  alert("❌ Send failed. Try again.");    
- }finally{    
-  btn.disabled=false;    
-  input.focus();    
- }    
-}    
-    
-function handleEnter(event){    
- if(event.key==='Enter' && !event.shiftKey){    
-  event.preventDefault();    
-  sendMsg();    
- }    
-}    
-    
-function loadMessages(){    
- if(chatUnsub) chatUnsub();    
- const messagesEl=document.getElementById('chatMessages');    
- messagesEl.innerHTML='<div style="text-align:center;padding:20px;color:#666;">Connecting...</div>';    
- chatUnsub = db.collection("chats").doc(currentChatId).collection("messages")    
- .orderBy("time").limit(50).onSnapshot((s)=>{    
-  messagesEl.innerHTML="";    
-  s.forEach(d=>{    
-   const msgEl=document.createElement('div');    
-   msgEl.className="msg";    
-   msgEl.textContent=d.data().text;    
-   messagesEl.appendChild(msgEl);    
-  });    
-  if(s.empty){    
-   messagesEl.innerHTML='<div style="text-align:center;padding:20px;color:#666;">💬 Start conversation</div>';    
-  }    
-  messagesEl.scrollTop = messagesEl.scrollHeight;    
- },(e)=>{    
-  messagesEl.innerHTML='<div style="text-align:center;padding:20px;color:#f44336;">⚠️ Chat error</div>';    
-  console.error('Chat error:',e);    
- });    
-}    
-</script>    
-    
-<!-- 🔥 SERVICE WORKER REGISTER -->    
-<script>    
-if ("serviceWorker" in navigator) {    
-  navigator.serviceWorker.register("/earth-property/sw.js").then(reg => console.log("✅ PWA Ready:", reg.scope)).catch(err => console.log("SW failed:", err));    
-}    
-</script>    
-    
-</body>    
+  alert("✅ Reported successfully. We will review it.");    
+ }catch(e){alert("✅ Report sent.");}    
+}
+
+// 🗨 CHAT SYSTEM LOGIC
+function openChat(id){
+ currentChatId=id;
+ document.getElementById('chatBox').style.display="block";
+ loadMessages();
+}
+function closeChat(){
+ document.getElementById('chatBox').style.display="none";
+ if(chatUnsub) chatUnsub();
+}
+async function sendMsg(){
+ const input=document.getElementById('chatInput');
+ const text=input.value.trim();
+ if(!text || !currentUser) return;
+ await db.collection("chats").doc(currentChatId).collection("messages").add({
+  text: text, 
+  time: Date.now(), 
+  user: currentUser.email
+ });
+ input.value="";
+}
+function loadMessages(){
+ const mDiv=document.getElementById('chatMessages');
+ mDiv.innerHTML='<div style="text-align:center; color:#666;">🔄 Connecting to chat...</div>';
+ 
+ chatUnsub = db.collection("chats").doc(currentChatId).collection("messages").orderBy("time")
+ .onSnapshot(s=>{
+  mDiv.innerHTML="";
+  if(s.empty) mDiv.innerHTML = '<div style="text-align:center; color:#999;">No messages yet. Say Hi!</div>';
+  s.forEach(d=> {
+    const msg = document.createElement('div');
+    msg.className="msg"; 
+    msg.style.alignSelf = d.data().user === currentUser.email ? "flex-end" : "flex-start";
+    msg.innerText=d.data().text;
+    mDiv.appendChild(msg);
+  });
+  mDiv.scrollTop = mDiv.scrollHeight;
+ });
+}
+</script>
+</body>
 </html>
