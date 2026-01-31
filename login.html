@@ -8,7 +8,27 @@
 <style>
 body{font-family:Arial;background:#f2f2f2;padding:10px;}
 header{background:#2e7d32;color:white;padding:15px;text-align:center;border-radius:10px;}
-input{width:100%;padding:10px;margin:8px 0;}
+
+.input-box{
+  position:relative;
+}
+
+input{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  padding-right:40px;
+}
+
+.eye{
+  position:absolute;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  cursor:pointer;
+  font-size:18px;
+}
+
 button{background:#2e7d32;color:white;border:none;padding:10px;border-radius:20px;width:100%;}
 a{color:#2e7d32;text-decoration:none;}
 </style>
@@ -26,7 +46,16 @@ a{color:#2e7d32;text-decoration:none;}
 </header>
 
 <input id="email" type="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
+
+<div class="input-box">
+  <input id="password" type="password" placeholder="Password">
+  <span class="eye" onclick="togglePass()">👁️</span>
+</div>
+
+<p style="text-align:right;">
+<a href="#" onclick="forgot()">Forgot Password?</a>
+</p>
+
 <button onclick="login()">Login</button>
 
 <p style="text-align:center;">No account? <a href="signup.html">Sign Up</a></p>
@@ -49,6 +78,29 @@ function login(){
   .then(()=>{
     alert("Login Success ✅");
     window.location.href = "index.html";
+  })
+  .catch(e=>{
+    alert("Error: " + e.message);
+  });
+}
+
+// 👁️ Show / Hide Password
+function togglePass(){
+  let p = document.getElementById("password");
+  p.type = (p.type === "password") ? "text" : "password";
+}
+
+// 🔐 Forgot Password (Firebase real)
+function forgot(){
+  let email = document.getElementById("email").value;
+  if(email===""){
+    alert("Enter your email first");
+    return;
+  }
+
+  auth.sendPasswordResetEmail(email)
+  .then(()=>{
+    alert("Password reset link sent to " + email);
   })
   .catch(e=>{
     alert("Error: " + e.message);
