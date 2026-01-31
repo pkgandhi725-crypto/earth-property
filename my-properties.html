@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>My Properties - Earth Property</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{margin:0;font-family:system-ui,Arial;background:#f2f2f2;}
+header{
+ background:#2e7d32;
+ color:white;
+ padding:14px;
+ text-align:center;
+ position:relative;
+}
+.list{padding:10px;}
+.card{background:white;border-radius:14px;padding:12px;margin-bottom:12px;box-shadow:0 4px 10px rgba(0,0,0,.08);}
+.card img{width:100%;border-radius:10px;margin-bottom:8px;}
+.row{display:flex;justify-content:space-between;align-items:center;}
+.btns{display:flex;gap:8px;margin-top:8px;}
+button{flex:1;padding:10px;border:none;border-radius:10px;cursor:pointer;font-size:14px;}
+.edit{background:#e3f2fd;}
+.del{background:#ffebee;color:#c62828;}
+.status{background:#f1f8e9;color:#33691e;font-size:12px;padding:6px 10px;border-radius:8px;}
+.home-btn{
+ position:absolute;
+ left:15px;
+ top:12px;
+ background:rgba(255,255,255,0.2);
+ border:none;
+ color:white;
+ padding:8px;
+ border-radius:20px;
+ cursor:pointer;
+}
+</style>
+
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+</head>
+
+<body>
+
+<header>
+  <button class="home-btn" onclick="goHome()">🏠</button>
+  <h2>🏠 My Properties</h2>
+</header>
+
+<div class="list" id="list">Loading...</div>
+
+<script>
+const firebaseConfig = {
+ apiKey:"AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
+ authDomain:"earth-properties-c3c56.firebaseapp.com",
+ projectId:"earth-properties-c3c56"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+auth.onAuthStateChanged(async user=>{
+ if(!user){ location.href="login.html"; return; }
+
+ const qs = await db.collection("properties")
+  .where("ownerId","==",user.uid)
+  .orderBy("timestamp","desc")
+  .get();
+
+ const list = document.getElementById("list");
+ list.innerHTML="";
+
+ if(qs.empty){
+  list.innerHTML = "<p style='text-align:center;color:#666'>No properties posted yet.</p>";
+  return;
+ }
+
+ qs.forEach(doc=>{
+  const d = doc.data();
+  const img = d.images?.[0] || "https://via.placeholder.com/400x250?text=No+Image";
+  list.innerHTML += `
+   <div class="card">
+    <img src="${img}">
+    <div class="row">
+      <strong>${d.title}</strong>
+      <span class="status">₹${d.price}</span>
+    </div>
+    <p style="color:#666">${d.location}</p>
+    <div class="btns">
+      <button class="edit" onclick="editProp('${doc.id}')">✏️ Edit</button>
+      <button class="del" onclick="deleteProp('${doc.id}')">🗑 Delete</button>
+    </div>
+   </div>
+  `;
+ });
+});
+
+function deleteProp(id){
+ if(!confirm("Delete this property?")) return;
+ db.collection("properties").doc(id).delete().then(()=>{
+  alert("Deleted");
+  location.reload();
+ });
+}
+
+function editProp(id){
+ alert("Edit feature coming next 🔥");
+}
+
+function goHome(){
+ window.location.href="index.html";
+}
+</script>
+
+</body>
+</html>
