@@ -3,44 +3,59 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Earth Property - Final</title>
+<title>Earth Property - Pro</title>
 <link rel="manifest" href="/earth-property/manifest.json">
 <meta name="theme-color" content="#2e7d32">
 
 <style>
-/* 🎨 Basic Styles */
-body{margin:0;font-family:system-ui,Arial;background:#f2f2f2;padding-bottom:20px}
-header{background:#2e7d32;color:white;padding:15px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+/* 🎨 UI & Feed Styles */
+body{margin:0;font-family:system-ui,Arial;background:#f2f2f2;padding-bottom:20px;-webkit-tap-highlight-color:transparent;}
+header{background:#2e7d32;color:white;padding:15px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
 #userBox{font-size:12px;opacity:.9;margin:0}
 .profile-img{width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,255,255,.3);object-fit:cover;cursor:pointer}
-.card{background:white;margin:12px;padding:12px;border-radius:14px;box-shadow:0 4px 12px rgba(0,0,0,.08);position:relative}
+.card{background:white;margin:12px;padding:12px;border-radius:14px;box-shadow:0 4px 12px rgba(0,0,0,.08);position:relative;animation:fadeIn 0.5s ease;}
+@keyframes fadeIn {from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 
-/* 📸 Home Slider */
 .slider{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;gap:8px}
 .slider::-webkit-scrollbar{display:none}
 .slider img{min-width:100%;scroll-snap-align:center;border-radius:12px;height:230px;object-fit:cover;cursor:pointer;background:#eee}
 
-/* 🖼️ Premium Fullscreen Gallery */
+/* 🖼️ 🔥 PRO INSTAGRAM-STYLE GALLERY ENGINE */
 #gallery{position:fixed;inset:0;background:black;display:none;z-index:9999;overflow:hidden}
-#gallerySlider{display:flex;height:100vh;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
-#gallerySlider img{
-  min-width:100%; height:100vh; object-fit:contain;
-  touch-action: pan-x pan-y; transition: transform 0.2s ease; cursor: zoom-in;
+#gallerySlider{
+  display:flex;
+  height:100vh;
+  overflow-x:auto;
+  scroll-snap-type:x mandatory;
+  scrollbar-width:none;
+  scroll-behavior:smooth;
 }
+#gallerySlider::-webkit-scrollbar{display:none;}
+
+#gallerySlider img{
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;      /* 🔥 Prevents skipping images while swiping */
+  object-fit: contain;
+  background: black;
+  touch-action: pan-x pan-y;
+  transition: transform 0.25s ease;
+  cursor: zoom-in;
+}
+
 #galleryCounter{position:absolute;top:25px;left:20px;color:white;background:rgba(0,0,0,.6);padding:6px 14px;border-radius:20px;font-size:14px;z-index:10001;font-weight:600}
 #galleryClose{position:absolute;top:25px;right:20px;background:#2e7d32;color:white;border:none;width:44px;height:44px;border-radius:50%;font-size:28px;z-index:10001;display:flex;align-items:center;justify-content:center;cursor:pointer}
 
-/* ⚡ Action Buttons (Fixed Width) */
+/* ⚡ Action Buttons (Symmetrical 20% Width) */
 .action-row{display:flex;justify-content:space-between;gap:4px;margin-top:12px}
-.action{flex:1 1 20%;min-width:0;height:56px;border-radius:14px;background:#f5f5f5;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;text-decoration:none;color:#444;cursor:pointer}
+.action{flex:1 1 20%;min-width:0;height:56px;border-radius:14px;background:#f5f5f5;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;text-decoration:none;color:#444;cursor:pointer;transition:0.2s}
+.action:active{background:#e0e0e0;transform:scale(0.95);}
 .action span{margin-top:2px;font-weight:600;white-space:nowrap}
 .fav-badge{position:absolute;top:20px;right:20px;background:white;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25);font-size:18px;z-index:10;cursor:pointer}
-.call{background:#e3f2fd} .whatsapp{background:#e8f5e9} .chat{background:#f3e5f5} .share{background:#e0f2f1} .report{background:#ffebee}
 
-/* 💬 Real-time Chat Box */
-#chatBox{position:fixed;bottom:0;left:0;right:0;background:white;display:none;z-index:1000;border-top:3px solid #2e7d32;border-radius:15px 15px 0 0;box-shadow:0 -5px 15px rgba(0,0,0,0.1)}
-#chatHeader{background:#2e7d32;color:white;padding:15px;display:flex;justify-content:space-between;align-items:center}
-#chatMessages{max-height:300px;overflow:auto;padding:15px;background:#f9f9f9}
+.call{background:#e3f2fd} .whatsapp{background:#e8f5e9} .chat{background:#f3e5f5} .share{background:#e0f2f1} .report{background:#ffebee}
 </style>
 </head>
 <body>
@@ -51,10 +66,10 @@ header{background:#2e7d32;color:white;padding:15px;display:flex;justify-content:
 </header>
 
 <div style="text-align:center; margin:15px">
-  <a href="post.html" style="background:#2e7d32;color:white;padding:12px 24px;border-radius:25px;text-decoration:none;font-weight:600;display:inline-block">➕ Post Property</a>
+  <a href="post.html" style="background:#2e7d32;color:white;padding:12px 24px;border-radius:25px;text-decoration:none;font-weight:600;display:inline-block;box-shadow:0 4px 10px rgba(46,125,50,0.3);">➕ Post Property</a>
 </div>
 
-<div id="list"></div>
+<div id="list"><div style="text-align:center; padding:50px; color:#666;">🔄 Syncing Properties...</div></div>
 
 <div id="gallery">
  <div id="galleryCounter">1/1</div>
@@ -62,17 +77,11 @@ header{background:#2e7d32;color:white;padding:15px;display:flex;justify-content:
  <div id="gallerySlider"></div>
 </div>
 
-<div id="chatBox">
- <div id="chatHeader"><span id="chatTitle" style="font-weight:600">🗨 Chat</span><button onclick="closeChat()" style="color:white;background:none;border:none;font-size:24px;cursor:pointer">×</button></div>
- <div id="chatMessages">Chat logic connecting...</div>
-</div>
-
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
 
 <script>
-// Firebase Config
 firebase.initializeApp({
  apiKey:"AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
  authDomain:"earth-properties-c3c56.firebaseapp.com",
@@ -80,10 +89,9 @@ firebase.initializeApp({
 });
 const db=firebase.firestore(); const auth=firebase.auth();
 
-// Variables
 let currentUser=null, galleryImgs=[], zoom=1, lastTap=0, moveX=0, moveY=0, startX=0, startY=0, swipeY=0;
 
-// 🟢 Auth Logic with Profile Backup
+// 🟢 AUTH & PROFILE (Fixed Blank Photo Logic)
 auth.onAuthStateChanged(async u=>{
  if(!u) location.href="login.html";
  else {
@@ -93,12 +101,12 @@ auth.onAuthStateChanged(async u=>{
     const userDoc = await db.collection("users").doc(u.uid).get();
     if(userDoc.exists && userDoc.data().photoURL) profileBtn.src = userDoc.data().photoURL;
     else if(u.photoURL) profileBtn.src = u.photoURL;
-  } catch(e){ console.log("Profile load failed"); }
+  } catch(e){ console.log("Data sync error"); }
   loadProperties();
  }
 });
 
-// 🖼️ Gallery Logic
+// 🖼️ GALLERY ENGINE
 function openGallery(json){
  galleryImgs=JSON.parse(decodeURIComponent(json));
  const g=document.getElementById("gallerySlider");
@@ -118,7 +126,6 @@ function closeGallery(){
  zoom=1; moveX=0; moveY=0;
 }
 
-// 🔄 Swipe & Zoom Handlers
 document.getElementById("gallerySlider").addEventListener("scroll", e=>{
  const idx = Math.round(e.target.scrollLeft / e.target.clientWidth);
  document.getElementById("galleryCounter").innerText = `${idx+1} / ${galleryImgs.length}`;
@@ -127,15 +134,13 @@ document.getElementById("gallerySlider").addEventListener("scroll", e=>{
 document.getElementById("gallerySlider").addEventListener("touchstart", e=>{
  swipeY = e.touches[0].clientY;
  if(zoom > 1){
-  startX = e.touches[0].clientX - moveX;
-  startY = e.touches[0].clientY - moveY;
+  startX = e.touches[0].clientX - moveX; startY = e.touches[0].clientY - moveY;
  }
 },{passive:true});
 
 document.getElementById("gallerySlider").addEventListener("touchmove", e=>{
  if(zoom > 1){
-  moveX = (e.touches[0].clientX - startX);
-  moveY = (e.touches[0].clientY - startY);
+  moveX = (e.touches[0].clientX - startX); moveY = (e.touches[0].clientY - startY);
   e.target.style.transform = `scale(${zoom}) translate(${moveX/zoom}px, ${moveY/zoom}px)`;
  } else {
   if((e.touches[0].clientY - swipeY) > 120) closeGallery();
@@ -152,44 +157,41 @@ document.getElementById("gallerySlider").addEventListener("touchend", e=>{
  lastTap = now;
 });
 
-// 🏠 Load Listings
+// 🏠 PROPERTY LISTING
 async function loadProperties(){
- const qs=await db.collection("properties").orderBy("timestamp","desc").get();
- const list=document.getElementById("list"); list.innerHTML="";
- qs.forEach(doc=>{
-  const d=doc.data(); const imgs=d.images||[]; const json=encodeURIComponent(JSON.stringify(imgs));
-  list.innerHTML+=`
-  <div class="card">
-   <div class="fav-badge" onclick="toggleFav('${doc.id}')">🤍</div>
-   <div class="slider">${imgs.map(i=>`<img src="${i}" onclick="openGallery('${json}')">`).join("")}</div>
-   <h3 style="margin:10px 0 5px">${d.title}</h3>
-   <p style="margin:0; color:#666; font-size:13px">📍 ${d.location} | 💰 ₹${d.price}</p>
-   <div class="action-row">
-    <a class="action call" href="tel:${d.phone}">📞<span>Call</span></a>
-    <a class="action whatsapp" href="https://wa.me/${d.phone}?text=Interested%20in%20${d.title}">💬<span>WhatsApp</span></a>
-    <button class="action chat" onclick="openChat('${d.title}')">🗨<span>Chat</span></button>
-    <button class="action share" onclick="window.navigator.share({title:'${d.title}',url:window.location.href})">📤<span>Share</span></button>
-    <button class="action report" onclick="reportPost('${doc.id}')">🚩<span>Report</span></button>
-   </div>
-  </div>`;
- });
+ const list=document.getElementById("list");
+ try {
+  const qs=await db.collection("properties").orderBy("timestamp","desc").get();
+  if(qs.empty){ list.innerHTML="<center style='padding:50px'>No properties posted yet.</center>"; return; }
+  list.innerHTML="";
+  qs.forEach(doc=>{
+   const d=doc.data(); const imgs=d.images||[]; const json=encodeURIComponent(JSON.stringify(imgs));
+   list.innerHTML+=`
+    <div class="card">
+     <div class="fav-badge" onclick="toggleFav('${doc.id}')">🤍</div>
+     <div class="slider">${imgs.map(i=>`<img src="${i}" onclick="openGallery('${json}')">`).join("")}</div>
+     <h3 style="margin:10px 0 5px">${d.title}</h3>
+     <p style="margin:0; color:#666; font-size:13px">📍 ${d.location} | 💰 ₹${d.price}</p>
+     <div class="action-row">
+      <a class="action call" href="tel:${d.phone}">📞<span>Call</span></a>
+      <a class="action whatsapp" href="https://wa.me/${d.phone}?text=Interested%20in%20${d.title}">💬<span>WhatsApp</span></a>
+      <a class="action chat" href="chat.html?id=${doc.id}&title=${encodeURIComponent(d.title)}">🗨<span>Chat</span></a>
+      <button class="action share" onclick="navigator.share({title:'${d.title}',url:window.location.href})">📤<span>Share</span></button>
+      <button class="action report" onclick="reportPost('${doc.id}')">🚩<span>Report</span></button>
+     </div>
+    </div>`;
+  });
+ } catch(e){ list.innerHTML="<center>Load error.</center>"; }
 }
-
-// 🛠️ Missing Action Functions Fixed
-function openChat(title){
- document.getElementById("chatTitle").innerText = "Chat: " + title;
- document.getElementById("chatBox").style.display = "block";
-}
-function closeChat(){ document.getElementById("chatBox").style.display = "none"; }
 
 async function reportPost(id){
- if(confirm("Report this listing?")){
-  await db.collection("properties").doc(id).update({reports: firebase.firestore.FieldValue.increment(1)});
-  alert("Listing Reported.");
+ if(confirm("Report this post?")){
+  await db.collection("properties").doc(id).update({reports:firebase.firestore.FieldValue.increment(1)});
+  alert("Reported.");
  }
 }
 
-function toggleFav(id){ alert("Listing saved to favorites!"); }
+function toggleFav(id){ alert("Added to Favorites!"); }
 </script>
 </body>
 </html>
