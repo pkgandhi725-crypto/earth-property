@@ -28,9 +28,8 @@ button{background:#2e7d32;color:white;border:none;padding:10px;width:100%;border
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-storage-compat.js"></script>
-</head>
 
+</head>
 <body>
 
 <div class="cover">
@@ -61,49 +60,71 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth();
 const db=firebase.firestore();
-const storage=firebase.storage();
 
 let uid=null;
 
+// ✅ Cloudinary config
+const CLOUD_NAME = "dnkhurnbv";
+const UPLOAD_PRESET = "earth-property";
+
+// 🔥 Upload to Cloudinary
+async function uploadToCloudinary(file){
+ const form = new FormData();
+ form.append("file", file);
+ form.append("upload_preset", UPLOAD_PRESET);
+
+ const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+  method: "POST",
+  body: form
+ });
+
+ const data = await res.json();
+ return data.secure_url;
+}
+
+// 🔐 Auth
 auth.onAuthStateChanged(async user=>{
  if(!user) location.href="login.html";
  uid=user.uid;
  email.value=user.email;
 
- const doc=await db.collection("users").doc(uid).get();
+ const doc = await db.collection("users").doc(uid).get();
  if(doc.exists){
-  const d=doc.data();
-  name.value=d.name||"";
-  phone.value=d.phone||"";
-  if(d.photoURL) profileImg.src=d.photoURL;
-  if(d.coverURL) coverImg.src=d.coverURL;
+  const d = doc.data();
+  name.value = d.name || "";
+  phone.value = d.phone || "";
+  if(d.photoURL) profileImg.src = d.photoURL;
+  if(d.coverURL) coverImg.src = d.coverURL;
  }
 });
 
+// 🖼 Profile photo upload
 profileInput.onchange = async ()=>{
- const file=profileInput.files[0];
- const ref=storage.ref("profilePhotos/"+uid+".jpg");
- await ref.put(file);
- const url=await ref.getDownloadURL();
- profileImg.src=url;
- db.collection("users").doc(uid).set({photoURL:url},{merge:true});
+ const file = profileInput.files[0];
+ if(!file) return;
+ profileImg.src = "https://i.imgur.com/8Km9tLL.gif";
+ const url = await uploadToCloudinary(file);
+ profileImg.src = url;
+ await db.collection("users").doc(uid).set({photoURL:url},{merge:true});
 };
 
-coverImg.onclick=()=>coverInput.click();
+// 🖼 Cover photo upload
+coverImg.onclick = ()=> coverInput.click();
 coverInput.onchange = async ()=>{
- const file=coverInput.files[0];
- const ref=storage.ref("coverPhotos/"+uid+".jpg");
- await ref.put(file);
- const url=await ref.getDownloadURL();
- coverImg.src=url;
- db.collection("users").doc(uid).set({coverURL:url},{merge:true});
+ const file = coverInput.files[0];
+ if(!file) return;
+ coverImg.src = "https://i.imgur.com/8Km9tLL.gif";
+ const url = await uploadToCloudinary(file);
+ coverImg.src = url;
+ await db.collection("users").doc(uid).set({coverURL:url},{merge:true});
 };
 
+// 💾 Save profile
 function saveProfile(){
  db.collection("users").doc(uid).set({
-  name:name.value,
-  phone:phone.value,
-  email:email.value
+  name: name.value,
+  phone: phone.value,
+  email: email.value
  },{merge:true});
  alert("Profile Saved ✅");
 }
