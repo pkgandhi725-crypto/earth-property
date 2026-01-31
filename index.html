@@ -19,48 +19,50 @@ header{background:#2e7d32;color:white;padding:15px;display:flex;align-items:cent
 .card{position:relative;background:white;margin:12px;padding:12px;border-radius:14px;box-shadow:0 4px 12px rgba(0,0,0,0.08);}
 .center{text-align:center;margin:10px;}
 
-/* 📸 Image Slider & Gallery */
+/* 📸 Slider & Gallery */
 .slider{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:8px; scrollbar-width: none; margin-bottom: 10px;}
 .slider::-webkit-scrollbar { display: none; }
 .slider img{min-width:100%;scroll-snap-align:center;border-radius:12px;cursor:pointer;height:220px;object-fit:cover; background: #eee;}
 
-#gallery{position:fixed;inset:0;background:black;display:none;z-index:9999; touch-action: none;}
-#gallerySlider{height:100vh;}
-#gallerySlider img{min-width:100%; height:100vh; object-fit:contain; pointer-events: none;}
+#gallery{position:fixed;inset:0;background:black;display:none;z-index:9999; overflow: hidden;}
+#gallerySlider img{
+  min-width:100%;
+  height:100vh;
+  object-fit:contain;
+  touch-action:none;
+  transition: transform 0.2s ease;
+  cursor: zoom-in;
+}
 
-/* 🔥 Optimized Green Close Button */
+/* 📊 Image counter style */
+#galleryCounter{
+ position:absolute; top:25px; left:20px;
+ background:rgba(0,0,0,0.6); color:white;
+ padding:6px 14px; border-radius:20px;
+ font-size:14px; z-index:10000; font-weight:600;
+}
+
 #galleryClose{
- position:absolute;
- top:25px;
- right:20px;
- background:#2e7d32;   /* 🔥 strong green */
- color:white;
- font-size:28px;
- border:none;
- width:44px;
- height:44px;
- border-radius:50%;
- z-index:10000;
+ position:absolute; top:25px; right:20px;
+ background:#2e7d32; color:white; font-size:28px; border:none;
+ width:44px; height:44px; border-radius:50%; z-index:10000;
  box-shadow:0 4px 10px rgba(0,0,0,0.5);
- display:flex;
- align-items:center;
- justify-content:center;
- cursor:pointer;
+ display:flex; align-items:center; justify-content:center;
 }
 
 .fav-badge{position:absolute;top:20px;right:20px;background:white;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25);font-size:18px;cursor:pointer;z-index:10;}
 
-/* ⚡ Action Buttons */
+/* ⚡ Actions */
 .action-row{display:flex;justify-content:space-between;gap:6px;margin-top:12px; flex-wrap: wrap;}
 .action{flex:1; min-width: 65px; height:56px; border:none; border-radius:14px; font-size:11px; color:#444; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#f5f5f5; text-decoration:none;}
 .action span{margin-top:2px; font-weight: 600;}
 .call{background:#e3f2fd;} .whatsapp{background:#e8f5e9;} .chat{background:#f3e5f5;} .share{background:#e0f2f1;} .report{background:#ffebee;}
 
-/* 💬 Chat UI */
-#chatBox{position:fixed;bottom:0;left:0;right:0;background:white;border-top:3px solid #2e7d32;display:none;z-index:1000;border-radius:15px 15px 0 0; box-shadow: 0 -5px 15px rgba(0,0,0,0.1);}
+/* 💬 Chat */
+#chatBox{position:fixed;bottom:0;left:0;right:0;background:white;border-top:3px solid #2e7d32;display:none;z-index:1000;border-radius:15px 15px 0 0;}
 #chatHeader{background:#2e7d32;color:white;padding:12px;display:flex;justify-content:space-between;align-items:center;}
 #chatMessages{max-height:280px;overflow:auto;padding:12px; background: #f9f9f9;}
-.msg{padding:8px 12px;background:#e0f2f1;border-radius:12px;margin:5px 0;max-width:80%;font-size:14px; border-bottom-left-radius: 2px;}
+.msg{padding:8px 12px;background:#e0f2f1;border-radius:12px;margin:5px 0;max-width:80%;font-size:14px;}
 #chatInputBox{display:flex;border-top:1px solid #ddd; padding: 5px;}
 #chatInput{flex:1;border:none;padding:12px; outline: none;}
 #sendBtn{background:#2e7d32;color:white;border:none;padding:0 20px; border-radius: 10px; font-weight: 600;}
@@ -73,10 +75,7 @@ header{background:#2e7d32;color:white;padding:15px;display:flex;align-items:cent
 <body>
 
 <header>
-  <div>
-    <h2 style="margin:0; font-size: 20px;">Earth Property</h2>
-    <p id="userBox">Connecting Auth...</p>
-  </div>
+  <div><h2 style="margin:0; font-size: 20px;">Earth Property</h2><p id="userBox">Connecting...</p></div>
   <img id="profileBtn" src="https://via.placeholder.com/40" class="profile-img" onclick="location.href='profile.html'">
 </header>
 
@@ -88,196 +87,166 @@ header{background:#2e7d32;color:white;padding:15px;display:flex;align-items:cent
 <div id="list"></div>
 
 <div id="gallery">
+  <div id="galleryCounter">1/1</div>
   <button id="galleryClose" onclick="closeGallery()">×</button>
   <div id="gallerySlider" class="slider"></div>
 </div>
 
 <div id="chatBox">
- <div id="chatHeader">
-   <span style="font-weight:600;">🗨 Real-time Chat</span>
-   <button onclick="closeChat()" style="color:white;background:none;border:none;font-size:24px;">×</button>
- </div>
+ <div id="chatHeader"><span style="font-weight:600;">🗨 Chat</span><button onclick="closeChat()" style="color:white;background:none;border:none;font-size:24px;">×</button></div>
  <div id="chatMessages"></div>
  <div id="chatInputBox">
-   <input id="chatInput" placeholder="Write a message..." onkeypress="if(event.key==='Enter') sendMsg()">
+   <input id="chatInput" placeholder="Write..." onkeypress="if(event.key==='Enter') sendMsg()">
    <button id="sendBtn" onclick="sendMsg()">Send</button>
  </div>
 </div>
 
 <script>
-const firebaseConfig={
- apiKey:"AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
- authDomain:"earth-properties-c3c56.firebaseapp.com",
- projectId:"earth-properties-c3c56"
-};
+const firebaseConfig={ apiKey:"AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain:"earth-properties-c3c56.firebaseapp.com", projectId:"earth-properties-c3c56" };
 firebase.initializeApp(firebaseConfig);
-const db=firebase.firestore();
-const auth=firebase.auth();
+const db=firebase.firestore(); const auth=firebase.auth();
 
+// Global Variables
 let currentUser=null, currentChatId=null, chatUnsub=null;
+let zoomed=false, currentImg=null, startX=0, startY2=0, moveX=0, moveY=0, swipeStartY=0;
+let galleryImages = [], currentIndex = 0, lastTap = 0;
 
-// 🟢 AUTH STATE
 auth.onAuthStateChanged(async u=>{
- if(!u) {
-   window.location.href="login.html";
- } else {
-  currentUser = u;
-  document.getElementById('userBox').innerText = "👤 " + u.email;
-  const userDoc = await db.collection("users").doc(u.uid).get();
-  if(userDoc.exists && userDoc.data().photoURL) {
-      document.getElementById("profileBtn").src = userDoc.data().photoURL;
-  }
+ if(!u) window.location.href="login.html";
+ else {
+  currentUser=u; document.getElementById('userBox').innerText="👤 "+u.email;
+  const userDoc=await db.collection("users").doc(u.uid).get();
+  if(userDoc.exists && userDoc.data().photoURL) document.getElementById("profileBtn").src=userDoc.data().photoURL;
   loadProperties();
  }
 });
 
 function logout(){ auth.signOut(); }
 
-// 🖼️ GALLERY LOGIC
+// 🖼️ Updated Gallery JS
 function openGallery(imagesJson){
- const images = JSON.parse(decodeURIComponent(imagesJson));
- const s=document.getElementById("gallerySlider");
- s.innerHTML="";
- images.forEach(i=>{
-  const img=document.createElement("img");
-  img.src=i;
-  s.appendChild(img);
+ galleryImages = JSON.parse(decodeURIComponent(imagesJson));
+ const s = document.getElementById("gallerySlider");
+ const counter = document.getElementById("galleryCounter");
+
+ s.innerHTML = "";
+ currentIndex = 0;
+
+ galleryImages.forEach((i, index)=>{
+   const img = document.createElement("img");
+   img.src = i;
+   img.dataset.index = index;
+   s.appendChild(img);
  });
+
+ counter.innerText = `1 / ${galleryImages.length}`;
  document.getElementById("gallery").style.display="block";
- document.body.style.overflow = "hidden";
+ document.body.style.overflow="hidden";
 }
 
 function closeGallery(){
-  document.getElementById("gallery").style.display="none";
-  document.body.style.overflow = "auto";
+  document.getElementById("gallery").style.display="none"; document.body.style.overflow="auto";
+  zoomed=false; moveX=0; moveY=0;
+  if(currentImg) currentImg.style.transform="scale(1) translate(0px, 0px)";
 }
 
-// 👇 Swipe down to close gallery feature
-let startY = 0;
-document.getElementById("gallery").addEventListener("touchstart", e=>{
-  startY = e.touches[0].clientY;
-}, {passive: true});
+// 🔄 Live Counter Update
+document.getElementById("gallerySlider").addEventListener("scroll", ()=>{
+ const slider = document.getElementById("gallerySlider");
+ const index = Math.round(slider.scrollLeft / slider.clientWidth);
+ currentIndex = index;
+ document.getElementById("galleryCounter").innerText = `${index+1} / ${galleryImages.length}`;
+});
 
-document.getElementById("gallery").addEventListener("touchmove", e=>{
-  const currentY = e.touches[0].clientY;
-  const diff = currentY - startY;
-  if(diff > 120){ // swipe down threshold
-    closeGallery();
-  }
-}, {passive: true});
+// 👆 Double-Tap Zoom & Drag Logic
+document.getElementById("gallerySlider").addEventListener("touchend", e=>{
+ const now = Date.now();
+ const img = e.target;
+ if(img.tagName !== "IMG") return;
 
-
-// ❤️ FAVORITES LOGIC
-function getFavs(){return JSON.parse(localStorage.getItem("favs")||"[]");}
-function toggleFav(id){
- let f=getFavs();
- f=f.includes(id)?f.filter(x=>x!==id):[...f,id];
- localStorage.setItem("favs",JSON.stringify(f));
- loadProperties();
-}
-
-// 🏠 LOAD PROPERTIES
-async function loadProperties(){
- const list=document.getElementById("list");
- list.innerHTML='<div style="text-align:center; padding:50px;">🔄 Loading Listings...</div>';
- 
- try {
-   const favs=getFavs();
-   const qs=await db.collection("properties").orderBy("timestamp","desc").get();
-   list.innerHTML="";
-   
-   if(qs.empty) {
-     list.innerHTML = '<p class="center">No properties found. be the first!</p>';
-     return;
+ if(now - lastTap < 300){
+   // Double tap detected
+   if(zoomed){
+     img.style.transform = "scale(1) translate(0px, 0px)";
+     zoomed = false; moveX = 0; moveY = 0;
+   } else {
+     img.style.transform = "scale(2)";
+     zoomed = true; currentImg = img;
    }
-
-   qs.forEach(doc=>{
-    const d=doc.data();
-    const imgs=d.images||[];
-    const isFav = favs.includes(doc.id) ? "❤️" : "🤍";
-    const imgsJson = encodeURIComponent(JSON.stringify(imgs));
-    
-    let sliderHtml = `<div class="slider">` + 
-      imgs.map(i=>`<img src="${i}" onclick="openGallery('${imgsJson}')" loading="lazy">`).join("") + 
-      `</div>`;
-
-    list.innerHTML+=`
-     <div class="card">
-      <div class="fav-badge" onclick="toggleFav('${doc.id}')">${isFav}</div>
-      ${imgs.length ? sliderHtml : '<img src="https://via.placeholder.com/400x220?text=No+Image" style="width:100%; border-radius:12px;">'}
-      <h3 style="margin:10px 0 5px; font-size: 18px;">${d.title || 'Untitled'}</h3>
-      <p style="color:#666; font-size:14px; margin: 5px 0;">📍 ${d.location} | 💰 <strong>₹${d.price}</strong></p>
-      
-      <div class="action-row">
-        <a class="action call" href="tel:${d.phone}">📞<span>Call</span></a>
-        <a class="action whatsapp" href="https://wa.me/${d.phone}?text=Interested%20in%20${d.title}">💬<span>WA</span></a>
-        <button class="action chat" onclick="openChat('${doc.id}')">🗨<span>Chat</span></button>
-        <button class="action share" onclick="sharePost('${d.title}','${d.location}','${d.price}')">📤<span>Share</span></button>
-        <button class="action report" onclick="reportPost('${doc.id}')">🚩<span>Report</span></button>
-      </div>
-     </div>`;
-   });
- } catch(err) {
-   list.innerHTML = '<p class="center" style="color:red;">Error loading properties.</p>';
  }
+ lastTap = now;
+});
+
+document.getElementById("gallerySlider").addEventListener("touchstart", e=>{
+ swipeStartY = e.touches[0].clientY;
+ if(!zoomed || e.touches.length !== 1) return;
+ startX = e.touches[0].clientX - moveX;
+ startY2 = e.touches[0].clientY - moveY;
+},{passive:true});
+
+document.getElementById("gallerySlider").addEventListener("touchmove", e=>{
+ if(zoomed && e.touches.length === 1){
+   moveX = e.touches[0].clientX - startX;
+   moveY = e.touches[0].clientY - startY2;
+   currentImg.style.transform = `scale(2) translate(${moveX/2}px, ${moveY/2}px)`;
+ } else if(!zoomed) {
+   if((e.touches[0].clientY - swipeStartY) > 120) closeGallery();
+ }
+},{passive:true});
+
+// 🏠 LOAD PROPERTIES & AUX FUNCTIONS
+async function loadProperties(){
+ const list=document.getElementById("list"); list.innerHTML='<div class="center">🔄 Loading...</div>';
+ try {
+  const qs=await db.collection("properties").orderBy("timestamp","desc").get();
+  list.innerHTML="";
+  qs.forEach(doc=>{
+   const d=doc.data(); const imgs=d.images||[]; const imgsJson=encodeURIComponent(JSON.stringify(imgs));
+   let sliderHtml=`<div class="slider">`+imgs.map(i=>`<img src="${i}" onclick="openGallery('${imgsJson}')" loading="lazy">`).join("")+`</div>`;
+   list.innerHTML+=`
+    <div class="card">
+     <div class="fav-badge" onclick="toggleFav('${doc.id}')">${JSON.parse(localStorage.getItem("favs")||"[]").includes(doc.id)?"❤️":"🤍"}</div>
+     ${imgs.length?sliderHtml:''}
+     <h3>${d.title}</h3><p>📍 ${d.location} | 💰 ₹${d.price}</p>
+     <div class="action-row">
+       <a class="action call" href="tel:${d.phone}">📞<span>Call</span></a>
+       <a class="action whatsapp" href="https://wa.me/${d.phone}?text=Interested%20in%20${d.title}">💬<span>WA</span></a>
+       <button class="action chat" onclick="openChat('${doc.id}')">🗨<span>Chat</span></button>
+       <button class="action share" onclick="sharePost('${d.title}','${d.location}','${d.price}')">📤<span>Share</span></button>
+       <button class="action report" onclick="reportPost('${doc.id}')">🚩<span>Report</span></button>
+     </div>
+    </div>`;
+  });
+ } catch(e){ list.innerHTML="Error."; }
 }
 
-// 📤 FULL SHARE LOGIC
+function toggleFav(id){
+ let f=JSON.parse(localStorage.getItem("favs")||"[]");
+ f=f.includes(id)?f.filter(x=>x!==id):[...f,id];
+ localStorage.setItem("favs",JSON.stringify(f)); loadProperties();
+}
+
 function sharePost(t,l,p){
- const text=`🏠 *${t}*\n📍 Location: ${l}\n💰 Price: ₹${p}\n\nCheck this on *Earth Property* App!`;
- if(navigator.share) {
-   navigator.share({ title: t, text: text });
- } else {
-   navigator.clipboard.writeText(text).then(()=>alert("Details Copied to Clipboard!"));
- }
+ const text=`🏠 *${t}*\n📍 Location: ${l}\n💰 Price: ₹${p}\n\nEarth Property App`;
+ if(navigator.share) navigator.share({text}); else alert("Copied!");
 }
 
-// 🚩 REPORT LOGIC
-async function reportPost(id){    
- if(!confirm("Report this post for fake info?")) return;
- try{    
-  await db.collection("properties").doc(id).update({reports:firebase.firestore.FieldValue.increment(1)});    
-  alert("✅ Reported successfully. We will review it.");    
- }catch(e){alert("✅ Report sent.");}    
+async function reportPost(id){
+ if(confirm("Report?")){ await db.collection("properties").doc(id).update({reports:firebase.firestore.FieldValue.increment(1)}); alert("Reported."); }
 }
 
-// 🗨 CHAT SYSTEM LOGIC
-function openChat(id){
- currentChatId=id;
- document.getElementById('chatBox').style.display="block";
- loadMessages();
-}
-function closeChat(){
- document.getElementById('chatBox').style.display="none";
- if(chatUnsub) chatUnsub();
-}
+function openChat(id){ currentChatId=id; document.getElementById('chatBox').style.display="block"; loadMessages(); }
+function closeChat(){ document.getElementById('chatBox').style.display="none"; if(chatUnsub) chatUnsub(); }
 async function sendMsg(){
- const input=document.getElementById('chatInput');
- const text=input.value.trim();
- if(!text || !currentUser) return;
- await db.collection("chats").doc(currentChatId).collection("messages").add({
-  text: text, 
-  time: Date.now(), 
-  user: currentUser.email
- });
+ const input=document.getElementById('chatInput'); const text=input.value.trim();
+ if(text) await db.collection("chats").doc(currentChatId).collection("messages").add({text, time:Date.now(), user:currentUser.email});
  input.value="";
 }
 function loadMessages(){
- const mDiv=document.getElementById('chatMessages');
- mDiv.innerHTML='<div style="text-align:center; color:#666;">🔄 Connecting to chat...</div>';
- 
- chatUnsub = db.collection("chats").doc(currentChatId).collection("messages").orderBy("time")
- .onSnapshot(s=>{
-  mDiv.innerHTML="";
-  if(s.empty) mDiv.innerHTML = '<div style="text-align:center; color:#999;">No messages yet. Say Hi!</div>';
-  s.forEach(d=> {
-    const msg = document.createElement('div');
-    msg.className="msg"; 
-    msg.style.alignSelf = d.data().user === currentUser.email ? "flex-end" : "flex-start";
-    msg.innerText=d.data().text;
-    mDiv.appendChild(msg);
-  });
-  mDiv.scrollTop = mDiv.scrollHeight;
+ const mDiv=document.getElementById('chatMessages'); mDiv.innerHTML="Connecting...";
+ chatUnsub=db.collection("chats").doc(currentChatId).collection("messages").orderBy("time").onSnapshot(s=>{
+  mDiv.innerHTML=""; s.forEach(d=>{ const msg=document.createElement('div'); msg.className="msg"; msg.innerText=d.data().text; mDiv.appendChild(msg); });
+  mDiv.scrollTop=mDiv.scrollHeight;
  });
 }
 </script>
