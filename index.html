@@ -4,227 +4,177 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Earth Property</title>
-
 <link rel="manifest" href="/earth-property/manifest.json">
 <meta name="theme-color" content="#2e7d32">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 <style>
-body{margin:0;font-family:system-ui,Arial;background:#f2f2f2; padding-bottom: 20px;}
-header{background:#2e7d32;color:white;padding:15px;display:flex;align-items:center;justify-content:space-between; position: sticky; top:0; z-index: 100;}
-#userBox{font-size:12px;opacity:.9;margin:0;}
-.profile-img{width:40px;height:40px;border-radius:50%;cursor:pointer;border:2px solid rgba(255,255,255,0.3); object-fit: cover;}
+/* 🎨 UI Styles */
+body{margin:0;font-family:system-ui,Arial;background:#f2f2f2;padding-bottom:20px}
+header{background:#2e7d32;color:white;padding:15px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+#userBox{font-size:12px;opacity:.9;margin:0}
+.profile-img{width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,255,255,.3);object-fit:cover;cursor:pointer}
+.card{background:white;margin:12px;padding:12px;border-radius:14px;box-shadow:0 4px 12px rgba(0,0,0,.08);position:relative}
+.slider{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+.slider::-webkit-scrollbar{display:none}
+.slider img{min-width:100%;scroll-snap-align:center;border-radius:12px;height:220px;object-fit:cover;cursor:pointer;background:#eee}
 
-.card{position:relative;background:white;margin:12px;padding:12px;border-radius:14px;box-shadow:0 4px 12px rgba(0,0,0,0.08);}
-.center{text-align:center;margin:10px;}
+/* 🖼️ Premium Gallery Styles */
+#gallery{position:fixed;inset:0;background:black;display:none;z-index:9999;overflow:hidden}
+#gallerySlider{display:flex;height:100vh;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+#gallerySlider img{min-width:100%;height:100vh;object-fit:contain;touch-action:none;transition:transform 0.1s ease-out;cursor:zoom-in}
+#galleryClose{position:absolute;top:20px;right:20px;background:#2e7d32;color:white;border:none;width:44px;height:44px;border-radius:50%;font-size:28px;z-index:10001;box-shadow:0 4px 10px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center}
+#galleryCounter{position:absolute;top:20px;left:20px;color:white;background:rgba(0,0,0,.6);padding:6px 14px;border-radius:20px;font-size:14px;z-index:10001;font-weight:600}
 
-/* 📸 Slider & Gallery */
-.slider{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:8px; scrollbar-width: none; margin-bottom: 10px;}
-.slider::-webkit-scrollbar { display: none; }
-.slider img{min-width:100%;scroll-snap-align:center;border-radius:12px;cursor:pointer;height:220px;object-fit:cover; background: #eee;}
+/* ⚡ Action Buttons */
+.action-row{display:flex;justify-content:space-between;gap:4px;margin-top:12px}
+.action{flex:1 1 20%;min-width:0;height:56px;border-radius:14px;background:#f5f5f5;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;text-decoration:none;color:#444}
+.action span{margin-top:2px;font-weight:600;white-space:nowrap}
+.fav-badge{position:absolute;top:20px;right:20px;background:white;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25);font-size:18px;z-index:10}
+.call{background:#e3f2fd} .whatsapp{background:#e8f5e9} .chat{background:#f3e5f5} .share{background:#e0f2f1} .report{background:#ffebee}
 
-#gallery{position:fixed;inset:0;background:black;display:none;z-index:9999; overflow: hidden;}
-#gallerySlider img{
-  min-width:100%; height:100vh; object-fit:contain;
-  touch-action:none; transition: transform 0.2s ease; cursor: zoom-in;
-}
-
-#galleryCounter{
- position:absolute; top:25px; left:20px; background:rgba(0,0,0,0.6); 
- color:white; padding:6px 14px; border-radius:20px; font-size:14px; z-index:10000; font-weight:600;
-}
-
-#galleryClose{
- position:absolute; top:25px; right:20px; background:#2e7d32; 
- color:white; font-size:28px; border:none; width:44px; height:44px; 
- border-radius:50%; z-index:10000; box-shadow:0 4px 10px rgba(0,0,0,0.5);
- display:flex; align-items:center; justify-content:center;
-}
-
-.fav-badge{position:absolute;top:20px;right:20px;background:white;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25);font-size:18px;cursor:pointer;z-index:10;}
-
-/* ⚡ Updated Action Buttons (Equal Width Fix) */
-.action-row{display:flex;justify-content:space-between;gap:4px;margin-top:12px;}
-.action{
-  flex: 1 1 20%; /* 🔥 Har button 20% space lega */
-  min-width: 0;
-  height:56px; border:none; border-radius:14px; font-size:10px; color:#444; 
-  cursor:pointer; display:flex; flex-direction:column; align-items:center; 
-  justify-content:center; background:#f5f5f5; text-decoration:none;
-}
-.action span{margin-top:2px; font-weight: 600; white-space: nowrap;}
-.call{background:#e3f2fd;} .whatsapp{background:#e8f5e9;} .chat{background:#f3e5f5;} .share{background:#e0f2f1;} .report{background:#ffebee;}
-
-/* 💬 Chat */
-#chatBox{position:fixed;bottom:0;left:0;right:0;background:white;border-top:3px solid #2e7d32;display:none;z-index:1000;border-radius:15px 15px 0 0;}
-#chatHeader{background:#2e7d32;color:white;padding:12px;display:flex;justify-content:space-between;align-items:center;}
-#chatMessages{max-height:280px;overflow:auto;padding:12px; background: #f9f9f9;}
-.msg{padding:8px 12px;background:#e0f2f1;border-radius:12px;margin:5px 0;max-width:80%;font-size:14px;}
-#chatInputBox{display:flex;border-top:1px solid #ddd; padding: 5px;}
-#chatInput{flex:1;border:none;padding:12px; outline: none;}
-#sendBtn{background:#2e7d32;color:white;border:none;padding:0 20px; border-radius: 10px; font-weight: 600;}
+/* 💬 Chat Box */
+#chatBox{position:fixed;bottom:0;left:0;right:0;background:white;display:none;z-index:1000;border-top:3px solid #2e7d32;border-radius:15px 15px 0 0}
+#chatHeader{background:#2e7d32;color:white;padding:12px;display:flex;justify-content:space-between}
+#chatMessages{max-height:280px;overflow:auto;padding:12px;background:#f9f9f9}
+.msg{padding:8px 12px;background:#e0f2f1;border-radius:12px;margin:5px 0;max-width:80%;font-size:14px}
 </style>
-
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
 <header>
-  <div><h2 style="margin:0; font-size: 20px;">Earth Property</h2><p id="userBox">Connecting...</p></div>
-  <img id="profileBtn" src="https://via.placeholder.com/40" class="profile-img" onclick="location.href='profile.html'">
+  <div><h3 style="margin:0">Earth Property</h3><p id="userBox">Connecting...</p></div>
+  <img id="profileBtn" class="profile-img" src="https://via.placeholder.com/40" onclick="location.href='profile.html'">
 </header>
 
-<div class="center">
-  <a href="post.html" style="background:#2e7d32;color:white;padding:12px 24px;border-radius:25px;text-decoration:none; display:inline-block; font-weight:600;">➕ Post Property</a>
-  <button onclick="logout()" style="background:#f44336;color:white;border:none;padding:12px 24px;border-radius:25px;margin-left:8px; font-weight:600;">Logout</button>
+<div class="card" style="text-align:center; padding:15px">
+  <a href="post.html" style="background:#2e7d32;color:white;padding:10px 20px;border-radius:25px;text-decoration:none;font-weight:600">➕ Post Property</a>
 </div>
 
 <div id="list"></div>
 
 <div id="gallery">
-  <div id="galleryCounter">1/1</div>
-  <button id="galleryClose" onclick="closeGallery()">×</button>
-  <div id="gallerySlider" class="slider"></div>
+ <div id="galleryCounter">1/1</div>
+ <button id="galleryClose" onclick="closeGallery()">×</button>
+ <div id="gallerySlider"></div>
 </div>
 
 <div id="chatBox">
- <div id="chatHeader"><span style="font-weight:600;">🗨 Chat</span><button onclick="closeChat()" style="color:white;background:none;border:none;font-size:24px;">×</button></div>
+ <div id="chatHeader"><span style="font-weight:600">🗨 Chat</span><button onclick="closeChat()" style="color:white;background:none;border:none;font-size:24px">×</button></div>
  <div id="chatMessages"></div>
- <div id="chatInputBox">
-   <input id="chatInput" placeholder="Write..." onkeypress="if(event.key==='Enter') sendMsg()">
-   <button id="sendBtn" onclick="sendMsg()">Send</button>
- </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+
 <script>
-const firebaseConfig={ apiKey:"AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain:"earth-properties-c3c56.firebaseapp.com", projectId:"earth-properties-c3c56" };
-firebase.initializeApp(firebaseConfig);
+firebase.initializeApp({
+ apiKey:"AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
+ authDomain:"earth-properties-c3c56.firebaseapp.com",
+ projectId:"earth-properties-c3c56"
+});
 const db=firebase.firestore(); const auth=firebase.auth();
 
-let currentUser=null, currentChatId=null, chatUnsub=null;
-let zoomed=false, currentImg=null, startX=0, startY2=0, moveX=0, moveY=0, swipeStartY=0;
-let galleryImages = [], currentIndex = 0, lastTap = 0;
+let currentUser=null, currentChatId=null, galleryImgs=[], currentIndex=0;
+let zoom=1, lastTap=0, startDist=0, moveX=0, moveY=0, startX=0, startY=0, swipeY=0;
 
+// 🟢 AUTH
 auth.onAuthStateChanged(async u=>{
- if(!u) window.location.href="login.html";
+ if(!u) location.href="login.html";
  else {
-  currentUser=u; document.getElementById('userBox').innerText="👤 "+u.email;
-  const userDoc=await db.collection("users").doc(u.uid).get();
-  if(userDoc.exists && userDoc.data().photoURL) document.getElementById("profileBtn").src=userDoc.data().photoURL;
+  currentUser=u; document.getElementById("userBox").innerText="👤 "+u.email;
   loadProperties();
  }
 });
 
-function logout(){ auth.signOut(); }
-
-function openGallery(imagesJson){
- galleryImages = JSON.parse(decodeURIComponent(imagesJson));
- const s = document.getElementById("gallerySlider");
- const counter = document.getElementById("galleryCounter");
- s.innerHTML = ""; currentIndex = 0;
- galleryImages.forEach((i, index)=>{
-   const img = document.createElement("img");
-   img.src = i; img.dataset.index = index; s.appendChild(img);
+// 🖼️ GALLERY ENGINE
+function openGallery(json){
+ galleryImgs=JSON.parse(decodeURIComponent(json));
+ const g=document.getElementById("gallerySlider");
+ g.innerHTML=""; currentIndex=0;
+ galleryImgs.forEach((src, i)=>{
+  const img=document.createElement("img");
+  img.src=src; img.dataset.index=i;
+  g.appendChild(img);
  });
- counter.innerText = `1 / ${galleryImages.length}`;
+ document.getElementById("galleryCounter").innerText=`1 / ${galleryImgs.length}`;
  document.getElementById("gallery").style.display="block";
  document.body.style.overflow="hidden";
 }
 
 function closeGallery(){
-  document.getElementById("gallery").style.display="none"; document.body.style.overflow="auto";
-  zoomed=false; moveX=0; moveY=0;
-  if(currentImg) currentImg.style.transform="scale(1) translate(0px, 0px)";
+ document.getElementById("gallery").style.display="none";
+ document.body.style.overflow="auto";
+ zoom=1; moveX=0; moveY=0;
 }
 
-document.getElementById("gallerySlider").addEventListener("scroll", ()=>{
- const slider = document.getElementById("gallerySlider");
- const index = Math.round(slider.scrollLeft / slider.clientWidth);
- document.getElementById("galleryCounter").innerText = `${index+1} / ${galleryImages.length}`;
+// 🔄 Update Counter
+document.getElementById("gallerySlider").addEventListener("scroll", e=>{
+ const idx = Math.round(e.target.scrollLeft / e.target.clientWidth);
+ document.getElementById("galleryCounter").innerText = `${idx+1} / ${galleryImgs.length}`;
 });
 
+// 🖐️ TOUCH LOGIC (Pinch, Drag, Double-Tap, Swipe-Down)
+document.getElementById("gallerySlider").addEventListener("touchstart", e=>{
+ swipeY = e.touches[0].clientY;
+ if(e.touches.length==2){
+  startDist = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+ } else {
+  startX = e.touches[0].clientX - moveX;
+  startY = e.touches[0].clientY - moveY;
+ }
+},{passive:true});
+
+document.getElementById("gallerySlider").addEventListener("touchmove", e=>{
+ const img = e.target;
+ if(e.touches.length==2){
+  const dist = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+  zoom = Math.min(Math.max(1, dist/startDist), 4);
+  img.style.transform = `scale(${zoom}) translate(${moveX}px, ${moveY}px)`;
+ } else if(zoom > 1){
+  moveX = (e.touches[0].clientX - startX);
+  moveY = (e.touches[0].clientY - startY);
+  img.style.transform = `scale(${zoom}) translate(${moveX/zoom}px, ${moveY/zoom}px)`;
+ } else {
+  if((e.touches[0].clientY - swipeY) > 120) closeGallery();
+ }
+},{passive:true});
+
 document.getElementById("gallerySlider").addEventListener("touchend", e=>{
- const now = Date.now(); const img = e.target;
- if(img.tagName !== "IMG") return;
- if(now - lastTap < 300){
-   if(zoomed){ img.style.transform = "scale(1) translate(0px, 0px)"; zoomed = false; moveX = 0; moveY = 0; }
-   else { img.style.transform = "scale(2)"; zoomed = true; currentImg = img; }
+ const now = Date.now();
+ if(now - lastTap < 300 && e.target.tagName=="IMG"){
+  zoom = (zoom === 1) ? 2 : 1;
+  moveX=0; moveY=0;
+  e.target.style.transform = `scale(${zoom})`;
  }
  lastTap = now;
 });
 
-document.getElementById("gallerySlider").addEventListener("touchstart", e=>{
- swipeStartY = e.touches[0].clientY;
- if(!zoomed || e.touches.length !== 1) return;
- startX = e.touches[0].clientX - moveX; startY2 = e.touches[0].clientY - moveY;
-},{passive:true});
-
-document.getElementById("gallerySlider").addEventListener("touchmove", e=>{
- if(zoomed && e.touches.length === 1){
-   moveX = e.touches[0].clientX - startX; moveY = e.touches[0].clientY - startY2;
-   currentImg.style.transform = `scale(2) translate(${moveX/2}px, ${moveY/2}px)`;
- } else if(!zoomed) {
-   if((e.touches[0].clientY - swipeStartY) > 120) closeGallery();
- }
-},{passive:true});
-
+// 🏠 LOAD & ACTIONS
 async function loadProperties(){
- const list=document.getElementById("list"); list.innerHTML='<div class="center">🔄 Loading...</div>';
- try {
-  const qs=await db.collection("properties").orderBy("timestamp","desc").get();
-  list.innerHTML="";
-  qs.forEach(doc=>{
-   const d=doc.data(); const imgs=d.images||[]; const imgsJson=encodeURIComponent(JSON.stringify(imgs));
-   let sliderHtml=`<div class="slider">`+imgs.map(i=>`<img src="${i}" onclick="openGallery('${imgsJson}')" loading="lazy">`).join("")+`</div>`;
-   list.innerHTML+=`
-    <div class="card">
-     <div class="fav-badge" onclick="toggleFav('${doc.id}')">${JSON.parse(localStorage.getItem("favs")||"[]").includes(doc.id)?"❤️":"🤍"}</div>
-     ${imgs.length?sliderHtml:''}
-     <h3>${d.title}</h3><p>📍 ${d.location} | 💰 ₹${d.price}</p>
-     <div class="action-row">
-       <a class="action call" href="tel:${d.phone}">📞<span>Call</span></a>
-       <a class="action whatsapp" href="https://wa.me/${d.phone}?text=Interested%20in%20${d.title}">💬<span>Whatsapp</span></a>
-       <button class="action chat" onclick="openChat('${doc.id}')">🗨<span>Chat</span></button>
-       <button class="action share" onclick="sharePost('${d.title}','${d.location}','${d.price}')">📤<span>Share</span></button>
-       <button class="action report" onclick="reportPost('${doc.id}')">🚩<span>Report</span></button>
-     </div>
-    </div>`;
-  });
- } catch(e){ list.innerHTML="Error."; }
-}
-
-function toggleFav(id){
- let f=JSON.parse(localStorage.getItem("favs")||"[]");
- f=f.includes(id)?f.filter(x=>x!==id):[...f,id];
- localStorage.setItem("favs",JSON.stringify(f)); loadProperties();
-}
-
-function sharePost(t,l,p){
- const text=`🏠 *${t}*\n📍 Location: ${l}\n💰 Price: ₹${p}\n\nEarth Property App`;
- if(navigator.share) navigator.share({text}); else alert("Details Copied!");
-}
-
-async function reportPost(id){
- if(confirm("Report this post?")){ await db.collection("properties").doc(id).update({reports:firebase.firestore.FieldValue.increment(1)}); alert("Reported."); }
-}
-
-function openChat(id){ currentChatId=id; document.getElementById('chatBox').style.display="block"; loadMessages(); }
-function closeChat(){ document.getElementById('chatBox').style.display="none"; if(chatUnsub) chatUnsub(); }
-async function sendMsg(){
- const input=document.getElementById('chatInput'); const text=input.value.trim();
- if(text) await db.collection("chats").doc(currentChatId).collection("messages").add({text, time:Date.now(), user:currentUser.email});
- input.value="";
-}
-function loadMessages(){
- const mDiv=document.getElementById('chatMessages'); mDiv.innerHTML="Connecting...";
- chatUnsub=db.collection("chats").doc(currentChatId).collection("messages").orderBy("time").onSnapshot(s=>{
-  mDiv.innerHTML=""; s.forEach(d=>{ const msg=document.createElement('div'); msg.className="msg"; msg.innerText=d.data().text; mDiv.appendChild(msg); });
-  mDiv.scrollTop=mDiv.scrollHeight;
+ const qs=await db.collection("properties").orderBy("timestamp","desc").get();
+ const list=document.getElementById("list"); list.innerHTML="";
+ qs.forEach(doc=>{
+  const d=doc.data(); const imgs=d.images||[]; const json=encodeURIComponent(JSON.stringify(imgs));
+  list.innerHTML+=`
+  <div class="card">
+   <div class="fav-badge" onclick="toggleFav('${doc.id}')">🤍</div>
+   <div class="slider">${imgs.map(i=>`<img src="${i}" onclick="openGallery('${json}')">`).join("")}</div>
+   <h3>${d.title}</h3><p>📍 ${d.location} | 💰 ₹${d.price}</p>
+   <div class="action-row">
+    <a class="action call" href="tel:${d.phone}">📞<span>Call</span></a>
+    <a class="action whatsapp" href="https://wa.me/${d.phone}?text=Hi">💬<span>WhatsApp</span></a>
+    <button class="action chat" onclick="openChat('${doc.id}')">🗨<span>Chat</span></button>
+    <button class="action share" onclick="window.navigator.share({title:'${d.title}',text:'Check this'})">📤<span>Share</span></button>
+    <button class="action report" onclick="alert('Reported')">🚩<span>Report</span></button>
+   </div>
+  </div>`;
  });
 }
+
+function openChat(id){ document.getElementById("chatBox").style.display="block"; }
+function closeChat(){ document.getElementById("chatBox").style.display="none"; }
+function toggleFav(id){ alert("Added to Favorites!"); }
 </script>
 </body>
 </html>
