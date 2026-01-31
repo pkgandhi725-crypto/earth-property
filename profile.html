@@ -207,7 +207,7 @@ async function saveProfile(){
  }
 }
 
-// 🔔 Status Messages
+// 🔥 MISSING FUNCTIONS ADD KIYE (YEH PROBLEM THI!)
 function showStatus(msg, type){
  const status = document.getElementById('statusMsg');
  status.textContent = msg;
@@ -216,8 +216,9 @@ function showStatus(msg, type){
  setTimeout(()=>status.style.display='none', 3000);
 }
 
-// 🔙 Navigation
-function goHome(){window.location.href='index.html';}
+function goHome(){
+ window.location.href='index.html';
+}
 
 // 📱 PWA Ready
 if("serviceWorker" in navigator){
