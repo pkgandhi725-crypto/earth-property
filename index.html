@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Earth Property - Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Earth Property - Pro Gallery</title>
 <link rel="manifest" href="/earth-property/manifest.json">
 <meta name="theme-color" content="#2e7d32">
 
@@ -20,41 +20,50 @@ header{background:#2e7d32;color:white;padding:15px;display:flex;justify-content:
 .slider::-webkit-scrollbar{display:none}
 .slider img{min-width:100%;scroll-snap-align:center;border-radius:12px;height:230px;object-fit:cover;cursor:pointer;background:#eee}
 
-/* 🖼️ 🔥 PRO INSTAGRAM-STYLE GALLERY ENGINE */
+/* 🖼️ 🔥 INSTAGRAM-STYLE CONTAINER GALLERY */
 #gallery{position:fixed;inset:0;background:black;display:none;z-index:9999;overflow:hidden}
-#gallerySlider{
-  display:flex;
-  height:100vh;
-  overflow-x:auto;
-  scroll-snap-type:x mandatory;
-  scrollbar-width:none;
-  scroll-behavior:smooth;
+
+#gallerySlider {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+  touch-action: pan-x; /* 🔥 Zoom ke baad horizontal swipe lock protection */
 }
 #gallerySlider::-webkit-scrollbar{display:none;}
 
-#gallerySlider img{
-  flex: 0 0 100%;
-  width: 100%;
-  height: 100%;
+.gallery-item {
+  flex: 0 0 100vw;
+  width: 100vw;
+  height: 100vh;
   scroll-snap-align: center;
   scroll-snap-stop: always;
-  object-fit: contain;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: black;
-  touch-action: pan-x pan-y;
-  transition: transform 0.25s ease;
-  cursor: zoom-in;
+  overflow: hidden; /* 🔥 Image container se bahar nahi niklegi (Zoom Lock) */
 }
 
-#galleryCounter{position:absolute;top:25px;left:20px;color:white;background:rgba(0,0,0,.6);padding:6px 14px;border-radius:20px;font-size:14px;z-index:10001;font-weight:600}
+.gallery-item img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform .25s ease;
+  touch-action: none;
+}
+
+#galleryCounter{position:absolute;top:25px;left:20px;color:white;background:rgba(0,0,0,.6);padding:6px 14px;border-radius:20px;z-index:10001;font-weight:600}
 #galleryClose{position:absolute;top:25px;right:20px;background:#2e7d32;color:white;border:none;width:44px;height:44px;border-radius:50%;font-size:28px;z-index:10001;display:flex;align-items:center;justify-content:center;cursor:pointer}
 
-/* ⚡ Action Buttons (Symmetrical 20% Width) */
+/* ⚡ Actions */
 .action-row{display:flex;justify-content:space-between;gap:4px;margin-top:12px}
-.action{flex:1 1 20%;min-width:0;height:56px;border-radius:14px;background:#f5f5f5;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;text-decoration:none;color:#444;cursor:pointer;transition:0.2s}
+.action{flex:1 1 20%;min-width:0;height:56px;border-radius:14px;background:#f5f5f5;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;text-decoration:none;color:#444;transition: 0.2s;}
 .action:active{background:#e0e0e0;transform:scale(0.95);}
 .action span{margin-top:2px;font-weight:600;white-space:nowrap}
-.fav-badge{position:absolute;top:20px;right:20px;background:white;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25);font-size:18px;z-index:10;cursor:pointer}
-
 .call{background:#e3f2fd} .whatsapp{background:#e8f5e9} .chat{background:#f3e5f5} .share{background:#e0f2f1} .report{background:#ffebee}
 </style>
 </head>
@@ -69,7 +78,7 @@ header{background:#2e7d32;color:white;padding:15px;display:flex;justify-content:
   <a href="post.html" style="background:#2e7d32;color:white;padding:12px 24px;border-radius:25px;text-decoration:none;font-weight:600;display:inline-block;box-shadow:0 4px 10px rgba(46,125,50,0.3);">➕ Post Property</a>
 </div>
 
-<div id="list"><div style="text-align:center; padding:50px; color:#666;">🔄 Syncing Properties...</div></div>
+<div id="list"></div>
 
 <div id="gallery">
  <div id="galleryCounter">1/1</div>
@@ -89,57 +98,39 @@ firebase.initializeApp({
 });
 const db=firebase.firestore(); const auth=firebase.auth();
 
-let currentUser=null, galleryImgs=[], zoom=1, lastTap=0, moveX=0, moveY=0, startX=0, startY=0, swipeY=0;
+let currentUser=null, galleryImgs=[], zoom=1, activeImg=null, lastTap=0;
 
-// 🔥 AUTH + PROFILE + CONNECTING FIX
-auth.onAuthStateChanged(async u => {
-  if (!u) {
-    location.href = "login.html";
-    return;
-  }
-
-  currentUser = u;
-
-  const userBox = document.getElementById("userBox");
+// 🟢 AUTH & PROFILE (No more "Connecting..." bug)
+auth.onAuthStateChanged(async u=>{
+ if(!u) location.href="login.html";
+ else {
+  currentUser=u; document.getElementById("userBox").innerText="👤 "+u.email;
   const profileBtn = document.getElementById("profileBtn");
-
-  userBox.innerText = "🔄 Connecting...";
-
   try {
     const userDoc = await db.collection("users").doc(u.uid).get();
-
-    if (userDoc.exists && userDoc.data().photoURL) {
-      profileBtn.src = userDoc.data().photoURL;
-    } 
-    else if (u.photoURL) {
-      profileBtn.src = u.photoURL;
-    } 
-    else {
-      profileBtn.src = "https://via.placeholder.com/40/2e7d32/ffffff?text=👤";
-    }
-
-    userBox.innerText = "👤 " + (u.email || "User");
-
-  } catch (e) {
-    console.error("Profile load error:", e);
-    userBox.innerText = "👤 " + (u.email || "User");
-    profileBtn.src = "https://via.placeholder.com/40/2e7d32/ffffff?text=👤";
-  }
-
-  // 🔥 VERY IMPORTANT
+    if(userDoc.exists && userDoc.data().photoURL) profileBtn.src = userDoc.data().photoURL;
+    else if(u.photoURL) profileBtn.src = u.photoURL;
+  } catch(e){ console.log("Profile Sync error"); }
   loadProperties();
+ }
 });
 
-// 🖼️ GALLERY ENGINE
+// 🖼️ ① NEW openGallery() STRUCTURE
 function openGallery(json){
- galleryImgs=JSON.parse(decodeURIComponent(json));
- const g=document.getElementById("gallerySlider");
- g.innerHTML="";
+ galleryImgs = JSON.parse(decodeURIComponent(json));
+ const g = document.getElementById("gallerySlider");
+ g.innerHTML = "";
+
  galleryImgs.forEach(src=>{
-  const img=document.createElement("img");
-  img.src=src; g.appendChild(img);
+   const frame = document.createElement("div");
+   frame.className = "gallery-item";
+   const img = document.createElement("img");
+   img.src = src;
+   frame.appendChild(img);
+   g.appendChild(frame);
  });
- document.getElementById("galleryCounter").innerText=`1 / ${galleryImgs.length}`;
+
+ document.getElementById("galleryCounter").innerText = `1 / ${galleryImgs.length}`;
  document.getElementById("gallery").style.display="block";
  document.body.style.overflow="hidden";
 }
@@ -147,75 +138,75 @@ function openGallery(json){
 function closeGallery(){
  document.getElementById("gallery").style.display="none";
  document.body.style.overflow="auto";
- zoom=1; moveX=0; moveY=0;
+ zoom=1; activeImg=null;
+ document.querySelectorAll('.gallery-item img').forEach(i => i.style.transform = 'scale(1)');
 }
 
-document.getElementById("gallerySlider").addEventListener("scroll", e=>{
- const idx = Math.round(e.target.scrollLeft / e.target.clientWidth);
- document.getElementById("galleryCounter").innerText = `${idx+1} / ${galleryImgs.length}`;
+// 🔄 ② FINAL ZOOM LOGIC (Your Fix)
+const slider = document.getElementById("gallerySlider");
+
+slider.addEventListener("touchstart", e=>{
+  if(e.target.tagName==="IMG") activeImg=e.target;
 });
 
-document.getElementById("gallerySlider").addEventListener("touchstart", e=>{
- swipeY = e.touches[0].clientY;
- if(zoom > 1){
-  startX = e.touches[0].clientX - moveX; startY = e.touches[0].clientY - moveY;
- }
-},{passive:true});
+slider.addEventListener("touchmove", e=>{
+  if(!activeImg) return;
 
-document.getElementById("gallerySlider").addEventListener("touchmove", e=>{
- if(zoom > 1){
-  moveX = (e.touches[0].clientX - startX); moveY = (e.touches[0].clientY - startY);
-  e.target.style.transform = `scale(${zoom}) translate(${moveX/zoom}px, ${moveY/zoom}px)`;
- } else {
-  if((e.touches[0].clientY - swipeY) > 120) closeGallery();
- }
-},{passive:true});
+  if(e.touches.length===2){
+    e.preventDefault();
+    const d=Math.hypot(
+      e.touches[0].clientX-e.touches[1].clientX,
+      e.touches[0].clientY-e.touches[1].clientY
+    );
+    // Start zoom from 1, and map the distance to scale
+    zoom=Math.min(Math.max(1, d/180), 4); 
+    activeImg.style.transform=`scale(${zoom})`;
+  }
+},{passive:false});
 
-document.getElementById("gallerySlider").addEventListener("touchend", e=>{
- const now = Date.now();
- if(now - lastTap < 300 && e.target.tagName=="IMG"){
-  zoom = (zoom === 1) ? 2.5 : 1;
-  moveX=0; moveY=0;
-  e.target.style.transform = `scale(${zoom})`;
- }
- lastTap = now;
+slider.addEventListener("touchend", ()=>{
+  if(zoom===1) activeImg=null;
 });
 
-// 🏠 PROPERTY LISTING
+// Double Tap Zoom
+slider.addEventListener("touchend", e=>{
+  const now = Date.now();
+  if(now - lastTap < 300 && e.target.tagName === 'IMG'){
+    zoom = (zoom === 1) ? 2.5 : 1;
+    e.target.style.transform = `scale(${zoom})`;
+  }
+  lastTap = now;
+});
+
+slider.addEventListener("scroll", e=>{
+  const idx = Math.round(e.target.scrollLeft / window.innerWidth);
+  document.getElementById("galleryCounter").innerText = `${idx+1} / ${galleryImgs.length}`;
+});
+
+// 🏠 LOAD PROPERTIES
 async function loadProperties(){
- const list=document.getElementById("list");
  try {
-  const qs=await db.collection("properties").orderBy("timestamp","desc").get();
-  if(qs.empty){ list.innerHTML="<center style='padding:50px'>No properties posted yet.</center>"; return; }
-  list.innerHTML="";
+  const qs = await db.collection("properties").orderBy("timestamp","desc").get();
+  const list = document.getElementById("list");
+  list.innerHTML = "";
   qs.forEach(doc=>{
    const d=doc.data(); const imgs=d.images||[]; const json=encodeURIComponent(JSON.stringify(imgs));
    list.innerHTML+=`
     <div class="card">
-     <div class="fav-badge" onclick="toggleFav('${doc.id}')">🤍</div>
      <div class="slider">${imgs.map(i=>`<img src="${i}" onclick="openGallery('${json}')">`).join("")}</div>
      <h3 style="margin:10px 0 5px">${d.title}</h3>
      <p style="margin:0; color:#666; font-size:13px">📍 ${d.location} | 💰 ₹${d.price}</p>
      <div class="action-row">
       <a class="action call" href="tel:${d.phone}">📞<span>Call</span></a>
       <a class="action whatsapp" href="https://wa.me/${d.phone}?text=Interested%20in%20${d.title}">💬<span>WhatsApp</span></a>
-      <a class="action chat" href="chat.html?id=${doc.id}&title=${encodeURIComponent(d.title)}">🗨<span>Chat</span></a>
+      <a class="action chat" href="chat.html?id=${doc.id}">🗨<span>Chat</span></a>
       <button class="action share" onclick="navigator.share({title:'${d.title}',url:window.location.href})">📤<span>Share</span></button>
-      <button class="action report" onclick="reportPost('${doc.id}')">🚩<span>Report</span></button>
+      <button class="action report">🚩<span>Report</span></button>
      </div>
     </div>`;
   });
- } catch(e){ list.innerHTML="<center>Load error.</center>"; }
+ } catch(e){ document.getElementById("list").innerHTML="Error loading properties."; }
 }
-
-async function reportPost(id){
- if(confirm("Report this post?")){
-  await db.collection("properties").doc(id).update({reports:firebase.firestore.FieldValue.increment(1)});
-  alert("Reported.");
- }
-}
-
-function toggleFav(id){ alert("Added to Favorites!"); }
 </script>
 </body>
 </html>
