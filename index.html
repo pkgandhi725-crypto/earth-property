@@ -9,6 +9,22 @@
 body{margin:0;font-family:system-ui,Arial;background:#f2f2f2;padding-bottom:20px;-webkit-tap-highlight-color:transparent;}
 header{background:#2e7d32;color:white;padding:15px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
 #userBox{font-size:12px;opacity:.9;margin:0}
+
+/* 🟢 + POST BUTTON STYLE */
+#addBtn {
+    background: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 700;
+    color: #2e7d32;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+    font-size: 14px;
+    transition: 0.2s;
+}
+#addBtn:active { transform: scale(0.95); }
+
 .profile-img{width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,255,255,.3);object-fit:cover;cursor:pointer}
 .card{background:white;margin:12px;padding:12px;border-radius:14px;box-shadow:0 4px 12px rgba(0,0,0,.08);position:relative;animation:fadeIn 0.5s ease;}
 @keyframes fadeIn {from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
@@ -20,27 +36,12 @@ header{background:#2e7d32;color:white;padding:15px;display:flex;justify-content:
 .spinner { width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid #2e7d32; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-/* 🖼️ FIXED GALLERY UI */
+/* 🖼️ GALLERY UI */
 #gallery{position:fixed;inset:0;background:black;display:none;z-index:9999;overflow:hidden}
-#gallerySlider { 
-    display: flex; height: 100vh; width: 100vw; 
-    overflow-x: auto; scroll-snap-type: x mandatory; 
-    scrollbar-width: none; touch-action: pan-x pan-y; 
-}
+#gallerySlider { display: flex; height: 100vh; width: 100vw; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; touch-action: pan-x pan-y; }
 #gallerySlider::-webkit-scrollbar{display:none}
-
-.gallery-item { 
-    flex: 0 0 100vw; width: 100vw; height: 100vh; 
-    scroll-snap-align: center; display: flex; 
-    align-items: center; justify-content: center; 
-    background:black; box-sizing: border-box; padding: 0 5px; 
-}
-
-.gallery-item img { 
-    max-width: 100%; max-height: 100%; 
-    object-fit: contain; transform-origin: center center;
-    transition: transform 0.1s ease-out;
-}
+.gallery-item { flex: 0 0 100vw; width: 100vw; height: 100vh; scroll-snap-align: center; display: flex; align-items: center; justify-content: center; background:black; box-sizing: border-box; padding: 0 5px; }
+.gallery-item img { max-width: 100%; max-height: 100%; object-fit: contain; transform-origin: center center; transition: transform 0.1s ease-out; }
 
 #galleryCounter{position:absolute;top:25px;left:20px;color:white;background:rgba(0,0,0,.6);padding:6px 14px;border-radius:20px;z-index:10001;}
 #galleryClose{position:absolute;top:25px;right:20px;background:#2e7d32;color:white;border:none;width:44px;height:44px;border-radius:50%;font-size:28px;z-index:10001;cursor:pointer}
@@ -55,8 +56,15 @@ header{background:#2e7d32;color:white;padding:15px;display:flex;justify-content:
 <body>
 
 <header>
-  <div><h3 style="margin:0">Earth Property</h3><p id="userBox">Connecting...</p></div>
-  <img id="profileBtn" class="profile-img" src="https://ui-avatars.com/api/?name=User" alt="Profile">
+  <div>
+    <h3 style="margin:0">Earth Property</h3>
+    <p id="userBox">Connecting...</p>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:12px">
+    <button id="addBtn">+ Post</button>
+    <img id="profileBtn" class="profile-img" src="https://ui-avatars.com/api/?name=User" alt="Profile">
+  </div>
 </header>
 
 <div id="list"></div>
@@ -84,25 +92,29 @@ const auth = firebase.auth();
 
 let galleryImgs = [];
 
-// --- 1. AUTH ---
+// --- 1. LOGIC & AUTH ---
 auth.onAuthStateChanged(u => {
-    const userBox = document.getElementById("userBox");
-    const profileBtn = document.getElementById("profileBtn");
     if (u) {
         const name = u.displayName || u.email.split('@')[0] || "User";
-        if (userBox) userBox.textContent = "👤 " + name;
-        if (profileBtn) profileBtn.src = u.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2e7d32&color=fff`;
+        document.getElementById("userBox").textContent = "👤 " + name;
+        document.getElementById("profileBtn").src = u.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2e7d32&color=fff`;
         loadProperties();
     } else {
         setTimeout(() => { if(!auth.currentUser) location.href = "login.html"; }, 1500);
     }
 });
 
+// ✅ Button Redirects
+document.getElementById("addBtn").onclick = () => location.href = "upload.html";
+document.getElementById("profileBtn").onclick = () => {
+    if(confirm("Logout?")) auth.signOut().then(() => location.href="login.html");
+};
+
 // --- 2. DATA LOAD ---
 async function loadProperties() {
     const list = document.getElementById("list");
     try {
-        list.innerHTML = `<center style="padding:50px;"><div class="spinner"></div><p>Searching...</p></center>`;
+        list.innerHTML = `<center style="padding:50px;"><div class="spinner"></div><p>Searching Properties...</p></center>`;
         const qs = await db.collection("properties").orderBy("timestamp", "desc").limit(40).get();
         if (qs.empty) {
             list.innerHTML = `<center style="padding:50px;color:#999">No properties found.</center>`;
@@ -114,6 +126,7 @@ async function loadProperties() {
             const imgs = d.images || [];
             const docId = doc.id;
             const phone = d.phone ? d.phone.replace(/\D/g,'') : "";
+
             list.innerHTML += `
                 <div class="card">
                     <div class="slider">
@@ -136,7 +149,7 @@ async function loadProperties() {
     } catch (e) { console.error(e); }
 }
 
-// --- 3. ULTIMATE GALLERY PHYSICS ---
+// --- 3. GALLERY ZOOM/PAN ---
 function openGallery(json) {
     galleryImgs = JSON.parse(decodeURIComponent(json));
     const slider = document.getElementById("gallerySlider");
@@ -146,9 +159,7 @@ function openGallery(json) {
     initZoom(); 
 }
 
-function closeGallery() { 
-    document.getElementById("gallery").style.display = "none";
-}
+function closeGallery() { document.getElementById("gallery").style.display = "none"; }
 
 function initZoom() {
     const imgs = document.querySelectorAll('.zoomable');
@@ -183,7 +194,7 @@ function initZoom() {
 
         img.addEventListener('touchend', e => {
             isPanning = false;
-            let now = new Date().getTime();
+            let now = Date.now();
             if (now - lastTap < 300) {
                 if (scale > 1.1) {
                     scale = 1; pointX = 0; pointY = 0;
@@ -211,7 +222,7 @@ function updateCounter(i) {
 
 function shareMe(title, id) {
     const url = window.location.origin + window.location.pathname + "?id=" + id;
-    if (navigator.share) navigator.share({ title: title, url: url }); else alert("Copied!");
+    if (navigator.share) navigator.share({ title: title, url: url }); else alert("Link Copied!");
 }
 </script>
 </body>
