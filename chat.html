@@ -1,29 +1,40 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Chat – Earth Property</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Earth Chat</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body, html { height: 100%; margin: 0; font-family: system-ui; background: #e5ddd5; display: flex; flex-direction: column; }
+        header { background: #2e7d32; color: white; padding: 12px 15px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        header a { color: white; text-decoration: none; font-size: 18px; }
+        
+        #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; scroll-behavior: smooth; }
+        
+        .chat-input-container { background: #f0f0f0; padding: 10px; display: flex; gap: 8px; align-items: center; position: sticky; bottom: 0; }
+        .chat-input-container input { flex: 1; border: none; padding: 12px 18px; border-radius: 25px; outline: none; font-size: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .send-btn { background: #2e7d32; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
-<style>
-body{margin:0;font-family:system-ui;background:#f2f2f2;}
-header{background:#2e7d32;color:white;padding:12px;font-weight:600;}
-#messages{height:calc(100vh - 110px);overflow:auto;padding:10px;}
-.msg{max-width:70%;padding:10px;border-radius:12px;margin:6px 0;font-size:14px;}
-.me{background:#c8e6c9;margin-left:auto;}
-.other{background:white;}
-#box{display:flex;padding:10px;background:white;}
-#input{flex:1;padding:12px;border:none;border-radius:10px;background:#eee;}
-#send{background:#2e7d32;color:white;border:none;padding:12px 16px;border-radius:10px;margin-left:8px;}
-</style>
+        /* WhatsApp Style Bubbles */
+        .msg { max-width: 75%; padding: 8px 12px; border-radius: 12px; font-size: 14px; position: relative; line-height: 1.4; word-wrap: break-word; }
+        .sent { align-self: flex-end; background: #dcf8c6; border-top-right-radius: 2px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
+        .received { align-self: flex-start; background: white; border-top-left-radius: 2px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
+        .time { font-size: 10px; color: #888; margin-top: 4px; text-align: right; display: block; }
+    </style>
 </head>
 <body>
 
-<header id="title">Chat</header>
+<header>
+    <a href="index.html"><i class="fa fa-arrow-left"></i></a>
+    <div id="chatPartner">Loading Chat...</div>
+</header>
+
 <div id="messages"></div>
 
-<div id="box">
- <input id="input" placeholder="Type message…">
- <button id="send">Send</button>
+<div class="chat-input-container">
+    <input type="text" id="msgInput" placeholder="Type a message..." autocomplete="off">
+    <button class="send-btn" id="sendBtn"><i class="fa fa-paper-plane"></i></button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
@@ -31,49 +42,81 @@ header{background:#2e7d32;color:white;padding:12px;font-weight:600;}
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
 
 <script>
-firebase.initializeApp({
- apiKey:"AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
- authDomain:"earth-properties-c3c56.firebaseapp.com",
- projectId:"earth-properties-c3c56"
+const firebaseConfig = { 
+    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
+    authDomain: "earth-properties-c3c56.firebaseapp.com", 
+    projectId: "earth-properties-c3c56"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+// URL Se Data Nikalna
+const params = new URLSearchParams(window.location.search);
+const partnerId = params.get('to');
+const propId = params.get('p');
+
+let currentRoomId = null;
+
+auth.onAuthStateChanged(user => {
+    if (!user) { location.href = 'login.html'; return; }
+    if (!partnerId) { alert("Invalid Chat"); location.href='index.html'; return; }
+
+    // Unique Room ID Logic: Sender + Receiver + Prop sorted (taaki dono ko ek hi room mile)
+    const ids = [user.uid, partnerId].sort();
+    currentRoomId = `${ids[0]}_${ids[1]}_${propId}`;
+    
+    loadMessages();
 });
-const db=firebase.firestore();
-const auth=firebase.auth();
 
-const url=new URLSearchParams(location.search);
-const chatId=url.get("id");
-document.getElementById("title").innerText=url.get("title")||"Chat";
-
-auth.onAuthStateChanged(user=>{
- if(!user) location.href="login.html";
- else loadChat(user);
-});
-
-function loadChat(user){
- const msgs=db.collection("chats").doc(chatId).collection("messages").orderBy("time");
- msgs.onSnapshot(s=>{
-  const box=document.getElementById("messages");
-  box.innerHTML="";
-  s.forEach(d=>{
-   const m=d.data();
-   const div=document.createElement("div");
-   div.className="msg "+(m.uid===auth.currentUser.uid?"me":"other");
-   div.innerText=m.text;
-   box.appendChild(div);
-  });
-  box.scrollTop=box.scrollHeight;
- });
-
- document.getElementById("send").onclick=async()=>{
-  const text=input.value.trim();
-  if(!text) return;
-  await db.collection("chats").doc(chatId).collection("messages").add({
-   text,
-   uid:auth.currentUser.uid,
-   time:Date.now()
-  });
-  input.value="";
- };
+// Real-time Messages Load karna
+function loadMessages() {
+    db.collection("chats").doc(currentRoomId).collection("messages")
+      .orderBy("timestamp", "asc")
+      .onSnapshot(snapshot => {
+          const msgDiv = document.getElementById('messages');
+          msgDiv.innerHTML = '';
+          
+          snapshot.forEach(doc => {
+              const data = doc.data();
+              const isMe = data.senderId === auth.currentUser.uid;
+              const time = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '...';
+              
+              msgDiv.innerHTML += `
+                  <div class="msg ${isMe ? 'sent' : 'received'}">
+                      ${data.text}
+                      <span class="time">${time}</span>
+                  </div>`;
+          });
+          msgDiv.scrollTop = msgDiv.scrollHeight; // Auto Scroll
+      });
 }
+
+// Message Bhejna
+async function sendMessage() {
+    const text = document.getElementById('msgInput').value.trim();
+    if (!text || !currentRoomId) return;
+
+    document.getElementById('msgInput').value = ''; // Input clear
+
+    await db.collection("chats").doc(currentRoomId).collection("messages").add({
+        senderId: auth.currentUser.uid,
+        text: text,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    // Room update (Last Message ke liye)
+    db.collection("chats").doc(currentRoomId).set({
+        lastMessage: text,
+        lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
+        users: [auth.currentUser.uid, partnerId],
+        propId: propId
+    }, { merge: true });
+}
+
+document.getElementById('sendBtn').onclick = sendMessage;
+document.getElementById('msgInput').onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
 </script>
+
 </body>
 </html>
