@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Post Property - Earth Property</title>
+<style>
+    body { font-family: system-ui; margin: 0; background: #f2f2f2; padding-bottom: 30px; }
+    header { background: #2e7d32; color: white; padding: 15px; position: sticky; top: 0; display: flex; align-items: center; gap: 15px; z-index: 100; }
+    .container { padding: 15px; }
+    .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    
+    label { font-weight: 600; font-size: 14px; color: #444; display: block; margin-top: 15px; }
+    input, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; outline: none; }
+    input:focus { border-color: #2e7d32; }
+
+    /* Photo Upload UI */
+    .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+    .photo-box { aspect-ratio: 1/1; border: 2px dashed #ccc; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #999; cursor: pointer; overflow: hidden; position: relative; }
+    .photo-box img { width: 100%; height: 100%; object-fit: cover; }
+
+    #submitBtn { width: 100%; background: #2e7d32; color: white; border: none; padding: 16px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 25px; transition: 0.3s; }
+    #submitBtn:disabled { background: #999; cursor: not-allowed; }
+    
+    #status { text-align: center; font-size: 14px; margin-top: 10px; color: #2e7d32; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header>
+    <div onclick="history.back()" style="cursor:pointer; font-size: 24px;">←</div>
+    <h3 style="margin:0">Post Property</h3>
+</header>
+
+<div class="container">
+    <div class="card">
+        <label>Photos (Select up to 5)</label>
+        <div class="photo-grid" id="photoGrid">
+            <div class="photo-box" onclick="document.getElementById('fileInput').click()">+</div>
+        </div>
+        <input type="file" id="fileInput" multiple accept="image/*" style="display:none">
+
+        <label>Property Title</label>
+        <input type="text" id="title" placeholder="e.g. Luxury 2BHK Flat">
+
+        <label>Price (₹)</label>
+        <input type="number" id="price" placeholder="e.g. 4500000">
+
+        <label>Location</label>
+        <input type="text" id="location" placeholder="e.g. Sector 10, Noida">
+
+        <label>WhatsApp Number</label>
+        <input type="tel" id="phone" placeholder="10 Digit Mobile Number">
+
+        <label>Details</label>
+        <textarea id="desc" rows="4" placeholder="Mention floors, area, nearby places etc."></textarea>
+
+        <p id="status"></p>
+        <button id="submitBtn">Post Property Now</button>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+
+<script>
+// 🔥 Firebase Setup (Wahi config jo index.html me hai)
+const firebaseConfig = { 
+    apiKey:"AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
+    authDomain:"earth-properties-c3c56.firebaseapp.com", 
+    projectId:"earth-properties-c3c56"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+let selectedImages = [];
+
+// --- Photo Selection & Preview ---
+document.getElementById('fileInput').onchange = (e) => {
+    const files = Array.from(e.target.files);
+    files.forEach(file => {
+        if (selectedImages.length >= 5) return;
+        
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            selectedImages.push(event.target.result); // Base64 for now
+            renderPhotos();
+        };
+        reader.readAsDataURL(file);
+    });
+};
+
+function renderPhotos() {
+    const grid = document.getElementById('photoGrid');
+    grid.innerHTML = selectedImages.map(src => `<div class="photo-box"><img src="${src}"></div>`).join('');
+    if (selectedImages.length < 5) {
+        grid.innerHTML += `<div class="photo-box" onclick="document.getElementById('fileInput').click()">+</div>`;
+    }
+}
+
+// --- Submit Data ---
+document.getElementById('submitBtn').onclick = async () => {
+    const btn = document.getElementById('submitBtn');
+    const status = document.getElementById('status');
+    
+    // Validations
+    const title = document.getElementById('title').value;
+    const price = document.getElementById('price').value;
+    const location = document.getElementById('location').value;
+    const phone = document.getElementById('phone').value;
+
+    if (!title || !price || selectedImages.length === 0) {
+        alert("Please fill title, price and add at least 1 photo!");
+        return;
+    }
+
+    btn.disabled = true;
+    status.innerText = "Uploading... Please wait.";
+
+    try {
+        await db.collection("properties").add({
+            title: title,
+            price: price,
+            location: location,
+            phone: phone,
+            description: document.getElementById('desc').value,
+            images: selectedImages, // Storing as Base64 strings
+            ownerId: auth.currentUser.uid,
+            ownerName: auth.currentUser.displayName || "User",
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        status.innerText = "✅ Property Posted Successfully!";
+        setTimeout(() => location.href = "index.html", 1500);
+    } catch (e) {
+        console.error(e);
+        status.innerText = "❌ Error: " + e.message;
+        btn.disabled = false;
+    }
+};
+</script>
+</body>
+</html>
