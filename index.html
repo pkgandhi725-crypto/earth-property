@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Earth Property - Final Master</title>
+<title>Earth Property - Final Pro</title>
 <style>
 /* 🎨 UI & Feed Styles */
 body{margin:0;font-family:system-ui,Arial;background:#f2f2f2;padding-bottom:20px;-webkit-tap-highlight-color:transparent;}
@@ -17,7 +17,7 @@ header{background:#2e7d32;color:white;padding:15px;display:flex;justify-content:
 .slider::-webkit-scrollbar{display:none}
 .slider img{min-width:100%;scroll-snap-align:center;border-radius:12px;height:230px;object-fit:cover;cursor:pointer;background:#eee}
 
-/* 🖼️ 🔥 PRO GALLERY WITH PAN & ZOOM LOCKS */
+/* 🖼️ 🔥 PRO GALLERY (The 100% Physics Fix) */
 #gallery{position:fixed;inset:0;background:black;display:none;z-index:9999;overflow:hidden}
 
 #gallerySlider {
@@ -28,28 +28,38 @@ header{background:#2e7d32;color:white;padding:15px;display:flex;justify-content:
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   scroll-behavior: smooth;
-  touch-action: none; /* 🔥 Browser default gestures block kiye taaki JS chale */
+  touch-action: pan-x pan-y; /* ✅ Bug #1 Fixed */
 }
 
 .gallery-item {
   flex: 0 0 100vw;
-  width:100vw;
-  height:100vh;
-  scroll-snap-align:center;
-  scroll-snap-stop:always;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  width: 100vw;
+  height: 100vh;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden; 
+  touch-action: pan-x pan-y;   /* ✅ Bug #1 Fixed */
+  overscroll-behavior: contain; /* ✅ Bug #3 Fixed */
+}
+
+.gallery-item::before {
+  content:"";
+  position:absolute;
+  inset:0;
   background:black;
-  overflow:hidden;     /* 🔥 Zoom image container se bahar na nikle */
-  touch-action:none;   /* 🔥 Conflict Fix */
+  z-index:-1;
 }
 
 .gallery-item img {
-  max-width:100%;
-  max-height:100%;
-  object-fit:contain;
-  transition:transform .25s ease;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform .25s ease;
+  transform-origin: center center;
 }
 
 #galleryCounter{position:absolute;top:25px;left:20px;color:white;background:rgba(0,0,0,.6);padding:6px 14px;border-radius:20px;z-index:10001;font-weight:600}
@@ -66,7 +76,7 @@ header{background:#2e7d32;color:white;padding:15px;display:flex;justify-content:
 
 <header>
   <div><h3 style="margin:0">Earth Property</h3><p id="userBox">Connecting...</p></div>
-  <img id="profileBtn" class="profile-img" src="https://via.placeholder.com/40/2e7d32/ffffff?text=👤" onclick="location.href='profile.html'">
+  <img id="profileBtn" class="profile-img" src="https://via.placeholder.com/40">
 </header>
 
 <div id="list"></div>
@@ -82,27 +92,15 @@ header{background:#2e7d32;color:white;padding:15px;display:flex;justify-content:
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
 
 <script>
-// Firebase Init (Your Config)
-firebase.initializeApp({
- apiKey:"AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
- authDomain:"earth-properties-c3c56.firebaseapp.com",
- projectId:"earth-properties-c3c56"
-});
+// Firebase Setup
+firebase.initializeApp({ apiKey:"AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain:"earth-properties-c3c56.firebaseapp.com", projectId:"earth-properties-c3c56"});
 const db=firebase.firestore(); const auth=firebase.auth();
 
 let galleryImgs=[], zoom=1, activeImg=null, lastTap=0;
 let panX=0, panY=0, panStartX=0, panStartY=0;
 
-// 🟢 AUTH & PROFILE
-auth.onAuthStateChanged(async u=>{
- if(!u) location.href="login.html";
- else {
-  document.getElementById("userBox").innerText="👤 "+u.email;
-  loadProperties();
- }
-});
+auth.onAuthStateChanged(u=>{ if(u){ loadProperties(); } else { location.href="login.html"; }});
 
-// 🖼️ GALLERY LOGIC
 function openGallery(json){
  galleryImgs = JSON.parse(decodeURIComponent(json));
  const g = document.getElementById("gallerySlider");
@@ -110,9 +108,7 @@ function openGallery(json){
  galleryImgs.forEach(src=>{
    const frame = document.createElement("div");
    frame.className = "gallery-item";
-   const img = document.createElement("img");
-   img.src = src;
-   frame.appendChild(img);
+   frame.innerHTML = `<img src="${src}">`;
    g.appendChild(frame);
  });
  document.getElementById("gallery").style.display="block";
@@ -127,11 +123,13 @@ function closeGallery(){
 
 function resetAll(){
  zoom=1; panX=0; panY=0; activeImg=null;
+ const slider = document.getElementById("gallerySlider");
+ slider.style.overflowX = "auto";
+ slider.style.scrollSnapType = "x mandatory";
  document.querySelectorAll('.gallery-item img').forEach(i => i.style.transform = 'scale(1) translate(0,0)');
- document.getElementById("gallerySlider").style.scrollSnapType = "x mandatory";
 }
 
-// 🔄 ZOOM & PAN LOGIC
+// 🔄 THE PHYSICS ENGINE (Zoom + Pan + Lock)
 const slider = document.getElementById("gallerySlider");
 
 slider.addEventListener("touchstart", e=>{
@@ -147,41 +145,34 @@ slider.addEventListener("touchstart", e=>{
 slider.addEventListener("touchmove", e=>{
   if(!activeImg) return;
 
-  // 1. PINCH ZOOM LOGIC
   if(e.touches.length===2){
     e.preventDefault();
     const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
     zoom=Math.min(Math.max(1, d/180), 4);
+    
+    // ✅ Bug #2 Fixed: Freeze slider when zoomed
     slider.style.scrollSnapType = zoom > 1 ? "none" : "x mandatory";
+    slider.style.overflowX = zoom > 1 ? "hidden" : "auto"; 
+
     activeImg.style.transform=`scale(${zoom}) translate(${panX/zoom}px, ${panY/zoom}px)`;
   } 
-  // 2. PAN LOGIC (Only if Zoomed)
   else if(zoom > 1){
     e.preventDefault();
-    panX = e.touches[0].clientX - panStartX;
-    panY = e.touches[0].clientY - panStartY;
+    panX = Math.max(Math.min(e.touches[0].clientX - panStartX, 400), -400);
+    panY = Math.max(Math.min(e.touches[0].clientY - panStartY, 400), -400);
     activeImg.style.transform = `scale(${zoom}) translate(${panX/zoom}px, ${panY/zoom}px)`;
-  }
-  // 3. NORMAL SLIDE (Only if not Zoomed)
-  else {
-    slider.scrollLeft -= e.movementX; 
   }
 },{passive:false});
 
 slider.addEventListener("touchend", e=>{
-  if(zoom === 1) {
-    panX=0; panY=0; activeImg=null;
-    slider.style.scrollSnapType = "x mandatory";
-  }
-  
-  // Double Tap Zoom
   const now = Date.now();
   if(now - lastTap < 300 && e.target.tagName === 'IMG'){
     zoom = (zoom === 1) ? 2.5 : 1;
     if(zoom === 1) resetAll();
     else {
       slider.style.scrollSnapType = "none";
-      e.target.style.transform = `scale(${zoom})`;
+      slider.style.overflowX = "hidden";
+      e.target.style.transform = `scale(2.5)`;
     }
   }
   lastTap = now;
@@ -192,27 +183,26 @@ slider.addEventListener("scroll", e=>{
   document.getElementById("galleryCounter").innerText = `${idx+1} / ${galleryImgs.length}`;
 });
 
-// 🏠 LOAD PROPERTIES
 async function loadProperties(){
- const qs = await db.collection("properties").orderBy("timestamp","desc").get();
- const list = document.getElementById("list");
- list.innerHTML = "";
- qs.forEach(doc=>{
-  const d=doc.data(); const imgs=d.images||[]; const json=encodeURIComponent(JSON.stringify(imgs));
-  list.innerHTML+=`
-   <div class="card">
-    <div class="slider">${imgs.map(i=>`<img src="${i}" onclick="openGallery('${json}')">`).join("")}</div>
-    <h3>${d.title}</h3>
-    <p>📍 ${d.location} | 💰 ₹${d.price}</p>
-    <div class="action-row">
-     <a class="action call" href="tel:${d.phone}">📞<span>Call</span></a>
-     <a class="action whatsapp" href="https://wa.me/${d.phone}?text=Hi">💬<span>WhatsApp</span></a>
-     <a class="action chat" href="chat.html?id=${doc.id}">🗨<span>Chat</span></a>
-     <button class="action share" onclick="navigator.share({title:'${d.title}',url:window.location.href})">📤<span>Share</span></button>
-     <button class="action report">🚩<span>Report</span></button>
-    </div>
-   </div>`;
- });
+ try {
+  const qs = await db.collection("properties").orderBy("timestamp","desc").get();
+  const list = document.getElementById("list"); list.innerHTML = "";
+  qs.forEach(doc=>{
+   const d=doc.data(); const imgs=d.images||[]; const json=encodeURIComponent(JSON.stringify(imgs));
+   list.innerHTML+=`
+    <div class="card">
+     <div class="slider">${imgs.map(i=>`<img src="${i}" onclick="openGallery('${json}')">`).join("")}</div>
+     <h3 style="margin:10px 0 5px">${d.title}</h3>
+     <div class="action-row">
+      <a class="action call" href="tel:${d.phone}">📞<span>Call</span></a>
+      <a class="action whatsapp" href="https://wa.me/${d.phone}?text=Hi">💬<span>WhatsApp</span></a>
+      <a class="action chat" href="chat.html?id=${doc.id}">🗨<span>Chat</span></a>
+      <button class="action share" onclick="navigator.share({title:'${d.title}',url:window.location.href})">📤<span>Share</span></button>
+      <button class="action report">🚩<span>Report</span></button>
+     </div>
+    </div>`;
+  });
+ } catch(e){ console.log("error"); }
 }
 </script>
 </body>
