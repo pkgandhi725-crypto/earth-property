@@ -9,38 +9,47 @@
         header { background: #2e7d32; color: white; padding: 18px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; }
         .container { padding: 15px; max-width: 500px; margin: auto; }
         .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        label { font-weight: 700; font-size: 12px; color: #666; display: block; margin-top: 15px; text-transform: uppercase; }
-        input, textarea, select { width: 100%; padding: 12px; margin-top: 5px; border: 1.5px solid #eee; border-radius: 10px; box-sizing: border-box; font-size: 16px; outline: none; }
+        label { font-weight: 700; font-size: 12px; color: #666; display: block; margin-top: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+        input, textarea, select { width: 100%; padding: 14px; margin-top: 8px; border: 1.5px solid #eee; border-radius: 12px; box-sizing: border-box; font-size: 16px; outline: none; background: #fdfdfd; }
+        input:focus { border-color: #2e7d32; }
         
-        .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
-        .photo-box { aspect-ratio: 1/1; border: 1.5px solid #eee; border-radius: 12px; overflow: hidden; position: relative; background: #fafafa; }
+        /* Photo UI Matched to Screenshot */
+        .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 15px; }
+        .photo-box { aspect-ratio: 1/1; border: 1.5px solid #eee; border-radius: 15px; overflow: hidden; position: relative; background: #fafafa; border-style: dashed; }
         .photo-box img { width: 100%; height: 100%; object-fit: cover; }
-        .del-btn { position: absolute; top: 5px; right: 5px; background: #d32f2f; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-weight: bold; }
+        .del-btn { position: absolute; top: 5px; right: 5px; background: #e53935; color: white; border: 2px solid white; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; }
         
-        #submitBtn { width: 100%; background: #2e7d32; color: white; border: none; padding: 16px; border-radius: 12px; font-weight: 800; font-size: 16px; margin-top: 25px; cursor: pointer; }
-        #submitBtn:disabled { background: #ccc; cursor: not-allowed; }
-        #status { text-align: center; font-size: 13px; margin-top: 15px; color: #2e7d32; font-weight: 600; }
+        /* Progress Bar Matched */
+        .prog-bg { width: 100%; height: 8px; background: #eee; border-radius: 10px; margin-top: 20px; display: none; overflow: hidden; }
+        .prog-bar { width: 0%; height: 100%; background: #2e7d32; transition: 0.3s; }
+        #statusText { text-align: center; color: #2e7d32; font-weight: bold; font-size: 14px; margin-top: 8px; display: none; }
+        
+        #submitBtn { width: 100%; background: #2e7d32; color: white; border: none; padding: 16px; border-radius: 15px; font-weight: 800; font-size: 16px; margin-top: 30px; cursor: pointer; transition: 0.3s; }
+        #submitBtn:disabled { background: #a5d6a7; }
     </style>
 </head>
 <body>
 
 <header>
     <div onclick="history.back()" style="cursor:pointer; font-size: 24px;">←</div>
-    <h3 style="margin:0;">Edit Property Details</h3>
+    <h3 style="margin:0;">List Your Property</h3>
 </header>
 
 <div class="container">
-    <div id="loader" style="text-align:center; padding:50px;">Fetching Details...</div>
+    <div id="loader" style="text-align:center; padding:50px; color: #666;">Fetching Details...</div>
 
     <div class="card" id="editForm" style="display:none;">
         <label>Property Photos (Max 5)</label>
         <div class="photo-grid" id="photoGrid"></div>
         <input type="file" id="fileInput" multiple accept="image/*" style="display:none">
 
-        <label>I want to</label>
+        <div class="prog-bg" id="progBg"><div class="prog-bar" id="progBar"></div></div>
+        <div id="statusText">Uploading 0/0: 0%</div>
+
+        <label>Transaction Type</label>
         <select id="type">
-            <option value="Sell">Sell My Property</option>
-            <option value="Rent">Rent My Property</option>
+            <option value="Sell">For Sale</option>
+            <option value="Rent">For Rent</option>
         </select>
 
         <label>Property Type (BHK)</label>
@@ -51,22 +60,21 @@
             <option value="4">4+ BHK</option>
         </select>
 
-        <label>Property Title</label>
-        <input type="text" id="title">
+        <label>Title</label>
+        <input type="text" id="title" placeholder="e.g. 4bhk Luxury Apartment">
         
-        <label>Price (₹)</label>
-        <input type="number" id="price">
+        <label>Expected Price (₹)</label>
+        <input type="number" id="price" placeholder="45000000">
         
-        <label>City / Location</label>
-        <input type="text" id="location">
+        <label>Area / Location</label>
+        <input type="text" id="location" placeholder="Noida">
         
-        <label>WhatsApp Number (without +91)</label>
-        <input type="tel" id="phone">
+        <label>WhatsApp Number</label>
+        <input type="tel" id="phone" placeholder="9674851279">
 
         <label>Description</label>
-        <textarea id="desc" rows="3"></textarea>
+        <textarea id="desc" rows="3" placeholder="Additional details..."></textarea>
 
-        <p id="status"></p>
         <button id="submitBtn">SAVE CHANGES</button>
     </div>
 </div>
@@ -116,24 +124,23 @@ auth.onAuthStateChanged(async user => {
         document.getElementById('loader').style.display = "none";
         document.getElementById('editForm').style.display = "block";
         render();
-    } catch(e) { alert("Error loading"); }
+    } catch(e) { alert("Error loading data"); }
 });
 
 function render() {
     const grid = document.getElementById('photoGrid');
     grid.innerHTML = "";
     existingPhotos.forEach((url, i) => {
-        grid.innerHTML += `<div class="photo-box"><button class="del-btn" onclick="removeEx(${i})">×</button><img src="${url}"></div>`;
+        grid.innerHTML += `<div class="photo-box" style="border-style:solid"><button class="del-btn" onclick="removeEx(${i})">×</button><img src="${url}"></div>`;
     });
     newFiles.forEach((file, i) => {
-        grid.innerHTML += `<div class="photo-box" style="border:2px solid #2e7d32"><button class="del-btn" onclick="removeNew(${i})">×</button><img src="${URL.createObjectURL(file)}"></div>`;
+        grid.innerHTML += `<div class="photo-box" style="border:2px solid #2e7d32; border-style:solid"><button class="del-btn" onclick="removeNew(${i})">×</button><img src="${URL.createObjectURL(file)}"></div>`;
     });
     if(existingPhotos.length + newFiles.length < 5) {
-        grid.innerHTML += `<div class="photo-box" onclick="document.getElementById('fileInput').click()" style="display:flex;align-items:center;justify-content:center;color:#ccc;font-size:30px;cursor:pointer;">+</div>`;
+        grid.innerHTML += `<div class="photo-box" onclick="document.getElementById('fileInput').click()" style="display:flex;align-items:center;justify-content:center;color:#ccc;font-size:40px;cursor:pointer;">+</div>`;
     }
 }
 
-// 🛠️ FIX: Resetting fileInput value to allow re-selection
 document.getElementById('fileInput').onchange = (e) => {
     const files = Array.from(e.target.files);
     files.forEach(file => { if(existingPhotos.length + newFiles.length < 5) newFiles.push(file); });
@@ -165,22 +172,38 @@ async function compress(file) {
 
 document.getElementById('submitBtn').onclick = async () => {
     const btn = document.getElementById('submitBtn');
-    const status = document.getElementById('status');
+    const progBg = document.getElementById('progBg');
+    const progBar = document.getElementById('progBar');
+    const statusText = document.getElementById('statusText');
+    
     btn.disabled = true;
+    progBg.style.display = "block";
+    statusText.style.display = "block";
     
     try {
-        status.innerText = "Processing...";
         for(let path of pathsToDelete) { await storage.ref(path).delete().catch(()=>{}); }
 
         const finalUrls = [...existingPhotos], finalPaths = [...existingPaths];
+        
         for(let i=0; i<newFiles.length; i++) {
             const blob = await compress(newFiles[i]);
             const path = `properties/${auth.currentUser.uid}/${propertyId}/${Date.now()}_${i}.jpg`;
-            const snap = await storage.ref(path).put(blob);
-            finalUrls.push(await snap.ref.getDownloadURL());
-            finalPaths.push(path);
+            const uploadTask = storage.ref(path).put(blob);
+
+            await new Promise((resolve, reject) => {
+                uploadTask.on('state_changed', (snap) => {
+                    const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+                    progBar.style.width = pct + "%";
+                    statusText.innerText = `Uploading ${i+1}/${newFiles.length}: ${pct}%`;
+                }, reject, async () => {
+                    finalUrls.push(await uploadTask.snapshot.ref.getDownloadURL());
+                    finalPaths.push(path);
+                    resolve();
+                });
+            });
         }
 
+        statusText.innerText = "Finalizing...";
         await db.collection("properties").doc(propertyId).update({
             title: document.getElementById('title').value,
             price: document.getElementById('price').value,
@@ -194,9 +217,14 @@ document.getElementById('submitBtn').onclick = async () => {
             lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        status.innerText = "✅ Updated!";
-        setTimeout(() => location.href='index.html', 800);
-    } catch(e) { alert("Error"); btn.disabled = false; }
+        statusText.innerText = "✅ Property Updated!";
+        setTimeout(() => location.href='index.html', 1000);
+    } catch(e) { 
+        alert("Upload Failed. Try again."); 
+        btn.disabled = false; 
+        progBg.style.display = "none";
+        statusText.style.display = "none";
+    }
 };
 </script>
 </body>
