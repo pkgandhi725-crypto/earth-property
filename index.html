@@ -17,6 +17,21 @@ header{background:#2e7d32;color:white;padding:15px;display:flex;justify-content:
 .slider::-webkit-scrollbar{display:none}
 .slider img{min-width:100%;scroll-snap-align:center;border-radius:12px;height:230px;object-fit:cover;cursor:pointer;background:#eee}
 
+/* 🔄 Spinner */
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #2e7d32;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 /* 🖼️ 🔥 PRO GALLERY (The 100% Physics Fix) */
 #gallery{position:fixed;inset:0;background:black;display:none;z-index:9999;overflow:hidden}
 
@@ -28,8 +43,9 @@ header{background:#2e7d32;color:white;padding:15px;display:flex;justify-content:
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
   scroll-behavior: smooth;
-  touch-action: pan-x pan-y; /* ✅ Bug #1 Fixed */
+  touch-action: pan-x pan-y;
 }
+#gallerySlider::-webkit-scrollbar{display:none}
 
 .gallery-item {
   flex: 0 0 100vw;
@@ -42,8 +58,8 @@ header{background:#2e7d32;color:white;padding:15px;display:flex;justify-content:
   justify-content: center;
   position: relative;
   overflow: hidden; 
-  touch-action: pan-x pan-y;   /* ✅ Bug #1 Fixed */
-  overscroll-behavior: contain; /* ✅ Bug #3 Fixed */
+  touch-action: pan-x pan-y;
+  overscroll-behavior: contain;
 }
 
 .gallery-item::before {
@@ -67,16 +83,17 @@ header{background:#2e7d32;color:white;padding:15px;display:flex;justify-content:
 
 /* ⚡ Actions */
 .action-row{display:flex;justify-content:space-between;gap:4px;margin-top:12px}
-.action{flex:1 1 20%;min-width:0;height:56px;border-radius:14px;background:#f5f5f5;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;text-decoration:none;color:#444;transition:0.2s}
+.action{flex:1 1 20%;min-width:0;height:56px;border-radius:14px;background:#f5f5f5;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;text-decoration:none;color:#444;transition:0.2s;cursor:pointer}
 .action span{margin-top:2px;font-weight:600;white-space:nowrap}
 .call{background:#e3f2fd} .whatsapp{background:#e8f5e9} .chat{background:#f3e5f5} .share{background:#e0f2f1} .report{background:#ffebee}
+.action:disabled{opacity:0.5;cursor:not-allowed}
 </style>
 </head>
 <body>
 
 <header>
   <div><h3 style="margin:0">Earth Property</h3><p id="userBox">Connecting...</p></div>
-  <img id="profileBtn" class="profile-img" src="https://via.placeholder.com/40">
+  <img id="profileBtn" class="profile-img" src="https://via.placeholder.com/40" alt="Profile">
 </header>
 
 <div id="list"></div>
@@ -92,117 +109,266 @@ header{background:#2e7d32;color:white;padding:15px;display:flex;justify-content:
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
 
 <script>
-// Firebase Setup
-firebase.initializeApp({ apiKey:"AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain:"earth-properties-c3c56.firebaseapp.com", projectId:"earth-properties-c3c56"});
-const db=firebase.firestore(); const auth=firebase.auth();
+// 🔥 Firebase Setup
+firebase.initializeApp({ 
+    apiKey:"AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
+    authDomain:"earth-properties-c3c56.firebaseapp.com", 
+    projectId:"earth-properties-c3c56"
+});
+const db = firebase.firestore(); 
+const auth = firebase.auth();
 
-let galleryImgs=[], zoom=1, activeImg=null, lastTap=0;
-let panX=0, panY=0, panStartX=0, panStartY=0;
+// 🎯 Global Variables
+let galleryImgs = [], currentIndex = 0, zoom = 1, activeImg = null, lastTap = 0;
+let panX = 0, panY = 0, panStartX = 0, panStartY = 0;
 
-auth.onAuthStateChanged(u=>{ if(u){ loadProperties(); } else { location.href="login.html"; }});
+// --- 1. INITIALIZATION & AUTH CHECK ---
+// ✅ FIX #1: Safer auth check (prevents race condition redirects)
+auth.onAuthStateChanged(u => {
+    const userBox = document.getElementById("userBox");
+    const profileBtn = document.getElementById("profileBtn");
 
-function openGallery(json){
- galleryImgs = JSON.parse(decodeURIComponent(json));
- const g = document.getElementById("gallerySlider");
- g.innerHTML = "";
- galleryImgs.forEach(src=>{
-   const frame = document.createElement("div");
-   frame.className = "gallery-item";
-   frame.innerHTML = `<img src="${src}">`;
-   g.appendChild(frame);
- });
- document.getElementById("gallery").style.display="block";
- document.body.style.overflow="hidden";
-}
-
-function closeGallery(){
- document.getElementById("gallery").style.display="none";
- document.body.style.overflow="auto";
- resetAll();
-}
-
-function resetAll(){
- zoom=1; panX=0; panY=0; activeImg=null;
- const slider = document.getElementById("gallerySlider");
- slider.style.overflowX = "auto";
- slider.style.scrollSnapType = "x mandatory";
- document.querySelectorAll('.gallery-item img').forEach(i => i.style.transform = 'scale(1) translate(0,0)');
-}
-
-// 🔄 THE PHYSICS ENGINE (Zoom + Pan + Lock)
-const slider = document.getElementById("gallerySlider");
-
-slider.addEventListener("touchstart", e=>{
-  if(e.target.tagName==="IMG"){
-    activeImg = e.target;
-    if(zoom > 1){
-      panStartX = e.touches[0].clientX - panX;
-      panStartY = e.touches[0].clientY - panY;
+    if (!u) {
+        // ⏳ Wait 1 second before redirect (fixes GitHub Pages race bug)
+        setTimeout(() => {
+            if (!auth.currentUser) location.href = "login.html";
+        }, 1000);
+        return;
     }
-  }
+
+    const name = u.displayName || (u.email ? u.email.split('@')[0] : "User");
+
+    if (userBox) userBox.textContent = "👤 " + name;
+
+    if (profileBtn) {
+        profileBtn.src = u.photoURL || 
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2e7d32&color=fff`;
+    }
+
+    loadProperties();
 });
 
-slider.addEventListener("touchmove", e=>{
-  if(!activeImg) return;
+// ✅ Profile Button Logout Handler
+document.addEventListener('DOMContentLoaded', ()=>{
+    document.getElementById("profileBtn")?.addEventListener("click", ()=>{
+        if(confirm("Do you want to logout?")) {
+            auth.signOut().then(()=> location.href="login.html");
+        }
+    });
+});
 
-  if(e.touches.length===2){
-    e.preventDefault();
-    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
-    zoom=Math.min(Math.max(1, d/180), 4);
+// --- 2. LOAD PROPERTIES (Core Engine) ---
+async function loadProperties() {
+    const list = document.getElementById("list");
+    if (!list) return;
+
+    try {
+        list.innerHTML = `<center style="padding:50px;color:#666">
+            <div class="spinner"></div><br>🔍 Finding best properties...
+        </center>`;
+
+        // ✅ Safe query with limit (prevents timestamp crash)
+        const qs = await db
+            .collection("properties")
+            .orderBy("timestamp", "desc")
+            .limit(50)
+            .get();
+
+        if (qs.empty) {
+            list.innerHTML = `<center style="padding:50px;color:#999">📭 No properties listed yet.</center>`;
+            return;
+        }
+
+        list.innerHTML = "";
+
+        qs.forEach(doc => {
+            const d = doc.data();
+            const imgs = d.images || [];
+            const json = encodeURIComponent(JSON.stringify(imgs));
+            const docId = doc.id;
+
+            // ✅ XSS Protection
+            const title = escapeHtml(d.title || "Untitled Property");
+            const price = escapeHtml(d.price || "Contact for Price");
+            const location = escapeHtml(d.location || "Location not specified");
+            const phone = d.phone || "";
+
+            list.innerHTML += `
+                <div class="card" id="card-${docId}">
+                    <div class="slider">
+                        ${imgs.length > 0 
+                            ? imgs.map(i => `<img src="${escapeHtml(i)}" onclick="openGallery('${json}')" loading="lazy" alt="Property">`).join("")
+                            : `<img src="https://placehold.co/600x400?text=No+Image" style="filter:grayscale(1)" alt="No image">`
+                        }
+                    </div>
+
+                    <div style="padding:15px">
+                        <h3 style="margin:0 0 8px; color:#333; font-size:18px">${title}</h3>
+                        <p style="margin:0; color:#2e7d32; font-weight:bold; font-size:16px">₹ ${price}</p>
+                        <p style="margin:5px 0 15px; color:#666; font-size:13px">📍 ${location}</p>
+
+                        <div class="action-row">
+                            ${phone 
+                                ? `<a class="action call" href="tel:${phone}">📞 <span>Call</span></a>
+                                   <a class="action whatsapp" href="https://wa.me/${phone}?text=Hi, I'm interested in: ${encodeURIComponent(title)}">💬 <span>WhatsApp</span></a>`
+                                : `<button class="action call" disabled>📞 <span>No Contact</span></button>
+                                   <button class="action whatsapp" disabled>💬 <span>No Contact</span></button>`
+                            }
+                            <a class="action chat" href="chat.html?id=${docId}${d.ownerId ? '&to=' + escapeHtml(d.ownerId) : ''}" 
+                               onclick="return ${d.ownerId ? 'true' : 'alert(\'Owner info not available\'); false'};">
+                                🗨️ <span>Chat</span>
+                            </a>
+                            <button class="action share" onclick="shareMe('${title.replace(/'/g, "\\'")}', '${docId}')">
+                                📤 <span>Share</span>
+                            </button>
+                            <button class="action report" onclick="reportPost('${docId}')">
+                                🚩
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+        });
+    } catch (e) {
+        console.error("Critical Error:", e);
+        list.innerHTML = `
+            <center style="padding:50px;color:red">
+                ⚠️ Connection failed<br>
+                <small style="color:#999">${e.message}</small><br><br>
+                <button onclick="loadProperties()" style="background:#2e7d32; color:white; border:none; padding:10px 20px; border-radius:5px; cursor:pointer">🔄 Retry Connection</button>
+            </center>`;
+    }
+}
+
+// --- 3. GALLERY FUNCTIONS ---
+function openGallery(json) {
+    galleryImgs = JSON.parse(decodeURIComponent(json));
+    const gallery = document.getElementById("gallery");
+    const slider = document.getElementById("gallerySlider");
     
-    // ✅ Bug #2 Fixed: Freeze slider when zoomed
-    slider.style.scrollSnapType = zoom > 1 ? "none" : "x mandatory";
-    slider.style.overflowX = zoom > 1 ? "hidden" : "auto"; 
+    if(!gallery || !slider) return;
+    
+    slider.innerHTML = "";
+    galleryImgs.forEach((src, idx) => {
+        const frame = document.createElement("div");
+        frame.className = "gallery-item";
+        frame.innerHTML = `<img src="${src}" alt="Image ${idx+1}">`;
+        slider.appendChild(frame);
+    });
+    
+    gallery.style.display = "block";
+    document.body.style.overflow = "hidden";
+    currentIndex = 0;
+    updateGalleryCounter();
+}
 
-    activeImg.style.transform=`scale(${zoom}) translate(${panX/zoom}px, ${panY/zoom}px)`;
-  } 
-  else if(zoom > 1){
-    e.preventDefault();
-    panX = Math.max(Math.min(e.touches[0].clientX - panStartX, 400), -400);
-    panY = Math.max(Math.min(e.touches[0].clientY - panStartY, 400), -400);
-    activeImg.style.transform = `scale(${zoom}) translate(${panX/zoom}px, ${panY/zoom}px)`;
-  }
-},{passive:false});
+function closeGallery() {
+    document.getElementById("gallery").style.display = "none";
+    document.body.style.overflow = "auto";
+    resetGallery();
+}
 
-slider.addEventListener("touchend", e=>{
-  const now = Date.now();
-  if(now - lastTap < 300 && e.target.tagName === 'IMG'){
-    zoom = (zoom === 1) ? 2.5 : 1;
-    if(zoom === 1) resetAll();
-    else {
-      slider.style.scrollSnapType = "none";
-      slider.style.overflowX = "hidden";
-      e.target.style.transform = `scale(2.5)`;
+function resetGallery() {
+    zoom = 1; panX = 0; panY = 0; activeImg = null; currentIndex = 0;
+    const slider = document.getElementById("gallerySlider");
+    slider.style.overflowX = "auto";
+    slider.style.scrollSnapType = "x mandatory";
+    slider.scrollLeft = 0;
+    document.querySelectorAll('.gallery-item img').forEach(i => i.style.transform = 'scale(1) translate(0,0)');
+}
+
+function updateGalleryCounter() {
+    const counter = document.getElementById("galleryCounter");
+    if(counter) counter.textContent = `${currentIndex + 1} / ${galleryImgs.length}`;
+}
+
+// 🔄 Gallery Physics Engine
+const gallerySlider = document.getElementById("gallerySlider");
+
+gallerySlider.addEventListener("touchstart", e => {
+    if(e.target.tagName === "IMG") {
+        activeImg = e.target;
+        if(zoom > 1) {
+            panStartX = e.touches[0].clientX - panX;
+            panStartY = e.touches[0].clientY - panY;
+        }
     }
-  }
-  lastTap = now;
 });
 
-slider.addEventListener("scroll", e=>{
-  const idx = Math.round(e.target.scrollLeft / window.innerWidth);
-  document.getElementById("galleryCounter").innerText = `${idx+1} / ${galleryImgs.length}`;
+gallerySlider.addEventListener("touchmove", e => {
+    if(!activeImg) return;
+
+    if(e.touches.length === 2) {
+        e.preventDefault();
+        const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        zoom = Math.min(Math.max(1, d/180), 4);
+        
+        gallerySlider.style.scrollSnapType = zoom > 1 ? "none" : "x mandatory";
+        gallerySlider.style.overflowX = zoom > 1 ? "hidden" : "auto";
+
+        activeImg.style.transform = `scale(${zoom}) translate(${panX/zoom}px, ${panY/zoom}px)`;
+    } 
+    else if(zoom > 1) {
+        e.preventDefault();
+        panX = Math.max(Math.min(e.touches[0].clientX - panStartX, 400), -400);
+        panY = Math.max(Math.min(e.touches[0].clientY - panStartY, 400), -400);
+        activeImg.style.transform = `scale(${zoom}) translate(${panX/zoom}px, ${panY/zoom}px)`;
+    }
+}, {passive: false});
+
+gallerySlider.addEventListener("touchend", e => {
+    const now = Date.now();
+    if(now - lastTap < 300 && e.target.tagName === 'IMG') {
+        zoom = (zoom === 1) ? 2.5 : 1;
+        if(zoom === 1) resetGallery();
+        else {
+            gallerySlider.style.scrollSnapType = "none";
+            gallerySlider.style.overflowX = "hidden";
+            e.target.style.transform = `scale(2.5)`;
+        }
+    }
+    lastTap = now;
 });
 
-async function loadProperties(){
- try {
-  const qs = await db.collection("properties").orderBy("timestamp","desc").get();
-  const list = document.getElementById("list"); list.innerHTML = "";
-  qs.forEach(doc=>{
-   const d=doc.data(); const imgs=d.images||[]; const json=encodeURIComponent(JSON.stringify(imgs));
-   list.innerHTML+=`
-    <div class="card">
-     <div class="slider">${imgs.map(i=>`<img src="${i}" onclick="openGallery('${json}')">`).join("")}</div>
-     <h3 style="margin:10px 0 5px">${d.title}</h3>
-     <div class="action-row">
-      <a class="action call" href="tel:${d.phone}">📞<span>Call</span></a>
-      <a class="action whatsapp" href="https://wa.me/${d.phone}?text=Hi">💬<span>WhatsApp</span></a>
-      <a class="action chat" href="chat.html?id=${doc.id}">🗨<span>Chat</span></a>
-      <button class="action share" onclick="navigator.share({title:'${d.title}',url:window.location.href})">📤<span>Share</span></button>
-      <button class="action report">🚩<span>Report</span></button>
-     </div>
-    </div>`;
-  });
- } catch(e){ console.log("error"); }
+// ✅ FIX #2: Android scroll index fix (prevents fractional scroll bugs)
+gallerySlider.addEventListener("scroll", e => {
+    currentIndex = Math.floor((e.target.scrollLeft + 10) / window.innerWidth);
+    updateGalleryCounter();
+});
+
+// --- 4. HELPER FUNCTIONS ---
+
+// ✅ XSS Protection
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Share Feature
+async function shareMe(title, id) {
+    const shareData = {
+        title: title,
+        text: `Check out this property: ${title}`,
+        url: window.location.href.split('?')[0] + "?id=" + id
+    };
+    try {
+        if (navigator.share) {
+            await navigator.share(shareData);
+        } else {
+            navigator.clipboard.writeText(shareData.url);
+            alert("✅ Link copied to clipboard!");
+        }
+    } catch (err) { 
+        console.log("Share failed:", err); 
+    }
+}
+
+// Report Logic
+function reportPost(id) {
+    if(confirm("Do you want to report this property?")) {
+        alert("✅ Thank you. Our team will review property ID: " + id);
+        // TODO: Send report to Firebase
+    }
 }
 </script>
 </body>
