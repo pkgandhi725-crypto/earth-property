@@ -6,40 +6,32 @@
     <title>Earth Property - Home</title>
     <style>
         body { font-family: system-ui; margin: 0; background: #f0f2f5; color: #1c1e21; }
-        header { background: #2e7d32; padding: 15px; color: white; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        header { background: #2e7d32; padding: 15px; color: white; position: sticky; top: 0; z-index: 1000; }
         .search-box { background: white; border-radius: 12px; display: flex; padding: 5px 15px; margin-top: 10px; align-items: center; }
         .search-box input { border: none; padding: 10px; width: 100%; outline: none; font-size: 16px; color: #333; }
-        
         .filters { display: flex; gap: 10px; overflow-x: auto; padding: 15px; scrollbar-width: none; }
-        .filters::-webkit-scrollbar { display: none; }
-        .filter-chip { background: white; padding: 8px 18px; border-radius: 20px; border: 1px solid #ddd; font-size: 13px; white-space: nowrap; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .filter-chip { background: white; padding: 8px 18px; border-radius: 20px; border: 1px solid #ddd; font-size: 13px; white-space: nowrap; font-weight: 600; cursor: pointer; }
         .filter-chip.active { background: #2e7d32; color: white; border-color: #2e7d32; }
-
-        .property-list { padding: 10px; max-width: 600px; margin: auto; min-height: 100vh; }
+        .property-list { padding: 10px; max-width: 600px; margin: auto; min-height: 80vh; }
         .prop-card { background: white; border-radius: 16px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative; }
-        .prop-img { width: 100%; aspect-ratio: 4/3; object-fit: cover; background: #eee; border-bottom: 1px solid #f0f0f0; }
+        .prop-img { width: 100%; aspect-ratio: 4/3; object-fit: cover; background: #ddd; }
         .prop-info { padding: 15px; }
         .prop-price { font-size: 22px; font-weight: 800; color: #2e7d32; margin: 0; }
-        .prop-title { font-size: 16px; color: #444; margin: 5px 0; font-weight: 600; text-transform: capitalize; }
-        .prop-loc { font-size: 13px; color: #777; display: flex; align-items: center; gap: 4px; margin-bottom: 10px; }
-        
-        .whatsapp-btn { background: #25D366; color: white; padding: 12px; border-radius: 12px; text-decoration: none; display: flex; align-items: center; justify-content: center; font-weight: 700; gap: 8px; transition: 0.3s; }
-        .whatsapp-btn:active { transform: scale(0.98); }
-        .edit-badge { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); color: white; padding: 6px 14px; border-radius: 20px; font-size: 12px; text-decoration: none; font-weight: bold; backdrop-filter: blur(5px); z-index: 10; }
-        
-        .fab { position: fixed; bottom: 25px; right: 25px; background: #2e7d32; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 5px 15px rgba(46,125,50,0.4); text-decoration: none; z-index: 999; }
+        .prop-title { font-size: 16px; color: #444; margin: 5px 0; font-weight: 600; }
+        .whatsapp-btn { background: #25D366; color: white; padding: 12px; border-radius: 12px; text-decoration: none; display: flex; align-items: center; justify-content: center; font-weight: 700; gap: 8px; margin-top: 10px; }
+        .edit-badge { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); color: white; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; z-index: 10; text-decoration: none; }
+        .fab { position: fixed; bottom: 25px; right: 25px; background: #2e7d32; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); text-decoration: none; }
     </style>
 </head>
 <body>
 
 <header>
     <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 style="margin:0; font-weight: 800; font-size: 24px;">Earth Property</h2>
-        <div id="userBtn" style="font-size: 14px; font-weight: 700; background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 8px;">Loading...</div>
+        <h2 style="margin:0;">Earth Property</h2>
+        <div id="userBtn" style="font-size: 14px; font-weight: 700;">Loading...</div>
     </div>
     <div class="search-box">
-        <span>🔍</span>
-        <input type="text" id="citySearch" placeholder="Search City, Area or Title..." oninput="filterData()">
+        <input type="text" id="citySearch" placeholder="Search City or Title..." oninput="filterData()">
     </div>
 </header>
 
@@ -47,17 +39,9 @@
     <div class="filter-chip active" onclick="setFilter('All', this)">All</div>
     <div class="filter-chip" onclick="setFilter('Sell', this)">For Sale</div>
     <div class="filter-chip" onclick="setFilter('Rent', this)">For Rent</div>
-    <div class="filter-chip" onclick="setFilter('1', this)">1 BHK</div>
-    <div class="filter-chip" onclick="setFilter('2', this)">2 BHK</div>
-    <div class="filter-chip" onclick="setFilter('3', this)">3 BHK</div>
-    <div class="filter-chip" onclick="setFilter('4', this)">4+ BHK</div>
 </div>
 
-<div class="property-list" id="propertyList">
-    <div style="text-align: center; padding: 100px 20px; color: #888; font-weight: 500;">
-        Fetching properties for you...
-    </div>
-</div>
+<div class="property-list" id="propertyList"></div>
 
 <a href="upload.html" class="fab">+</a>
 
@@ -66,7 +50,6 @@
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
 
 <script>
-// --- FIREBASE CONFIG ---
 const firebaseConfig = { 
     apiKey:"AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
     authDomain:"earth-properties-c3c56.firebaseapp.com", 
@@ -79,76 +62,62 @@ const auth = firebase.auth();
 let allProperties = [];
 let currentFilter = 'All';
 
-// 1. Fetch Data From Firestore
 async function loadProperties() {
+    const listDiv = document.getElementById('propertyList');
     try {
-        const snap = await db.collection("properties").orderBy("createdAt", "desc").get();
+        // 🔥 FIX 1: Removed orderBy temporarily to avoid Index error
+        const snap = await db.collection("properties").get();
+        
+        if(snap.empty) {
+            listDiv.innerHTML = "<center style='padding:50px;'>No properties in database. Click + to add.</center>";
+            return;
+        }
+
         allProperties = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        filterData(); // Initial render
-    } catch (error) {
-        console.error("Error loading properties:", error);
-        document.getElementById('propertyList').innerHTML = `<div style="text-align:center; padding:50px; color:red;">Error loading properties. Check Console.</div>`;
+        
+        // Manual sort (Newest first)
+        allProperties.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+        
+        filterData();
+    } catch (e) {
+        listDiv.innerHTML = "Error: " + e.message;
     }
 }
 
-// 2. Render List With Multi-Format Support
 function renderProperties(data) {
     const list = document.getElementById('propertyList');
-    if(data.length === 0) {
-        list.innerHTML = `
-            <div style="text-align:center; padding:80px 20px; color:#999;">
-                <p style="font-size:18px;">No properties found here.</p>
-                <p style="font-size:14px;">Try searching for a different city or category.</p>
-            </div>`;
-        return;
-    }
-    
     list.innerHTML = data.map(p => {
-        // 🔥 COMPATIBILITY FIX: Handle both Object {url, id} and String "url"
-        let displayImg = 'https://via.placeholder.com/400x300?text=Earth+Property';
-        if (p.images && p.images.length > 0) {
-            const firstImg = p.images[0];
-            displayImg = typeof firstImg === 'object' ? firstImg.url : firstImg;
+        // 🔥 FIX 2: Bulletproof Image Logic
+        let imgUrl = 'https://via.placeholder.com/400x300?text=No+Image';
+        if(p.images && p.images.length > 0) {
+            const first = p.images[0];
+            imgUrl = (typeof first === 'object') ? first.url : first;
         }
-        
+
         const isOwner = auth.currentUser && auth.currentUser.uid === p.ownerId;
-        const formattedPrice = Number(p.price || 0).toLocaleString('en-IN');
-        
+
         return `
             <div class="prop-card">
-                ${isOwner ? `<a href="edit.html?id=${p.id}" class="edit-badge">Edit My Ad</a>` : ''}
-                <img src="${displayImg}" class="prop-img" onerror="this.src='https://via.placeholder.com/400x300?text=Loading+Error'" loading="lazy">
+                ${isOwner ? `<a href="edit.html?id=${p.id}" class="edit-badge">Edit</a>` : ''}
+                <img src="${imgUrl}" class="prop-img">
                 <div class="prop-info">
-                    <p class="prop-price">₹${formattedPrice}</p>
-                    <div class="prop-title">${p.title || 'Untitled Property'}</div>
-                    <div class="prop-loc">📍 ${p.location || 'Location not specified'} | ${p.bhk || '?'} BHK</div>
-                    <a href="https://wa.me/91${p.phone}?text=Hi, I am interested in your property '${p.title}' listed on Earth Property." class="whatsapp-btn">
-                        <span>💬</span> Chat with Owner
-                    </a>
+                    <p class="prop-price">₹${p.price || '0'}</p>
+                    <div class="prop-title">${p.title || 'Property'}</div>
+                    <div style="font-size:13px; color:#666;">📍 ${p.location || 'N/A'}</div>
+                    <a href="https://wa.me/91${p.phone}" class="whatsapp-btn">WhatsApp Owner</a>
                 </div>
             </div>
         `;
     }).join('');
 }
 
-// 3. Smart Search & Chip Filter
 function filterData() {
-    const searchTerm = document.getElementById('citySearch').value.toLowerCase();
-    
+    const search = document.getElementById('citySearch').value.toLowerCase();
     const filtered = allProperties.filter(p => {
-        const title = (p.title || "").toLowerCase();
-        const loc = (p.location || "").toLowerCase();
-        
-        const matchesSearch = title.includes(searchTerm) || loc.includes(searchTerm);
-        
-        let matchesFilter = true;
-        if(currentFilter === 'Sell') matchesFilter = (p.type === 'Sell');
-        else if(currentFilter === 'Rent') matchesFilter = (p.type === 'Rent');
-        else if(currentFilter !== 'All') matchesFilter = (p.bhk == currentFilter);
-        
-        return matchesSearch && matchesFilter;
+        const matchSearch = (p.location || "").toLowerCase().includes(search) || (p.title || "").toLowerCase().includes(search);
+        const matchType = currentFilter === 'All' || p.type === currentFilter;
+        return matchSearch && matchType;
     });
-    
     renderProperties(filtered);
 }
 
@@ -159,22 +128,9 @@ function setFilter(type, el) {
     filterData();
 }
 
-// 4. Auth State Monitor
 auth.onAuthStateChanged(user => {
-    const btn = document.getElementById('userBtn');
-    if(user) {
-        btn.innerText = "Logout";
-        btn.style.cursor = "pointer";
-        btn.onclick = () => {
-            if(confirm("Logout from Earth Property?")) {
-                auth.signOut().then(() => location.reload());
-            }
-        };
-    } else {
-        btn.innerText = "Login";
-        btn.style.cursor = "pointer";
-        btn.onclick = () => location.href = 'login.html';
-    }
+    document.getElementById('userBtn').innerText = user ? "Logout" : "Login";
+    document.getElementById('userBtn').onclick = () => user ? auth.signOut().then(()=>location.reload()) : location.href='login.html';
     loadProperties();
 });
 </script>
