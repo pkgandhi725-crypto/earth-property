@@ -9,24 +9,21 @@
         body, html { height: 100%; margin: 0; font-family: system-ui; background: #e5ddd5; display: flex; flex-direction: column; }
         header { background: #2e7d32; color: white; padding: 12px 15px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         header a { color: white; text-decoration: none; font-size: 18px; }
-        #chatPartner { font-weight: 700; font-size: 17px; letter-spacing: 0.3px; }
-        
+        #chatPartner { font-weight: 700; font-size: 17px; }
         #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; scroll-behavior: smooth; }
-        
         .chat-input-container { background: #f0f0f0; padding: 10px; display: flex; gap: 8px; align-items: center; position: sticky; bottom: 0; }
-        .chat-input-container input { flex: 1; border: none; padding: 12px 18px; border-radius: 25px; outline: none; font-size: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .chat-input-container input { flex: 1; border: none; padding: 12px 18px; border-radius: 25px; outline: none; font-size: 15px; }
         .send-btn { background: #2e7d32; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-
-        .msg { max-width: 75%; padding: 8px 12px; border-radius: 12px; font-size: 14px; position: relative; line-height: 1.4; word-wrap: break-word; }
-        .sent { align-self: flex-end; background: #dcf8c6; border-top-right-radius: 2px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
-        .received { align-self: flex-start; background: white; border-top-left-radius: 2px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
+        .msg { max-width: 75%; padding: 8px 12px; border-radius: 12px; font-size: 14px; position: relative; line-height: 1.4; word-wrap: break-word; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
+        .sent { align-self: flex-end; background: #dcf8c6; border-top-right-radius: 2px; }
+        .received { align-self: flex-start; background: white; border-top-left-radius: 2px; }
         .time { font-size: 10px; color: #888; margin-top: 4px; text-align: right; display: block; }
     </style>
 </head>
 <body>
 
 <header>
-    <a href="index.html"><i class="fa fa-arrow-left"></i></a>
+    <a href="inbox.html"><i class="fa fa-arrow-left"></i></a>
     <div id="chatPartner">Chat</div>
 </header>
 
@@ -42,11 +39,7 @@
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
 
 <script>
-const firebaseConfig = { 
-    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
-    authDomain: "earth-properties-c3c56.firebaseapp.com", 
-    projectId: "earth-properties-c3c56"
-};
+const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
@@ -60,52 +53,48 @@ auth.onAuthStateChanged(async user => {
     if (!user) { location.href = 'login.html'; return; }
     if (!partnerId) { location.href='index.html'; return; }
 
-    // 🔥 Owner ka naam fetch karna
-    try {
-        const userDoc = await db.collection("users").doc(partnerId).get();
-        if(userDoc.exists){
-            const u = userDoc.data();
-            document.getElementById("chatPartner").innerText = u.name || u.email.split('@')[0] || "Owner";
-        }
-    } catch(e) { console.log("Name fetch error", e); }
-
     const ids = [user.uid, partnerId].sort();
     currentRoomId = `${ids[0]}_${ids[1]}_${propId}`;
+
+    // Load Partner Name
+    const userDoc = await db.collection("users").doc(partnerId).get();
+    if(userDoc.exists) document.getElementById("chatPartner").innerText = userDoc.data().name || "Owner";
+
+    // Mark as Seen when opening
+    db.collection("chats").doc(currentRoomId).update({ isSeen: true }).catch(() => {});
+    
     loadMessages();
 });
 
 function loadMessages() {
-    db.collection("chats").doc(currentRoomId).collection("messages")
-      .orderBy("timestamp", "asc")
-      .onSnapshot(snapshot => {
-          const msgDiv = document.getElementById('messages');
-          msgDiv.innerHTML = '';
-          snapshot.forEach(doc => {
-              const data = doc.data();
-              const isMe = data.senderId === auth.currentUser.uid;
-              const time = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '...';
-              msgDiv.innerHTML += `<div class="msg ${isMe ? 'sent' : 'received'}">${data.text}<span class="time">${time}</span></div>`;
-          });
-          msgDiv.scrollTop = msgDiv.scrollHeight;
-      });
+    db.collection("chats").doc(currentRoomId).collection("messages").orderBy("timestamp", "asc")
+    .onSnapshot(snap => {
+        const msgDiv = document.getElementById('messages');
+        msgDiv.innerHTML = '';
+        snap.forEach(doc => {
+            const d = doc.data();
+            const isMe = d.senderId === auth.currentUser.uid;
+            const time = d.timestamp ? new Date(d.timestamp.seconds * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
+            msgDiv.innerHTML += `<div class="msg ${isMe ? 'sent' : 'received'}">${d.text}<span class="time">${time}</span></div>`;
+        });
+        msgDiv.scrollTop = msgDiv.scrollHeight;
+    });
 }
 
 async function sendMessage() {
     const text = document.getElementById('msgInput').value.trim();
-    if (!text || !currentRoomId) return;
+    if (!text) return;
     document.getElementById('msgInput').value = '';
-    
-    const msgData = {
-        senderId: auth.currentUser.uid,
-        text: text,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    };
 
-    await db.collection("chats").doc(currentRoomId).collection("messages").add(msgData);
+    const msg = { senderId: auth.currentUser.uid, text, timestamp: firebase.firestore.FieldValue.serverTimestamp() };
+    await db.collection("chats").doc(currentRoomId).collection("messages").add(msg);
 
+    // Update Room Meta for Inbox
     db.collection("chats").doc(currentRoomId).set({
         lastMessage: text,
         lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
+        lastSenderId: auth.currentUser.uid,
+        isSeen: false,
         users: [auth.currentUser.uid, partnerId],
         propId: propId
     }, { merge: true });
