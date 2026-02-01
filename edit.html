@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Edit Ad - Earth Property</title>
+    <title>Edit Property - Earth Property</title>
     <style>
         body { font-family: system-ui; margin: 0; background: #f4f7f6; padding-bottom: 40px; }
         header { background: #2e7d32; color: white; padding: 18px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; }
         .container { padding: 15px; max-width: 500px; margin: auto; }
         .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        label { font-weight: 700; font-size: 13px; color: #666; display: block; margin-top: 18px; text-transform: uppercase; }
-        input, textarea, select { width: 100%; padding: 14px; margin-top: 6px; border: 1.5px solid #eee; border-radius: 12px; box-sizing: border-box; font-size: 16px; outline: none; }
+        label { font-weight: 700; font-size: 12px; color: #666; display: block; margin-top: 15px; text-transform: uppercase; }
+        input, textarea, select { width: 100%; padding: 12px; margin-top: 5px; border: 1.5px solid #eee; border-radius: 10px; box-sizing: border-box; font-size: 16px; outline: none; }
         
         .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
         .photo-box { aspect-ratio: 1/1; border: 1.5px solid #eee; border-radius: 12px; overflow: hidden; position: relative; background: #fafafa; }
         .photo-box img { width: 100%; height: 100%; object-fit: cover; }
         .del-btn { position: absolute; top: 5px; right: 5px; background: #d32f2f; color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-weight: bold; }
         
-        #submitBtn { width: 100%; background: #2e7d32; color: white; border: none; padding: 18px; border-radius: 15px; font-weight: 800; font-size: 16px; margin-top: 25px; cursor: pointer; }
-        #submitBtn:disabled { background: #ccc; }
+        #submitBtn { width: 100%; background: #2e7d32; color: white; border: none; padding: 16px; border-radius: 12px; font-weight: 800; font-size: 16px; margin-top: 25px; cursor: pointer; }
+        #submitBtn:disabled { background: #ccc; cursor: not-allowed; }
         #status { text-align: center; font-size: 13px; margin-top: 15px; color: #2e7d32; font-weight: 600; }
     </style>
 </head>
@@ -26,40 +26,48 @@
 
 <header>
     <div onclick="history.back()" style="cursor:pointer; font-size: 24px;">←</div>
-    <h3 style="margin:0;">Edit Property</h3>
+    <h3 style="margin:0;">Edit Property Details</h3>
 </header>
 
 <div class="container">
     <div id="loader" style="text-align:center; padding:50px;">Fetching Details...</div>
 
     <div class="card" id="editForm" style="display:none;">
-        <label>Manage Photos (Max 5)</label>
+        <label>Property Photos (Max 5)</label>
         <div class="photo-grid" id="photoGrid"></div>
         <input type="file" id="fileInput" multiple accept="image/*" style="display:none">
 
-        <label>Property Category</label>
+        <label>I want to</label>
         <select id="type">
-            <option value="Sell">For Sale</option>
-            <option value="Rent">For Rent</option>
+            <option value="Sell">Sell My Property</option>
+            <option value="Rent">Rent My Property</option>
         </select>
 
-        <label>Title</label>
+        <label>Property Type (BHK)</label>
+        <select id="bhk">
+            <option value="1">1 BHK</option>
+            <option value="2">2 BHK</option>
+            <option value="3">3 BHK</option>
+            <option value="4">4+ BHK</option>
+        </select>
+
+        <label>Property Title</label>
         <input type="text" id="title">
         
         <label>Price (₹)</label>
         <input type="number" id="price">
         
-        <label>Location</label>
+        <label>City / Location</label>
         <input type="text" id="location">
         
-        <label>WhatsApp Number</label>
+        <label>WhatsApp Number (without +91)</label>
         <input type="tel" id="phone">
 
         <label>Description</label>
         <textarea id="desc" rows="3"></textarea>
 
         <p id="status"></p>
-        <button id="submitBtn">UPDATE PROPERTY</button>
+        <button id="submitBtn">SAVE CHANGES</button>
     </div>
 </div>
 
@@ -87,23 +95,28 @@ let existingPhotos = [], existingPaths = [], newFiles = [], pathsToDelete = [];
 
 auth.onAuthStateChanged(async user => {
     if(!user) { location.href='login.html'; return; }
-    const doc = await db.collection("properties").doc(propertyId).get();
-    const d = doc.data();
-    if(d.ownerId !== user.uid) { alert("Unauthorized"); history.back(); return; }
+    if(!propertyId) { history.back(); return; }
 
-    document.getElementById('title').value = d.title;
-    document.getElementById('price').value = d.price;
-    document.getElementById('location').value = d.location;
-    document.getElementById('phone').value = d.phone;
-    document.getElementById('desc').value = d.description || "";
-    document.getElementById('type').value = d.type || "Sell";
-    
-    existingPhotos = d.images || [];
-    existingPaths = d.storagePaths || [];
-    
-    document.getElementById('loader').style.display = "none";
-    document.getElementById('editForm').style.display = "block";
-    render();
+    try {
+        const doc = await db.collection("properties").doc(propertyId).get();
+        const d = doc.data();
+        if(d.ownerId !== user.uid) { history.back(); return; }
+
+        document.getElementById('title').value = d.title || "";
+        document.getElementById('price').value = d.price || "";
+        document.getElementById('location').value = d.location || "";
+        document.getElementById('phone').value = d.phone || "";
+        document.getElementById('desc').value = d.description || "";
+        document.getElementById('type').value = d.type || "Sell";
+        document.getElementById('bhk').value = d.bhk || "2";
+        
+        existingPhotos = d.images || [];
+        existingPaths = d.storagePaths || [];
+        
+        document.getElementById('loader').style.display = "none";
+        document.getElementById('editForm').style.display = "block";
+        render();
+    } catch(e) { alert("Error loading"); }
 });
 
 function render() {
@@ -120,16 +133,17 @@ function render() {
     }
 }
 
+// 🛠️ FIX: Resetting fileInput value to allow re-selection
 document.getElementById('fileInput').onchange = (e) => {
     const files = Array.from(e.target.files);
     files.forEach(file => { if(existingPhotos.length + newFiles.length < 5) newFiles.push(file); });
+    e.target.value = ""; 
     render();
 };
 
 function removeEx(i) { pathsToDelete.push(existingPaths[i]); existingPhotos.splice(i,1); existingPaths.splice(i,1); render(); }
 function removeNew(i) { newFiles.splice(i,1); render(); }
 
-// --- Compression Logic ---
 async function compress(file) {
     return new Promise(resolve => {
         const reader = new FileReader();
@@ -139,11 +153,10 @@ async function compress(file) {
             img.src = e.target.result;
             img.onload = () => {
                 const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
                 let w = img.width, h = img.height;
-                if(w > 1200) { h = h * (1200/w); w = 1200; }
+                if(w > 1000) { h *= 1000/w; w = 1000; }
                 canvas.width = w; canvas.height = h;
-                ctx.drawImage(img, 0, 0, w, h);
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
                 canvas.toBlob(blob => resolve(blob), 'image/jpeg', 0.7);
             };
         };
@@ -152,17 +165,15 @@ async function compress(file) {
 
 document.getElementById('submitBtn').onclick = async () => {
     const btn = document.getElementById('submitBtn');
-    btn.disabled = true;
     const status = document.getElementById('status');
+    btn.disabled = true;
     
     try {
-        // 1. Cleanup Storage
+        status.innerText = "Processing...";
         for(let path of pathsToDelete) { await storage.ref(path).delete().catch(()=>{}); }
 
-        // 2. Upload Compressed New Photos
         const finalUrls = [...existingPhotos], finalPaths = [...existingPaths];
         for(let i=0; i<newFiles.length; i++) {
-            status.innerText = `Optimizing photo ${i+1}...`;
             const blob = await compress(newFiles[i]);
             const path = `properties/${auth.currentUser.uid}/${propertyId}/${Date.now()}_${i}.jpg`;
             const snap = await storage.ref(path).put(blob);
@@ -170,7 +181,6 @@ document.getElementById('submitBtn').onclick = async () => {
             finalPaths.push(path);
         }
 
-        // 3. Update Firestore
         await db.collection("properties").doc(propertyId).update({
             title: document.getElementById('title').value,
             price: document.getElementById('price').value,
@@ -178,13 +188,15 @@ document.getElementById('submitBtn').onclick = async () => {
             phone: document.getElementById('phone').value,
             description: document.getElementById('desc').value,
             type: document.getElementById('type').value,
+            bhk: document.getElementById('bhk').value,
             images: finalUrls,
-            storagePaths: finalPaths
+            storagePaths: finalPaths,
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        status.innerText = "✅ Successfully Updated!";
-        setTimeout(() => location.href='index.html', 1000);
-    } catch(e) { alert(e.message); btn.disabled = false; }
+        status.innerText = "✅ Updated!";
+        setTimeout(() => location.href='index.html', 800);
+    } catch(e) { alert("Error"); btn.disabled = false; }
 };
 </script>
 </body>
