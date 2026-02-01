@@ -1,4 +1,142 @@
-// --- 3. GALLERY ZOOM & PAN PHYSICS (ULTIMATE FIX) ---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Earth Property - Final Pro</title>
+<style>
+/* 🎨 UI & Feed Styles */
+body{margin:0;font-family:system-ui,Arial;background:#f2f2f2;padding-bottom:20px;-webkit-tap-highlight-color:transparent;}
+header{background:#2e7d32;color:white;padding:15px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
+#userBox{font-size:12px;opacity:.9;margin:0}
+.profile-img{width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,255,255,.3);object-fit:cover;cursor:pointer}
+.card{background:white;margin:12px;padding:12px;border-radius:14px;box-shadow:0 4px 12px rgba(0,0,0,.08);position:relative;animation:fadeIn 0.5s ease;}
+@keyframes fadeIn {from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+.slider{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;gap:8px}
+.slider::-webkit-scrollbar{display:none}
+.slider img{min-width:100%;scroll-snap-align:center;border-radius:12px;height:230px;object-fit:cover;cursor:pointer;background:#eee}
+
+.spinner { width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid #2e7d32; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* 🖼️ FIXED GALLERY UI */
+#gallery{position:fixed;inset:0;background:black;display:none;z-index:9999;overflow:hidden}
+#gallerySlider { 
+    display: flex; height: 100vh; width: 100vw; 
+    overflow-x: auto; scroll-snap-type: x mandatory; 
+    scrollbar-width: none; touch-action: pan-x pan-y; 
+}
+#gallerySlider::-webkit-scrollbar{display:none}
+
+.gallery-item { 
+    flex: 0 0 100vw; width: 100vw; height: 100vh; 
+    scroll-snap-align: center; display: flex; 
+    align-items: center; justify-content: center; 
+    background:black; box-sizing: border-box; padding: 0 5px; 
+}
+
+.gallery-item img { 
+    max-width: 100%; max-height: 100%; 
+    object-fit: contain; transform-origin: center center;
+    transition: transform 0.1s ease-out;
+}
+
+#galleryCounter{position:absolute;top:25px;left:20px;color:white;background:rgba(0,0,0,.6);padding:6px 14px;border-radius:20px;z-index:10001;}
+#galleryClose{position:absolute;top:25px;right:20px;background:#2e7d32;color:white;border:none;width:44px;height:44px;border-radius:50%;font-size:28px;z-index:10001;cursor:pointer}
+
+/* ⚡ Actions */
+.action-row{display:flex;justify-content:space-between;gap:6px;margin-top:12px}
+.action{flex:1; height:54px;border-radius:12px;background:#f5f5f5;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;text-decoration:none;color:#444;cursor:pointer}
+.action span{margin-top:2px;font-weight:600;}
+.call{background:#e3f2fd; color:#0d47a1} .whatsapp{background:#e8f5e9; color:#1b5e20} .chat{background:#f3e5f5; color:#4a148c} .share{background:#e0f2f1; color:#004d40} .report{background:#ffebee; flex:0 0 40px}
+</style>
+</head>
+<body>
+
+<header>
+  <div><h3 style="margin:0">Earth Property</h3><p id="userBox">Connecting...</p></div>
+  <img id="profileBtn" class="profile-img" src="https://ui-avatars.com/api/?name=User" alt="Profile">
+</header>
+
+<div id="list"></div>
+
+<div id="gallery">
+ <div id="galleryCounter">1/1</div>
+ <button id="galleryClose" onclick="closeGallery()">×</button>
+ <div id="gallerySlider"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+
+<script>
+// 🔥 Firebase Setup
+const firebaseConfig = { 
+    apiKey:"AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
+    authDomain:"earth-properties-c3c56.firebaseapp.com", 
+    projectId:"earth-properties-c3c56"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore(); 
+const auth = firebase.auth();
+
+let galleryImgs = [];
+
+// --- 1. AUTH ---
+auth.onAuthStateChanged(u => {
+    const userBox = document.getElementById("userBox");
+    const profileBtn = document.getElementById("profileBtn");
+    if (u) {
+        const name = u.displayName || u.email.split('@')[0] || "User";
+        if (userBox) userBox.textContent = "👤 " + name;
+        if (profileBtn) profileBtn.src = u.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2e7d32&color=fff`;
+        loadProperties();
+    } else {
+        setTimeout(() => { if(!auth.currentUser) location.href = "login.html"; }, 1500);
+    }
+});
+
+// --- 2. DATA LOAD ---
+async function loadProperties() {
+    const list = document.getElementById("list");
+    try {
+        list.innerHTML = `<center style="padding:50px;"><div class="spinner"></div><p>Searching...</p></center>`;
+        const qs = await db.collection("properties").orderBy("timestamp", "desc").limit(40).get();
+        if (qs.empty) {
+            list.innerHTML = `<center style="padding:50px;color:#999">No properties found.</center>`;
+            return;
+        }
+        list.innerHTML = "";
+        qs.forEach(doc => {
+            const d = doc.data();
+            const imgs = d.images || [];
+            const docId = doc.id;
+            const phone = d.phone ? d.phone.replace(/\D/g,'') : "";
+            list.innerHTML += `
+                <div class="card">
+                    <div class="slider">
+                        ${imgs.map(i => `<img src="${i}" onclick="openGallery('${encodeURIComponent(JSON.stringify(imgs))}')" loading="lazy">`).join("")}
+                    </div>
+                    <div style="padding:5px">
+                        <h3 style="margin:10px 0 5px; color:#222">${d.title}</h3>
+                        <p style="margin:0; color:#2e7d32; font-weight:bold">₹ ${d.price}</p>
+                        <p style="margin:5px 0 15px; color:#666; font-size:13px">📍 ${d.location}</p>
+                        <div class="action-row">
+                            <a class="action call" href="tel:${phone}">📞<span>Call</span></a>
+                            <a class="action whatsapp" href="https://wa.me/${phone}?text=Interested in ${encodeURIComponent(d.title)}">💬<span>WhatsApp</span></a>
+                            <a class="action chat" href="chat.html?id=${docId}">🗨️<span>Chat</span></a>
+                            <button class="action share" onclick="shareMe('${d.title}', '${docId}')">📤<span>Share</span></button>
+                            <button class="action report">🚩</button>
+                        </div>
+                    </div>
+                </div>`;
+        });
+    } catch (e) { console.error(e); }
+}
+
+// --- 3. ULTIMATE GALLERY PHYSICS ---
 function openGallery(json) {
     galleryImgs = JSON.parse(decodeURIComponent(json));
     const slider = document.getElementById("gallerySlider");
@@ -8,16 +146,14 @@ function openGallery(json) {
     initZoom(); 
 }
 
+function closeGallery() { 
+    document.getElementById("gallery").style.display = "none";
+}
+
 function initZoom() {
     const imgs = document.querySelectorAll('.zoomable');
     imgs.forEach(img => {
-        let lastTap = 0;
-        let scale = 1;
-        let pointX = 0;
-        let pointY = 0;
-        let startX = 0;
-        let startY = 0;
-        let isPanning = false;
+        let lastTap = 0, scale = 1, pointX = 0, pointY = 0, startX = 0, startY = 0, isPanning = false, initialDist = 0;
 
         img.addEventListener('touchstart', e => {
             if (e.touches.length === 1 && scale > 1) {
@@ -43,12 +179,10 @@ function initZoom() {
                 img.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
                 document.getElementById("gallerySlider").style.overflowX = scale > 1.1 ? "hidden" : "auto";
             }
-        });
+        }, { passive: false });
 
         img.addEventListener('touchend', e => {
             isPanning = false;
-            
-            // Double Tap to Toggle Zoom
             let now = new Date().getTime();
             if (now - lastTap < 300) {
                 if (scale > 1.1) {
@@ -65,3 +199,20 @@ function initZoom() {
         });
     });
 }
+
+document.getElementById("gallerySlider").onscroll = (e) => {
+    const idx = Math.round(e.target.scrollLeft / window.innerWidth);
+    updateCounter(idx);
+};
+
+function updateCounter(i) {
+    document.getElementById("galleryCounter").textContent = `${i + 1} / ${galleryImgs.length}`;
+}
+
+function shareMe(title, id) {
+    const url = window.location.origin + window.location.pathname + "?id=" + id;
+    if (navigator.share) navigator.share({ title: title, url: url }); else alert("Copied!");
+}
+</script>
+</body>
+</html>
