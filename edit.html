@@ -13,13 +13,11 @@
         input, textarea, select { width: 100%; padding: 14px; margin-top: 8px; border: 1.5px solid #eee; border-radius: 12px; box-sizing: border-box; font-size: 16px; outline: none; background: #fdfdfd; }
         input:focus { border-color: #2e7d32; }
         
-        /* Photo UI Matched to Screenshot */
         .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 15px; }
         .photo-box { aspect-ratio: 1/1; border: 1.5px solid #eee; border-radius: 15px; overflow: hidden; position: relative; background: #fafafa; border-style: dashed; }
         .photo-box img { width: 100%; height: 100%; object-fit: cover; }
         .del-btn { position: absolute; top: 5px; right: 5px; background: #e53935; color: white; border: 2px solid white; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; }
         
-        /* Progress Bar Matched */
         .prog-bg { width: 100%; height: 8px; background: #eee; border-radius: 10px; margin-top: 20px; display: none; overflow: hidden; }
         .prog-bar { width: 0%; height: 100%; background: #2e7d32; transition: 0.3s; }
         #statusText { text-align: center; color: #2e7d32; font-weight: bold; font-size: 14px; margin-top: 8px; display: none; }
@@ -32,7 +30,7 @@
 
 <header>
     <div onclick="history.back()" style="cursor:pointer; font-size: 24px;">←</div>
-    <h3 style="margin:0;">List Your Property</h3>
+    <h3 style="margin:0;">Edit Property Details</h3>
 </header>
 
 <div class="container">
@@ -161,12 +159,19 @@ async function compress(file) {
             img.onload = () => {
                 const canvas = document.createElement('canvas');
                 let w = img.width, h = img.height;
-                if(w > 1000) { h *= 1000/w; w = 1000; }
+                const max = 1000;
+                if(w > h && w > max){ h *= max/w; w = max; }
+                else if(h > max){ w *= max/h; h = max; }
                 canvas.width = w; canvas.height = h;
                 canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                canvas.toBlob(blob => resolve(blob), 'image/jpeg', 0.7);
+                canvas.toBlob(blob => {
+                    if(blob && blob.size > 0) resolve(blob);
+                    else resolve(file); // Fallback logic
+                }, 'image/jpeg', 0.7);
             };
+            img.onerror = () => resolve(file);
         };
+        reader.onerror = () => resolve(file);
     });
 }
 
@@ -220,7 +225,7 @@ document.getElementById('submitBtn').onclick = async () => {
         statusText.innerText = "✅ Property Updated!";
         setTimeout(() => location.href='index.html', 1000);
     } catch(e) { 
-        alert("Upload Failed. Try again."); 
+        alert("Update Failed. Try again."); 
         btn.disabled = false; 
         progBg.style.display = "none";
         statusText.style.display = "none";
