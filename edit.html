@@ -30,7 +30,7 @@
 
 <header>
     <div onclick="history.back()" style="cursor:pointer; font-size: 24px;">←</div>
-    <h3 style="margin:0;">Edit Property Details</h3>
+    <h3 style="margin:0;">List Your Property</h3>
 </header>
 
 <div class="container">
@@ -149,6 +149,7 @@ document.getElementById('fileInput').onchange = (e) => {
 function removeEx(i) { pathsToDelete.push(existingPaths[i]); existingPhotos.splice(i,1); existingPaths.splice(i,1); render(); }
 function removeNew(i) { newFiles.splice(i,1); render(); }
 
+// 🔥 ROCKET FIX STEP 1: Compression returning Base64
 async function compress(file) {
     return new Promise(resolve => {
         const reader = new FileReader();
@@ -159,19 +160,20 @@ async function compress(file) {
             img.onload = () => {
                 const canvas = document.createElement('canvas');
                 let w = img.width, h = img.height;
-                const max = 1000;
+                const max = 1200;
                 if(w > h && w > max){ h *= max/w; w = max; }
                 else if(h > max){ w *= max/h; h = max; }
                 canvas.width = w; canvas.height = h;
-                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                canvas.toBlob(blob => {
-                    if(blob && blob.size > 0) resolve(blob);
-                    else resolve(file); // Fallback logic
-                }, 'image/jpeg', 0.7);
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+
+                // Convert to Base64 to bypass Android Blob bug
+                const base64 = canvas.toDataURL("image/jpeg", 0.7);
+                resolve(base64);
             };
-            img.onerror = () => resolve(file);
+            img.onerror = () => resolve(e.target.result); // Fallback to original
         };
-        reader.onerror = () => resolve(file);
+        reader.onerror = () => resolve("");
     });
 }
 
@@ -186,14 +188,18 @@ document.getElementById('submitBtn').onclick = async () => {
     statusText.style.display = "block";
     
     try {
+        // Purane images delete karna
         for(let path of pathsToDelete) { await storage.ref(path).delete().catch(()=>{}); }
 
         const finalUrls = [...existingPhotos], finalPaths = [...existingPaths];
         
         for(let i=0; i<newFiles.length; i++) {
-            const blob = await compress(newFiles[i]);
+            // 🔥 ROCKET FIX STEP 2: Base64 String lena
+            const base64Data = await compress(newFiles[i]);
             const path = `properties/${auth.currentUser.uid}/${propertyId}/${Date.now()}_${i}.jpg`;
-            const uploadTask = storage.ref(path).put(blob);
+            
+            // 🔥 ROCKET FIX STEP 3: putString use karna
+            const uploadTask = storage.ref(path).putString(base64Data, 'data_url');
 
             await new Promise((resolve, reject) => {
                 uploadTask.on('state_changed', (snap) => {
@@ -225,7 +231,7 @@ document.getElementById('submitBtn').onclick = async () => {
         statusText.innerText = "✅ Property Updated!";
         setTimeout(() => location.href='index.html', 1000);
     } catch(e) { 
-        alert("Update Failed. Try again."); 
+        alert("Update Failed. Please try again."); 
         btn.disabled = false; 
         progBg.style.display = "none";
         statusText.style.display = "none";
