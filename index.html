@@ -3,227 +3,230 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Earth Property - Final Pro</title>
+<title>Earth Property Pro</title>
 <style>
-/* 🎨 UI & Feed Styles */
-body{margin:0;font-family:system-ui,Arial;background:#f2f2f2;padding-bottom:20px;-webkit-tap-highlight-color:transparent;}
-header{background:#2e7d32;color:white;padding:15px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
-#userBox{font-size:12px;opacity:.9;margin:0}
+    body { margin:0; font-family:system-ui, -apple-system, sans-serif; background:#f4f7f6; padding-bottom:75px; overflow-x:hidden; }
+    header { background:#2e7d32; color:white; padding:15px; position:sticky; top:0; z-index:100; display:flex; justify-content:space-between; align-items:center; }
+    
+    /* Search & Filter Bar */
+    .search-bar { background:white; padding:12px; position:sticky; top:65px; z-index:99; border-bottom:1px solid #eee; display:flex; gap:10px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
+    #searchInput { flex:1; padding:12px; border-radius:12px; border:1px solid #eee; background:#f9f9f9; outline:none; font-size:14px; }
+    #filterType { padding:0 10px; border-radius:12px; border:1px solid #eee; background:#f9f9f9; font-weight:600; color:#2e7d32; }
 
-/* 🟢 + POST BUTTON STYLE */
-#addBtn {
-    background: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-weight: 700;
-    color: #2e7d32;
-    cursor: pointer;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-    font-size: 14px;
-    transition: 0.2s;
-}
-#addBtn:active { transform: scale(0.95); }
+    /* Navigation */
+    .nav-bar { position:fixed; bottom:0; width:100%; background:white; display:flex; height:65px; border-top:1px solid #eee; z-index:1000; }
+    .nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:11px; color:#777; cursor:pointer; }
+    .nav-item.active { color:#2e7d32; font-weight:bold; }
+    .nav-item i { font-size:24px; margin-bottom:2px; }
 
-.profile-img{width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,255,255,.3);object-fit:cover;cursor:pointer}
-.card{background:white;margin:12px;padding:12px;border-radius:14px;box-shadow:0 4px 12px rgba(0,0,0,.08);position:relative;animation:fadeIn 0.5s ease;}
-@keyframes fadeIn {from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+    /* Cards */
+    .section { display:none; animation: fadeIn 0.3s ease; }
+    .section.active { display:block; }
+    @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
 
-.slider{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;gap:8px}
-.slider::-webkit-scrollbar{display:none}
-.slider img{min-width:100%;scroll-snap-align:center;border-radius:12px;height:230px;object-fit:cover;cursor:pointer;background:#eee}
+    .card { background:white; margin:15px 12px; padding:12px; border-radius:18px; box-shadow:0 4px 15px rgba(0,0,0,.06); position: relative; }
+    .slider { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; gap:10px; border-radius:14px; }
+    .slider img { min-width:100%; height:250px; object-fit:cover; scroll-snap-align:center; background:#eee; }
+    .slider::-webkit-scrollbar { display:none; }
+    
+    .price-tag { color:#2e7d32; font-size: 22px; font-weight:800; margin: 12px 0 2px; }
+    .loc-tag { color:#666; font-size:13px; display:flex; align-items:center; gap:4px; margin-bottom: 10px; }
 
-.spinner { width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid #2e7d32; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .manage-btns { display:flex; gap:10px; margin-top:15px; border-top: 1px solid #f0f0f0; padding-top: 12px; }
+    .btn-edit { flex:1; padding:12px; border-radius:12px; border:1.5px solid #2e7d32; color:#2e7d32; background:none; font-weight:bold; }
+    .btn-del { flex:1; padding:12px; border-radius:12px; border:none; background:#fff1f0; color:#d32f2f; font-weight:bold; }
 
-/* 🖼️ GALLERY UI */
-#gallery{position:fixed;inset:0;background:black;display:none;z-index:9999;overflow:hidden}
-#gallerySlider { display: flex; height: 100vh; width: 100vw; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; touch-action: pan-x pan-y; }
-#gallerySlider::-webkit-scrollbar{display:none}
-.gallery-item { flex: 0 0 100vw; width: 100vw; height: 100vh; scroll-snap-align: center; display: flex; align-items: center; justify-content: center; background:black; box-sizing: border-box; padding: 0 5px; }
-.gallery-item img { max-width: 100%; max-height: 100%; object-fit: contain; transform-origin: center center; transition: transform 0.1s ease-out; }
-
-#galleryCounter{position:absolute;top:25px;left:20px;color:white;background:rgba(0,0,0,.6);padding:6px 14px;border-radius:20px;z-index:10001;}
-#galleryClose{position:absolute;top:25px;right:20px;background:#2e7d32;color:white;border:none;width:44px;height:44px;border-radius:50%;font-size:28px;z-index:10001;cursor:pointer}
-
-/* ⚡ Actions */
-.action-row{display:flex;justify-content:space-between;gap:6px;margin-top:12px}
-.action{flex:1; height:54px;border-radius:12px;background:#f5f5f5;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;text-decoration:none;color:#444;cursor:pointer}
-.action span{margin-top:2px;font-weight:600;}
-.call{background:#e3f2fd; color:#0d47a1} .whatsapp{background:#e8f5e9; color:#1b5e20} .chat{background:#f3e5f5; color:#4a148c} .share{background:#e0f2f1; color:#004d40} .report{background:#ffebee; flex:0 0 40px}
+    #gallery { position:fixed; inset:0; background:black; display:none; z-index:9999; }
+    #gallerySlider { display:flex; height:100vh; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; }
+    .gallery-item { flex:0 0 100vw; display:flex; align-items:center; justify-content:center; }
+    .gallery-item img { max-width:100%; max-height:100%; object-fit:contain; }
+    #galClose { position:absolute; top:20px; right:20px; color:white; background:rgba(0,0,0,0.5); border:none; width:45px; height:45px; border-radius:50%; font-size:28px; }
 </style>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
 
 <header>
-  <div>
-    <h3 style="margin:0">Earth Property</h3>
-    <p id="userBox">Connecting...</p>
-  </div>
-
-  <div style="display:flex;align-items:center;gap:12px">
-    <button id="addBtn">+ Post</button>
-    <img id="profileBtn" class="profile-img" src="https://ui-avatars.com/api/?name=User" alt="Profile">
-  </div>
+    <div>
+        <h2 style="margin:0; font-size:18px;">Earth Property</h2>
+        <span id="uNameTop" style="font-size:11px; opacity:0.8;">Welcome</span>
+    </div>
+    <img id="uPicTop" src="" style="width:38px;height:38px;border-radius:50%;border:2px solid #fff;">
 </header>
 
-<div id="list"></div>
+<div class="search-bar" id="searchBarUI">
+    <input type="text" id="searchInput" placeholder="Search location or title...">
+    <select id="filterType">
+        <option value="All">All</option>
+        <option value="Rent">Rent</option>
+        <option value="Sell">Sale</option>
+    </select>
+</div>
+
+<div id="homeSec" class="section active">
+    <div id="feedAll"></div>
+</div>
+
+<div id="profileSec" class="section">
+    <div style="padding:30px 20px; background:white; text-align:center;">
+        <img id="uPicBig" src="" style="width:85px;height:85px;border-radius:50%;">
+        <h3 id="uNameBig" style="margin:12px 0 5px;">User</h3>
+        <button onclick="logout()" style="color:#d32f2f; border:none; background:none; font-weight:600;">LOGOUT</button>
+    </div>
+    <h4 style="margin:20px 15px 10px;">My Ads</h4>
+    <div id="feedMy"></div>
+</div>
 
 <div id="gallery">
- <div id="galleryCounter">1/1</div>
- <button id="galleryClose" onclick="closeGallery()">×</button>
- <div id="gallerySlider"></div>
+    <button id="galClose" onclick="closeGal()">×</button>
+    <div id="gallerySlider"></div>
+</div>
+
+<div class="nav-bar">
+    <div class="nav-item active" onclick="tab('homeSec', this)">
+        <i class="material-icons">explore</i><span>Explore</span>
+    </div>
+    <div class="nav-item" onclick="goPost()">
+        <i class="material-icons" style="font-size:30px;color:#2e7d32">add_circle</i><span>Post</span>
+    </div>
+    <div class="nav-item" onclick="tab('profileSec', this)">
+        <i class="material-icons">account_circle</i><span>My Ads</span>
+    </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-storage-compat.js"></script>
 
 <script>
-// 🔥 Firebase Setup
 const firebaseConfig = { 
     apiKey:"AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
     authDomain:"earth-properties-c3c56.firebaseapp.com", 
-    projectId:"earth-properties-c3c56"
+    projectId:"earth-properties-c3c56",
+    storageBucket: "earth-properties-c3c56.appspot.com"
 };
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore(); 
+const db = firebase.firestore();
 const auth = firebase.auth();
 
-let galleryImgs = [];
+let allPostsCache = [];
 
-// --- 1. LOGIC & AUTH ---
-auth.onAuthStateChanged(u => {
-    if (u) {
-        const name = u.displayName || u.email.split('@')[0] || "User";
-        document.getElementById("userBox").textContent = "👤 " + name;
-        document.getElementById("profileBtn").src = u.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=2e7d32&color=fff`;
-        loadProperties();
-    } else {
-        setTimeout(() => { if(!auth.currentUser) location.href = "login.html"; }, 1500);
+auth.onAuthStateChanged(user => {
+    if(user) {
+        const name = user.displayName || user.email.split('@')[0];
+        const img = user.photoURL || `https://ui-avatars.com/api/?name=${name}&background=2e7d32&color=fff`;
+        document.getElementById("uNameTop").innerText = "Hi, " + name;
+        document.getElementById("uPicTop").src = img;
+        document.getElementById("uNameBig").innerText = name;
+        document.getElementById("uPicBig").src = img;
     }
+    loadAll();
 });
 
-// ✅ Button Redirects
-document.getElementById("addBtn").onclick = () => location.href = "upload.html";
-document.getElementById("profileBtn").onclick = () => {
-    if(confirm("Logout?")) auth.signOut().then(() => location.href="login.html");
-};
+function tab(id, el) {
+    if(id === 'profileSec' && !auth.currentUser) { location.href='login.html'; return; }
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    el.classList.add('active');
+    document.getElementById('searchBarUI').style.display = (id === 'homeSec') ? 'flex' : 'none';
+    if(id === 'profileSec') loadMy();
+}
 
-// --- 2. DATA LOAD ---
-async function loadProperties() {
-    const list = document.getElementById("list");
+function goPost() { auth.currentUser ? location.href='upload.html' : location.href='login.html'; }
+
+async function loadAll() {
+    const box = document.getElementById("feedAll");
+    box.innerHTML = "<center style='padding:50px;color:#999;'>Loading Properties...</center>";
     try {
-        list.innerHTML = `<center style="padding:50px;"><div class="spinner"></div><p>Searching Properties...</p></center>`;
-        const qs = await db.collection("properties").orderBy("timestamp", "desc").limit(40).get();
-        if (qs.empty) {
-            list.innerHTML = `<center style="padding:50px;color:#999">No properties found.</center>`;
-            return;
-        }
-        list.innerHTML = "";
-        qs.forEach(doc => {
-            const d = doc.data();
-            const imgs = d.images || [];
-            const docId = doc.id;
-            const phone = d.phone ? d.phone.replace(/\D/g,'') : "";
-
-            list.innerHTML += `
-                <div class="card">
-                    <div class="slider">
-                        ${imgs.map(i => `<img src="${i}" onclick="openGallery('${encodeURIComponent(JSON.stringify(imgs))}')" loading="lazy">`).join("")}
-                    </div>
-                    <div style="padding:5px">
-                        <h3 style="margin:10px 0 5px; color:#222">${d.title}</h3>
-                        <p style="margin:0; color:#2e7d32; font-weight:bold">₹ ${d.price}</p>
-                        <p style="margin:5px 0 15px; color:#666; font-size:13px">📍 ${d.location}</p>
-                        <div class="action-row">
-                            <a class="action call" href="tel:${phone}">📞<span>Call</span></a>
-                            <a class="action whatsapp" href="https://wa.me/${phone}?text=Interested in ${encodeURIComponent(d.title)}">💬<span>WhatsApp</span></a>
-                            <a class="action chat" href="chat.html?id=${docId}">🗨️<span>Chat</span></a>
-                            <button class="action share" onclick="shareMe('${d.title}', '${docId}')">📤<span>Share</span></button>
-                            <button class="action report">🚩</button>
-                        </div>
-                    </div>
-                </div>`;
-        });
-    } catch (e) { console.error(e); }
+        const snap = await db.collection("properties").orderBy("timestamp", "desc").get();
+        allPostsCache = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderList(allPostsCache, box, false);
+    } catch(e) { box.innerHTML = "<center style='padding:50px;'>Check Index Link in Console</center>"; }
 }
 
-// --- 3. GALLERY ZOOM/PAN ---
-function openGallery(json) {
-    galleryImgs = JSON.parse(decodeURIComponent(json));
-    const slider = document.getElementById("gallerySlider");
-    slider.innerHTML = galleryImgs.map(src => `<div class="gallery-item"><img src="${src}" class="zoomable"></div>`).join("");
-    document.getElementById("gallery").style.display = "block";
-    updateCounter(0);
-    initZoom(); 
+async function loadMy() {
+    const box = document.getElementById("feedMy");
+    box.innerHTML = "<p style='text-align:center;'>Fetching your ads...</p>";
+    const snap = await db.collection("properties").where("ownerId", "==", auth.currentUser.uid).get();
+    const myPosts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderList(myPosts, box, true);
 }
 
-function closeGallery() { document.getElementById("gallery").style.display = "none"; }
-
-function initZoom() {
-    const imgs = document.querySelectorAll('.zoomable');
-    imgs.forEach(img => {
-        let lastTap = 0, scale = 1, pointX = 0, pointY = 0, startX = 0, startY = 0, isPanning = false, initialDist = 0;
-
-        img.addEventListener('touchstart', e => {
-            if (e.touches.length === 1 && scale > 1) {
-                isPanning = true;
-                startX = e.touches[0].clientX - pointX;
-                startY = e.touches[0].clientY - pointY;
-            } else if (e.touches.length === 2) {
-                isPanning = false;
-                initialDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-            }
-        });
-
-        img.addEventListener('touchmove', e => {
-            if (e.touches.length === 1 && isPanning) {
-                e.preventDefault();
-                pointX = e.touches[0].clientX - startX;
-                pointY = e.touches[0].clientY - startY;
-                img.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
-            } else if (e.touches.length === 2) {
-                e.preventDefault();
-                const dist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-                scale = Math.min(Math.max(1, (dist / initialDist) * scale), 4);
-                img.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
-                document.getElementById("gallerySlider").style.overflowX = scale > 1.1 ? "hidden" : "auto";
-            }
-        }, { passive: false });
-
-        img.addEventListener('touchend', e => {
-            isPanning = false;
-            let now = Date.now();
-            if (now - lastTap < 300) {
-                if (scale > 1.1) {
-                    scale = 1; pointX = 0; pointY = 0;
-                    img.style.transform = `translate(0,0) scale(1)`;
-                    document.getElementById("gallerySlider").style.overflowX = "auto";
-                } else {
-                    scale = 2.5;
-                    img.style.transform = `translate(0,0) scale(2.5)`;
-                    document.getElementById("gallerySlider").style.overflowX = "hidden";
-                }
-            }
-            lastTap = now;
-        });
+function renderList(posts, container, isMine) {
+    container.innerHTML = posts.length === 0 ? "<p style='text-align:center;padding:50px;color:#999;'>No properties found.</p>" : "";
+    posts.forEach(p => {
+        const card = document.createElement('div');
+        card.className = "card";
+        card.id = "c-" + p.id;
+        const imgs = p.images || [];
+        const ph = (p.phone || "").replace(/\D/g,'');
+        
+        card.innerHTML = `
+            <div class="slider">
+                ${imgs.map(i => `<img src="${i}" onclick="openGal('${encodeURIComponent(JSON.stringify(imgs))}')" loading="lazy">`).join("")}
+            </div>
+            <div style="padding:5px">
+                <h3 style="margin:12px 0 2px; font-size:16px;">${p.title}</h3>
+                <p class="price-tag">₹ ${Number(p.price).toLocaleString('en-IN')}</p>
+                <p class="loc-tag"><i class="material-icons" style="font-size:15px;">place</i> ${p.location}</p>
+                ${isMine ? `
+                    <div class="manage-btns">
+                        <button class="btn-edit" onclick="location.href='edit.html?id=${p.id}'">EDIT</button>
+                        <button class="btn-del" onclick="delPost('${p.id}')">DELETE</button>
+                    </div>
+                ` : `
+                    <a href="tel:${ph}" style="display:block; background:#2e7d32; color:white; text-align:center; padding:13px; border-radius:12px; text-decoration:none; font-weight:bold; margin-top:10px;">CALL OWNER</a>
+                `}
+            </div>`;
+        container.appendChild(card);
     });
 }
 
-document.getElementById("gallerySlider").onscroll = (e) => {
-    const idx = Math.round(e.target.scrollLeft / window.innerWidth);
-    updateCounter(idx);
-};
+// LIVE SEARCH & FILTER
+document.getElementById('searchInput').oninput = filterData;
+document.getElementById('filterType').onchange = filterData;
 
-function updateCounter(i) {
-    document.getElementById("galleryCounter").textContent = `${i + 1} / ${galleryImgs.length}`;
+function filterData() {
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    const type = document.getElementById('filterType').value;
+    const filtered = allPostsCache.filter(p => {
+        const matchSearch = p.title.toLowerCase().includes(query) || p.location.toLowerCase().includes(query);
+        const matchType = (type === "All") || (p.type === type);
+        return matchSearch && matchType;
+    });
+    renderList(filtered, document.getElementById("feedAll"), false);
 }
 
-function shareMe(title, id) {
-    const url = window.location.origin + window.location.pathname + "?id=" + id;
-    if (navigator.share) navigator.share({ title: title, url: url }); else alert("Link Copied!");
+async function delPost(id) {
+    if(!confirm("Delete this ad permanently?")) return;
+    try {
+        const docRef = db.collection("properties").doc(id);
+        const snap = await docRef.get();
+        const paths = snap.data().storagePaths || [];
+        await Promise.all(paths.map(path => firebase.storage().ref(path).delete().catch(e=>{})));
+        await docRef.delete();
+        document.getElementById("c-"+id).remove();
+    } catch(e) { alert("Delete failed"); }
 }
+
+let lastScroll = 0;
+function openGal(json){
+    lastScroll = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${lastScroll}px`;
+    const list = JSON.parse(decodeURIComponent(json));
+    document.getElementById("gallerySlider").innerHTML = list.map(i => `<div class="gallery-item"><img src="${i}"></div>`).join("");
+    document.getElementById("gallery").style.display = "block";
+}
+function closeGal(){
+    document.getElementById("gallery").style.display="none";
+    document.body.style.position = '';
+    window.scrollTo(0, lastScroll);
+}
+
+function logout() { if(confirm("Logout?")) auth.signOut().then(()=> location.reload()); }
 </script>
 </body>
 </html>
