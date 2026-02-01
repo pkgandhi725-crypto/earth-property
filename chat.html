@@ -9,6 +9,7 @@
         body, html { height: 100%; margin: 0; font-family: system-ui; background: #e5ddd5; display: flex; flex-direction: column; }
         header { background: #2e7d32; color: white; padding: 12px 15px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         header a { color: white; text-decoration: none; font-size: 18px; }
+        #chatPartner { font-weight: 700; font-size: 17px; letter-spacing: 0.3px; }
         
         #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; scroll-behavior: smooth; }
         
@@ -16,7 +17,6 @@
         .chat-input-container input { flex: 1; border: none; padding: 12px 18px; border-radius: 25px; outline: none; font-size: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .send-btn { background: #2e7d32; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
-        /* WhatsApp Style Bubbles */
         .msg { max-width: 75%; padding: 8px 12px; border-radius: 12px; font-size: 14px; position: relative; line-height: 1.4; word-wrap: break-word; }
         .sent { align-self: flex-end; background: #dcf8c6; border-top-right-radius: 2px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
         .received { align-self: flex-start; background: white; border-top-left-radius: 2px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
@@ -27,7 +27,7 @@
 
 <header>
     <a href="index.html"><i class="fa fa-arrow-left"></i></a>
-    <div id="chatPartner">Loading Chat...</div>
+    <div id="chatPartner">Chat</div>
 </header>
 
 <div id="messages"></div>
@@ -51,61 +51,58 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// URL Se Data Nikalna
 const params = new URLSearchParams(window.location.search);
 const partnerId = params.get('to');
 const propId = params.get('p');
-
 let currentRoomId = null;
 
-auth.onAuthStateChanged(user => {
+auth.onAuthStateChanged(async user => {
     if (!user) { location.href = 'login.html'; return; }
-    if (!partnerId) { alert("Invalid Chat"); location.href='index.html'; return; }
+    if (!partnerId) { location.href='index.html'; return; }
 
-    // Unique Room ID Logic: Sender + Receiver + Prop sorted (taaki dono ko ek hi room mile)
+    // 🔥 Owner ka naam fetch karna
+    try {
+        const userDoc = await db.collection("users").doc(partnerId).get();
+        if(userDoc.exists){
+            const u = userDoc.data();
+            document.getElementById("chatPartner").innerText = u.name || u.email.split('@')[0] || "Owner";
+        }
+    } catch(e) { console.log("Name fetch error", e); }
+
     const ids = [user.uid, partnerId].sort();
     currentRoomId = `${ids[0]}_${ids[1]}_${propId}`;
-    
     loadMessages();
 });
 
-// Real-time Messages Load karna
 function loadMessages() {
     db.collection("chats").doc(currentRoomId).collection("messages")
       .orderBy("timestamp", "asc")
       .onSnapshot(snapshot => {
           const msgDiv = document.getElementById('messages');
           msgDiv.innerHTML = '';
-          
           snapshot.forEach(doc => {
               const data = doc.data();
               const isMe = data.senderId === auth.currentUser.uid;
               const time = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '...';
-              
-              msgDiv.innerHTML += `
-                  <div class="msg ${isMe ? 'sent' : 'received'}">
-                      ${data.text}
-                      <span class="time">${time}</span>
-                  </div>`;
+              msgDiv.innerHTML += `<div class="msg ${isMe ? 'sent' : 'received'}">${data.text}<span class="time">${time}</span></div>`;
           });
-          msgDiv.scrollTop = msgDiv.scrollHeight; // Auto Scroll
+          msgDiv.scrollTop = msgDiv.scrollHeight;
       });
 }
 
-// Message Bhejna
 async function sendMessage() {
     const text = document.getElementById('msgInput').value.trim();
     if (!text || !currentRoomId) return;
-
-    document.getElementById('msgInput').value = ''; // Input clear
-
-    await db.collection("chats").doc(currentRoomId).collection("messages").add({
+    document.getElementById('msgInput').value = '';
+    
+    const msgData = {
         senderId: auth.currentUser.uid,
         text: text,
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    };
 
-    // Room update (Last Message ke liye)
+    await db.collection("chats").doc(currentRoomId).collection("messages").add(msgData);
+
     db.collection("chats").doc(currentRoomId).set({
         lastMessage: text,
         lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
@@ -117,6 +114,5 @@ async function sendMessage() {
 document.getElementById('sendBtn').onclick = sendMessage;
 document.getElementById('msgInput').onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
 </script>
-
 </body>
 </html>
