@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inbox - Earth Property</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { margin: 0; font-family: system-ui; background: #f0f2f5; }
+        header { background: #2e7d32; color: white; padding: 15px; font-weight: 700; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; }
+        .chat-list { padding: 12px; }
+        .chat-card { background: white; border-radius: 12px; padding: 15px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid transparent; }
+        .chat-card.unread { border-left-color: #2e7d32; background: #fafffa; }
+        .chat-info { flex: 1; }
+        .chat-name { font-weight: 700; font-size: 16px; color: #333; }
+        .chat-last { font-size: 13px; color: #666; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+        .badge { background: #2e7d32; color: white; font-size: 10px; padding: 3px 8px; border-radius: 10px; font-weight: 800; }
+        .empty { text-align: center; padding: 50px; color: #999; }
+    </style>
+</head>
+<body>
+
+<header>
+    <i class="fa fa-arrow-left" onclick="location.href='index.html'"></i>
+    <span>Messages</span>
+</header>
+
+<div class="chat-list" id="chatList">
+    <div class="empty">Loading conversations...</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+auth.onAuthStateChanged(user => {
+    if (!user) { location.href = 'login.html'; return; }
+    listenForChats(user.uid);
+});
+
+function listenForChats(uid) {
+    db.collection("chats")
+    .where("users", "array-contains", uid)
+    .orderBy("lastUpdate", "desc")
+    .onSnapshot(async snap => {
+        const list = document.getElementById("chatList");
+        if (snap.empty) { list.innerHTML = '<div class="empty">No messages yet.</div>'; return; }
+
+        let html = '';
+        for (const doc of snap.docs) {
+            const d = doc.data();
+            const otherId = d.users.find(id => id !== uid);
+            const isUnread = d.lastSenderId !== uid && !d.isSeen;
+
+            // Fetch name for each chat
+            const uDoc = await db.collection("users").doc(otherId).get();
+            const name = uDoc.exists ? (uDoc.data().name || "User") : "User";
+
+            html += `
+                <div class="chat-card ${isUnread ? 'unread' : ''}" onclick="location.href='chat.html?to=${otherId}&p=${d.propId}'">
+                    <div class="chat-info">
+                        <div class="chat-name">${name}</div>
+                        <div class="chat-last">${d.lastMessage}</div>
+                    </div>
+                    ${isUnread ? '<div class="badge">NEW</div>' : ''}
+                </div>`;
+        }
+        list.innerHTML = html;
+    });
+}
+</script>
+</body>
+</html>
