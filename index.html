@@ -43,15 +43,16 @@ header{background:#2e7d32;color:white;padding:15px;display:flex;justify-content:
     justify-content: center; 
     background:black;
     box-sizing: border-box;
-    padding: 0 10px; /* 👈 Ye images ko chipakne se rokega */
+    padding: 0 10px; 
 }
 
 .gallery-item img { 
     max-width: 100%; 
     max-height: 100%; 
     object-fit: contain; 
-    transition: transform 0.1s ease-out; /* Smooth Zoom */
+    transition: transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1); 
     transform-origin: center center;
+    touch-action: none;
 }
 
 #galleryCounter{position:absolute;top:25px;left:20px;color:white;background:rgba(0,0,0,.6);padding:6px 14px;border-radius:20px;z-index:10001;}
@@ -96,6 +97,7 @@ const auth = firebase.auth();
 let galleryImgs = [];
 let currentScale = 1;
 let initialDist = 0;
+let isZooming = false;
 
 // --- 1. AUTH LOGIC ---
 auth.onAuthStateChanged(u => {
@@ -111,11 +113,7 @@ auth.onAuthStateChanged(u => {
     }
 });
 
-document.getElementById("profileBtn").onclick = () => {
-    if(confirm("Logout from Earth Property?")) auth.signOut().then(() => location.href="login.html");
-};
-
-// --- 2. CORE DATA LOAD ---
+// --- 2. LOAD DATA ---
 async function loadProperties() {
     const list = document.getElementById("list");
     try {
@@ -131,7 +129,6 @@ async function loadProperties() {
             const imgs = d.images || [];
             const docId = doc.id;
             const phone = d.phone ? d.phone.replace(/\D/g,'') : "";
-
             list.innerHTML += `
                 <div class="card">
                     <div class="slider">
@@ -155,30 +152,42 @@ async function loadProperties() {
                 </div>`;
         });
     } catch (e) {
-        list.innerHTML = `<center style="padding:50px;color:red">⚠️ Connection Error<br><button onclick="loadProperties()" style="margin-top:10px">Retry</button></center>`;
+        list.innerHTML = `<center style="padding:50px;color:red">⚠️ Connection Error</center>`;
     }
 }
 
-// --- 3. GALLERY ZOOM & PHYSICS ---
+// --- 3. GALLERY ZOOM & PHYSICS (FIXED) ---
 function openGallery(json) {
     galleryImgs = JSON.parse(decodeURIComponent(json));
     const slider = document.getElementById("gallerySlider");
     slider.innerHTML = galleryImgs.map(src => `<div class="gallery-item"><img src="${src}" class="zoomable"></div>`).join("");
     document.getElementById("gallery").style.display = "block";
     updateCounter(0);
-    initZoom(); // Zoom enable karo
+    initZoom(); 
 }
 
 function closeGallery() { 
     document.getElementById("gallery").style.display = "none";
+    resetAllZoom();
+}
+
+function resetAllZoom() {
+    document.querySelectorAll('.zoomable').forEach(img => {
+        img.style.transform = "scale(1)";
+    });
     currentScale = 1;
+    document.getElementById("gallerySlider").style.overflowX = "auto";
 }
 
 function initZoom() {
     const imgs = document.querySelectorAll('.zoomable');
     imgs.forEach(img => {
+        let lastTap = 0;
+        let localScale = 1;
+
         img.addEventListener('touchstart', e => {
             if (e.touches.length === 2) {
+                isZooming = true;
                 initialDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
             }
         });
@@ -187,34 +196,33 @@ function initZoom() {
             if (e.touches.length === 2) {
                 e.preventDefault();
                 const dist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-                let scale = currentScale * (dist / initialDist);
-                scale = Math.min(Math.max(1, scale), 4); // Limit zoom 1x to 4x
-                img.style.transform = `scale(${scale})`;
-                
-                // Disable scrolling while zooming
-                document.getElementById("gallerySlider").style.overflowX = scale > 1.1 ? "hidden" : "auto";
+                localScale = (dist / initialDist) * currentScale;
+                localScale = Math.min(Math.max(1, localScale), 4);
+                img.style.transform = `scale(${localScale})`;
+                document.getElementById("gallerySlider").style.overflowX = localScale > 1.1 ? "hidden" : "auto";
             }
         });
 
         img.addEventListener('touchend', e => {
-            if (img.style.transform !== "scale(1)") {
-                // Thodi der baad wapas normal kar do agar zoom out kiya ho
-                setTimeout(() => {
-                    if (e.touches.length === 0) {
-                        // Keep current scale if needed, or reset:
-                        // img.style.transform = "scale(1)"; 
-                    }
-                }, 200);
+            if (e.touches.length < 2) {
+                currentScale = localScale; // 🔥 Ab zoom ruk jayega, wapas nahi bhagega
+                isZooming = false;
             }
-        });
-        
-        // Double Tap to Reset Zoom
-        let lastTap = 0;
-        img.addEventListener('touchend', e => {
+
+            // Double Tap Logic
             let now = new Date().getTime();
-            if (now - lastTap < 300) {
-                img.style.transform = "scale(1)";
-                document.getElementById("gallerySlider").style.overflowX = "auto";
+            if (now - lastTap < 300 && e.touches.length === 0) {
+                if (currentScale > 1.1) {
+                    img.style.transform = "scale(1)";
+                    currentScale = 1;
+                    localScale = 1;
+                    document.getElementById("gallerySlider").style.overflowX = "auto";
+                } else {
+                    img.style.transform = "scale(2.5)";
+                    currentScale = 2.5;
+                    localScale = 2.5;
+                    document.getElementById("gallerySlider").style.overflowX = "hidden";
+                }
             }
             lastTap = now;
         });
@@ -222,8 +230,10 @@ function initZoom() {
 }
 
 document.getElementById("gallerySlider").onscroll = (e) => {
-    const idx = Math.round(e.target.scrollLeft / window.innerWidth);
-    updateCounter(idx);
+    if(!isZooming) {
+        const idx = Math.round(e.target.scrollLeft / window.innerWidth);
+        updateCounter(idx);
+    }
 };
 
 function updateCounter(i) {
@@ -239,8 +249,7 @@ async function shareMe(title, id) {
         alert("Link Copied!");
     }
 }
-
-function reportPost(id) { alert("Reported property ID: " + id); }
+function reportPost(id) { alert("Reported: " + id); }
 </script>
 </body>
 </html>
