@@ -1,20 +1,156 @@
-// ... (Purana code wahi rahega, bas loop ke andar ye changes) ...
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Post Property - Earth Property Pro</title>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; margin: 0; background: #f4f7f6; color: #333; padding-bottom: 40px; }
+        header { background: #2e7d32; color: white; padding: 18px; position: sticky; top: 0; display: flex; align-items: center; gap: 15px; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .container { padding: 15px; max-width: 500px; margin: auto; }
+        .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        label { font-weight: 700; font-size: 13px; color: #666; display: block; margin-top: 18px; text-transform: uppercase; letter-spacing: 0.5px; }
+        input, textarea, select { width: 100%; padding: 14px; margin-top: 6px; border: 1.5px solid #eee; border-radius: 12px; box-sizing: border-box; font-size: 16px; outline: none; transition: 0.3s; }
+        input:focus { border-color: #2e7d32; background: #f9fff9; }
+        .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 10px; }
+        .photo-box { aspect-ratio: 1/1; border: 2px dashed #ddd; border-radius: 15px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; background: #fafafa; }
+        .photo-box img { width: 100%; height: 100%; object-fit: cover; }
+        .del-btn { position: absolute; top: 5px; right: 5px; background: rgba(211, 47, 47, 0.9); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; z-index: 10; }
+        #progressWrap { width: 100%; background: #eee; border-radius: 10px; margin-top: 20px; display: none; height: 10px; overflow: hidden; }
+        #progressBar { width: 0%; height: 100%; background: linear-gradient(90deg, #4caf50, #2e7d32); transition: 0.1s; }
+        #status { text-align: center; font-size: 13px; margin-top: 12px; color: #2e7d32; font-weight: 600; }
+        #submitBtn { width: 100%; background: #2e7d32; color: white; border: none; padding: 18px; border-radius: 15px; font-weight: 800; font-size: 16px; margin-top: 25px; cursor: pointer; box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3); }
+        #submitBtn:disabled { background: #ccc; box-shadow: none; }
+    </style>
+</head>
+<body>
 
-    const finalUrls = [];
-    const storagePaths = []; // 🔥 New: To track paths for auto-delete
-    uploadedRefs = [];
+<header>
+    <div onclick="history.back()" style="cursor:pointer; font-size: 24px; padding: 0 5px;">←</div>
+    <h3 style="margin:0; font-size: 18px;">List Your Property</h3>
+</header>
+
+<div class="container">
+    <div class="card">
+        <label>Property Photos (Max 5)</label>
+        <div class="photo-grid" id="photoGrid">
+            <div class="photo-box" onclick="document.getElementById('fileInput').click()">
+                <span style="font-size: 30px; color: #bbb;">+</span>
+            </div>
+        </div>
+        <input type="file" id="fileInput" multiple accept="image/*" style="display:none">
+        
+        <div id="progressWrap"><div id="progressBar"></div></div>
+        <p id="status"></p>
+
+        <label>Transaction Type</label>
+        <select id="listingType"><option value="Sell">For Sale</option><option value="Rent">For Rent</option></select>
+        <label>Title</label>
+        <input type="text" id="title" placeholder="e.g. Luxury 3BHK Flat">
+        <label>Expected Price (₹)</label>
+        <input type="number" id="price" placeholder="Enter amount">
+        <label>Area / Location</label>
+        <input type="text" id="location" placeholder="e.g. Sector 62, Noida">
+        <label>WhatsApp Number</label>
+        <input type="tel" id="phone" placeholder="10-digit mobile number">
+        <label>Description</label>
+        <textarea id="desc" rows="4" placeholder="Mention floors, parking, etc."></textarea>
+        <button id="submitBtn">PUBLISH AD</button>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-storage-compat.js"></script>
+
+<script>
+const firebaseConfig = { 
+    apiKey:"AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
+    authDomain:"earth-properties-c3c56.firebaseapp.com", 
+    projectId:"earth-properties-c3c56",
+    storageBucket: "earth-properties-c3c56.appspot.com"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const storage = firebase.storage();
+const auth = firebase.auth();
+
+let selectedFiles = [];
+let uploadedRefs = [];
+
+document.getElementById('fileInput').onchange = (e) => {
+    const files = Array.from(e.target.files);
+    if(selectedFiles.length + files.length > 5) return alert("Max 5 photos allowed!");
+    files.forEach(file => {
+        if (file.type.startsWith("image/") && file.size < 10 * 1024 * 1024) selectedFiles.push(file);
+    });
+    render();
+    e.target.value = ""; 
+};
+
+function render() {
+    const grid = document.getElementById('photoGrid');
+    grid.innerHTML = selectedFiles.map((file, i) => `
+        <div class="photo-box">
+            <button class="del-btn" onclick="remove(${i})">×</button>
+            <img src="${URL.createObjectURL(file)}">
+        </div>`).join('');
+    if (selectedFiles.length < 5) grid.innerHTML += `<div class="photo-box" onclick="document.getElementById('fileInput').click()"><span style="font-size:30px;color:#bbb;">+</span></div>`;
+}
+
+function remove(i) { selectedFiles.splice(i, 1); render(); }
+
+async function compressImage(file) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (e) => {
+            const img = new Image();
+            img.src = e.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                let width = img.width, height = img.height, MAX = 1200;
+                if (width > height && width > MAX) { height *= MAX / width; width = MAX; }
+                else if (height > MAX) { width *= MAX / height; height = MAX; }
+                canvas.width = width; canvas.height = height;
+                if (file.type === 'image/png') ctx.clearRect(0, 0, width, height);
+                else { ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, width, height); }
+                ctx.drawImage(img, 0, 0, width, height);
+                const format = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+                canvas.toBlob((blob) => resolve(blob), format, 0.75);
+            };
+        };
+    });
+}
+
+document.getElementById('submitBtn').onclick = async () => {
+    const btn = document.getElementById('submitBtn');
+    if(btn.disabled) return;
+    const user = auth.currentUser;
+    if(!user) return alert("Login First!");
+
+    const title = document.getElementById('title').value;
+    const price = document.getElementById('price').value;
+    if(!title || !price || selectedFiles.length === 0) return alert("Fill all details!");
+
+    btn.disabled = true;
+    document.getElementById('progressWrap').style.display = "block";
+    const status = document.getElementById('status');
+    const progBar = document.getElementById('progressBar');
     
+    const finalUrls = [];
+    const storagePaths = [];
+    uploadedRefs = [];
     const adUniqueKey = Date.now() + "_" + Math.random().toString(36).substring(2, 7);
 
     try {
         for(let i=0; i < selectedFiles.length; i++) {
-            // Reset Progress Bar for each new image
             progBar.style.width = "0%"; 
-            
             const blob = await compressImage(selectedFiles[i]);
             const path = `properties/${user.uid}/${adUniqueKey}/img_${i}.jpg`;
             const ref = storage.ref(path);
-            
             const task = ref.put(blob);
             
             await new Promise((resolve, reject) => {
@@ -22,13 +158,13 @@
                     (snap) => {
                         let per = (snap.bytesTransferred / snap.totalBytes) * 100;
                         progBar.style.width = per + "%";
-                        status.innerText = `Uploading Photo ${i+1}/${selectedFiles.length}: ${Math.round(per)}%`;
+                        status.innerText = `Uploading ${i+1}/${selectedFiles.length}: ${Math.round(per)}%`;
                     },
                     (err) => reject(err),
                     async () => {
                         const url = await task.snapshot.ref.getDownloadURL();
                         finalUrls.push(url);
-                        storagePaths.push(path); // 🔥 Track path for future delete
+                        storagePaths.push(path);
                         uploadedRefs.push(ref);
                         resolve();
                     }
@@ -36,19 +172,27 @@
             });
         }
 
-        // Final Firestore Save with Storage Paths
         await db.collection("properties").add({
-            title: document.getElementById('title').value,
-            price: document.getElementById('price').value,
-            images: finalUrls,
-            storagePaths: storagePaths, // 🔥 Ab humare paas map hai!
+            title, price,
+            type: document.getElementById('listingType').value,
             location: document.getElementById('location').value,
             phone: document.getElementById('phone').value.replace(/\D/g,''),
+            description: document.getElementById('desc').value,
+            images: finalUrls,
+            storagePaths: storagePaths,
             ownerId: user.uid,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        status.innerText = "🚀 LIVE NOW!";
+        status.innerText = "✅ LIVE NOW!";
         setTimeout(() => location.href="index.html", 1000);
-
-// ... (Rollback logic wahi rahega) ...
+    } catch(e) {
+        for(let ref of uploadedRefs) await ref.delete().catch(()=>{});
+        alert("Failed. Cleanup done. Try again.");
+        btn.disabled = false;
+        document.getElementById('progressWrap').style.display = "none";
+    }
+};
+</script>
+</body>
+</html>
