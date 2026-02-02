@@ -6,37 +6,52 @@
     <title>My Ads - Earth Property</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary: #2e7d32; --red: #d32f2f; }
-        body { font-family: system-ui; margin: 0; background: #f0f2f5; padding-bottom: 20px; }
-        header { background: var(--primary); padding: 15px; color: white; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; }
-        header a { color: white; text-decoration: none; font-size: 18px; }
+        :root { --primary: #2e7d32; --red: #d32f2f; --bg: #f8f9fa; }
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; background: var(--bg); padding-bottom: 20px; color: #333; }
         
-        .ads-list { padding: 12px; }
-        .ad-card { background: white; border-radius: 12px; margin-bottom: 12px; display: flex; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: relative; }
-        .ad-img { width: 100px; height: 100px; object-fit: cover; }
-        .ad-info { padding: 10px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
-        .ad-title { font-weight: 700; font-size: 14px; color: #333; margin-bottom: 4px; }
-        .ad-price { color: var(--primary); font-weight: 800; font-size: 16px; }
-        
-        .ad-actions { display: flex; gap: 10px; margin-top: 8px; }
-        .btn-action { flex: 1; padding: 6px; border-radius: 6px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; text-align: center; text-decoration: none; }
-        .btn-edit { background: #e8f5e9; color: var(--primary); }
-        .btn-delete { background: #ffebee; color: var(--red); }
+        /* Header */
+        header { background: var(--primary); padding: 15px; color: white; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        header a { color: white; text-decoration: none; font-size: 18px; display: flex; align-items: center; }
+        header h2 { margin: 0; font-size: 18px; font-weight: 600; }
 
-        .loader { text-align: center; padding: 50px; color: #666; }
-        .empty-state { text-align: center; padding: 80px 20px; }
-        .btn-post { background: var(--primary); color: white; padding: 12px 25px; border-radius: 25px; text-decoration: none; display: inline-block; margin-top: 15px; font-weight: 700; }
+        /* Ads List Container */
+        .ads-list { padding: 15px; max-width: 600px; margin: 0 auto; }
+        
+        /* Ad Card Style */
+        .ad-card { background: white; border-radius: 12px; margin-bottom: 15px; display: flex; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #eee; }
+        .ad-img { width: 120px; height: 120px; object-fit: cover; background: #f0f0f0; }
+        
+        .ad-info { padding: 12px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .ad-title { font-weight: 600; font-size: 15px; color: #222; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .ad-price { color: var(--primary); font-weight: 700; font-size: 18px; margin-bottom: 10px; }
+        
+        /* Action Buttons */
+        .ad-actions { display: flex; gap: 10px; }
+        .btn-action { flex: 1; padding: 8px; border-radius: 6px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; }
+        .btn-edit { background: #f1f8f1; color: var(--primary); }
+        .btn-edit:active { background: #e2f0e2; }
+        .btn-delete { background: #fff1f1; color: var(--red); }
+        .btn-delete:active { background: #ffe2e2; }
+
+        /* Empty State */
+        .loader { text-align: center; padding: 60px; color: #666; font-size: 14px; }
+        .empty-state { text-align: center; padding: 100px 20px; color: #999; }
+        .empty-state i { font-size: 50px; color: #eee; margin-bottom: 15px; }
+        .btn-post-now { background: var(--primary); color: white; padding: 12px 32px; border-radius: 25px; text-decoration: none; display: inline-block; margin-top: 20px; font-weight: 600; font-size: 14px; }
     </style>
 </head>
 <body>
 
 <header>
     <a href="index.html"><i class="fa fa-arrow-left"></i></a>
-    <div style="font-weight: 700;">My Ads</div>
+    <h2>My Ads</h2>
 </header>
 
 <div id="myAdsList" class="ads-list">
-    <div class="loader">Checking your ads...</div>
+    <div class="loader">
+        <i class="fa fa-circle-notch fa-spin" style="font-size: 24px; color: var(--primary);"></i>
+        <p>Loading your ads...</p>
+    </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
@@ -54,8 +69,11 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 
 auth.onAuthStateChanged(user => {
-    if (!user) { location.href = 'login.html'; return; }
-    loadMyAds(user.uid);
+    if (!user) {
+        location.href = 'login.html';
+    } else {
+        loadMyAds(user.uid);
+    }
 });
 
 async function loadMyAds(uid) {
@@ -68,9 +86,10 @@ async function loadMyAds(uid) {
         if (snap.empty) {
             listDiv.innerHTML = `
                 <div class="empty-state">
-                    <i class="fa fa-folder-open" style="font-size: 50px; color: #ccc;"></i>
-                    <p style="color: #666; margin-top: 10px;">You haven't posted any ads yet.</p>
-                    <a href="upload.html" class="btn-post">Post Now</a>
+                    <i class="fa fa-folder-open"></i>
+                    <h3>No Ads Yet</h3>
+                    <p>Post your first property to see it here.</p>
+                    <a href="upload.html" class="btn-post-now">Post Ad</a>
                 </div>`;
             return;
         }
@@ -78,50 +97,56 @@ async function loadMyAds(uid) {
         let html = '';
         snap.forEach(doc => {
             const p = doc.data();
-            const firstImg = p.images && p.images.length > 0 ? (typeof p.images[0] === 'object' ? p.images[0].url : p.images[0]) : 'https://via.placeholder.com/100';
+            const firstImg = (p.images && p.images.length > 0) 
+                ? (typeof p.images[0] === 'object' ? p.images[0].url : p.images[0]) 
+                : 'https://via.placeholder.com/150?text=No+Image';
             
             html += `
                 <div class="ad-card" id="card-${doc.id}">
-                    <img src="${firstImg}" class="ad-img">
+                    <img src="${firstImg}" class="ad-img" alt="property">
                     <div class="ad-info">
                         <div>
-                            <div class="ad-title">${p.title}</div>
-                            <div class="ad-price">₹${Number(p.price).toLocaleString('en-IN')}</div>
+                            <div class="ad-title">${p.title || 'Untitled Property'}</div>
+                            <div class="ad-price">₹${Number(p.price || 0).toLocaleString('en-IN')}</div>
                         </div>
                         <div class="ad-actions">
-                            <a href="edit.html?id=${doc.id}" class="btn-action btn-edit"><i class="fa fa-edit"></i> Edit</a>
-                            <button onclick="deleteAd('${doc.id}')" class="btn-action btn-delete"><i class="fa fa-trash"></i> Delete</button>
+                            <a href="edit.html?id=${doc.id}" class="btn-action btn-edit">
+                                <i class="fa fa-pen-to-square"></i> Edit
+                            </a>
+                            <button onclick="deleteAd('${doc.id}')" class="btn-action btn-delete">
+                                <i class="fa fa-trash-can"></i> Delete
+                            </button>
                         </div>
                     </div>
                 </div>`;
         });
         listDiv.innerHTML = html;
     } catch (e) {
-        listDiv.innerHTML = "Error loading ads. Please refresh.";
-        console.error(e);
+        listDiv.innerHTML = "<div class='loader'>Error loading ads. Check your connection.</div>";
+        console.error("Error:", e);
     }
 }
 
 async function deleteAd(id) {
-    if (confirm("Bhai, kya aap sach mein ye ad delete karna chahte hain?")) {
+    // Professional Crisp English Copy
+    if (confirm("Delete ad?")) {
+        const card = document.getElementById(`card-${id}`);
         try {
-            // UI se turant hata do (Faster feel)
-            document.getElementById(`card-${id}`).style.opacity = '0.5';
-            document.getElementById(`card-${id}`).style.pointerEvents = 'none';
+            card.style.opacity = '0.4';
+            card.style.pointerEvents = 'none';
 
-            // Firebase se delete karo
             await db.collection("properties").doc(id).delete();
             
-            // UI se permanent remove
-            document.getElementById(`card-${id}`).remove();
+            card.remove();
             
-            // Check if last ad was deleted
+            // Reload if empty to show post button
             if (document.querySelectorAll('.ad-card').length === 0) {
                 location.reload();
             }
         } catch (e) {
-            alert("Delete nahi ho paya. Dobara koshish karein.");
-            document.getElementById(`card-${id}`).style.opacity = '1';
+            alert("Delete failed. Please try again.");
+            card.style.opacity = '1';
+            card.style.pointerEvents = 'auto';
         }
     }
 }
