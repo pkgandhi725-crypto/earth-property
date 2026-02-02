@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>My Ads - Earth Property</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #2e7d32; --red: #d32f2f; }
+        body { font-family: system-ui; margin: 0; background: #f0f2f5; padding-bottom: 20px; }
+        header { background: var(--primary); padding: 15px; color: white; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; }
+        header a { color: white; text-decoration: none; font-size: 18px; }
+        
+        .ads-list { padding: 12px; }
+        .ad-card { background: white; border-radius: 12px; margin-bottom: 12px; display: flex; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: relative; }
+        .ad-img { width: 100px; height: 100px; object-fit: cover; }
+        .ad-info { padding: 10px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .ad-title { font-weight: 700; font-size: 14px; color: #333; margin-bottom: 4px; }
+        .ad-price { color: var(--primary); font-weight: 800; font-size: 16px; }
+        
+        .ad-actions { display: flex; gap: 10px; margin-top: 8px; }
+        .btn-action { flex: 1; padding: 6px; border-radius: 6px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; text-align: center; text-decoration: none; }
+        .btn-edit { background: #e8f5e9; color: var(--primary); }
+        .btn-delete { background: #ffebee; color: var(--red); }
+
+        .loader { text-align: center; padding: 50px; color: #666; }
+        .empty-state { text-align: center; padding: 80px 20px; }
+        .btn-post { background: var(--primary); color: white; padding: 12px 25px; border-radius: 25px; text-decoration: none; display: inline-block; margin-top: 15px; font-weight: 700; }
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="index.html"><i class="fa fa-arrow-left"></i></a>
+    <div style="font-weight: 700;">My Ads</div>
+</header>
+
+<div id="myAdsList" class="ads-list">
+    <div class="loader">Checking your ads...</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = { 
+    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
+    authDomain: "earth-properties-c3c56.firebaseapp.com", 
+    projectId: "earth-properties-c3c56"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+auth.onAuthStateChanged(user => {
+    if (!user) { location.href = 'login.html'; return; }
+    loadMyAds(user.uid);
+});
+
+async function loadMyAds(uid) {
+    const listDiv = document.getElementById('myAdsList');
+    try {
+        const snap = await db.collection("properties")
+                           .where("ownerId", "==", uid)
+                           .get();
+
+        if (snap.empty) {
+            listDiv.innerHTML = `
+                <div class="empty-state">
+                    <i class="fa fa-folder-open" style="font-size: 50px; color: #ccc;"></i>
+                    <p style="color: #666; margin-top: 10px;">You haven't posted any ads yet.</p>
+                    <a href="upload.html" class="btn-post">Post Now</a>
+                </div>`;
+            return;
+        }
+
+        let html = '';
+        snap.forEach(doc => {
+            const p = doc.data();
+            const firstImg = p.images && p.images.length > 0 ? (typeof p.images[0] === 'object' ? p.images[0].url : p.images[0]) : 'https://via.placeholder.com/100';
+            
+            html += `
+                <div class="ad-card" id="card-${doc.id}">
+                    <img src="${firstImg}" class="ad-img">
+                    <div class="ad-info">
+                        <div>
+                            <div class="ad-title">${p.title}</div>
+                            <div class="ad-price">₹${Number(p.price).toLocaleString('en-IN')}</div>
+                        </div>
+                        <div class="ad-actions">
+                            <a href="edit.html?id=${doc.id}" class="btn-action btn-edit"><i class="fa fa-edit"></i> Edit</a>
+                            <button onclick="deleteAd('${doc.id}')" class="btn-action btn-delete"><i class="fa fa-trash"></i> Delete</button>
+                        </div>
+                    </div>
+                </div>`;
+        });
+        listDiv.innerHTML = html;
+    } catch (e) {
+        listDiv.innerHTML = "Error loading ads. Please refresh.";
+        console.error(e);
+    }
+}
+
+async function deleteAd(id) {
+    if (confirm("Bhai, kya aap sach mein ye ad delete karna chahte hain?")) {
+        try {
+            // UI se turant hata do (Faster feel)
+            document.getElementById(`card-${id}`).style.opacity = '0.5';
+            document.getElementById(`card-${id}`).style.pointerEvents = 'none';
+
+            // Firebase se delete karo
+            await db.collection("properties").doc(id).delete();
+            
+            // UI se permanent remove
+            document.getElementById(`card-${id}`).remove();
+            
+            // Check if last ad was deleted
+            if (document.querySelectorAll('.ad-card').length === 0) {
+                location.reload();
+            }
+        } catch (e) {
+            alert("Delete nahi ho paya. Dobara koshish karein.");
+            document.getElementById(`card-${id}`).style.opacity = '1';
+        }
+    }
+}
+</script>
+</body>
+</html>
