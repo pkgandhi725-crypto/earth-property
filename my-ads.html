@@ -3,221 +3,228 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>My Ads - Earth Property</title>
+    <title>My Advertisements - Earth Property</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary: #2e7d32; --red: #d32f2f; --bg: #f8f9fa; --blue: #007bff; --gray: #9e9e9e; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); padding-bottom: 20px; }
+        body { font-family: system-ui, -apple-system, sans-serif; margin: 0; background: #f4f7f6; color: #333; }
+        header { background: #2e7d32; color: white; padding: 15px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .container { padding: 15px; max-width: 600px; margin: auto; }
         
-        header { background: var(--primary); padding: 15px; color: white; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        header a { color: white; text-decoration: none; font-size: 18px; }
-        header h2 { margin: 0; font-size: 18px; font-weight: 600; }
+        .ad-card { background: white; border-radius: 15px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 15px; border: 1px solid #eee; transition: 0.3s; }
+        .ad-info { display: flex; gap: 12px; }
+        .ad-img { width: 90px; height: 90px; border-radius: 12px; object-fit: cover; background: #eee; border: 1px solid #f0f0f0; }
+        .ad-details { flex: 1; }
+        .ad-details h4 { margin: 0; font-size: 16px; color: #333; line-height: 1.2; }
+        .price { font-size: 18px; font-weight: 800; color: #2e7d32; margin: 5px 0; }
+        
+        .status-row { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid #f5f5f5; font-size: 13px; }
+        
+        .btn-group { display: flex; gap: 10px; margin-top: 12px; }
+        button { cursor: pointer; font-family: inherit; transition: 0.2s; border: none; font-weight: 600; border-radius: 8px; font-size: 14px; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .edit-btn { flex: 1; background: #f5f5f5; border: 1px solid #ddd; padding: 10px; color: #444; }
+        .renew-btn { flex: 1.5; background: #2e7d32; color: white; padding: 10px; box-shadow: 0 2px 4px rgba(46, 125, 50, 0.2); }
+        .live-badge { flex: 1.5; background: #e8f5e9; color: #2e7d32; padding: 10px; border-radius: 8px; font-weight: 700; text-align: center; font-size: 13px; border: 1px solid #c8e6c9; }
+        .delete-btn { background: #ffebee; color: #c62828; padding: 10px 15px; border: 1px solid #ffcdd2; }
 
-        .ads-list { padding: 15px; max-width: 600px; margin: 0 auto; }
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 25px; border-radius: 30px; z-index: 1000; font-size: 14px; animation: slideUp 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        @keyframes slideUp { from { bottom: -50px; opacity: 0; } to { bottom: 20px; opacity: 1; } }
         
-        /* Smooth card and transition */
-        .ad-card { background: white; border-radius: 12px; margin-bottom: 15px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #eee; transition: all 0.4s ease; }
-        .ad-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        
-        .ad-main { display: flex; align-items: center; padding: 10px; }
-        .ad-img { width: 85px; height: 85px; object-fit: cover; border-radius: 8px; background: #f0f0f0; }
-        
-        .ad-info { padding: 0 12px; flex: 1; }
-        .ad-title { font-weight: 600; font-size: 15px; color: #222; margin-bottom: 2px; }
-        .ad-price { color: var(--primary); font-weight: 700; font-size: 16px; margin-bottom: 4px; }
-        .ad-meta { font-size: 11px; color: var(--gray); }
-        
-        .status-bar { background: #fafafa; padding: 8px 15px; font-size: 11px; display: flex; justify-content: space-between; border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; }
-        .tag { font-weight: 700; padding: 2px 6px; border-radius: 4px; }
-        .tag-active { background: #e8f5e9; color: #2e7d32; }
-        .tag-expired { background: #ffebee; color: #c62828; }
-
-        .ad-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 10px; background: #fff; }
-        .btn-action { padding: 12px 5px; border-radius: 8px; border: 1px solid #eee; font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; transition: 0.2s; user-select: none; }
-        .btn-action:active { transform: scale(0.95); }
-        
-        .btn-edit { background: #f1f8f1; color: var(--primary); border-color: #c8e6c9; }
-        
-        /* Pulse for Expired Ads */
-        .btn-renew { background: #e3f2fd; color: var(--blue); border-color: #bbdefb; animation: pulse 2s infinite; }
-        .btn-renew:disabled { animation: none; opacity: 0.7; }
-
-        /* Professional Live Badge */
-        .btn-live { background: #e8f5e9 !important; color: #2e7d32 !important; border-color: #c8e6c9 !important; cursor: default; opacity: 1 !important; }
-
-        .btn-delete { background: #fff1f1; color: var(--red); border-color: #ffcdd2; }
-
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0,123,255, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(0,123,255, 0); } 100% { box-shadow: 0 0 0 0 rgba(0,123,255, 0); } }
-
-        /* Professional Toasts */
-        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 24px; border-radius: 25px; font-size: 13px; z-index: 2000; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: opacity 0.3s; opacity: 0; }
+        #loader { text-align: center; margin-top: 50px; color: #2e7d32; }
+        #noAds { text-align: center; margin-top: 50px; display: none; }
     </style>
 </head>
 <body>
 
-<div id="toast"></div>
-
 <header>
-    <a href="index.html"><i class="fa fa-arrow-left"></i></a>
-    <h2>My Advertisements</h2>
+    <div onclick="location.href='index.html'" style="cursor:pointer; padding: 5px;"><i class="fa fa-arrow-left"></i></div>
+    <div style="font-weight: 700; font-size: 18px;">My Advertisements</div>
 </header>
 
-<div id="myAdsList" class="ads-list">
-    <div style="text-align:center; padding:60px; color:#999;">
-        <i class="fa fa-circle-notch fa-spin" style="font-size:24px; color:var(--primary);"></i>
-        <p>Loading your properties...</p>
+<div class="container">
+    <div id="loader"><i class="fa fa-spinner fa-spin fa-2x"></i><p>Fetching your listings...</p></div>
+    <div id="adList"></div>
+    <div id="noAds">
+        <i class="fa fa-home fa-4x" style="color:#ccc; margin-bottom: 10px;"></i>
+        <p style="color:#666">You haven't posted any ads yet.</p>
+        <button onclick="location.href='post.html'" style="background:#2e7d32; color:white; padding:12px 25px; border-radius:8px">Post Your First Ad</button>
     </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-storage-compat.js"></script>
 
 <script>
+// Firebase Configuration
 const firebaseConfig = { 
     apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
     authDomain: "earth-properties-c3c56.firebaseapp.com", 
-    projectId: "earth-properties-c3c56" 
+    projectId: "earth-properties-c3c56",
+    storageBucket: "earth-properties-c3c56.appspot.com"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
+const storage = firebase.storage();
 
-function showToast(msg, color = '#333') {
-    const t = document.getElementById('toast');
-    t.innerText = msg; t.style.background = color; t.style.display = 'block'; 
-    setTimeout(() => { t.style.opacity = '1'; }, 10);
-    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.style.display = 'none', 300); }, 3000);
+// Enable Offline Support ✅
+db.enablePersistence().catch(err => console.log("Offline mode unavailable"));
+
+let unsubscribe = null;
+let renewingAds = new Set(); // Multi-click prevention ✅
+
+// XSS Protection Helper ✅
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
 }
 
 auth.onAuthStateChanged(user => {
-    if (!user) location.href = 'login.html';
-    else loadMyAds(user.uid);
+    if (!user) return location.href = 'login.html';
+    if (unsubscribe) unsubscribe(); // Cleanup memory leak ✅
+    unsubscribe = loadMyAds(user.uid);
 });
 
-async function loadMyAds(uid) {
-    const listDiv = document.getElementById('myAdsList');
-    try {
-        const snap = await db.collection("properties")
-                           .where("ownerId", "==", uid)
-                           .orderBy("createdAt", "desc")
-                           .get();
+function loadMyAds(uid) {
+    return db.collection("properties")
+      .where("ownerId", "==", uid)
+      .orderBy("createdAt", "desc")
+      .limit(30) // Performance optimization ✅
+      .onSnapshot(snapshot => {
+          document.getElementById('loader').style.display = 'none';
+          const adList = document.getElementById('adList');
+          adList.innerHTML = '';
 
-        if (snap.empty) {
-            listDiv.innerHTML = `<div style="text-align:center; padding:100px 20px; color:#999;">
-                <i class="fa fa-building" style="font-size:40px; opacity:0.1;"></i>
-                <p>No ads found.</p>
-                <a href="upload.html" style="color:var(--primary); font-weight:700; text-decoration:none;">+ Post Property</a>
-            </div>`;
-            return;
+          if (snapshot.empty) {
+              document.getElementById('noAds').style.display = 'block';
+              return;
+          }
+
+          document.getElementById('noAds').style.display = 'none';
+          snapshot.forEach(doc => {
+              adList.innerHTML += createAdCard(doc);
+          });
+      }, error => {
+          console.error("Firestore Error:", error);
+          if (error.code === 'failed-precondition') {
+              alert("Index needed! Please wait or check Firebase Console.");
+          }
+      });
+}
+
+function createAdCard(doc) {
+    const ad = doc.data();
+    const adId = doc.id;
+    
+    // ⏳ 30-Day Expiry Calculation
+    const now = new Date();
+    const createdAt = ad.createdAt ? ad.createdAt.toDate() : new Date();
+    const diffDays = Math.floor(Math.abs(now - createdAt) / (1000 * 60 * 60 * 24));
+    const daysLeft = 30 - diffDays;
+
+    // Safety checks for images & strings ✅
+    const imgUrl = ad.images?.[0] || 'https://via.placeholder.com/90?text=No+Image';
+    const bhkText = escapeHtml(ad.bhk) + " BHK";
+    const furnishText = escapeHtml(ad.furnishing || 'Furnished');
+
+    let statusLabel = "";
+    let actionUI = "";
+    let daysStyle = daysLeft <= 5 ? "color: #d32f2f; font-weight: bold;" : "color: #666;";
+
+    if (daysLeft <= 0) {
+        statusLabel = `<span style="color: #d32f2f; font-weight: bold;">● EXPIRED</span>`;
+        actionUI = `<button class="renew-btn" onclick="renewAd('${adId}', this)"><i class="fa fa-sync"></i> Renew Ad</button>`;
+    } else {
+        statusLabel = `<span style="color: #2e7d32; font-weight: bold;">● ACTIVE</span>`;
+        actionUI = `<div class="live-badge" title="Publicly Visible"><i class="fa fa-check-circle"></i> LIVE</div>`;
+    }
+
+    return `
+    <div class="ad-card" id="card-${adId}">
+        <div class="ad-info">
+            <img src="${imgUrl}" class="ad-img" onerror="this.src='https://via.placeholder.com/90?text=No+Image'">
+            <div class="ad-details">
+                <h4>${bhkText} - ${furnishText}</h4>
+                <div class="price">₹${Number(ad.price).toLocaleString('en-IN')}</div>
+                <div style="font-size:12px; ${daysStyle}">
+                    ${daysLeft > 0 ? '<i class="fa fa-clock"></i> ' + daysLeft + ' days left' : '<i class="fa fa-exclamation-triangle"></i> Validity Expired'}
+                </div>
+            </div>
+        </div>
+
+        <div class="status-row">
+            <div>Status: ${statusLabel}</div>
+            <div style="color:#999; font-size: 11px;">Posted: ${createdAt.toLocaleDateString()}</div>
+        </div>
+
+        <div class="btn-group">
+            <button class="edit-btn" onclick="location.href='edit-ad.html?id=${adId}'"><i class="fa fa-edit"></i> Edit</button>
+            ${actionUI}
+            <button class="delete-btn" onclick="deleteAd('${adId}', this)"><i class="fa fa-trash"></i></button>
+        </div>
+    </div>`;
+}
+
+// Show Toast Feedback ✅
+function showToast(msg) {
+    const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+    document.body.appendChild(t); setTimeout(() => t.remove(), 3000);
+}
+
+// Renew Ad Function ✅
+async function renewAd(adId, btn) {
+    if(renewingAds.has(adId)) return;
+    if(!confirm("Renew this listing for another 30 days?")) return;
+    
+    renewingAds.add(adId);
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Renewing...';
+
+    try {
+        await db.collection("properties").doc(adId).update({
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showToast("Success! Ad extended for 30 days. 🎉");
+    } catch (e) {
+        alert("Update failed: " + e.message);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-sync"></i> Renew Ad';
+    } finally {
+        renewingAds.delete(adId);
+    }
+}
+
+// Delete Ad & Clean Storage ✅
+async function deleteAd(adId, btn) {
+    if(!confirm("Are you sure? This will delete the ad and all its photos forever.")) return;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+
+    try {
+        const doc = await db.collection("properties").doc(adId).get();
+        const data = doc.data();
+
+        // 1. Delete images from Storage first ✅
+        if (data.images && data.images.length > 0) {
+            for (let url of data.images) {
+                try {
+                    await storage.refFromURL(url).delete();
+                } catch (err) { console.log("Storage cleanup skip:", err); }
+            }
         }
 
-        let html = '';
-        snap.forEach(doc => {
-            const p = doc.data();
-            const id = doc.id;
-            
-            // Professional Image Handling
-            let firstImg = 'https://via.placeholder.com/85?text=Earth';
-            if (p.images && p.images.length > 0) {
-                const img = p.images[0];
-                firstImg = typeof img === 'string' ? img : (img.url || img.downloadURL || firstImg);
-            }
-            
-            // Date & Expiry (Rent: 30 days, Sell: 180 days)
-            const createdAt = p.createdAt ? p.createdAt.toDate() : new Date();
-            const diffDays = Math.floor((new Date() - createdAt) / (1000 * 60 * 60 * 24));
-            const limit = p.purpose === 'Rent' ? 30 : 180;
-            const remaining = limit - diffDays;
-            const isExpired = remaining <= 0;
-
-            html += `
-                <div class="ad-card" id="card-${id}">
-                    <div class="ad-main">
-                        <img src="${firstImg}" class="ad-img">
-                        <div class="ad-info">
-                            <div class="ad-title">${p.title || 'Property'}</div>
-                            <div class="ad-price">₹${Number(p.price || 0).toLocaleString('en-IN')}</div>
-                            <div class="ad-meta">${p.purpose} | ${createdAt.toLocaleDateString()}</div>
-                        </div>
-                    </div>
-                    
-                    <div class="status-bar">
-                        <span>Status: <b style="color:${isExpired ? 'red' : 'green'}">${isExpired ? 'EXPIRED' : 'ACTIVE'}</b></span>
-                        <span class="tag ${isExpired ? 'tag-expired' : 'tag-active'}">
-                            ${isExpired ? 'Renewal Due' : remaining + ' days left'}
-                        </span>
-                    </div>
-
-                    <div class="ad-actions">
-                        <button onclick="location.href='upload.html?edit=${id}'" class="btn-action btn-edit">
-                            <i class="fa fa-edit"></i> Edit
-                        </button>
-
-                        ${isExpired ? `
-                            <button onclick="renewAd('${id}', this)" class="btn-action btn-renew">
-                                <i class="fa fa-sync-alt"></i> Renew
-                            </button>
-                        ` : `
-                            <button class="btn-action btn-live" disabled>
-                                <i class="fa fa-check-circle"></i> Live
-                            </button>
-                        `}
-
-                        <button onclick="deleteAd('${id}', this)" class="btn-action btn-delete">
-                            <i class="fa fa-trash"></i> Delete
-                        </button>
-                    </div>
-                </div>`;
-        });
-        listDiv.innerHTML = html;
-    } catch (e) { 
-        console.error(e);
-        listDiv.innerHTML = "<p style='text-align:center; padding:50px;'>Error loading ads. Refresh page.</p>"; 
-    }
-}
-
-async function renewAd(id, btn) {
-    if (btn.disabled) return;
-    
-    // ✅ ADDED RENEW CONFIRMATION
-    if (!confirm("Renew this ad? It will be moved to the top of the listings for a new period.")) return;
-    
-    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>'; 
-    btn.disabled = true;
-
-    try {
-        await db.collection("properties").doc(id).update({
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            lastRenewedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        showToast("✓ Ad successfully renewed!", "#2e7d32");
-        setTimeout(() => location.reload(), 1500);
+        // 2. Delete document from Firestore
+        await db.collection("properties").doc(adId).delete();
+        showToast("Ad and images deleted successfully.");
     } catch (e) {
-        showToast("Error: " + e.message, "#d32f2f");
-        btn.innerHTML = '<i class="fa fa-sync-alt"></i> Renew';
+        alert("Delete failed: " + e.message);
         btn.disabled = false;
-    }
-}
-
-async function deleteAd(id, btn) {
-    if (btn.disabled) return;
-    if (!confirm("Are you sure? This will permanently delete your ad.")) return;
-    
-    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
-    btn.disabled = true;
-
-    try {
-        await db.collection("properties").doc(id).delete();
-        showToast("Ad removed", "#333");
-        const card = document.getElementById(`card-${id}`);
-        card.style.opacity = '0';
-        card.style.transform = 'translateX(20px)';
-        setTimeout(() => card.remove(), 400);
-    } catch (e) {
-        showToast("Delete failed", "#d32f2f");
-        btn.innerHTML = '<i class="fa fa-trash"></i> Delete';
-        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-trash"></i>';
     }
 }
 </script>
