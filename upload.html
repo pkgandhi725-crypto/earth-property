@@ -94,7 +94,6 @@ let existingImages = [];
 let editID = new URLSearchParams(window.location.search).get('edit');
 let isUploading = false;
 
-// Navigation safety
 window.onbeforeunload = () => isUploading ? "Upload in progress. Don't leave!" : null;
 
 auth.onAuthStateChanged(async (user) => {
@@ -107,7 +106,6 @@ auth.onAuthStateChanged(async (user) => {
             const doc = await db.collection("properties").doc(editID).get();
             if (doc.exists) {
                 const data = doc.data();
-                // Ownership guard
                 if (data.ownerId !== user.uid) {
                     alert("Unauthorized access!");
                     location.href = 'my-ads.html';
@@ -161,9 +159,7 @@ function render() {
 document.getElementById('fileInput').onchange = (e) => {
     const files = Array.from(e.target.files);
     const available = 5 - (selectedFiles.length + existingImages.length);
-    
     if (files.length > available) alert(`Only ${available} more photo(s) allowed.`);
-    
     files.slice(0, available).forEach(f => {
         if (f.type.startsWith('image/') && f.size <= 5 * 1024 * 1024) {
             selectedFiles.push(f);
@@ -192,7 +188,7 @@ document.getElementById('submitBtn').onclick = async () => {
     const price = document.getElementById('price').value;
     const loc = document.getElementById('location').value.trim();
     const phoneRaw = document.getElementById('phone').value.trim();
-    const cleanPhone = phoneRaw.replace(/\D/g, ''); // Fix 2: Phone normalization
+    const cleanPhone = phoneRaw.replace(/\D/g, ''); 
 
     if (!title || title.length < 5) return alert("Title too short.");
     if (!price || price <= 0) return alert("Valid price required.");
@@ -214,6 +210,10 @@ document.getElementById('submitBtn').onclick = async () => {
             newImages.push(data);
         }
 
+        // 🔥 Logic: Expiry date after 30 days [cite: 2026-02-03]
+        const expiryDate = new Date();
+        expiryDate.setDate(expiryDate.getDate() + 30);
+
         const propertyData = {
             title,
             price: Number(price),
@@ -223,20 +223,23 @@ document.getElementById('submitBtn').onclick = async () => {
             purpose: document.getElementById('type').value,
             bhk: document.getElementById('bhk').value,
             images: [...existingImages, ...newImages],
-            ownerId: auth.currentUser.uid,
+            ownerId: auth.currentUser.uid, // Required for Rules [cite: 2026-02-03]
+            ownerEmail: auth.currentUser.email,
+            status: "active", // Initial status [cite: 2026-02-03]
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
         if (editID) {
             await db.collection("properties").doc(editID).update(propertyData);
         } else {
-            propertyData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            propertyData.createdAt = firebase.firestore.FieldValue.serverTimestamp(); // [cite: 2026-02-03]
+            propertyData.expiresAt = firebase.firestore.Timestamp.fromDate(expiryDate); // [cite: 2026-02-03]
             await db.collection("properties").add(propertyData);
         }
 
         status.innerText = "✅ Successfully Saved!";
         isUploading = false;
-        setTimeout(() => location.href='my-ads.html', 1500);
+        setTimeout(() => location.href='index.html', 1500);
     } catch(e) { 
         console.error(e);
         alert(e.message.includes("permission") ? "Security Error: Check ownership." : "Upload failed.");
