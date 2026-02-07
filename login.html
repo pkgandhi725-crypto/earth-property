@@ -1,112 +1,136 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Login - Earth Property</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Earth Property | Global Access</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #2e7d32; --bg: #f8f9fa; }
+        body { margin: 0; height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #e8f5e9, #f0f2f5); font-family: system-ui, sans-serif; overflow: hidden; }
+        
+        /* 1. Fixed Toast Animation (Smooth slide from top) */
+        .toast { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); background: #323232; color: #fff; padding: 14px 28px; border-radius: 12px; font-size: 14px; transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); z-index: 1000; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .toast.show { top: 20px; }
+        .toast.error { background: #d32f2f; }
+        .toast.success { background: #2e7d32; }
 
-<style>
-body{font-family:Arial;background:#f2f2f2;padding:10px;}
-header{background:#2e7d32;color:white;padding:15px;text-align:center;border-radius:10px;}
-
-.input-box{
-  position:relative;
-}
-
-input{
-  width:100%;
-  padding:10px;
-  margin:8px 0;
-  padding-right:40px;
-}
-
-.eye{
-  position:absolute;
-  right:12px;
-  top:50%;
-  transform:translateY(-50%);
-  cursor:pointer;
-  font-size:18px;
-}
-
-button{background:#2e7d32;color:white;border:none;padding:10px;border-radius:20px;width:100%;}
-a{color:#2e7d32;text-decoration:none;}
-</style>
-
-<!-- 🔥 FIREBASE (COMPAT) -->
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+        .card { background: #fff; width: 90%; max-width: 360px; padding: 40px 25px; border-radius: 28px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); text-align: center; }
+        .logo { font-size: 26px; font-weight: 800; color: var(--primary); margin-bottom: 5px; }
+        .subtitle { font-size: 13px; color: #777; margin-bottom: 30px; }
+        
+        input { width: 100%; padding: 16px; border-radius: 14px; border: 1.5px solid #eee; font-size: 16px; outline: none; box-sizing: border-box; transition: 0.3s; margin-bottom: 18px; }
+        input:focus { border-color: var(--primary); background: #f9fff9; }
+        
+        button { width: 100%; padding: 16px; border: none; border-radius: 14px; background: var(--primary); color: #fff; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; }
+        button:disabled { background: #a5d6a7; cursor: not-allowed; }
+        
+        .spinner { width: 18px; height: 18px; border: 2px solid #ffffff55; border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 10px; display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .flags-section { margin-top: 35px; border-top: 1px solid #f0f0f0; padding-top: 20px; }
+        .flags { font-size: 22px; letter-spacing: 6px; margin-bottom: 10px; }
+    </style>
 </head>
-
 <body>
 
-<header>
-<h2>🌍 Earth Property</h2>
-<p>Login</p>
-</header>
+    <div id="toast" class="toast"></div>
 
-<input id="email" type="email" placeholder="Email">
+    <div class="card">
+        <div class="logo">🌍 Earth Property</div>
+        <div id="ui-container">
+            <div class="subtitle">International Property Portal</div>
+            <input type="email" id="email" placeholder="Email address" required>
+            <button id="loginBtn" onclick="login()">
+                <div class="spinner" id="loader"></div>
+                <span id="btnText">Get Secure Link</span>
+            </button>
+        </div>
+        
+        <div class="flags-section">
+            <div class="flags">🇮🇳 🇵🇰 🇦🇪 🇸🇦 🇬🇧 🇺🇸</div>
+            <div style="font-size: 11px; color: #bbb; letter-spacing: 1px;">GLOBAL VERIFICATION SYSTEM</div>
+        </div>
+    </div>
 
-<div class="input-box">
-  <input id="password" type="password" placeholder="Password">
-  <span class="eye" onclick="togglePass()">👁️</span>
-</div>
+    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
 
-<p style="text-align:right;">
-<a href="#" onclick="forgot()">Forgot Password?</a>
-</p>
+    <script>
+        const firebaseConfig = {
+          apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
+          authDomain: "earth-properties-c3c56.firebaseapp.com",
+          projectId: "earth-properties-c3c56"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
 
-<button onclick="login()">Login</button>
+        function showToast(msg, type = 'success') {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = `toast show ${type}`;
+            setTimeout(() => t.classList.remove('show'), 3500);
+        }
 
-<p style="text-align:center;">No account? <a href="signup.html">Sign Up</a></p>
+        document.getElementById('email').addEventListener('keypress', (e) => { if(e.key === 'Enter') login(); });
 
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
-  authDomain: "earth-properties-c3c56.firebaseapp.com",
-  projectId: "earth-properties-c3c56"
-};
+        function login() {
+            const email = document.getElementById('email').value.trim();
+            const btn = document.getElementById('loginBtn');
+            const loader = document.getElementById('loader');
+            const btnText = document.getElementById('btnText');
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
+            if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showToast("Please enter a valid email", "error");
+                return;
+            }
 
-function login(){
-  const email = document.getElementById("email").value;
-  const pass = document.getElementById("password").value;
+            btn.disabled = true;
+            loader.style.display = "block";
+            btnText.textContent = "Sending...";
 
-  auth.signInWithEmailAndPassword(email, pass)
-  .then(()=>{
-    alert("Login Success ✅");
-    window.location.href = "index.html";
-  })
-  .catch(e=>{
-    alert("Error: " + e.message);
-  });
-}
+            auth.sendSignInLinkToEmail(email, {
+                url: window.location.href, 
+                handleCodeInApp: true
+            }).then(() => {
+                localStorage.setItem("emailForSignIn", email);
+                showToast("✓ Success! Check your email inbox.", "success");
+            }).catch(err => {
+                showToast("Error: " + err.message, "error");
+            }).finally(() => {
+                btn.disabled = false;
+                loader.style.display = "none";
+                btnText.textContent = "Get Secure Link";
+            });
+        }
 
-// 👁️ Show / Hide Password
-function togglePass(){
-  let p = document.getElementById("password");
-  p.type = (p.type === "password") ? "text" : "password";
-}
+        window.onload = function() {
+            // 2. Auto-Redirect if already logged in (and not coming from email link)
+            auth.onAuthStateChanged((user) => {
+                if (user && !auth.isSignInWithEmailLink(window.location.href)) {
+                    window.location.href = "index.html"; 
+                }
+            });
 
-// 🔐 Forgot Password (Firebase real)
-function forgot(){
-  let email = document.getElementById("email").value;
-  if(email===""){
-    alert("Enter your email first");
-    return;
-  }
-
-  auth.sendPasswordResetEmail(email)
-  .then(()=>{
-    alert("Password reset link sent to " + email);
-  })
-  .catch(e=>{
-    alert("Error: " + e.message);
-  });
-}
-</script>
-
+            // 3. Callback & Looping Fix
+            if (auth.isSignInWithEmailLink(window.location.href)) {
+                let email = localStorage.getItem("emailForSignIn");
+                if (!email) {
+                    email = window.prompt("Please enter your email again for confirmation:");
+                }
+                
+                showToast("Verifying access...", "success");
+                
+                auth.signInWithEmailLink(email, window.location.href)
+                    .then(() => {
+                        localStorage.removeItem("emailForSignIn");
+                        showToast("Login Successful!", "success");
+                        // Redirect to main and clear URL parameters
+                        setTimeout(() => window.location.href = window.location.origin + "/index.html", 1500);
+                    })
+                    .catch(() => showToast("Link expired or invalid.", "error"));
+            }
+        };
+    </script>
 </body>
 </html>
