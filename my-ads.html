@@ -6,41 +6,51 @@
     <title>My Ads - Earth Property</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary: #2e7d32; --red: #d32f2f; --bg: #f8f9fa; --blue: #007bff; }
+        :root { --primary: #2e7d32; --red: #d32f2f; --bg: #f8f9fa; --blue: #007bff; --gray: #9e9e9e; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); padding-bottom: 20px; }
         
-        header { background: var(--primary); padding: 15px; color: white; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; }
-        header a { color: white; text-decoration: none; }
+        header { background: var(--primary); padding: 15px; color: white; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        header a { color: white; text-decoration: none; font-size: 18px; }
         header h2 { margin: 0; font-size: 18px; font-weight: 600; }
 
         .ads-list { padding: 15px; max-width: 600px; margin: 0 auto; }
         
-        .ad-card { background: white; border-radius: 12px; margin-bottom: 15px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #eee; transition: 0.3s; }
+        /* Smooth card and transition */
+        .ad-card { background: white; border-radius: 12px; margin-bottom: 15px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #eee; transition: all 0.4s ease; }
         .ad-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         
-        .ad-main { display: flex; align-items: center; }
-        .ad-img { width: 90px; height: 90px; object-fit: cover; margin: 10px; border-radius: 8px; background: #eee; }
+        .ad-main { display: flex; align-items: center; padding: 10px; }
+        .ad-img { width: 85px; height: 85px; object-fit: cover; border-radius: 8px; background: #f0f0f0; }
         
-        .ad-info { padding: 10px; flex: 1; }
+        .ad-info { padding: 0 12px; flex: 1; }
         .ad-title { font-weight: 600; font-size: 15px; color: #222; margin-bottom: 2px; }
         .ad-price { color: var(--primary); font-weight: 700; font-size: 16px; margin-bottom: 4px; }
-        .ad-stats { font-size: 11px; color: #999; }
+        .ad-meta { font-size: 11px; color: var(--gray); }
         
-        .status-bar { background: #fdfdfd; padding: 10px 15px; font-size: 11px; display: flex; justify-content: space-between; border-top: 1px solid #f0f0f0; }
-        .tag { font-weight: 700; padding: 3px 8px; border-radius: 4px; }
+        .status-bar { background: #fafafa; padding: 8px 15px; font-size: 11px; display: flex; justify-content: space-between; border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; }
+        .tag { font-weight: 700; padding: 2px 6px; border-radius: 4px; }
         .tag-active { background: #e8f5e9; color: #2e7d32; }
         .tag-expired { background: #ffebee; color: #c62828; }
 
-        .ad-actions { display: flex; padding: 10px; gap: 8px; background: #fff; border-top: 1px solid #f0f0f0; }
-        .btn-action { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #eee; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; user-select: none; }
+        .ad-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 10px; background: #fff; }
+        .btn-action { padding: 12px 5px; border-radius: 8px; border: 1px solid #eee; font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; transition: 0.2s; user-select: none; }
         .btn-action:active { transform: scale(0.95); }
         
-        .btn-edit { background: #f1f8f1; color: var(--primary); }
-        .btn-renew { background: #e3f2fd; color: var(--blue); }
-        .btn-delete { background: #fff1f1; color: var(--red); }
+        .btn-edit { background: #f1f8f1; color: var(--primary); border-color: #c8e6c9; }
+        
+        /* Pulse for Expired Ads */
+        .btn-renew { background: #e3f2fd; color: var(--blue); border-color: #bbdefb; animation: pulse 2s infinite; }
+        .btn-renew:disabled { animation: none; opacity: 0.7; }
 
-        /* Toast Notification */
-        #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 25px; border-radius: 30px; font-size: 14px; z-index: 2000; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        /* Professional Live Badge */
+        .btn-live { background: #e8f5e9 !important; color: #2e7d32 !important; border-color: #c8e6c9 !important; cursor: default; opacity: 1 !important; }
+
+        .btn-delete { background: #fff1f1; color: var(--red); border-color: #ffcdd2; }
+
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0,123,255, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(0,123,255, 0); } 100% { box-shadow: 0 0 0 0 rgba(0,123,255, 0); } }
+
+        /* Professional Toasts */
+        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 24px; border-radius: 25px; font-size: 13px; z-index: 2000; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.2); transition: opacity 0.3s; opacity: 0; }
     </style>
 </head>
 <body>
@@ -53,9 +63,9 @@
 </header>
 
 <div id="myAdsList" class="ads-list">
-    <div style="text-align:center; padding:50px; color:#999;">
-        <i class="fa fa-circle-notch fa-spin" style="font-size:24px;"></i>
-        <p>Loading your ads...</p>
+    <div style="text-align:center; padding:60px; color:#999;">
+        <i class="fa fa-circle-notch fa-spin" style="font-size:24px; color:var(--primary);"></i>
+        <p>Loading your properties...</p>
     </div>
 </div>
 
@@ -64,17 +74,20 @@
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
 
 <script>
-const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
+const firebaseConfig = { 
+    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
+    authDomain: "earth-properties-c3c56.firebaseapp.com", 
+    projectId: "earth-properties-c3c56" 
+};
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
 function showToast(msg, color = '#333') {
     const t = document.getElementById('toast');
-    t.innerText = msg;
-    t.style.background = color;
-    t.style.display = 'block';
-    setTimeout(() => t.style.display = 'none', 3000);
+    t.innerText = msg; t.style.background = color; t.style.display = 'block'; 
+    setTimeout(() => { t.style.opacity = '1'; }, 10);
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.style.display = 'none', 300); }, 3000);
 }
 
 auth.onAuthStateChanged(user => {
@@ -92,9 +105,9 @@ async function loadMyAds(uid) {
 
         if (snap.empty) {
             listDiv.innerHTML = `<div style="text-align:center; padding:100px 20px; color:#999;">
-                <i class="fa fa-folder-open" style="font-size:48px; opacity:0.1;"></i>
-                <p>No ads found</p>
-                <a href="upload.html" style="color:var(--primary); text-decoration:none; font-weight:bold;">+ Post New Ad</a>
+                <i class="fa fa-building" style="font-size:40px; opacity:0.1;"></i>
+                <p>No ads found.</p>
+                <a href="upload.html" style="color:var(--primary); font-weight:700; text-decoration:none;">+ Post Property</a>
             </div>`;
             return;
         }
@@ -102,48 +115,56 @@ async function loadMyAds(uid) {
         let html = '';
         snap.forEach(doc => {
             const p = doc.data();
+            const id = doc.id;
             
             // Professional Image Handling
-            let firstImg = 'https://via.placeholder.com/150?text=No+Image';
+            let firstImg = 'https://via.placeholder.com/85?text=Earth';
             if (p.images && p.images.length > 0) {
                 const img = p.images[0];
                 firstImg = typeof img === 'string' ? img : (img.url || img.downloadURL || firstImg);
             }
             
-            // Date & Expiry Calculation
+            // Date & Expiry (Rent: 30 days, Sell: 180 days)
             const createdAt = p.createdAt ? p.createdAt.toDate() : new Date();
-            const dateStr = createdAt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
             const diffDays = Math.floor((new Date() - createdAt) / (1000 * 60 * 60 * 24));
             const limit = p.purpose === 'Rent' ? 30 : 180;
             const remaining = limit - diffDays;
             const isExpired = remaining <= 0;
 
             html += `
-                <div class="ad-card" id="card-${doc.id}">
+                <div class="ad-card" id="card-${id}">
                     <div class="ad-main">
                         <img src="${firstImg}" class="ad-img">
                         <div class="ad-info">
-                            <div class="ad-title">${p.title || 'Untitled'}</div>
+                            <div class="ad-title">${p.title || 'Property'}</div>
                             <div class="ad-price">₹${Number(p.price || 0).toLocaleString('en-IN')}</div>
-                            <div class="ad-stats">Posted: ${dateStr} • ${p.purpose || 'Sell'}</div>
+                            <div class="ad-meta">${p.purpose} | ${createdAt.toLocaleDateString()}</div>
                         </div>
                     </div>
                     
                     <div class="status-bar">
-                        <span>Status: <b style="color:${isExpired ? 'red' : 'green'}">${isExpired ? 'EXPIRED' : 'LIVE'}</b></span>
+                        <span>Status: <b style="color:${isExpired ? 'red' : 'green'}">${isExpired ? 'EXPIRED' : 'ACTIVE'}</b></span>
                         <span class="tag ${isExpired ? 'tag-expired' : 'tag-active'}">
-                            ${isExpired ? 'Action Needed' : remaining + ' days left'}
+                            ${isExpired ? 'Renewal Due' : remaining + ' days left'}
                         </span>
                     </div>
 
                     <div class="ad-actions">
-                        <button onclick="location.href='edit.html?id=${doc.id}'" class="btn-action btn-edit">
+                        <button onclick="location.href='upload.html?edit=${id}'" class="btn-action btn-edit">
                             <i class="fa fa-edit"></i> Edit
                         </button>
-                        <button onclick="renewAd('${doc.id}', this)" class="btn-action btn-renew">
-                            <i class="fa fa-sync-alt"></i> Renew
-                        </button>
-                        <button onclick="deleteAd('${doc.id}', this)" class="btn-action btn-delete">
+
+                        ${isExpired ? `
+                            <button onclick="renewAd('${id}', this)" class="btn-action btn-renew">
+                                <i class="fa fa-sync-alt"></i> Renew
+                            </button>
+                        ` : `
+                            <button class="btn-action btn-live" disabled>
+                                <i class="fa fa-check-circle"></i> Live
+                            </button>
+                        `}
+
+                        <button onclick="deleteAd('${id}', this)" class="btn-action btn-delete">
                             <i class="fa fa-trash"></i> Delete
                         </button>
                     </div>
@@ -152,33 +173,28 @@ async function loadMyAds(uid) {
         listDiv.innerHTML = html;
     } catch (e) { 
         console.error(e);
-        if (e.message.includes("index")) {
-            listDiv.innerHTML = `<div style="padding:20px; text-align:center; font-size:13px;">
-                <p>⚠️ Database Indexing Needed</p>
-                <a href="${e.message.match(/https:\/\/[^\s]+/)}" target="_blank" style="color:blue;">Click here to enable sorting</a>
-            </div>`;
-        } else {
-            listDiv.innerHTML = "<p style='text-align:center; padding:50px;'>Error loading ads.</p>"; 
-        }
+        listDiv.innerHTML = "<p style='text-align:center; padding:50px;'>Error loading ads. Refresh page.</p>"; 
     }
 }
 
 async function renewAd(id, btn) {
     if (btn.disabled) return;
-    if (!confirm("Renew this ad to move it to the top?")) return;
     
-    btn.innerHTML = '<i class="fa fa-circle-notch fa-spin"></i>';
+    // ✅ ADDED RENEW CONFIRMATION
+    if (!confirm("Renew this ad? It will be moved to the top of the listings for a new period.")) return;
+    
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>'; 
     btn.disabled = true;
 
     try {
         await db.collection("properties").doc(id).update({
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            renewedAt: firebase.firestore.FieldValue.serverTimestamp()
+            lastRenewedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         showToast("✓ Ad successfully renewed!", "#2e7d32");
         setTimeout(() => location.reload(), 1500);
     } catch (e) {
-        showToast("❌ Error: " + e.message, "#d32f2f");
+        showToast("Error: " + e.message, "#d32f2f");
         btn.innerHTML = '<i class="fa fa-sync-alt"></i> Renew';
         btn.disabled = false;
     }
@@ -186,22 +202,20 @@ async function renewAd(id, btn) {
 
 async function deleteAd(id, btn) {
     if (btn.disabled) return;
-    if (!confirm("Are you sure you want to delete this ad permanently?")) return;
+    if (!confirm("Are you sure? This will permanently delete your ad.")) return;
     
-    btn.innerHTML = '<i class="fa fa-circle-notch fa-spin"></i>';
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
     btn.disabled = true;
 
     try {
-        // Ownership Check
-        const doc = await db.collection("properties").doc(id).get();
-        if (doc.data().ownerId !== auth.currentUser.uid) throw new Error("Unauthorized");
-
         await db.collection("properties").doc(id).delete();
-        showToast("✓ Ad deleted", "#333");
-        document.getElementById(`card-${id}`).style.opacity = '0';
-        setTimeout(() => document.getElementById(`card-${id}`).remove(), 500);
+        showToast("Ad removed", "#333");
+        const card = document.getElementById(`card-${id}`);
+        card.style.opacity = '0';
+        card.style.transform = 'translateX(20px)';
+        setTimeout(() => card.remove(), 400);
     } catch (e) {
-        showToast("❌ Delete failed", "#d32f2f");
+        showToast("Delete failed", "#d32f2f");
         btn.innerHTML = '<i class="fa fa-trash"></i> Delete';
         btn.disabled = false;
     }
