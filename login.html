@@ -6,17 +6,27 @@
     <title>Earth Property | Secure Login</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary: #2e7d32; }
+        :root { --primary: #2e7d32; --bg: #f8f9fa; }
         body { margin: 0; height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #e8f5e9, #f0f2f5); font-family: system-ui, sans-serif; overflow: hidden; }
-        .toast { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); background: #323232; color: #fff; padding: 14px 28px; border-radius: 12px; transition: 0.5s; z-index: 1000; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        
+        .toast { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); background: #323232; color: #fff; padding: 14px 28px; border-radius: 12px; font-size: 14px; transition: 0.5s; z-index: 1000; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
         .toast.show { top: 20px; }
+        .toast.error { background: #d32f2f; }
+
         .card { background: #fff; width: 90%; max-width: 360px; padding: 40px 25px; border-radius: 28px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); text-align: center; }
-        input { width: 100%; padding: 16px; border-radius: 14px; border: 1.5px solid #eee; font-size: 16px; outline: none; box-sizing: border-box; margin-bottom: 18px; }
-        button { width: 100%; padding: 16px; border: none; border-radius: 14px; background: var(--primary); color: #fff; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; }
+        .logo { font-size: 26px; font-weight: 800; color: var(--primary); margin-bottom: 5px; }
+        
+        input { width: 100%; padding: 16px; border-radius: 14px; border: 1.5px solid #eee; font-size: 16px; outline: none; box-sizing: border-box; transition: 0.3s; margin-bottom: 18px; }
+        input:focus { border-color: var(--primary); background: #f9fff9; }
+        
+        button { width: 100%; padding: 16px; border: none; border-radius: 14px; background: var(--primary); color: #fff; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
         button:disabled { background: #ccc; cursor: not-allowed; }
-        .spinner { width: 22px; height: 22px; border: 3px solid #ffffff55; border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto; display: none; }
+        
+        .spinner { width: 20px; height: 20px; border: 3px solid #ffffff55; border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; display: none; margin: 0 auto; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        
         #cooldownTimer { font-size: 12px; color: #d32f2f; margin-top: 10px; display: none; font-weight: 600; }
+        .footer-flags { margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px; color: #bbb; font-size: 20px; letter-spacing: 5px; }
     </style>
 </head>
 <body>
@@ -24,22 +34,24 @@
     <div id="toast" class="toast"></div>
 
     <div class="card">
-        <div style="font-size: 26px; font-weight: 800; color: var(--primary); margin-bottom: 5px;">🌍 Earth Property</div>
+        <div class="logo">🌍 Earth Property</div>
         <div id="ui-container">
-            <div style="font-size: 13px; color: #777; margin-bottom: 30px;">International Property Portal</div>
-            <input type="email" id="email" placeholder="Enter email address">
+            <p style="font-size: 13px; color: #777; margin-bottom: 25px;">International Property Portal</p>
+            <input type="email" id="email" placeholder="Enter email address" required>
             <button id="loginBtn" onclick="login()">
                 <div class="spinner" id="loader"></div>
                 <span id="btnText">Get Secure Link</span>
             </button>
             <div id="cooldownTimer"></div>
         </div>
+        <div class="footer-flags">🇮🇳 🇵🇰 🇦🇪 🇸🇦 🇬🇧 🇺🇸</div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
 
     <script>
+        // 1. Configuration
         const firebaseConfig = {
           apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
           authDomain: "earth-properties-c3c56.firebaseapp.com",
@@ -51,63 +63,67 @@
         const BASE_URL = "https://pkgandhi725-crypto.github.io/earth-property";
         const COOLDOWN_MS = 60000;
 
-        function showToast(msg) {
+        function showToast(msg, isError = false) {
             const t = document.getElementById('toast');
             t.textContent = msg;
-            t.classList.add('show');
+            t.className = `toast show ${isError ? 'error' : ''}`;
             setTimeout(() => t.classList.remove('show'), 4000);
         }
 
-        function startCooldownTimer() {
+        function updateCooldownUI() {
             const timer = document.getElementById('cooldownTimer');
-            function update() {
-                const lastSent = parseInt(localStorage.getItem('lastEmailSentTime') || '0');
-                const remaining = Math.ceil((lastSent + COOLDOWN_MS - Date.now()) / 1000);
-                if (remaining > 0) {
-                    timer.textContent = `⏱ Wait ${remaining}s to resend`;
-                    timer.style.display = 'block';
-                    setTimeout(update, 1000);
-                } else { 
-                    timer.style.display = 'none';
-                    document.getElementById('loginBtn').disabled = false;
-                }
+            const btn = document.getElementById('loginBtn');
+            const lastSent = parseInt(localStorage.getItem('lastEmailSentTime') || '0');
+            
+            const remaining = Math.ceil((lastSent + COOLDOWN_MS - Date.now()) / 1000);
+            
+            if (remaining > 0) {
+                btn.disabled = true;
+                timer.style.display = 'block';
+                timer.textContent = `⏱ Wait ${remaining}s to request again`;
+                setTimeout(updateCooldownUI, 1000);
+            } else {
+                btn.disabled = false;
+                timer.style.display = 'none';
             }
-            update();
         }
 
         async function login() {
-            const email = document.getElementById('email').value.trim();
+            const emailField = document.getElementById('email');
+            const email = emailField.value.trim();
             const btn = document.getElementById('loginBtn');
             const loader = document.getElementById('loader');
             const btnText = document.getElementById('btnText');
 
+            // Validation
             if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                showToast("Please enter a valid email");
+                showToast("Please enter a valid email", true);
                 return;
             }
 
-            // UI Loading State
+            // Start Loading State
             btn.disabled = true;
             loader.style.display = "block";
             btnText.style.display = "none";
 
             try {
-                console.log("Attempting to send link to:", email);
-                await auth.sendSignInLinkToEmail(email, {
+                const actionCodeSettings = {
                     url: `${BASE_URL}/login.html`,
                     handleCodeInApp: true
-                });
+                };
+
+                await auth.sendSignInLinkToEmail(email, actionCodeSettings);
                 
+                // Success
+                localStorage.setItem('emailForSignIn', email);
                 localStorage.setItem('lastEmailSentTime', Date.now().toString());
-                localStorage.setItem("emailForSignIn", email);
-                showToast("✓ Link sent! Check Inbox/Spam.");
-                startCooldownTimer();
-                console.log("Link sent successfully");
+                showToast("✓ Security link sent! Check your email.");
+                updateCooldownUI();
 
             } catch (error) {
-                console.error("Firebase Error:", error);
-                showToast("Error: " + error.message);
-                btn.disabled = false; // Reset button on error
+                console.error("Login Error:", error);
+                showToast(error.message, true);
+                btn.disabled = false; // Reset if error occurs
             } finally {
                 loader.style.display = "none";
                 btnText.style.display = "block";
@@ -115,23 +131,24 @@
         }
 
         window.onload = function() {
-            const lastSent = parseInt(localStorage.getItem('lastEmailSentTime') || '0');
-            if (Date.now() - lastSent < COOLDOWN_MS) {
-                document.getElementById('loginBtn').disabled = true;
-                startCooldownTimer();
-            }
+            // Restore Cooldown on refresh
+            if (localStorage.getItem('lastEmailSentTime')) updateCooldownUI();
 
+            // Handle Email Link Click
             if (auth.isSignInWithEmailLink(window.location.href)) {
-                let email = localStorage.getItem("emailForSignIn") || window.prompt("Confirm your email:");
+                let email = localStorage.getItem('emailForSignIn') || window.prompt("Confirm your email:");
+                
                 if(email) {
+                    document.getElementById('ui-container').innerHTML = `<p>Verifying Access...</p><div class="spinner" style="display:block; border-top-color:var(--primary);"></div>`;
+                    
                     auth.signInWithEmailLink(email, window.location.href)
                         .then(() => {
-                            localStorage.removeItem("emailForSignIn");
+                            localStorage.removeItem('emailForSignIn');
                             window.location.replace(`${BASE_URL}/index.html`);
                         })
                         .catch(err => {
-                            console.error("Link Error:", err);
-                            showToast("Link expired or invalid.");
+                            console.error("Verification Error:", err);
+                            showToast("Link expired or invalid.", true);
                         });
                 }
             }
