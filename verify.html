@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Verify Business - Earth Property</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: system-ui; margin: 0; background: #f4f7f6; padding-bottom: 30px; }
+        header { background: #2e7d32; color: white; padding: 18px; display: flex; align-items: center; gap: 15px; }
+        .container { padding: 20px; max-width: 500px; margin: auto; }
+        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-bottom: 20px; transition: 0.3s; }
+        
+        /* Payment Section */
+        .payment-box { background: #f1f8e9; padding: 15px; border-radius: 12px; border: 1.5px dashed #2e7d32; text-align: center; margin: 15px 0; }
+        .upi-id { font-size: 18px; font-weight: 800; color: #2e7d32; letter-spacing: 0.5px; margin: 8px 0; display: block; }
+        
+        /* Upload UI */
+        .upload-zone { border: 2px dashed #ccc; padding: 25px; border-radius: 15px; text-align: center; margin-top: 10px; cursor: pointer; transition: 0.2s; }
+        .upload-zone:hover { border-color: #2e7d32; background: #f9f9f9; }
+        .upload-zone i { font-size: 28px; color: #2e7d32; margin-bottom: 10px; }
+        .preview-img { width: 100%; height: 160px; object-fit: cover; border-radius: 10px; margin-top: 10px; display: none; border: 1px solid #ddd; }
+        
+        label { font-weight: 700; font-size: 11px; color: #888; display: block; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        input[type="text"] { width: 100%; padding: 14px; margin-top: 8px; border: 1.5px solid #eee; border-radius: 12px; box-sizing: border-box; font-size: 15px; outline: none; }
+        input[type="text"]:focus { border-color: #2e7d32; }
+        
+        #submitBtn { width: 100%; background: #2e7d32; color: white; border: none; padding: 16px; border-radius: 14px; font-weight: 700; font-size: 16px; margin-top: 30px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2); }
+        #submitBtn:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; }
+        
+        /* Status Badges */
+        .status-badge { display: inline-block; padding: 6px 16px; border-radius: 25px; font-size: 12px; font-weight: 800; margin-top: 10px; text-transform: uppercase; }
+        .pending { background: #fff3e0; color: #ef6c00; }
+        .approved { background: #e8f5e9; color: #2e7d32; }
+        .rejected { background: #ffebee; color: #c62828; }
+
+        .loader { display: none; margin-right: 8px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div onclick="history.back()" style="cursor:pointer; padding: 5px;"><i class="fa fa-arrow-left"></i></div>
+    <div style="font-weight: 700; font-size: 18px;">Premium Verification</div>
+</header>
+
+<div class="container">
+    <div id="statusCard" class="card" style="display:none; text-align: center;">
+        <h3 style="margin:0 0 5px 0;">Verification Status</h3>
+        <div id="statusText" style="font-size: 14px; color: #666;">We are reviewing your documents.</div>
+        <div id="statusBadge" class="status-badge">Pending</div>
+    </div>
+
+    <div class="card" id="formCard">
+        <h2 style="margin:0; font-size: 22px;">Upgrade to Verified</h2>
+        <p style="color:#666; font-size:14px; margin-top: 5px;">Build trust and get prioritized in search results.</p>
+
+        <div class="payment-box">
+            <p style="margin:0; font-size: 13px; font-weight: 600; color: #555;">Step 1: Pay Verification Fee (₹999)</p>
+            <span class="upi-id">earthproperty@upi</span>
+            <small style="color: #666;">Pay via any UPI app & take a screenshot.</small>
+        </div>
+
+        <label>Full Name / Business Name</label>
+        <input type="text" id="bizName" placeholder="Name to show on profile">
+
+        <label>Step 2: Upload ID Proof (Aadhar/PAN)</label>
+        <div class="upload-zone" onclick="document.getElementById('idInput').click()">
+            <i class="fa fa-id-card"></i>
+            <div id="idText" style="font-size: 13px; font-weight: 600;">Click to upload ID Image</div>
+            <img id="idPreview" class="preview-img">
+        </div>
+        <input type="file" id="idInput" hidden accept="image/*">
+
+        <label>Step 3: Upload Payment Screenshot</label>
+        <div class="upload-zone" onclick="document.getElementById('payInput').click()">
+            <i class="fa fa-receipt"></i>
+            <div id="payText" style="font-size: 13px; font-weight: 600;">Click to upload Screenshot</div>
+            <img id="payPreview" class="preview-img">
+        </div>
+        <input type="file" id="payInput" hidden accept="image/*">
+
+        <button id="submitBtn">SUBMIT FOR REVIEW</button>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = { 
+    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
+    authDomain: "earth-properties-c3c56.firebaseapp.com", 
+    projectId: "earth-properties-c3c56" 
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+const CLOUD_NAME = "dnkhurnbv";
+const UPLOAD_PRESET = "earth_property"; 
+
+let idFile, payFile;
+
+// Handle File Previews & Validation
+function setupUpload(inputId, textId, previewId, callback) {
+    document.getElementById(inputId).onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) { // 5MB Validation
+                alert("File is too big! Max 5MB allowed.");
+                e.target.value = ""; return;
+            }
+            document.getElementById(textId).innerText = file.name;
+            const preview = document.getElementById(previewId);
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = 'block';
+            callback(file);
+        }
+    };
+}
+
+setupUpload('idInput', 'idText', 'idPreview', (f) => idFile = f);
+setupUpload('payInput', 'payText', 'payPreview', (f) => payFile = f);
+
+auth.onAuthStateChanged(async user => {
+    if (!user) return location.href = 'login.html';
+    
+    // ✅ Real-time status sync
+    db.collection("verification_requests").doc(user.uid).onSnapshot(doc => {
+        if (doc.exists) {
+            const data = doc.data();
+            document.getElementById('statusCard').style.display = 'block';
+            document.getElementById('statusBadge').innerText = data.status;
+            document.getElementById('statusBadge').className = `status-badge ${data.status}`;
+            
+            if (data.status === 'pending') {
+                document.getElementById('statusText').innerText = "We are reviewing your request. Please wait.";
+                lockForm("REQUEST UNDER REVIEW");
+            } else if (data.status === 'approved') {
+                document.getElementById('statusText').innerText = "Congratulations! You are a Verified Seller.";
+                lockForm("VERIFIED SELLER");
+            } else if (data.status === 'rejected') {
+                document.getElementById('statusText').innerText = "Request rejected. Please contact support.";
+            }
+        }
+    });
+});
+
+function lockForm(msg) {
+    document.getElementById('formCard').style.opacity = '0.5';
+    document.getElementById('formCard').style.pointerEvents = 'none';
+    document.getElementById('submitBtn').innerText = msg;
+    document.getElementById('submitBtn').disabled = true;
+}
+
+async function uploadToCloudinary(file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", UPLOAD_PRESET);
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: "POST", body: formData });
+    if (!res.ok) throw new Error("Upload failed");
+    const data = await res.json();
+    return data.secure_url;
+}
+
+document.getElementById('submitBtn').onclick = async () => {
+    const bizName = document.getElementById('bizName').value.trim();
+    if (!bizName || !idFile || !payFile) return alert("All fields are mandatory.");
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Submitting...';
+
+    try {
+        const idUrl = await uploadToCloudinary(idFile);
+        const payUrl = await uploadToCloudinary(payFile);
+
+        await db.collection("verification_requests").doc(auth.currentUser.uid).set({
+            businessName: bizName,
+            idProofUrl: idUrl,
+            paymentUrl: payUrl,
+            status: 'pending',
+            userId: auth.currentUser.uid,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        alert("Verification request submitted successfully!");
+    } catch (e) {
+        alert("Something went wrong. Please try again.");
+        btn.disabled = false;
+        btn.innerText = "SUBMIT FOR REVIEW";
+    }
+};
+</script>
+</body>
+</html>
