@@ -19,8 +19,15 @@
         input { width: 100%; padding: 16px; border-radius: 14px; border: 1.5px solid #eee; font-size: 16px; outline: none; box-sizing: border-box; transition: 0.3s; margin-bottom: 18px; }
         input:focus { border-color: var(--primary); background: #f9fff9; }
         
-        button { width: 100%; padding: 16px; border: none; border-radius: 14px; background: var(--primary); color: #fff; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
+        button { width: 100%; padding: 16px; border: none; border-radius: 14px; background: var(--primary); color: #fff; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; margin-bottom: 10px; }
         button:disabled { background: #ccc; cursor: not-allowed; }
+
+        /* Google Button Styling */
+        .google-btn { background: #fff; color: #444; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; }
+        .google-btn img { width: 18px; margin-right: 12px; }
+        .divider { margin: 15px 0; color: #bbb; font-size: 12px; position: relative; }
+        .divider::before, .divider::after { content: ""; position: absolute; top: 50%; width: 40%; height: 1px; background: #eee; }
+        .divider::before { left: 0; } .divider::after { right: 0; }
         
         .spinner { width: 20px; height: 20px; border: 3px solid #ffffff55; border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; display: none; margin: 0 auto; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -37,6 +44,14 @@
         <div class="logo">🌍 Earth Property</div>
         <div id="ui-container">
             <p style="font-size: 13px; color: #777; margin-bottom: 25px;">International Property Portal</p>
+            
+            <button class="google-btn" onclick="loginWithGoogle()">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg">
+                Continue with Google
+            </button>
+
+            <div class="divider">OR</div>
+
             <input type="email" id="email" placeholder="Enter email address" required>
             <button id="loginBtn" onclick="login()">
                 <div class="spinner" id="loader"></div>
@@ -51,7 +66,6 @@
     <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
 
     <script>
-        // 1. Configuration
         const firebaseConfig = {
           apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
           authDomain: "earth-properties-c3c56.firebaseapp.com",
@@ -70,11 +84,24 @@
             setTimeout(() => t.classList.remove('show'), 4000);
         }
 
+        // --- NEW: Google Login Function ---
+        async function loginWithGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            try {
+                const result = await auth.signInWithPopup(provider);
+                showToast("✓ Welcome " + result.user.displayName);
+                window.location.replace(`${BASE_URL}/index.html`);
+            } catch (error) {
+                console.error("Google Login Error:", error);
+                showToast("Google Login Failed", true);
+            }
+        }
+
+        // --- Existing Email Link Logic ---
         function updateCooldownUI() {
             const timer = document.getElementById('cooldownTimer');
             const btn = document.getElementById('loginBtn');
             const lastSent = parseInt(localStorage.getItem('lastEmailSentTime') || '0');
-            
             const remaining = Math.ceil((lastSent + COOLDOWN_MS - Date.now()) / 1000);
             
             if (remaining > 0) {
@@ -95,13 +122,11 @@
             const loader = document.getElementById('loader');
             const btnText = document.getElementById('btnText');
 
-            // Validation
             if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
                 showToast("Please enter a valid email", true);
                 return;
             }
 
-            // Start Loading State
             btn.disabled = true;
             loader.style.display = "block";
             btnText.style.display = "none";
@@ -111,19 +136,14 @@
                     url: `${BASE_URL}/login.html`,
                     handleCodeInApp: true
                 };
-
                 await auth.sendSignInLinkToEmail(email, actionCodeSettings);
-                
-                // Success
                 localStorage.setItem('emailForSignIn', email);
                 localStorage.setItem('lastEmailSentTime', Date.now().toString());
                 showToast("✓ Security link sent! Check your email.");
                 updateCooldownUI();
-
             } catch (error) {
-                console.error("Login Error:", error);
                 showToast(error.message, true);
-                btn.disabled = false; // Reset if error occurs
+                btn.disabled = false;
             } finally {
                 loader.style.display = "none";
                 btnText.style.display = "block";
@@ -131,23 +151,18 @@
         }
 
         window.onload = function() {
-            // Restore Cooldown on refresh
             if (localStorage.getItem('lastEmailSentTime')) updateCooldownUI();
 
-            // Handle Email Link Click
             if (auth.isSignInWithEmailLink(window.location.href)) {
                 let email = localStorage.getItem('emailForSignIn') || window.prompt("Confirm your email:");
-                
                 if(email) {
                     document.getElementById('ui-container').innerHTML = `<p>Verifying Access...</p><div class="spinner" style="display:block; border-top-color:var(--primary);"></div>`;
-                    
                     auth.signInWithEmailLink(email, window.location.href)
                         .then(() => {
                             localStorage.removeItem('emailForSignIn');
                             window.location.replace(`${BASE_URL}/index.html`);
                         })
                         .catch(err => {
-                            console.error("Verification Error:", err);
                             showToast("Link expired or invalid.", true);
                         });
                 }
