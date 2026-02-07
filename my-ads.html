@@ -6,50 +6,55 @@
     <title>My Ads - Earth Property</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary: #2e7d32; --red: #d32f2f; --bg: #f8f9fa; }
-        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; background: var(--bg); padding-bottom: 20px; color: #333; }
+        :root { --primary: #2e7d32; --red: #d32f2f; --bg: #f8f9fa; --blue: #007bff; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); padding-bottom: 20px; }
         
-        /* Header */
-        header { background: var(--primary); padding: 15px; color: white; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        header a { color: white; text-decoration: none; font-size: 18px; display: flex; align-items: center; }
+        header { background: var(--primary); padding: 15px; color: white; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; }
+        header a { color: white; text-decoration: none; }
         header h2 { margin: 0; font-size: 18px; font-weight: 600; }
 
-        /* Ads List Container */
         .ads-list { padding: 15px; max-width: 600px; margin: 0 auto; }
         
-        /* Ad Card Style */
-        .ad-card { background: white; border-radius: 12px; margin-bottom: 15px; display: flex; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #eee; }
-        .ad-img { width: 120px; height: 120px; object-fit: cover; background: #f0f0f0; }
+        .ad-card { background: white; border-radius: 12px; margin-bottom: 15px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #eee; transition: 0.3s; }
+        .ad-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         
-        .ad-info { padding: 12px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
-        .ad-title { font-weight: 600; font-size: 15px; color: #222; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .ad-price { color: var(--primary); font-weight: 700; font-size: 18px; margin-bottom: 10px; }
+        .ad-main { display: flex; align-items: center; }
+        .ad-img { width: 90px; height: 90px; object-fit: cover; margin: 10px; border-radius: 8px; background: #eee; }
         
-        /* Action Buttons */
-        .ad-actions { display: flex; gap: 10px; }
-        .btn-action { flex: 1; padding: 8px; border-radius: 6px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; }
-        .btn-edit { background: #f1f8f1; color: var(--primary); }
-        .btn-edit:active { background: #e2f0e2; }
-        .btn-delete { background: #fff1f1; color: var(--red); }
-        .btn-delete:active { background: #ffe2e2; }
+        .ad-info { padding: 10px; flex: 1; }
+        .ad-title { font-weight: 600; font-size: 15px; color: #222; margin-bottom: 2px; }
+        .ad-price { color: var(--primary); font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+        .ad-stats { font-size: 11px; color: #999; }
+        
+        .status-bar { background: #fdfdfd; padding: 10px 15px; font-size: 11px; display: flex; justify-content: space-between; border-top: 1px solid #f0f0f0; }
+        .tag { font-weight: 700; padding: 3px 8px; border-radius: 4px; }
+        .tag-active { background: #e8f5e9; color: #2e7d32; }
+        .tag-expired { background: #ffebee; color: #c62828; }
 
-        /* Empty State */
-        .loader { text-align: center; padding: 60px; color: #666; font-size: 14px; }
-        .empty-state { text-align: center; padding: 100px 20px; color: #999; }
-        .empty-state i { font-size: 50px; color: #eee; margin-bottom: 15px; }
-        .btn-post-now { background: var(--primary); color: white; padding: 12px 32px; border-radius: 25px; text-decoration: none; display: inline-block; margin-top: 20px; font-weight: 600; font-size: 14px; }
+        .ad-actions { display: flex; padding: 10px; gap: 8px; background: #fff; border-top: 1px solid #f0f0f0; }
+        .btn-action { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #eee; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; user-select: none; }
+        .btn-action:active { transform: scale(0.95); }
+        
+        .btn-edit { background: #f1f8f1; color: var(--primary); }
+        .btn-renew { background: #e3f2fd; color: var(--blue); }
+        .btn-delete { background: #fff1f1; color: var(--red); }
+
+        /* Toast Notification */
+        #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 25px; border-radius: 30px; font-size: 14px; z-index: 2000; display: none; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
 
+<div id="toast"></div>
+
 <header>
     <a href="index.html"><i class="fa fa-arrow-left"></i></a>
-    <h2>My Ads</h2>
+    <h2>My Advertisements</h2>
 </header>
 
 <div id="myAdsList" class="ads-list">
-    <div class="loader">
-        <i class="fa fa-circle-notch fa-spin" style="font-size: 24px; color: var(--primary);"></i>
+    <div style="text-align:center; padding:50px; color:#999;">
+        <i class="fa fa-circle-notch fa-spin" style="font-size:24px;"></i>
         <p>Loading your ads...</p>
     </div>
 </div>
@@ -59,21 +64,22 @@
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
 
 <script>
-const firebaseConfig = { 
-    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
-    authDomain: "earth-properties-c3c56.firebaseapp.com", 
-    projectId: "earth-properties-c3c56"
-};
+const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
+function showToast(msg, color = '#333') {
+    const t = document.getElementById('toast');
+    t.innerText = msg;
+    t.style.background = color;
+    t.style.display = 'block';
+    setTimeout(() => t.style.display = 'none', 3000);
+}
+
 auth.onAuthStateChanged(user => {
-    if (!user) {
-        location.href = 'login.html';
-    } else {
-        loadMyAds(user.uid);
-    }
+    if (!user) location.href = 'login.html';
+    else loadMyAds(user.uid);
 });
 
 async function loadMyAds(uid) {
@@ -81,73 +87,123 @@ async function loadMyAds(uid) {
     try {
         const snap = await db.collection("properties")
                            .where("ownerId", "==", uid)
+                           .orderBy("createdAt", "desc")
                            .get();
 
         if (snap.empty) {
-            listDiv.innerHTML = `
-                <div class="empty-state">
-                    <i class="fa fa-folder-open"></i>
-                    <h3>No Ads Yet</h3>
-                    <p>Post your first property to see it here.</p>
-                    <a href="upload.html" class="btn-post-now">Post Ad</a>
-                </div>`;
+            listDiv.innerHTML = `<div style="text-align:center; padding:100px 20px; color:#999;">
+                <i class="fa fa-folder-open" style="font-size:48px; opacity:0.1;"></i>
+                <p>No ads found</p>
+                <a href="upload.html" style="color:var(--primary); text-decoration:none; font-weight:bold;">+ Post New Ad</a>
+            </div>`;
             return;
         }
 
         let html = '';
         snap.forEach(doc => {
             const p = doc.data();
-            const firstImg = (p.images && p.images.length > 0) 
-                ? (typeof p.images[0] === 'object' ? p.images[0].url : p.images[0]) 
-                : 'https://via.placeholder.com/150?text=No+Image';
             
+            // Professional Image Handling
+            let firstImg = 'https://via.placeholder.com/150?text=No+Image';
+            if (p.images && p.images.length > 0) {
+                const img = p.images[0];
+                firstImg = typeof img === 'string' ? img : (img.url || img.downloadURL || firstImg);
+            }
+            
+            // Date & Expiry Calculation
+            const createdAt = p.createdAt ? p.createdAt.toDate() : new Date();
+            const dateStr = createdAt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+            const diffDays = Math.floor((new Date() - createdAt) / (1000 * 60 * 60 * 24));
+            const limit = p.purpose === 'Rent' ? 30 : 180;
+            const remaining = limit - diffDays;
+            const isExpired = remaining <= 0;
+
             html += `
                 <div class="ad-card" id="card-${doc.id}">
-                    <img src="${firstImg}" class="ad-img" alt="property">
-                    <div class="ad-info">
-                        <div>
-                            <div class="ad-title">${p.title || 'Untitled Property'}</div>
+                    <div class="ad-main">
+                        <img src="${firstImg}" class="ad-img">
+                        <div class="ad-info">
+                            <div class="ad-title">${p.title || 'Untitled'}</div>
                             <div class="ad-price">₹${Number(p.price || 0).toLocaleString('en-IN')}</div>
+                            <div class="ad-stats">Posted: ${dateStr} • ${p.purpose || 'Sell'}</div>
                         </div>
-                        <div class="ad-actions">
-                            <a href="edit.html?id=${doc.id}" class="btn-action btn-edit">
-                                <i class="fa fa-pen-to-square"></i> Edit
-                            </a>
-                            <button onclick="deleteAd('${doc.id}')" class="btn-action btn-delete">
-                                <i class="fa fa-trash-can"></i> Delete
-                            </button>
-                        </div>
+                    </div>
+                    
+                    <div class="status-bar">
+                        <span>Status: <b style="color:${isExpired ? 'red' : 'green'}">${isExpired ? 'EXPIRED' : 'LIVE'}</b></span>
+                        <span class="tag ${isExpired ? 'tag-expired' : 'tag-active'}">
+                            ${isExpired ? 'Action Needed' : remaining + ' days left'}
+                        </span>
+                    </div>
+
+                    <div class="ad-actions">
+                        <button onclick="location.href='edit.html?id=${doc.id}'" class="btn-action btn-edit">
+                            <i class="fa fa-edit"></i> Edit
+                        </button>
+                        <button onclick="renewAd('${doc.id}', this)" class="btn-action btn-renew">
+                            <i class="fa fa-sync-alt"></i> Renew
+                        </button>
+                        <button onclick="deleteAd('${doc.id}', this)" class="btn-action btn-delete">
+                            <i class="fa fa-trash"></i> Delete
+                        </button>
                     </div>
                 </div>`;
         });
         listDiv.innerHTML = html;
-    } catch (e) {
-        listDiv.innerHTML = "<div class='loader'>Error loading ads. Check your connection.</div>";
-        console.error("Error:", e);
+    } catch (e) { 
+        console.error(e);
+        if (e.message.includes("index")) {
+            listDiv.innerHTML = `<div style="padding:20px; text-align:center; font-size:13px;">
+                <p>⚠️ Database Indexing Needed</p>
+                <a href="${e.message.match(/https:\/\/[^\s]+/)}" target="_blank" style="color:blue;">Click here to enable sorting</a>
+            </div>`;
+        } else {
+            listDiv.innerHTML = "<p style='text-align:center; padding:50px;'>Error loading ads.</p>"; 
+        }
     }
 }
 
-async function deleteAd(id) {
-    // Professional Crisp English Copy
-    if (confirm("Delete ad?")) {
-        const card = document.getElementById(`card-${id}`);
-        try {
-            card.style.opacity = '0.4';
-            card.style.pointerEvents = 'none';
+async function renewAd(id, btn) {
+    if (btn.disabled) return;
+    if (!confirm("Renew this ad to move it to the top?")) return;
+    
+    btn.innerHTML = '<i class="fa fa-circle-notch fa-spin"></i>';
+    btn.disabled = true;
 
-            await db.collection("properties").doc(id).delete();
-            
-            card.remove();
-            
-            // Reload if empty to show post button
-            if (document.querySelectorAll('.ad-card').length === 0) {
-                location.reload();
-            }
-        } catch (e) {
-            alert("Delete failed. Please try again.");
-            card.style.opacity = '1';
-            card.style.pointerEvents = 'auto';
-        }
+    try {
+        await db.collection("properties").doc(id).update({
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            renewedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showToast("✓ Ad successfully renewed!", "#2e7d32");
+        setTimeout(() => location.reload(), 1500);
+    } catch (e) {
+        showToast("❌ Error: " + e.message, "#d32f2f");
+        btn.innerHTML = '<i class="fa fa-sync-alt"></i> Renew';
+        btn.disabled = false;
+    }
+}
+
+async function deleteAd(id, btn) {
+    if (btn.disabled) return;
+    if (!confirm("Are you sure you want to delete this ad permanently?")) return;
+    
+    btn.innerHTML = '<i class="fa fa-circle-notch fa-spin"></i>';
+    btn.disabled = true;
+
+    try {
+        // Ownership Check
+        const doc = await db.collection("properties").doc(id).get();
+        if (doc.data().ownerId !== auth.currentUser.uid) throw new Error("Unauthorized");
+
+        await db.collection("properties").doc(id).delete();
+        showToast("✓ Ad deleted", "#333");
+        document.getElementById(`card-${id}`).style.opacity = '0';
+        setTimeout(() => document.getElementById(`card-${id}`).remove(), 500);
+    } catch (e) {
+        showToast("❌ Delete failed", "#d32f2f");
+        btn.innerHTML = '<i class="fa fa-trash"></i> Delete';
+        btn.disabled = false;
     }
 }
 </script>
