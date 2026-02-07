@@ -34,6 +34,7 @@
         .received { align-self: flex-start; background: white; border-top-left-radius: 2px; }
         .time { font-size: 10px; color: #888; margin-top: 4px; text-align: right; display: block; }
         #blockBanner { background: #ffebee; color: #c62828; padding: 8px; text-align: center; font-size: 12px; font-weight: 600; display: none; }
+        #removedBanner { background: #f5f5f5; color: #666; padding: 15px; text-align: center; font-size: 14px; border-top: 1px solid #ddd; display: none; }
     </style>
 </head>
 <body>
@@ -57,8 +58,9 @@
 
 <div id="blockBanner"></div>
 <div id="messages"></div>
+<div id="removedBanner"><i class="fa fa-info-circle"></i> This listing is no longer active.</div>
 
-<div class="chat-input-container">
+<div class="chat-input-container" id="inputArea">
     <input type="text" id="msgInput" placeholder="Type a message..." autocomplete="off">
     <button class="send-btn" id="sendBtn"><i class="fa fa-paper-plane"></i></button>
 </div>
@@ -80,11 +82,14 @@ let currentRoomId = null;
 let isPartnerBlocked = false;
 let amIBlocked = false;
 
-// Menu Logic
+// ✅ FIXED: Dropdown Outside Click
 const menuBtn = document.getElementById('menuBtn');
 const dropdown = document.getElementById('myDropdown');
 menuBtn.onclick = () => dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-window.onclick = (e) => { if(!menuBtn.contains(e.target)) dropdown.style.display = 'none'; };
+window.onclick = (e) => {
+    const menuContainer = document.querySelector('.menu-container');
+    if(!menuContainer.contains(e.target)) dropdown.style.display = 'none';
+};
 
 auth.onAuthStateChanged(async user => {
     if (!user) { location.href = 'login.html'; return; }
@@ -93,7 +98,6 @@ auth.onAuthStateChanged(async user => {
     const ids = [user.uid, partnerId].sort();
     currentRoomId = `${ids[0]}_${ids[1]}_${propId}`;
 
-    // Load Data
     const userDoc = await db.collection("users").doc(partnerId).get();
     if(userDoc.exists) document.getElementById("chatPartner").innerText = userDoc.data().name || "User";
 
@@ -102,7 +106,10 @@ auth.onAuthStateChanged(async user => {
         const p = propDoc.data();
         document.getElementById("propStatus").innerText = `${p.bhk} BHK - ₹${Number(p.price).toLocaleString('en-IN')}`;
     } else {
-        document.getElementById("propStatus").innerText = "Property Ad Removed";
+        // ✅ NEW: Handle Property Deletion UI
+        document.getElementById("propStatus").innerText = "Ad Removed";
+        document.getElementById("inputArea").style.display = 'none';
+        document.getElementById("removedBanner").style.display = 'block';
     }
 
     checkBlockStatus(user.uid);
@@ -128,13 +135,11 @@ function updateUIForBlock() {
     const blockActionText = document.getElementById('blockAction');
 
     if (isPartnerBlocked) {
-        banner.style.display = 'block';
-        banner.innerText = "You have blocked this user.";
+        banner.style.display = 'block'; banner.innerText = "You have blocked this user.";
         input.disabled = true; btn.disabled = true;
         blockActionText.innerText = "Unblock User";
     } else if (amIBlocked) {
-        banner.style.display = 'block';
-        banner.innerText = "You can no longer send messages.";
+        banner.style.display = 'block'; banner.innerText = "You can no longer send messages.";
         input.disabled = true; btn.disabled = true;
         blockActionText.innerText = "Block User";
     } else {
