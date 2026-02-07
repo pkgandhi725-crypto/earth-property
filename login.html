@@ -19,17 +19,18 @@
         input { width: 100%; padding: 16px; border-radius: 14px; border: 1.5px solid #eee; font-size: 16px; outline: none; box-sizing: border-box; transition: 0.3s; margin-bottom: 18px; }
         input:focus { border-color: var(--primary); background: #f9fff9; }
         
-        button { width: 100%; padding: 16px; border: none; border-radius: 14px; background: var(--primary); color: #fff; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; margin-bottom: 10px; }
-        button:disabled { background: #ccc; cursor: not-allowed; }
+        button { width: 100%; padding: 16px; border: none; border-radius: 14px; background: var(--primary); color: #fff; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.2s; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; }
+        button:disabled { background: #ccc; cursor: not-allowed; opacity: 0.7; }
 
-        /* Google Button Styling */
-        .google-btn { background: #fff; color: #444; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; }
-        .google-btn img { width: 18px; margin-right: 12px; }
-        .divider { margin: 15px 0; color: #bbb; font-size: 12px; position: relative; }
+        .google-btn { background: #fff; color: #444; border: 1px solid #ddd; font-weight: 600; }
+        .google-btn:hover:not(:disabled) { background: #f8f9fa; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .google-btn img { width: 20px; margin-right: 12px; }
+        
+        .divider { margin: 20px 0; color: #bbb; font-size: 12px; position: relative; }
         .divider::before, .divider::after { content: ""; position: absolute; top: 50%; width: 40%; height: 1px; background: #eee; }
         .divider::before { left: 0; } .divider::after { right: 0; }
         
-        .spinner { width: 20px; height: 20px; border: 3px solid #ffffff55; border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; display: none; margin: 0 auto; }
+        .spinner { width: 20px; height: 20px; border: 3px solid #ffffff55; border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; display: none; margin-right: 10px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
         #cooldownTimer { font-size: 12px; color: #d32f2f; margin-top: 10px; display: none; font-weight: 600; }
@@ -45,9 +46,9 @@
         <div id="ui-container">
             <p style="font-size: 13px; color: #777; margin-bottom: 25px;">International Property Portal</p>
             
-            <button class="google-btn" onclick="loginWithGoogle()">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg">
-                Continue with Google
+            <button class="google-btn" id="googleBtn" onclick="loginWithGoogle()">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google">
+                <span id="googleBtnText">Continue with Google</span>
             </button>
 
             <div class="divider">OR</div>
@@ -66,6 +67,7 @@
     <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
 
     <script>
+        // 1. Firebase Config
         const firebaseConfig = {
           apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
           authDomain: "earth-properties-c3c56.firebaseapp.com",
@@ -84,20 +86,31 @@
             setTimeout(() => t.classList.remove('show'), 4000);
         }
 
-        // --- NEW: Google Login Function ---
+        // 2. Google Login Logic
         async function loginWithGoogle() {
+            const btn = document.getElementById('googleBtn');
+            const btnText = document.getElementById('googleBtnText');
+            
+            btn.disabled = true;
+            btnText.innerHTML = "Logging in...";
+            
             const provider = new firebase.auth.GoogleAuthProvider();
+            
             try {
                 const result = await auth.signInWithPopup(provider);
-                showToast("✓ Welcome " + result.user.displayName);
+                showToast("✓ Welcome " + (result.user.displayName || "User"));
                 window.location.replace(`${BASE_URL}/index.html`);
             } catch (error) {
-                console.error("Google Login Error:", error);
-                showToast("Google Login Failed", true);
+                console.error(error);
+                let msg = "Login Failed";
+                if(error.code === 'auth/popup-closed-by-user') msg = "Login cancelled";
+                showToast(msg, true);
+                btn.disabled = false;
+                btnText.innerHTML = "Continue with Google";
             }
         }
 
-        // --- Existing Email Link Logic ---
+        // 3. Email Link Logic
         function updateCooldownUI() {
             const timer = document.getElementById('cooldownTimer');
             const btn = document.getElementById('loginBtn');
@@ -107,7 +120,7 @@
             if (remaining > 0) {
                 btn.disabled = true;
                 timer.style.display = 'block';
-                timer.textContent = `⏱ Wait ${remaining}s to request again`;
+                timer.textContent = `⏱ Wait ${remaining}s`;
                 setTimeout(updateCooldownUI, 1000);
             } else {
                 btn.disabled = false;
@@ -116,15 +129,13 @@
         }
 
         async function login() {
-            const emailField = document.getElementById('email');
-            const email = emailField.value.trim();
+            const email = document.getElementById('email').value.trim();
             const btn = document.getElementById('loginBtn');
             const loader = document.getElementById('loader');
             const btnText = document.getElementById('btnText');
 
             if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                showToast("Please enter a valid email", true);
-                return;
+                return showToast("Invalid email format", true);
             }
 
             btn.disabled = true;
@@ -132,14 +143,13 @@
             btnText.style.display = "none";
 
             try {
-                const actionCodeSettings = {
+                await auth.sendSignInLinkToEmail(email, {
                     url: `${BASE_URL}/login.html`,
                     handleCodeInApp: true
-                };
-                await auth.sendSignInLinkToEmail(email, actionCodeSettings);
+                });
                 localStorage.setItem('emailForSignIn', email);
                 localStorage.setItem('lastEmailSentTime', Date.now().toString());
-                showToast("✓ Security link sent! Check your email.");
+                showToast("✓ Link sent to your email!");
                 updateCooldownUI();
             } catch (error) {
                 showToast(error.message, true);
@@ -150,23 +160,34 @@
             }
         }
 
+        // 4. Initialization
         window.onload = function() {
             if (localStorage.getItem('lastEmailSentTime')) updateCooldownUI();
 
+            // Handle Email Verification Link
             if (auth.isSignInWithEmailLink(window.location.href)) {
                 let email = localStorage.getItem('emailForSignIn') || window.prompt("Confirm your email:");
                 if(email) {
-                    document.getElementById('ui-container').innerHTML = `<p>Verifying Access...</p><div class="spinner" style="display:block; border-top-color:var(--primary);"></div>`;
                     auth.signInWithEmailLink(email, window.location.href)
                         .then(() => {
                             localStorage.removeItem('emailForSignIn');
                             window.location.replace(`${BASE_URL}/index.html`);
                         })
-                        .catch(err => {
-                            showToast("Link expired or invalid.", true);
-                        });
+                        .catch(() => showToast("Link expired.", true));
                 }
             }
+
+            // Auto-Redirect if logged in
+            auth.onAuthStateChanged((user) => {
+                if (user && !auth.isSignInWithEmailLink(window.location.href)) {
+                    window.location.replace(`${BASE_URL}/index.html`);
+                }
+            });
+
+            // Enter Key Support
+            document.getElementById('email').addEventListener('keypress', (e) => {
+                if(e.key === 'Enter') login();
+            });
         };
     </script>
 </body>
