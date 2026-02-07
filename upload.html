@@ -4,38 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>List Property - Earth Property</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: system-ui; margin: 0; background: #f4f7f6; padding-bottom: 40px; }
-        header { background: #2e7d32; color: white; padding: 18px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; }
+        body { font-family: system-ui, -apple-system, sans-serif; margin: 0; background: #f4f7f6; padding-bottom: 40px; }
+        header { background: #2e7d32; color: white; padding: 18px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .container { padding: 15px; max-width: 500px; margin: auto; }
         .card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
         label { font-weight: 700; font-size: 11px; color: #888; display: block; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px; }
-        input, textarea, select { width: 100%; padding: 14px; margin-top: 8px; border: 1.5px solid #eee; border-radius: 12px; box-sizing: border-box; font-size: 16px; outline: none; background: #fdfdfd; }
-        
+        input, textarea, select { width: 100%; padding: 14px; margin-top: 8px; border: 1.5px solid #eee; border-radius: 12px; box-sizing: border-box; font-size: 16px; outline: none; background: #fdfdfd; transition: 0.3s; }
+        input:focus { border-color: #2e7d32; background: #fff; }
         .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 15px; }
-        .photo-box { aspect-ratio: 1/1; border: 1.5px dashed #ccc; border-radius: 15px; overflow: hidden; position: relative; background: #fafafa; }
+        .photo-box { aspect-ratio: 1/1; border: 1.5px dashed #ccc; border-radius: 15px; overflow: hidden; position: relative; background: #fafafa; display: flex; align-items: center; justify-content: center; }
         .photo-box img { width: 100%; height: 100%; object-fit: cover; }
-        .del-btn { position: absolute; top: 5px; right: 5px; background: #e53935; color: white; border: 2px solid white; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; }
-        
+        .del-btn { position: absolute; top: 5px; right: 5px; background: #e53935; color: white; border: 2px solid white; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; z-index: 10; }
+        .photo-count { text-align: center; color: #666; font-size: 12px; margin-top: 8px; font-weight: 600; }
         #statusText { text-align: center; color: #2e7d32; font-weight: 700; font-size: 14px; margin-top: 20px; display: none; }
-        #submitBtn { width: 100%; background: #2e7d32; color: white; border: none; padding: 16px; border-radius: 15px; font-weight: 800; font-size: 16px; margin-top: 30px; cursor: pointer; }
-        #submitBtn:disabled { background: #a5d6a7; }
+        #submitBtn { width: 100%; background: #2e7d32; color: white; border: none; padding: 16px; border-radius: 15px; font-weight: 800; font-size: 16px; margin-top: 30px; cursor: pointer; transition: 0.3s; }
+        #submitBtn:disabled { background: #a5d6a7; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
 <header>
-    <div onclick="history.back()" style="cursor:pointer; font-size: 24px;">←</div>
-    <h3 style="margin:0;">List Your Property</h3>
+    <div onclick="history.back()" style="cursor:pointer; font-size: 20px;"><i class="fa fa-arrow-left"></i></div>
+    <h3 id="pageTitle" style="margin:0;">List Your Property</h3>
 </header>
 
 <div class="container">
     <div class="card">
         <label>Property Photos (Max 5)</label>
         <div class="photo-grid" id="photoGrid"></div>
+        <div class="photo-count" id="photoCount">0/5 photos</div>
         <input type="file" id="fileInput" multiple accept="image/*" style="display:none">
 
-        <div id="statusText">Uploading to Cloud...</div>
+        <div id="statusText">Processing...</div>
 
         <label>Transaction Type</label>
         <select id="type">
@@ -76,9 +78,9 @@
 
 <script>
 const firebaseConfig = { 
-    apiKey:"AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
-    authDomain:"earth-properties-c3c56.firebaseapp.com", 
-    projectId:"earth-properties-c3c56"
+    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
+    authDomain: "earth-properties-c3c56.firebaseapp.com", 
+    projectId: "earth-properties-c3c56" 
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
@@ -88,83 +90,159 @@ const CLOUD_NAME = "dnkhurnbv";
 const UPLOAD_PRESET = "earth_property";
 
 let selectedFiles = [];
+let existingImages = [];
+let editID = new URLSearchParams(window.location.search).get('edit');
+let isUploading = false;
 
-// Photo Grid Render
+// Navigation safety
+window.onbeforeunload = () => isUploading ? "Upload in progress. Don't leave!" : null;
+
+auth.onAuthStateChanged(async (user) => {
+    if (!user) { location.href = 'login.html'; return; }
+    
+    if (editID) {
+        document.getElementById('pageTitle').innerText = "Edit Property";
+        document.getElementById('submitBtn').innerText = "UPDATE PROPERTY";
+        try {
+            const doc = await db.collection("properties").doc(editID).get();
+            if (doc.exists) {
+                const data = doc.data();
+                // Ownership guard
+                if (data.ownerId !== user.uid) {
+                    alert("Unauthorized access!");
+                    location.href = 'my-ads.html';
+                    return;
+                }
+                document.getElementById('title').value = data.title || '';
+                document.getElementById('price').value = data.price || '';
+                document.getElementById('location').value = data.location || '';
+                document.getElementById('phone').value = data.phone || '';
+                document.getElementById('desc').value = data.description || '';
+                document.getElementById('type').value = data.purpose || 'Sell';
+                document.getElementById('bhk').value = data.bhk || '1';
+                existingImages = data.images || [];
+                render();
+            }
+        } catch(e) { alert("Error loading property data."); }
+    } else {
+        render();
+    }
+});
+
 function render() {
     const grid = document.getElementById('photoGrid');
+    const countEl = document.getElementById('photoCount');
     grid.innerHTML = "";
-    selectedFiles.forEach((file, i) => {
+    
+    existingImages.forEach((img, i) => {
+        const url = img.url || img;
         grid.innerHTML += `
             <div class="photo-box" style="border-style:solid">
+                <button class="del-btn" onclick="removeExisting(${i})">×</button>
+                <img src="${url}">
+            </div>`;
+    });
+
+    selectedFiles.forEach((file, i) => {
+        grid.innerHTML += `
+            <div class="photo-box" style="border-style:dashed; border-color:#2e7d32">
                 <button class="del-btn" onclick="removePhoto(${i})">×</button>
                 <img src="${URL.createObjectURL(file)}">
             </div>`;
     });
-    if(selectedFiles.length < 5) {
-        grid.innerHTML += `<div class="photo-box" onclick="document.getElementById('fileInput').click()" style="display:flex;align-items:center;justify-content:center;color:#ccc;font-size:40px;cursor:pointer;">+</div>`;
+    
+    const total = selectedFiles.length + existingImages.length;
+    countEl.textContent = `${total}/5 photos`;
+    if (total < 5) {
+        grid.innerHTML += `<div class="photo-box" onclick="document.getElementById('fileInput').click()" style="cursor:pointer; color:#ccc; font-size:40px;">+</div>`;
     }
 }
 
 document.getElementById('fileInput').onchange = (e) => {
     const files = Array.from(e.target.files);
-    files.forEach(f => { if(selectedFiles.length < 5) selectedFiles.push(f); });
+    const available = 5 - (selectedFiles.length + existingImages.length);
+    
+    if (files.length > available) alert(`Only ${available} more photo(s) allowed.`);
+    
+    files.slice(0, available).forEach(f => {
+        if (f.type.startsWith('image/') && f.size <= 5 * 1024 * 1024) {
+            selectedFiles.push(f);
+        } else {
+            alert("Invalid file or size too large (Max 5MB).");
+        }
+    });
     e.target.value = ""; render();
 };
 
 function removePhoto(i) { selectedFiles.splice(i,1); render(); }
-render();
+function removeExisting(i) { existingImages.splice(i,1); render(); }
 
-// 🔥 Step 1: Cloudinary Upload (Base64 Fallback)
 async function uploadToCloudinary(file) {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", UPLOAD_PRESET);
-    
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-        method: "POST",
-        body: formData
-    });
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: "POST", body: formData });
+    if (!res.ok) throw new Error("Upload Failed");
     const data = await res.json();
     return { url: data.secure_url, id: data.public_id };
 }
 
 document.getElementById('submitBtn').onclick = async () => {
-    if(!auth.currentUser) return alert("Please login first");
-    if(selectedFiles.length === 0) return alert("Add at least 1 photo");
+    const title = document.getElementById('title').value.trim();
+    const price = document.getElementById('price').value;
+    const loc = document.getElementById('location').value.trim();
+    const phoneRaw = document.getElementById('phone').value.trim();
+    const cleanPhone = phoneRaw.replace(/\D/g, ''); // Fix 2: Phone normalization
+
+    if (!title || title.length < 5) return alert("Title too short.");
+    if (!price || price <= 0) return alert("Valid price required.");
+    if (!loc) return alert("Location required.");
+    if (cleanPhone.length < 10) return alert("Valid WhatsApp number required.");
+    if (selectedFiles.length === 0 && existingImages.length === 0) return alert("Add at least 1 photo.");
 
     const btn = document.getElementById('submitBtn');
     const status = document.getElementById('statusText');
     btn.disabled = true;
+    isUploading = true;
     status.style.display = "block";
 
     try {
-        const uploadedImages = [];
-        for(let i=0; i < selectedFiles.length; i++) {
+        const newImages = [];
+        for (let i = 0; i < selectedFiles.length; i++) {
             status.innerText = `Uploading Photo ${i+1}/${selectedFiles.length}...`;
-            const imgData = await uploadToCloudinary(selectedFiles[i]);
-            uploadedImages.push(imgData);
+            const data = await uploadToCloudinary(selectedFiles[i]);
+            newImages.push(data);
         }
 
-        status.innerText = "Finishing Post...";
-        await db.collection("properties").add({
-            title: document.getElementById('title').value,
-            price: document.getElementById('price').value,
-            location: document.getElementById('location').value,
-            phone: document.getElementById('phone').value,
+        const propertyData = {
+            title,
+            price: Number(price),
+            location: loc,
+            phone: cleanPhone,
             description: document.getElementById('desc').value,
-            type: document.getElementById('type').value,
+            purpose: document.getElementById('type').value,
             bhk: document.getElementById('bhk').value,
-            images: uploadedImages, // Array of {url, id}
+            images: [...existingImages, ...newImages],
             ownerId: auth.currentUser.uid,
-            ownerEmail: auth.currentUser.email,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
 
-        status.innerText = "✅ Property Listed Successfully!";
-        setTimeout(() => location.href='index.html', 1200);
+        if (editID) {
+            await db.collection("properties").doc(editID).update(propertyData);
+        } else {
+            propertyData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            await db.collection("properties").add(propertyData);
+        }
+
+        status.innerText = "✅ Successfully Saved!";
+        isUploading = false;
+        setTimeout(() => location.href='my-ads.html', 1500);
     } catch(e) { 
-        alert("Upload failed. Try again."); 
-        btn.disabled = false; 
+        console.error(e);
+        alert(e.message.includes("permission") ? "Security Error: Check ownership." : "Upload failed.");
+        btn.disabled = false;
+        isUploading = false;
+        status.style.display = "none";
     }
 };
 </script>
