@@ -7,26 +7,55 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body, html { height: 100%; margin: 0; font-family: system-ui; background: #e5ddd5; display: flex; flex-direction: column; }
-        header { background: #2e7d32; color: white; padding: 12px 15px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        header { background: #2e7d32; color: white; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .header-left { display: flex; align-items: center; gap: 12px; }
         header a { color: white; text-decoration: none; font-size: 18px; }
-        #chatPartner { font-weight: 700; font-size: 17px; }
+        .partner-info { display: flex; flex-direction: column; }
+        #chatPartner { font-weight: 700; font-size: 16px; }
+        #propStatus { font-size: 11px; opacity: 0.9; font-weight: 400; }
+        
+        .menu-container { position: relative; }
+        #menuBtn { cursor: pointer; padding: 5px 10px; font-size: 18px; }
+        .dropdown { position: absolute; right: 0; top: 35px; background: white; color: #333; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: none; min-width: 150px; overflow: hidden; }
+        .dropdown div { padding: 12px 15px; font-size: 14px; cursor: pointer; border-bottom: 1px solid #eee; }
+        .dropdown div:hover { background: #f5f5f5; }
+        .dropdown div.report { color: #d32f2f; }
+
         #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; scroll-behavior: smooth; }
         .chat-input-container { background: #f0f0f0; padding: 10px; display: flex; gap: 8px; align-items: center; position: sticky; bottom: 0; }
         .chat-input-container input { flex: 1; border: none; padding: 12px 18px; border-radius: 25px; outline: none; font-size: 15px; }
+        .chat-input-container input:disabled { background: #ddd; }
+        
         .send-btn { background: #2e7d32; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .send-btn:disabled { background: #ccc; }
+
         .msg { max-width: 75%; padding: 8px 12px; border-radius: 12px; font-size: 14px; position: relative; line-height: 1.4; word-wrap: break-word; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
         .sent { align-self: flex-end; background: #dcf8c6; border-top-right-radius: 2px; }
         .received { align-self: flex-start; background: white; border-top-left-radius: 2px; }
         .time { font-size: 10px; color: #888; margin-top: 4px; text-align: right; display: block; }
+        #blockBanner { background: #ffebee; color: #c62828; padding: 8px; text-align: center; font-size: 12px; font-weight: 600; display: none; }
     </style>
 </head>
 <body>
 
 <header>
-    <a href="inbox.html"><i class="fa fa-arrow-left"></i></a>
-    <div id="chatPartner">Chat</div>
+    <div class="header-left">
+        <a href="inbox.html"><i class="fa fa-arrow-left"></i></a>
+        <div class="partner-info">
+            <div id="chatPartner">Chat</div>
+            <div id="propStatus">Loading property...</div>
+        </div>
+    </div>
+    <div class="menu-container">
+        <div id="menuBtn"><i class="fa fa-ellipsis-v"></i></div>
+        <div class="dropdown" id="myDropdown">
+            <div id="blockAction">Block User</div>
+            <div class="report" id="reportBtn">Report User</div>
+        </div>
+    </div>
 </header>
 
+<div id="blockBanner"></div>
 <div id="messages"></div>
 
 <div class="chat-input-container">
@@ -48,23 +77,94 @@ const params = new URLSearchParams(window.location.search);
 const partnerId = params.get('to');
 const propId = params.get('p');
 let currentRoomId = null;
+let isPartnerBlocked = false;
+let amIBlocked = false;
+
+// Menu Logic
+const menuBtn = document.getElementById('menuBtn');
+const dropdown = document.getElementById('myDropdown');
+menuBtn.onclick = () => dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+window.onclick = (e) => { if(!menuBtn.contains(e.target)) dropdown.style.display = 'none'; };
 
 auth.onAuthStateChanged(async user => {
     if (!user) { location.href = 'login.html'; return; }
-    if (!partnerId) { location.href='index.html'; return; }
+    if (!partnerId || !propId) { location.href='index.html'; return; }
 
     const ids = [user.uid, partnerId].sort();
     currentRoomId = `${ids[0]}_${ids[1]}_${propId}`;
 
-    // Load Partner Name
+    // Load Data
     const userDoc = await db.collection("users").doc(partnerId).get();
-    if(userDoc.exists) document.getElementById("chatPartner").innerText = userDoc.data().name || "Owner";
+    if(userDoc.exists) document.getElementById("chatPartner").innerText = userDoc.data().name || "User";
 
-    // Mark as Seen when opening
+    const propDoc = await db.collection("properties").doc(propId).get();
+    if(propDoc.exists) {
+        const p = propDoc.data();
+        document.getElementById("propStatus").innerText = `${p.bhk} BHK - ₹${Number(p.price).toLocaleString('en-IN')}`;
+    } else {
+        document.getElementById("propStatus").innerText = "Property Ad Removed";
+    }
+
+    checkBlockStatus(user.uid);
     db.collection("chats").doc(currentRoomId).update({ isSeen: true }).catch(() => {});
-    
     loadMessages();
 });
+
+function checkBlockStatus(myUid) {
+    db.collection("users").doc(myUid).onSnapshot(doc => {
+        isPartnerBlocked = (doc.data()?.blockedUsers || []).includes(partnerId);
+        updateUIForBlock();
+    });
+    db.collection("users").doc(partnerId).onSnapshot(doc => {
+        amIBlocked = (doc.data()?.blockedUsers || []).includes(myUid);
+        updateUIForBlock();
+    });
+}
+
+function updateUIForBlock() {
+    const input = document.getElementById('msgInput');
+    const btn = document.getElementById('sendBtn');
+    const banner = document.getElementById('blockBanner');
+    const blockActionText = document.getElementById('blockAction');
+
+    if (isPartnerBlocked) {
+        banner.style.display = 'block';
+        banner.innerText = "You have blocked this user.";
+        input.disabled = true; btn.disabled = true;
+        blockActionText.innerText = "Unblock User";
+    } else if (amIBlocked) {
+        banner.style.display = 'block';
+        banner.innerText = "You can no longer send messages.";
+        input.disabled = true; btn.disabled = true;
+        blockActionText.innerText = "Block User";
+    } else {
+        banner.style.display = 'none';
+        input.disabled = false; btn.disabled = false;
+        blockActionText.innerText = "Block User";
+    }
+}
+
+document.getElementById('blockAction').onclick = async () => {
+    const ref = db.collection("users").doc(auth.currentUser.uid);
+    if (isPartnerBlocked) {
+        await ref.update({ blockedUsers: firebase.firestore.FieldValue.arrayRemove(partnerId) });
+    } else if(confirm("Block this user?")) {
+        await ref.update({ blockedUsers: firebase.firestore.FieldValue.arrayUnion(partnerId) });
+    }
+    dropdown.style.display = 'none';
+};
+
+document.getElementById('reportBtn').onclick = async () => {
+    const reason = prompt("Reason for reporting?");
+    if (reason) {
+        await db.collection("reports").add({
+            reporterId: auth.currentUser.uid, reportedUserId: partnerId,
+            propertyId: propId, reason: reason, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        alert("Reported successfully.");
+    }
+    dropdown.style.display = 'none';
+};
 
 function loadMessages() {
     db.collection("chats").doc(currentRoomId).collection("messages").orderBy("timestamp", "asc")
@@ -73,9 +173,8 @@ function loadMessages() {
         msgDiv.innerHTML = '';
         snap.forEach(doc => {
             const d = doc.data();
-            const isMe = d.senderId === auth.currentUser.uid;
             const time = d.timestamp ? new Date(d.timestamp.seconds * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
-            msgDiv.innerHTML += `<div class="msg ${isMe ? 'sent' : 'received'}">${d.text}<span class="time">${time}</span></div>`;
+            msgDiv.innerHTML += `<div class="msg ${d.senderId === auth.currentUser.uid ? 'sent' : 'received'}">${d.text}<span class="time">${time}</span></div>`;
         });
         msgDiv.scrollTop = msgDiv.scrollHeight;
     });
@@ -83,20 +182,16 @@ function loadMessages() {
 
 async function sendMessage() {
     const text = document.getElementById('msgInput').value.trim();
-    if (!text) return;
+    if (!text || isPartnerBlocked || amIBlocked) return;
     document.getElementById('msgInput').value = '';
 
     const msg = { senderId: auth.currentUser.uid, text, timestamp: firebase.firestore.FieldValue.serverTimestamp() };
     await db.collection("chats").doc(currentRoomId).collection("messages").add(msg);
 
-    // Update Room Meta for Inbox
     db.collection("chats").doc(currentRoomId).set({
-        lastMessage: text,
-        lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
-        lastSenderId: auth.currentUser.uid,
-        isSeen: false,
-        users: [auth.currentUser.uid, partnerId],
-        propId: propId
+        lastMessage: text, lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
+        lastSenderId: auth.currentUser.uid, isSeen: false,
+        users: [auth.currentUser.uid, partnerId], propId: propId
     }, { merge: true });
 }
 
