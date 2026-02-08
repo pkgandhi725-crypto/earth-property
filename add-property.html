@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post Property - Earth Property</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #2e7d32; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        h2 { color: var(--primary); text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; }
+        input, textarea, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; }
+        .upload-area { border: 2px dashed var(--primary); padding: 20px; text-align: center; border-radius: 10px; cursor: pointer; background: #f1f8f4; }
+        .preview-container { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+        .preview-img { width: 80px; height: 80px; object-fit: cover; border-radius: 5px; }
+        .btn-post { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        .btn-post:disabled { background: #ccc; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2><i class="fa-solid fa-house-medical"></i> Post New Property</h2>
+    <form id="propertyForm">
+        <div class="form-group">
+            <label>Property Title</label>
+            <input type="text" id="title" placeholder="e.g. 2BHK Flat in Sonipat" required>
+        </div>
+        <div class="form-group">
+            <label>Price (₹)</label>
+            <input type="number" id="price" placeholder="Price" required>
+        </div>
+        <div class="form-group">
+            <label>Location (City)</label>
+            <input type="text" id="city" placeholder="e.g. Sonipat" required>
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <textarea id="desc" rows="4" placeholder="Detail about property..." required></textarea>
+        </div>
+
+        <div class="upload-area" id="uploadWidgetBtn">
+            <i class="fa-solid fa-camera fa-2x"></i>
+            <p>Click to Upload Property Images</p>
+        </div>
+        <div class="preview-container" id="imagePreview"></div>
+
+        <button type="submit" class="btn-post" id="postBtn">Post Property (Live for 30 Days)</button>
+    </form>
+</div>
+
+<script src="https://upload-widget.cloudinary.com/global/all.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+    // Firebase Init (Same as your previous config)
+    const firebaseConfig = {
+        apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
+        authDomain: "earth-properties-c3c56.firebaseapp.com",
+        projectId: "earth-properties-c3c56"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    const CLOUDINARY_CLOUD_NAME = "dnkhurnbv";
+    const CLOUDINARY_UPLOAD_PRESET = "earth_property";
+    let uploadedImages = [];
+
+    // Cloudinary Widget
+    const myWidget = cloudinary.createUploadWidget({
+        cloudName: CLOUDINARY_CLOUD_NAME,
+        uploadPreset: CLOUDINARY_UPLOAD_PRESET,
+        folder: "property_images"
+    }, (error, result) => {
+        if (!error && result && result.event === "success") {
+            uploadedImages.push(result.info.secure_url);
+            const img = document.createElement('img');
+            img.src = result.info.secure_url;
+            img.className = 'preview-img';
+            document.getElementById('imagePreview').appendChild(img);
+        }
+    });
+
+    document.getElementById("uploadWidgetBtn").addEventListener("click", () => myWidget.open());
+
+    // Submit Logic with 30-Day Expiry
+    document.getElementById('propertyForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const user = auth.currentUser;
+        if (!user) return alert("Login first!");
+        if (uploadedImages.length === 0) return alert("Upload at least one image!");
+
+        const btn = document.getElementById('postBtn');
+        btn.disabled = true;
+        btn.innerText = "Posting...";
+
+        // --- EXPIRY LOGIC START ---
+        const now = new Date();
+        const expiry = new Date();
+        expiry.setDate(now.getDate() + 30); // Aaj se exactly 30 din baad [cite: 2026-02-03]
+        // --- EXPIRY LOGIC END ---
+
+        // Get user verification status
+        const userDoc = await db.collection("users").doc(user.uid).get();
+        const isVerified = userDoc.exists ? (userDoc.data().isVerified || false) : false;
+
+        try {
+            await db.collection("properties").add({
+                title: document.getElementById('title').value,
+                price: Number(document.getElementById('price').value),
+                city: document.getElementById('city').value.toLowerCase(),
+                desc: document.getElementById('desc').value,
+                images: uploadedImages,
+                ownerId: user.uid,
+                isVerified: isVerified, // Dealer blue tick logic
+                createdAt: firebase.firestore.Timestamp.fromDate(now),
+                expiryDate: firebase.firestore.Timestamp.fromDate(expiry), // 30-day limit [cite: 2026-02-03]
+                status: "active"
+            });
+
+            alert("Property Posted Successfully! It will expire in 30 days."); [cite: 2026-02-03]
+            location.href = "index.html";
+        } catch (err) {
+            alert("Error: " + err.message);
+            btn.disabled = false;
+        }
+    });
+</script>
+</body>
+</html>
