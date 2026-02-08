@@ -91,29 +91,66 @@ const auth = firebase.auth();
 
 let allProps = [], myFavs = [];
 
+// ✅ Real-time User Data & Verification Status
+auth.onAuthStateChanged(user => {
+    if(user) {
+        document.getElementById('welcomeText').innerText = `Hi, ${user.displayName || user.email.split('@')[0]}`;
+        document.getElementById('authBtn').innerText = "Logout";
+        document.getElementById('myAdsLink').style.display = document.getElementById('postLink').style.display = 'flex';
+        
+        // Real-time listener to hide portal immediately after approval
+        db.collection("users").doc(user.uid).onSnapshot(uDoc => {
+            const userData = uDoc.exists ? uDoc.data() : {};
+            
+            // Admin Check
+            if(userData.role === 'admin' || user.uid === "WOY9f67DachGVTuhR4tSJ1BHozx1") {
+                document.getElementById('adminLink').style.display = 'block';
+            }
+
+            const portal = document.getElementById('premiumPortal');
+            if(userData.isVerified === true) {
+                portal.style.display = 'none'; // Approved users don't see the verify portal
+            } else {
+                portal.style.display = 'block';
+                checkVerificationRequest(user.uid);
+            }
+        });
+    } else {
+        document.getElementById('welcomeText').innerText = "Welcome, Guest";
+        document.getElementById('authBtn').innerText = "Login";
+    }
+    loadProps();
+});
+
+async function checkVerificationRequest(uid) {
+    const vReq = await db.collection("verification_requests").doc(uid).get();
+    const portal = document.getElementById('premiumPortal');
+    if(vReq.exists && vReq.data().status === 'pending') {
+        portal.innerHTML = `<div class="premium-box" style="border-color:#ef6c00"><h3>⏳ Review Pending</h3><p style="font-size:12px;color:#666">Your documents are under review.</p></div>`;
+    } else {
+        portal.innerHTML = `<div class="premium-box"><h3>💎 Premium Dealer</h3><p style="font-size:12px;color:#666">Get verified and grow your trust.</p><button class="verify-btn" onclick="location.href='verify.html'">Verify Now</button></div>`;
+    }
+}
+
 async function loadProps() {
-    document.getElementById('propertyList').innerHTML = '<center style="padding:50px;"><i class="fa fa-spinner fa-spin fa-2x"></i></center>';
+    const list = document.getElementById('propertyList');
+    list.innerHTML = '<center style="padding:50px;"><i class="fa fa-spinner fa-spin fa-2x"></i></center>';
     try {
         if (auth.currentUser) {
             const favSnap = await db.collection("favorites").where("userId", "==", auth.currentUser.uid).get();
             myFavs = favSnap.docs.map(doc => doc.data().propertyId);
         }
 
-        // ✅ FIX: Removed orderBy temporarily to show all 10+ posts (even those without createdAt)
         const snap = await db.collection("properties").limit(50).get();
-        
-        // Sorting manually in JavaScript to handle missing dates
         allProps = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        allProps.sort((a, b) => {
-            const dateA = a.createdAt?.seconds || 0;
-            const dateB = b.createdAt?.seconds || 0;
-            return dateB - dateA;
-        });
-
+        
+        // Manual Sort for missing timestamps
+        allProps.sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0));
+        
         renderProps(allProps);
     } catch(e) { 
         console.error(e);
-        document.getElementById('propertyList').innerHTML = "<center style='padding:50px;'>Error: "+e.message+"</center>"; 
+        list.innerHTML = "<center style='padding:50px;'>Error: "+e.message+"</center>"; 
     }
 }
 
@@ -186,33 +223,6 @@ async function toggleFavorite(pId) {
 }
 
 function toggleAuth() { if(auth.currentUser) { if(confirm("Logout?")) auth.signOut().then(()=>location.reload()); } else location.href='login.html'; }
-
-auth.onAuthStateChanged(async user => {
-    if(user) {
-        document.getElementById('welcomeText').innerText = `Hi, ${user.displayName || user.email.split('@')[0]}`;
-        document.getElementById('authBtn').innerText = "Logout";
-        document.getElementById('myAdsLink').style.display = document.getElementById('postLink').style.display = 'flex';
-        
-        const uDoc = await db.collection("users").doc(user.uid).get();
-        const userData = uDoc.exists ? uDoc.data() : {};
-        
-        // Admin Access Logic
-        if(userData.role === 'admin' || user.uid === "WOY9f67DachGVTuhR4tSJ1BHozx1") document.getElementById('adminLink').style.display = 'block';
-        
-        if(!userData.isVerified) {
-            const portal = document.getElementById('premiumPortal');
-            portal.style.display = 'block';
-            const vReq = await db.collection("verification_requests").doc(user.uid).get();
-            
-            if(vReq.exists && vReq.data().status === 'pending') {
-                portal.innerHTML = `<div class="premium-box" style="border-color:#ef6c00"><h3>⏳ Review Pending</h3><p style="font-size:12px;color:#666">Your documents are under review.</p></div>`;
-            } else {
-                portal.innerHTML = `<div class="premium-box"><h3>💎 Premium Dealer</h3><p style="font-size:12px;color:#666">Get verified and grow your trust.</p><button class="verify-btn" onclick="location.href='verify.html'">Verify Now</button></div>`;
-            }
-        }
-    }
-    loadProps();
-});
 
 function filterData() {
     const s = document.getElementById('citySearch').value.toLowerCase();
