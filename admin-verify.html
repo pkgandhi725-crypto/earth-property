@@ -19,9 +19,8 @@
         .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         .approve-btn { background: #2e7d32; color: white; }
         .reject-btn { background: #ffebee; color: #c62828; }
-        .btn:disabled { opacity: 0.5; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         #loader { text-align: center; padding: 50px; }
-        /* Modal for Full Image View */
         #imgModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; justify-content:center; align-items:center; }
         #imgModal img { max-width: 90%; max-height: 90%; border-radius: 10px; }
     </style>
@@ -50,7 +49,6 @@ const auth = firebase.auth();
 
 auth.onAuthStateChanged(user => {
     if (!user) location.href = 'login.html';
-    // Logic: Only Admin can fetch these (Rules will handle security)
     loadRequests();
 });
 
@@ -74,9 +72,9 @@ function loadRequests() {
                   <div class="req-header">
                       <div class="user-info">
                           <h4>${data.businessName}</h4>
-                          <span>User ID: ${data.userId}</span>
+                          <span>User ID: ${doc.id}</span>
                       </div>
-                      <div style="font-size:11px; color:#999;">${data.timestamp?.toDate().toLocaleDateString()}</div>
+                      <div style="font-size:11px; color:#999;">${data.timestamp?.toDate().toLocaleDateString() || 'N/A'}</div>
                   </div>
                   <div class="docs-row">
                       <div class="doc-box" onclick="viewImg('${data.idProofUrl}')">
@@ -89,8 +87,8 @@ function loadRequests() {
                       </div>
                   </div>
                   <div class="actions">
-                      <button class="btn approve-btn" onclick="updateStatus('${doc.id}', 'approved')">APPROVE</button>
-                      <button class="btn reject-btn" onclick="updateStatus('${doc.id}', 'rejected')">REJECT</button>
+                      <button class="btn approve-btn" id="btn-app-${doc.id}" onclick="updateStatus('${doc.id}', 'approved')">APPROVE</button>
+                      <button class="btn reject-btn" id="btn-rej-${doc.id}" onclick="updateStatus('${doc.id}', 'rejected')">REJECT</button>
                   </div>
               </div>`;
           });
@@ -111,25 +109,41 @@ async function updateStatus(uid, newStatus) {
 
     if (!confirm(`Are you sure you want to ${newStatus} this request?`)) return;
 
+    // Disable buttons to prevent double clicks
+    document.getElementById(`btn-app-${uid}`).disabled = true;
+    document.getElementById(`btn-rej-${uid}`).disabled = true;
+
     try {
-        // 1. Update verification request
-        await db.collection("verification_requests").doc(uid).update({
+        const batch = db.batch(); // Create a Batch
+
+        // 1. Update Verification Request
+        const reqRef = db.collection("verification_requests").doc(uid);
+        batch.update(reqRef, {
             status: newStatus,
             reason: reason,
             reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // 2. If approved, update User's main profile to set 'isVerified: true'
+        // 2. If approved, sync User and Properties
         if (newStatus === 'approved') {
-            await db.collection("users").doc(uid).set({
-                isVerified: true,
-                premiumDealer: true
-            }, { merge: true });
+            // Update User Profile
+            const userRef = db.collection("users").doc(uid);
+            batch.set(userRef, { isVerified: true, premiumDealer: true }, { merge: true });
+
+            // Update all Properties of this user (Denormalization for Blue Tick)
+            const propsSnap = await db.collection("properties").where("ownerId", "==", uid).get();
+            propsSnap.forEach(propDoc => {
+                batch.update(propDoc.ref, { isVerified: true });
+            });
         }
 
-        alert(`Request ${newStatus}!`);
+        await batch.commit(); // Execute all updates together
+        alert(`User ${newStatus} successfully! All properties updated.`);
     } catch (e) {
-        alert("Error updating: " + e.message);
+        console.error(e);
+        alert("Error: " + e.message);
+        document.getElementById(`btn-app-${uid}`).disabled = false;
+        document.getElementById(`btn-rej-${uid}`).disabled = false;
     }
 }
 </script>
