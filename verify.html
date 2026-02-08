@@ -1,51 +1,53 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8"><title>Verify Business - Earth Property</title>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <title>Get Verified</title>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
-    <div style="padding:20px; text-align:center;">
-        <h2>Premium Verification</h2>
-        <input type="text" id="bizName" placeholder="Business/Shop Name" style="padding:10px; width:80%; margin-bottom:10px;"><br>
-        <button id="submitBtn" onclick="submitDocs()" style="padding:12px 24px; background:#2e7d32; color:white; border:none; border-radius:5px; cursor:pointer;">Submit Documents</button>
-    </div>
 
-    <script>
-        const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
+<h2>Premium Verification</h2>
+<input id="bizName" placeholder="Business Name">
+<button onclick="submitDocs()">Submit</button>
 
-        async function submitDocs() {
-            const user = auth.currentUser;
-            const bizName = document.getElementById('bizName').value;
-            if(!user || !bizName) return alert("Please login and enter Business Name");
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
+  authDomain: "earth-properties-c3c56.firebaseapp.com",
+  projectId: "earth-properties-c3c56"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
 
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.innerText = "Submitting...";
+async function submitDocs() {
+  const user = auth.currentUser;
+  const bizName = document.getElementById('bizName').value;
 
-            try {
-                // ✅ Using .doc(uid).set() to match ID-based security rules
-                await db.collection("verification_requests").doc(user.uid).set({
-                    businessName: bizName,
-                    idProofUrl: "CLOUDINARY_URL_HERE", // Replace with your logic
-                    paymentUrl: "CLOUDINARY_URL_HERE",  // Replace with your logic
-                    status: "pending",
-                    userId: user.uid,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
+  if (!user || !bizName) {
+    alert("Login + Business name required");
+    return;
+  }
 
-                alert("✅ Submitted Successfully! Admin will verify soon.");
-                window.location.href = "profile.html";
-            } catch (e) {
-                alert("Submission Failed: " + e.message);
-                btn.disabled = false; btn.innerText = "Submit Documents";
-            }
-        }
-    </script>
+  try {
+    await db.collection("verification_requests")
+      .doc(user.uid)
+      .set({
+        businessName: bizName,
+        idProofUrl: "CLOUDINARY_ID_URL",
+        paymentUrl: "CLOUDINARY_PAY_URL",
+        status: "pending",
+        userId: user.uid,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
+    alert("✅ Submitted for verification");
+  } catch (e) {
+    alert("❌ Error: " + e.message);
+  }
+}
+</script>
 </body>
 </html>
