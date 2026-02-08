@@ -15,7 +15,6 @@
         
         #notifBadge { position: absolute; top: -5px; right: -5px; background: #ff0000; color: white; font-size: 10px; padding: 2px 6px; border-radius: 50%; font-weight: bold; border: 2px solid var(--primary); }
         
-        .pull-hint { text-align: center; padding: 8px; font-size: 11px; color: #666; background: #f9f9f9; }
         .premium-box { background: white; margin: 12px; padding: 20px; border-radius: 16px; border: 2px dashed var(--primary); text-align: center; }
         .guest-banner { background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%); color: white; border: none !important; }
         .verify-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; }
@@ -23,7 +22,6 @@
         .prop-card { background: white; border-radius: 16px; margin: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06); position: relative; }
         .img-container { position: relative; width: 100%; aspect-ratio: 4/3; background: #eee; overflow: hidden; }
         .img-slider { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; height: 100%; scrollbar-width: none; gap: 4px; }
-        .img-slider::-webkit-scrollbar { display: none; }
         .img-slider img { width: 100%; flex-shrink: 0; object-fit: cover; scroll-snap-align: start; }
         
         .prop-info { padding: 15px; }
@@ -41,10 +39,10 @@
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #eee; z-index: 1000; }
         .nav-item { display: flex; flex-direction: column; align-items: center; color: #888; text-decoration: none; font-size: 11px; font-weight: 600; }
         .nav-item.active { color: var(--primary); }
-        .nav-post { background: var(--primary); color: white !important; width: 50px; height: 50px; border-radius: 50%; justify-content: center; margin-top: -30px; box-shadow: 0 4px 12px rgba(46,125,50,0.4); }
+        .nav-post { background: var(--primary); color: white !important; width: 50px; height: 50px; border-radius: 50%; justify-content: center; margin-top: -30px; }
         
         #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 3000; display: none; align-items: center; justify-content: center; }
-        #overlay img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        #overlay img { max-width: 100%; max-height: 100%; }
     </style>
 </head>
 <body>
@@ -53,7 +51,7 @@
     <div id="welcomeText" class="user-identity">Welcome, Guest</div>
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <h2 style="margin:0; font-weight: 800;">Earth Property</h2>
-        <div style="display: flex; gap: 18px; align-items: center;">
+        <div style="display: flex; gap: 15px; align-items: center;">
             <div id="adminLink" style="display:none;" onclick="location.href='admin-verify.html'"><i class="fa fa-user-shield" style="font-size: 20px;"></i></div>
             <div id="notifBell" style="position:relative; display:none;" onclick="location.href='inbox.html'">
                 <i class="fa fa-bell" style="font-size: 20px;"></i>
@@ -65,7 +63,6 @@
     <div class="search-box"><i class="fa fa-search" style="color:#ccc;"></i><input type="text" id="citySearch" placeholder="Search City, Area..." oninput="filterData()"></div>
 </header>
 
-<div class="pull-hint" onclick="location.reload()">↓ Click to refresh</div>
 <div id="premiumPortal" style="display:none;"></div>
 <div id="propertyList"></div>
 
@@ -93,179 +90,114 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-let allProps = [], myFavs = [], userUnsubscribe = null, searchTimeout;
+let allProps = [], myFavs = [], searchTimeout;
 
-// ✅ Auth & Notification Logic
+// 1. Pehle Posts Load Karo (Independent of Auth)
+loadProps();
+
+// 2. Auth Logic (Bell, Admin, Portal)
 auth.onAuthStateChanged(user => {
-    if (userUnsubscribe) userUnsubscribe();
     const portal = document.getElementById('premiumPortal');
-    
     if(user) {
         document.getElementById('welcomeText').innerText = `Hi, ${user.displayName || user.email.split('@')[0]}`;
         document.getElementById('authBtn').innerText = "Logout";
         document.getElementById('myAdsLink').style.display = document.getElementById('postLink').style.display = 'flex';
         document.getElementById('notifBell').style.display = 'block';
 
-        // 🔔 Notification Badge Logic
-        db.collection("chats")
-            .where("receiverId", "==", user.uid)
-            .where("read", "==", false)
-            .onSnapshot(snap => {
-                const badge = document.getElementById('notifBadge');
-                if(snap.size > 0) {
-                    badge.innerText = snap.size;
-                    badge.style.display = 'block';
-                } else {
-                    badge.style.display = 'none';
-                }
-            });
-
-        // 👤 User Data & Admin Check
-        userUnsubscribe = db.collection("users").doc(user.uid).onSnapshot(uDoc => {
-            const userData = uDoc.exists ? uDoc.data() : {};
-            if(userData.role === 'admin') document.getElementById('adminLink').style.display = 'block';
-
-            if(userData.isVerified === true) {
+        // Check for Admin & Verification
+        db.collection("users").doc(user.uid).onSnapshot(doc => {
+            const data = doc.data() || {};
+            if(data.role === 'admin') document.getElementById('adminLink').style.display = 'block';
+            
+            if(data.isVerified === true) {
                 portal.style.display = 'none';
             } else {
                 portal.style.display = 'block';
                 checkVerificationRequest(user.uid);
             }
         });
+
+        // Unread Messages Badge
+        db.collection("chats").where("receiverId", "==", user.uid).where("read", "==", false).onSnapshot(snap => {
+            const badge = document.getElementById('notifBadge');
+            badge.style.display = snap.size > 0 ? 'block' : 'none';
+            badge.innerText = snap.size;
+        });
     } else {
-        document.getElementById('welcomeText').innerText = "Welcome, Guest";
-        document.getElementById('authBtn').innerText = "Login";
-        document.getElementById('myAdsLink').style.display = 'none';
-        document.getElementById('postLink').style.display = 'none';
-        document.getElementById('adminLink').style.display = 'none';
-        document.getElementById('notifBell').style.display = 'none';
-        
+        // Guest Mode
         portal.style.display = 'block';
-        portal.innerHTML = `<div class="premium-box guest-banner"><h3>🏡 Join Earth Property</h3><p style="font-size:12px;opacity:0.9">Post properties & save favorites</p><button class="verify-btn" style="background:white;color:#2e7d32;" onclick="location.href='login.html'">Login Now</button></div>`;
+        portal.innerHTML = `<div class="premium-box guest-banner"><h3>🏡 Join Earth Property</h3><button class="verify-btn" style="background:white;color:#2e7d32;" onclick="location.href='login.html'">Login Now</button></div>`;
     }
-    loadProps();
 });
 
-async function checkVerificationRequest(uid) {
-    const vReq = await db.collection("verification_requests").doc(uid).get();
-    const portal = document.getElementById('premiumPortal');
-    if(vReq.exists && vReq.data().status === 'pending') {
-        portal.innerHTML = `<div class="premium-box" style="border-color:#ef6c00"><h3>⏳ Review Pending</h3><p style="font-size:12px;color:#666">Your documents are under review.</p></div>`;
-    } else {
-        portal.innerHTML = `<div class="premium-box"><h3>💎 Premium Dealer</h3><p style="font-size:12px;color:#666">Get verified & grow trust.</p><button class="verify-btn" onclick="location.href='verify.html'">Verify Now</button></div>`;
-    }
-}
-
-// ✅ Load Properties with Bulletproof Fallback
 async function loadProps() {
     const list = document.getElementById('propertyList');
-    list.innerHTML = '<center style="padding:50px;"><i class="fa fa-spinner fa-spin fa-2x"></i><p>Loading ads...</p></center>';
+    list.innerHTML = '<center style="padding:50px;"><i class="fa fa-spinner fa-spin fa-2x"></i><p>Loading Posts...</p></center>';
     
     try {
-        if (auth.currentUser) {
-            const favSnap = await db.collection("favorites").where("userId", "==", auth.currentUser.uid).get();
-            myFavs = favSnap.docs.map(doc => doc.data().propertyId);
-        }
-
-        let snap;
-        try {
-            // Index required for this
-            snap = await db.collection("properties").orderBy("updatedAt", "desc").limit(50).get();
-        } catch(e) {
-            console.warn("Index fallback triggered");
-            // Fallback: simple fetch if index fails
-            snap = await db.collection("properties").limit(50).get();
-        }
-
+        // Super simple query (No orderBy to avoid index issues)
+        const snap = await db.collection("properties").limit(50).get();
         allProps = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
-        // Manual sort if index failed
+        // Client-side sort fallback
         allProps.sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0));
         
         renderProps(allProps);
     } catch(e) {
-        list.innerHTML = `<center style='padding:50px;'>Error: ${e.message}</center>`;
+        list.innerHTML = `<center style="padding:50px;">Error: ${e.message}</center>`;
     }
 }
 
 function renderProps(data) {
     const list = document.getElementById('propertyList');
     if(!data.length) { list.innerHTML = "<center style='padding:50px;'>No Ads Found</center>"; return; }
-    const now = new Date();
-
-    list.innerHTML = data.map((p) => {
-        const imgs = Array.isArray(p.images) ? p.images : [];
-        const isFav = myFavs.includes(p.id);
+    
+    list.innerHTML = data.map(p => {
+        const imgs = p.images || [];
         const cleanPhone = (p.phone || "").replace(/\D/g, "");
-        const whatsappNumber = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
-        
-        let isExpired = false;
-        if (p.expiresAt) {
-            if (p.expiresAt.toDate() < now) isExpired = true;
-        }
-
+        const whatsapp = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
         const badge = p.isVerified ? '<i class="fa-solid fa-check-circle verified-badge"></i>' : '';
-        const imgHtml = imgs.map(img => {
-            const src = typeof img === 'object' ? (img.url || img.downloadURL) : img;
-            return src ? `<img src="${src}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x300?text=Property'" onclick="showOverlay(this.src)">` : '';
-        }).join('');
-        
+
         return `
-        <div class="prop-card" style="opacity: ${isExpired ? '0.7' : '1'}">
-            <div class="img-container"><div class="img-slider">${imgHtml || '<center style="padding-top:80px">No Image</center>'}</div></div>
+        <div class="prop-card">
+            <div class="img-container">
+                <div class="img-slider">${imgs.map(img => `<img src="${typeof img === 'object' ? img.url : img}" loading="lazy" onclick="showOverlay(this.src)">`).join('') || 'No Image'}</div>
+            </div>
             <div class="prop-info">
                 <div class="price-row">
                     <p class="prop-price">₹${Number(p.price || 0).toLocaleString('en-IN')}</p>
-                    <i class="${isFav?'fa-solid':'fa-regular'} fa-heart" style="color:${isFav?'#ff4757':'#666'}" onclick="toggleFavorite('${p.id}', this)"></i>
                 </div>
                 <div style="font-weight:700;margin-top:5px;">${p.title || 'Untitled'} ${badge}</div>
                 <div class="biz-name"><i class="fa fa-store"></i> ${p.businessName || 'Individual'}</div>
                 <div class="btn-group">
-                    ${!isExpired && cleanPhone.length >= 10 ? `
-                        <a href="tel:${cleanPhone}" class="btn btn-call"><i class="fa fa-phone"></i>Call</a>
-                        <a href="https://wa.me/${whatsappNumber}" class="btn btn-wa"><i class="fa-brands fa-whatsapp"></i>WA</a>
-                    ` : '<div style="grid-column: span 2; text-align:center; color:#999; font-size:11px;">Inactive</div>'}
-                    <button onclick="location.href='chat.html?to=${p.ownerId}&p=${p.id}'" class="btn btn-chat" ${isExpired ? 'disabled' : ''}><i class="fa-regular fa-comment-dots"></i>Chat</button>
+                    <a href="tel:${cleanPhone}" class="btn btn-call"><i class="fa fa-phone"></i>Call</a>
+                    <a href="https://wa.me/${whatsapp}" class="btn btn-wa"><i class="fa-brands fa-whatsapp"></i>WA</a>
+                    <button onclick="location.href='chat.html?to=${p.ownerId}&p=${p.id}'" class="btn btn-chat"><i class="fa-regular fa-comment-dots"></i>Chat</button>
                 </div>
             </div>
         </div>`;
     }).join('');
 }
 
+async function checkVerificationRequest(uid) {
+    const vReq = await db.collection("verification_requests").doc(uid).get();
+    const portal = document.getElementById('premiumPortal');
+    if(vReq.exists && vReq.data().status === 'pending') {
+        portal.innerHTML = `<div class="premium-box" style="border-color:#ef6c00"><h3>⏳ Review Pending</h3></div>`;
+    } else {
+        portal.innerHTML = `<div class="premium-box"><h3>💎 Premium Dealer</h3><button class="verify-btn" onclick="location.href='verify.html'">Verify Now</button></div>`;
+    }
+}
+
 function filterData() {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
         const s = document.getElementById('citySearch').value.toLowerCase();
-        renderProps(allProps.filter(p => 
-            (p.location||"").toLowerCase().includes(s) || 
-            (p.title||"").toLowerCase().includes(s) ||
-            (p.businessName||"").toLowerCase().includes(s)
-        ));
+        renderProps(allProps.filter(p => (p.location||"").toLowerCase().includes(s) || (p.title||"").toLowerCase().includes(s)));
     }, 300);
 }
 
-async function toggleFavorite(pId, element) {
-    if (!auth.currentUser) return alert("Login First!");
-    element.style.opacity = '0.5';
-    const favRef = db.collection("favorites").doc(`${auth.currentUser.uid}_${pId}`);
-    try {
-        const doc = await favRef.get();
-        if (doc.exists) {
-            await favRef.delete();
-            myFavs = myFavs.filter(id => id !== pId);
-        } else {
-            await favRef.set({ userId: auth.currentUser.uid, propertyId: pId, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
-            myFavs.push(pId);
-        }
-        renderProps(allProps);
-    } catch(e) { alert(e.message); element.style.opacity = '1'; }
-}
-
-function showOverlay(src) {
-    document.getElementById('overlayImg').src = src;
-    document.getElementById('overlay').style.display = 'flex';
-}
-
+function showOverlay(src) { document.getElementById('overlayImg').src = src; document.getElementById('overlay').style.display = 'flex'; }
 function toggleAuth() { if(auth.currentUser) { if(confirm("Logout?")) auth.signOut().then(()=>location.reload()); } else location.href='login.html'; }
 </script>
 </body>
