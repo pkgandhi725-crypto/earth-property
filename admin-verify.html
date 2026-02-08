@@ -3,41 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Verification Portal</title>
+    <title>Earth Property - Admin Portal</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', system-ui; margin: 0; background: #f4f7f6; padding: 20px; }
-        h2 { color: #1b5e20; display: flex; align-items: center; gap: 10px; }
-        .req-card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid #e0e0e0; }
-        .req-header { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 15px; }
-        .user-info h4 { margin: 0; color: #333; font-size: 18px; }
-        .user-info span { font-size: 11px; color: #888; background: #eee; padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block; }
-        .docs-row { display: flex; gap: 15px; margin-bottom: 18px; }
-        .doc-box { flex: 1; text-align: center; cursor: pointer; transition: 0.3s; }
-        .doc-box img { width: 100%; height: 140px; object-fit: cover; border-radius: 12px; border: 2px solid #eee; }
-        .doc-box p { font-size: 11px; font-weight: bold; margin-top: 8px; color: #2e7d32; text-transform: uppercase; }
-        .actions { display: flex; gap: 12px; }
-        .btn { flex: 1; padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; }
-        .approve-btn { background: #2e7d32; color: white; box-shadow: 0 4px 10px rgba(46,125,50,0.2); }
-        .reject-btn { background: #fff1f0; color: #d32f2f; border: 1px solid #ffccc7; }
-        #imgModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; justify-content:center; align-items:center; padding: 20px; }
-        #imgModal img { max-width: 100%; max-height: 90%; border-radius: 10px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; }
+        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; }
+        .card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .doc-preview { display: flex; gap: 10px; margin: 15px 0; }
+        .doc-preview img { width: 48%; height: 150px; object-fit: cover; border-radius: 10px; border: 1px solid #ddd; cursor: pointer; }
+        .btn-group { display: flex; gap: 10px; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-approve { background: #28a745; color: white; }
+        .btn-approve:disabled { background: #94d3a2; }
+        .btn-reject { background: #dc3545; color: white; }
+        .status-badge { font-size: 12px; padding: 4px 8px; border-radius: 5px; background: #fff3cd; color: #856404; }
     </style>
 </head>
 <body>
 
-<div style="max-width: 600px; margin: auto;">
-    <button onclick="location.href='admin.html'" style="background:none; border:none; color:#2e7d32; font-weight:bold; cursor:pointer; margin-bottom:10px;"><i class="fa fa-arrow-left"></i> Back to Ads</button>
-    <h2><i class="fa fa-user-check"></i> Verification Desk</h2>
-    <div id="loader" style="text-align:center; padding:40px;"><i class="fa fa-spinner fa-spin fa-2x"></i></div>
-    <div id="requestContainer"></div>
+<div class="container">
+    <div class="header">
+        <h2><i class="fa-solid fa-shield-halved"></i> Verification Desk</h2>
+        <button onclick="location.href='index.html'" style="border:none; background:none; color:#007bff; cursor:pointer;">Back to App</button>
+    </div>
+
+    <div id="requestList">
+        <div style="text-align: center; padding: 50px;"><i class="fa-solid fa-spinner fa-spin fa-2x"></i><p>Fetching requests...</p></div>
+    </div>
 </div>
 
-<div id="imgModal" onclick="this.style.display='none'"><img id="modalImg"></div>
-
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
 const firebaseConfig = { 
@@ -51,119 +49,121 @@ const auth = firebase.auth();
 
 const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
 
-// Security Check
+// Auth Gate
 auth.onAuthStateChanged(user => {
     if (!user || user.uid !== ADMIN_UID) {
-        alert("Restricted Area!");
-        location.href = 'index.html';
+        alert("Access Denied: Admin Only");
+        window.location.href = "login.html";
     } else {
-        loadRequests();
+        console.log("Admin Verified:", user.uid);
+        fetchRequests();
     }
 });
 
-function loadRequests() {
+function fetchRequests() {
+    // onSnapshot ensures real-time updates and handles 'list' permission
     db.collection("verification_requests")
       .where("status", "==", "pending")
       .onSnapshot(snapshot => {
-          document.getElementById('loader').style.display = 'none';
-          const container = document.getElementById('requestContainer');
-          container.innerHTML = '';
+        const listDiv = document.getElementById('requestList');
+        listDiv.innerHTML = '';
 
-          if (snapshot.empty) {
-              container.innerHTML = '<div style="text-align:center; padding:40px; color:#999;"><i class="fa fa-coffee fa-3x"></i><p>No pending requests.</p></div>';
-              return;
-          }
+        if (snapshot.empty) {
+            listDiv.innerHTML = '<div class="card" style="text-align:center;">No pending requests! 😎</div>';
+            return;
+        }
 
-          snapshot.forEach(docSnap => {
-              const data = docSnap.data();
-              const uid = docSnap.id;
-              container.innerHTML += `
-              <div class="req-card">
-                  <div class="req-header">
-                      <div class="user-info">
-                          <h4>${data.businessName || 'New Dealer'}</h4>
-                          <span>UID: ${uid}</span>
-                      </div>
-                  </div>
-                  <div class="docs-row">
-                      <div class="doc-box" onclick="viewImg('${data.idProofUrl}')">
-                          <img src="${data.idProofUrl}">
-                          <p>ID Proof</p>
-                      </div>
-                      <div class="doc-box" onclick="viewImg('${data.paymentUrl}')">
-                          <img src="${data.paymentUrl}">
-                          <p>Payment Reciept</p>
-                      </div>
-                  </div>
-                  <div class="actions">
-                      <button class="btn approve-btn" id="btn-app-${uid}" onclick="processApproval('${uid}', '${data.businessName}')">APPROVE</button>
-                      <button class="btn reject-btn" id="btn-rej-${uid}" onclick="processRejection('${uid}')">REJECT</button>
-                  </div>
-              </div>`;
-          });
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const uid = doc.id;
+            listDiv.innerHTML += `
+                <div class="card" id="card-${uid}">
+                    <div style="display:flex; justify-content:space-between; align-items:start;">
+                        <div>
+                            <h3 style="margin:0;">${data.businessName || 'Dealer Request'}</h3>
+                            <p style="color:#666; font-size:14px;">User ID: ${uid}</p>
+                        </div>
+                        <span class="status-badge">PENDING</span>
+                    </div>
+                    
+                    <div class="doc-preview">
+                        <img src="${data.idProofUrl}" onclick="window.open('${data.idProofUrl}')" title="Click to enlarge ID">
+                        <img src="${data.paymentUrl}" onclick="window.open('${data.paymentUrl}')" title="Click to enlarge Receipt">
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn btn-approve" onclick="approveDealer('${uid}', '${data.businessName}')" id="btn-app-${uid}">
+                            <i class="fa-solid fa-check"></i> Approve & Verify
+                        </button>
+                        <button class="btn btn-reject" onclick="rejectDealer('${uid}')" id="btn-rej-${uid}">
+                            <i class="fa-solid fa-xmark"></i> Reject
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+      }, error => {
+          console.error("Snapshot Error:", error);
+          document.getElementById('requestList').innerHTML = `<div class="card" style="color:red;">Error: ${error.message}. Check Firestore Rules!</div>`;
       });
 }
 
-async function processApproval(uid, bizName) {
-    if (!confirm("Confirm Verification for " + bizName + "?")) return;
-    
-    const btnApp = document.getElementById(`btn-app-${uid}`);
-    const btnRej = document.getElementById(`btn-rej-${uid}`);
-    btnApp.disabled = btnRej.disabled = true;
-    btnApp.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+async function approveDealer(uid, bizName) {
+    if (!confirm(`Are you sure you want to verify ${bizName}?`)) return;
+
+    const btn = document.getElementById(`btn-app-${uid}`);
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Syncing...';
 
     try {
         const batch = db.batch();
-        
-        // 1. Update User Document (Matched with new Rules)
+
+        // 1. Update User Profile to Premium/Verified
         const userRef = db.collection("users").doc(uid);
-        batch.set(userRef, { 
-            isVerified: true, 
+        batch.set(userRef, {
+            isVerified: true,
             premiumDealer: true,
-            businessName: bizName || "Verified Dealer",
-            role: "premium" 
+            role: "premium",
+            lastVerifiedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
 
-        // 2. Remove Verification Request
+        // 2. Mark Request as Approved (or Delete it)
         const reqRef = db.collection("verification_requests").doc(uid);
-        batch.delete(reqRef);
+        batch.update(reqRef, { status: 'approved' });
 
-        // 3. Sync Existing Properties (Blue Tick)
-        const propsSnap = await db.collection("properties").where("ownerId", "==", uid).get();
-        propsSnap.forEach(prop => {
-            batch.update(prop.ref, { isVerified: true });
+        // 3. Find and verify all properties owned by this user
+        const props = await db.collection("properties").where("ownerId", "==", uid).get();
+        props.forEach(pDoc => {
+            batch.update(pDoc.ref, { isVerified: true });
         });
 
+        // Commit all changes
         await batch.commit();
-        alert("✅ Dealer Approved & All Ads Synced!");
-    } catch (e) {
-        console.error("Approval Error:", e);
-        alert("Permission Error: Check Rules and Admin UID. " + e.message);
-        btnApp.disabled = btnRej.disabled = false;
-        btnApp.innerText = 'APPROVE';
+        console.log("Batch commit successful for UID:", uid);
+        alert("Dealer Verified Successfully!");
+
+    } catch (error) {
+        console.error("Approval Process Failed:", error);
+        alert("Error: " + error.message);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Approve & Verify';
     }
 }
 
-async function processRejection(uid) {
-    const reason = prompt("Enter Rejection Reason:");
-    if (!reason) return;
+async function rejectDealer(uid) {
+    const reason = prompt("Enter rejection reason:");
+    if (reason === null) return;
 
     try {
         await db.collection("verification_requests").doc(uid).update({
             status: 'rejected',
-            reason: reason,
-            reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
+            rejectionReason: reason,
+            rejectedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        alert("Request Rejected.");
-    } catch (e) {
-        alert("Error: " + e.message);
+        alert("Request rejected.");
+    } catch (error) {
+        alert("Error: " + error.message);
     }
-}
-
-function viewImg(url) {
-    if(!url) return;
-    document.getElementById('modalImg').src = url;
-    document.getElementById('imgModal').style.display = 'flex';
 }
 </script>
 </body>
