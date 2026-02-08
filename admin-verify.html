@@ -71,7 +71,7 @@ function loadRequests() {
               <div class="req-card" id="req-${doc.id}">
                   <div class="req-header">
                       <div class="user-info">
-                          <h4>${data.businessName}</h4>
+                          <h4>${data.businessName || 'Unnamed Business'}</h4>
                           <span>User ID: ${doc.id}</span>
                       </div>
                       <div style="font-size:11px; color:#999;">${data.timestamp?.toDate().toLocaleDateString() || 'N/A'}</div>
@@ -109,36 +109,43 @@ async function updateStatus(uid, newStatus) {
 
     if (!confirm(`Are you sure you want to ${newStatus} this request?`)) return;
 
-    // Disable buttons to prevent double clicks
     document.getElementById(`btn-app-${uid}`).disabled = true;
     document.getElementById(`btn-rej-${uid}`).disabled = true;
 
     try {
-        const batch = db.batch(); // Create a Batch
+        const batch = db.batch();
+        const reqRef = db.collection("verification_requests").doc(uid);
+        
+        // Fetch request data to get the business name
+        const reqSnap = await reqRef.get();
+        const reqData = reqSnap.data() || {};
 
         // 1. Update Verification Request
-        const reqRef = db.collection("verification_requests").doc(uid);
         batch.update(reqRef, {
             status: newStatus,
             reason: reason,
             reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // 2. If approved, sync User and Properties
+        // 2. If approved, sync User Profile and all existing Properties
         if (newStatus === 'approved') {
-            // Update User Profile
             const userRef = db.collection("users").doc(uid);
-            batch.set(userRef, { isVerified: true, premiumDealer: true }, { merge: true });
+            // ✅ Fix: Syncing businessName to user profile for upload.html to use
+            batch.set(userRef, { 
+                isVerified: true, 
+                premiumDealer: true,
+                businessName: reqData.businessName || "Verified Dealer"
+            }, { merge: true });
 
-            // Update all Properties of this user (Denormalization for Blue Tick)
+            // ✅ Denormalization: Update all ads with the blue tick (isVerified: true)
             const propsSnap = await db.collection("properties").where("ownerId", "==", uid).get();
             propsSnap.forEach(propDoc => {
                 batch.update(propDoc.ref, { isVerified: true });
             });
         }
 
-        await batch.commit(); // Execute all updates together
-        alert(`User ${newStatus} successfully! All properties updated.`);
+        await batch.commit();
+        alert(`Request ${newStatus} successfully! All systems synced.`);
     } catch (e) {
         console.error(e);
         alert("Error: " + e.message);
