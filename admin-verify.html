@@ -14,17 +14,14 @@
         .user-info span { font-size: 11px; color: #888; background: #eee; padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block; }
         .docs-row { display: flex; gap: 15px; margin-bottom: 18px; }
         .doc-box { flex: 1; text-align: center; cursor: pointer; transition: 0.3s; }
-        .doc-box:hover { transform: translateY(-3px); }
         .doc-box img { width: 100%; height: 140px; object-fit: cover; border-radius: 12px; border: 2px solid #eee; }
         .doc-box p { font-size: 11px; font-weight: bold; margin-top: 8px; color: #2e7d32; text-transform: uppercase; }
         .actions { display: flex; gap: 12px; }
         .btn { flex: 1; padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; }
         .approve-btn { background: #2e7d32; color: white; box-shadow: 0 4px 10px rgba(46,125,50,0.2); }
         .reject-btn { background: #fff1f0; color: #d32f2f; border: 1px solid #ffccc7; }
-        .btn:active { transform: scale(0.98); }
-        #loader { text-align: center; padding: 60px; color: #666; }
         #imgModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; justify-content:center; align-items:center; padding: 20px; }
-        #imgModal img { max-width: 100%; max-height: 90%; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        #imgModal img { max-width: 100%; max-height: 90%; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -32,7 +29,7 @@
 <div style="max-width: 600px; margin: auto;">
     <button onclick="location.href='admin.html'" style="background:none; border:none; color:#2e7d32; font-weight:bold; cursor:pointer; margin-bottom:10px;"><i class="fa fa-arrow-left"></i> Back to Ads</button>
     <h2><i class="fa fa-user-check"></i> Verification Desk</h2>
-    <div id="loader"><i class="fa fa-spinner fa-spin fa-2x"></i><p>Fetching new requests...</p></div>
+    <div id="loader" style="text-align:center; padding:40px;"><i class="fa fa-spinner fa-spin fa-2x"></i></div>
     <div id="requestContainer"></div>
 </div>
 
@@ -54,7 +51,7 @@ const auth = firebase.auth();
 
 const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
 
-// Security check
+// Security Check
 auth.onAuthStateChanged(user => {
     if (!user || user.uid !== ADMIN_UID) {
         alert("Restricted Area!");
@@ -65,7 +62,6 @@ auth.onAuthStateChanged(user => {
 });
 
 function loadRequests() {
-    // Listens for pending requests
     db.collection("verification_requests")
       .where("status", "==", "pending")
       .onSnapshot(snapshot => {
@@ -74,7 +70,7 @@ function loadRequests() {
           container.innerHTML = '';
 
           if (snapshot.empty) {
-              container.innerHTML = '<div style="text-align:center; padding:40px; color:#999;"><i class="fa fa-coffee fa-3x"></i><p>All caught up! No pending requests.</p></div>';
+              container.innerHTML = '<div style="text-align:center; padding:40px; color:#999;"><i class="fa fa-coffee fa-3x"></i><p>No pending requests.</p></div>';
               return;
           }
 
@@ -91,37 +87,35 @@ function loadRequests() {
                   </div>
                   <div class="docs-row">
                       <div class="doc-box" onclick="viewImg('${data.idProofUrl}')">
-                          <img src="${data.idProofUrl}" onerror="this.src='https://via.placeholder.com/150?text=No+ID'">
+                          <img src="${data.idProofUrl}">
                           <p>ID Proof</p>
                       </div>
                       <div class="doc-box" onclick="viewImg('${data.paymentUrl}')">
-                          <img src="${data.paymentUrl}" onerror="this.src='https://via.placeholder.com/150?text=No+Payment'">
+                          <img src="${data.paymentUrl}">
                           <p>Payment Reciept</p>
                       </div>
                   </div>
                   <div class="actions">
-                      <button class="btn approve-btn" onclick="processApproval('${uid}', '${data.businessName}')">APPROVE DEALER</button>
-                      <button class="btn reject-btn" onclick="processRejection('${uid}')">REJECT</button>
+                      <button class="btn approve-btn" id="btn-app-${uid}" onclick="processApproval('${uid}', '${data.businessName}')">APPROVE</button>
+                      <button class="btn reject-btn" id="btn-rej-${uid}" onclick="processRejection('${uid}')">REJECT</button>
                   </div>
               </div>`;
           });
       });
 }
 
-function viewImg(url) {
-    if(!url) return;
-    document.getElementById('modalImg').src = url;
-    document.getElementById('imgModal').style.display = 'flex';
-}
-
-// ✅ ATOMIC APPROVAL: Updates User, Ads, and Request in one go
 async function processApproval(uid, bizName) {
     if (!confirm("Confirm Verification for " + bizName + "?")) return;
+    
+    const btnApp = document.getElementById(`btn-app-${uid}`);
+    const btnRej = document.getElementById(`btn-rej-${uid}`);
+    btnApp.disabled = btnRej.disabled = true;
+    btnApp.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
 
     try {
         const batch = db.batch();
         
-        // 1. Mark User as Verified
+        // 1. Update User Document (Matched with new Rules)
         const userRef = db.collection("users").doc(uid);
         batch.set(userRef, { 
             isVerified: true, 
@@ -130,25 +124,28 @@ async function processApproval(uid, bizName) {
             role: "premium" 
         }, { merge: true });
 
-        // 2. Remove from pending requests
+        // 2. Remove Verification Request
         const reqRef = db.collection("verification_requests").doc(uid);
         batch.delete(reqRef);
 
-        // 3. Update all their properties with blue tick
+        // 3. Sync Existing Properties (Blue Tick)
         const propsSnap = await db.collection("properties").where("ownerId", "==", uid).get();
         propsSnap.forEach(prop => {
             batch.update(prop.ref, { isVerified: true });
         });
 
         await batch.commit();
-        alert("Dealer Approved & Sync Complete! ✅");
+        alert("✅ Dealer Approved & All Ads Synced!");
     } catch (e) {
-        alert("Sync Error: " + e.message);
+        console.error("Approval Error:", e);
+        alert("Permission Error: Check Rules and Admin UID. " + e.message);
+        btnApp.disabled = btnRej.disabled = false;
+        btnApp.innerText = 'APPROVE';
     }
 }
 
 async function processRejection(uid) {
-    const reason = prompt("Reason for rejection (e.g. Invalid ID):");
+    const reason = prompt("Enter Rejection Reason:");
     if (!reason) return;
 
     try {
@@ -161,6 +158,12 @@ async function processRejection(uid) {
     } catch (e) {
         alert("Error: " + e.message);
     }
+}
+
+function viewImg(url) {
+    if(!url) return;
+    document.getElementById('modalImg').src = url;
+    document.getElementById('imgModal').style.display = 'flex';
 }
 </script>
 </body>
