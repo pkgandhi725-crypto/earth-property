@@ -1,69 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><title>Admin Portal - Earth Property</title>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <style>.req-card { border:1px solid #ddd; padding:15px; margin:10px; border-radius:10px; background:#fff; box-shadow:0 2px 5px rgba(0,0,0,0.1); }</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Verification Desk</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; }
+        .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .img-container { display: flex; gap: 10px; margin: 15px 0; }
+        .img-container img { width: 120px; height: 120px; border-radius: 8px; border: 1px solid #ddd; object-fit: cover; cursor: pointer; }
+        .btn-app { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-app:disabled { background: #ccc; }
+    </style>
 </head>
 <body>
-    <div style="max-width:800px; margin:auto; padding:20px;">
-        <h2><i class="fa fa-shield"></i> Pending Verifications</h2>
-        <div id="requestContainer">Loading requests...</div>
+
+    <div style="max-width: 800px; margin: auto;">
+        <h2><i class="fas fa-shield-alt"></i> Pending Verifications</h2>
+        <div id="requestContainer">Loading...</div>
     </div>
 
-    <script>
-        const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
-        const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-        auth.onAuthStateChanged(user => {
-            if(!user || user.uid !== ADMIN_UID) {
-                alert("Admin Access Required!"); window.location.href = "login.html";
-            } else { loadRequests(); }
-        });
+<script>
+    const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
 
-        function loadRequests() {
-            db.collection("verification_requests").where("status", "==", "pending")
-              .onSnapshot(snapshot => {
-                  const container = document.getElementById('requestContainer');
-                  container.innerHTML = '';
-                  if(snapshot.empty) container.innerHTML = "No pending requests. 👍";
-                  snapshot.forEach(doc => {
-                      const data = doc.data();
-                      container.innerHTML += `
-                        <div class="req-card">
-                            <h3>${data.businessName}</h3>
-                            <button onclick="processApprove('${doc.id}', '${data.businessName}')" id="btn-${doc.id}" style="padding:10px; background:green; color:white; border:none; cursor:pointer;">Approve Dealer</button>
-                        </div>`;
-                  });
-              }, err => { alert("Firestore Error: " + err.message); });
+    const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
+
+    auth.onAuthStateChanged(user => {
+        if (!user || user.uid !== ADMIN_UID) {
+            alert("Admin Login Required!");
+            window.location.href = "login.html";
+        } else {
+            console.log("Logged in as Admin:", user.uid);
+            loadPendingRequests();
         }
+    });
 
-        async function processApprove(uid, bizName) {
-            if(!confirm("Verify " + bizName + "?")) return;
-            const btn = document.getElementById('btn-' + uid);
-            btn.disabled = true; btn.innerText = "Processing...";
+    function loadPendingRequests() {
+        db.collection("verification_requests")
+          .where("status", "==", "pending")
+          .onSnapshot(snapshot => {
+              const container = document.getElementById('requestContainer');
+              container.innerHTML = '';
 
-            try {
-                const batch = db.batch();
-                // 1. User Profile: set with merge:true
-                batch.set(db.collection("users").doc(uid), { isVerified: true, premiumDealer: true, role: "premium" }, { merge: true });
-                // 2. Request status
-                batch.update(db.collection("verification_requests").doc(uid), { status: 'approved' });
-                // 3. Properties Sync
-                const props = await db.collection("properties").where("ownerId", "==", uid).get();
-                props.forEach(p => batch.update(p.ref, { isVerified: true }));
+              if (snapshot.empty) {
+                  container.innerHTML = "<div class='card'>No pending requests! 😎</div>";
+                  return;
+              }
 
-                await batch.commit();
-                alert("✅ Approved Successfully!");
-            } catch (e) {
-                alert("Error: " + e.message); btn.disabled = false; btn.innerText = "Approve Dealer";
-            }
+              snapshot.forEach(doc => {
+                  const data = doc.data();
+                  const uid = doc.id;
+                  container.innerHTML += `
+                    <div class="card" id="card-${uid}">
+                        <h3>Dealer: ${data.businessName || 'Unknown'}</h3>
+                        <p>User UID: ${uid}</p>
+                        <div class="img-container">
+                            <img src="${data.idProofUrl}" onclick="window.open('${data.idProofUrl}')" onerror="this.src='https://via.placeholder.com/120?text=No+Image'">
+                            <img src="${data.paymentUrl}" onclick="window.open('${data.paymentUrl}')" onerror="this.src='https://via.placeholder.com/120?text=No+Image'">
+                        </div>
+                        <button class="btn-app" onclick="approveDealer('${uid}', '${data.businessName}')" id="btn-${uid}">
+                            APPROVE NOW
+                        </button>
+                    </div>`;
+              });
+          }, error => {
+              console.error("Rules/Fetch Error:", error);
+              document.getElementById('requestContainer').innerHTML = `<div class='card' style='color:red;'>Error: ${error.message}. <br>Check if Admin Login is stale!</div>`;
+          });
+    }
+
+    async function approveDealer(uid, bizName) {
+        if (!confirm(`Verify ${bizName}?`)) return;
+        const btn = document.getElementById(`btn-${uid}`);
+        btn.disabled = true;
+        btn.innerText = "Syncing...";
+
+        try {
+            const batch = db.batch();
+            // 1. User Update
+            batch.set(db.collection("users").doc(uid), { 
+                isVerified: true, premiumDealer: true, role: "premium" 
+            }, { merge: true });
+            // 2. Request Update
+            batch.update(db.collection("verification_requests").doc(uid), { status: 'approved' });
+            // 3. Properties Sync
+            const props = await db.collection("properties").where("ownerId", "==", uid).get();
+            props.forEach(p => batch.update(p.ref, { isVerified: true }));
+
+            await batch.commit();
+            alert("✅ " + bizName + " Verified!");
+        } catch (e) {
+            console.error("Approval Error:", e);
+            alert("Permission Denied: Ensure rules are published and token is fresh.");
+            btn.disabled = false;
+            btn.innerText = "APPROVE NOW";
         }
-    </script>
+    }
+</script>
 </body>
 </html>
