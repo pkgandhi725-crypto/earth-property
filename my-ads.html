@@ -9,27 +9,21 @@
         body { font-family: system-ui, -apple-system, sans-serif; margin: 0; background: #f4f7f6; color: #333; }
         header { background: #2e7d32; color: white; padding: 15px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .container { padding: 15px; max-width: 600px; margin: auto; }
-        
         .ad-card { background: white; border-radius: 15px; padding: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 15px; border: 1px solid #eee; transition: 0.3s; }
         .ad-info { display: flex; gap: 12px; }
         .ad-img { width: 90px; height: 90px; border-radius: 12px; object-fit: cover; background: #eee; border: 1px solid #f0f0f0; }
         .ad-details { flex: 1; }
         .ad-details h4 { margin: 0; font-size: 16px; color: #333; line-height: 1.2; }
         .price { font-size: 18px; font-weight: 800; color: #2e7d32; margin: 5px 0; }
-        
         .status-row { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid #f5f5f5; font-size: 13px; }
-        
         .btn-group { display: flex; gap: 10px; margin-top: 12px; }
         button { cursor: pointer; font-family: inherit; transition: 0.2s; border: none; font-weight: 600; border-radius: 8px; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 5px; }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
-        
         .edit-btn { flex: 1; background: #f5f5f5; border: 1px solid #ddd; padding: 10px; color: #444; }
         .renew-btn { flex: 1.5; background: #2e7d32; color: white; padding: 10px; box-shadow: 0 2px 4px rgba(46, 125, 50, 0.2); }
         .live-badge { flex: 1.5; background: #e8f5e9; color: #2e7d32; padding: 10px; border-radius: 8px; font-weight: 700; text-align: center; font-size: 13px; border: 1px solid #c8e6c9; }
         .delete-btn { background: #ffebee; color: #c62828; padding: 10px 15px; border: 1px solid #ffcdd2; }
-
         .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 25px; border-radius: 30px; z-index: 1000; font-size: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        
         #loader { text-align: center; margin-top: 50px; color: #2e7d32; }
         #noAds { text-align: center; margin-top: 50px; display: none; }
     </style>
@@ -47,34 +41,25 @@
     <div id="noAds">
         <i class="fa fa-home fa-4x" style="color:#ccc; margin-bottom: 10px;"></i>
         <p style="color:#666">You haven't posted any ads yet.</p>
-        <button onclick="location.href='post.html'" style="background:#2e7d32; color:white; padding:12px 25px; border-radius:8px">Post Your First Ad</button>
+        <button onclick="location.href='upload.html'" style="background:#2e7d32; color:white; padding:12px 25px; border-radius:8px">Post Your First Ad</button>
     </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-storage-compat.js"></script>
 
 <script>
 const firebaseConfig = { 
     apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
     authDomain: "earth-properties-c3c56.firebaseapp.com", 
-    projectId: "earth-properties-c3c56",
-    storageBucket: "earth-properties-c3c56.appspot.com"
+    projectId: "earth-properties-c3c56"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
-const storage = firebase.storage();
 
 let renewingAds = new Set();
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text || '';
-    return div.innerHTML;
-}
 
 auth.onAuthStateChanged(user => {
     if (!user) return location.href = 'login.html';
@@ -82,10 +67,8 @@ auth.onAuthStateChanged(user => {
 });
 
 function loadMyAds(uid) {
-    // Note: Make sure to create Index in Firebase for ownerId + createdAt
     db.collection("properties")
       .where("ownerId", "==", uid)
-      .orderBy("createdAt", "desc")
       .onSnapshot(snapshot => {
           document.getElementById('loader').style.display = 'none';
           const adList = document.getElementById('adList');
@@ -97,113 +80,103 @@ function loadMyAds(uid) {
           }
 
           document.getElementById('noAds').style.display = 'none';
-          snapshot.forEach(doc => {
-              adList.innerHTML += createAdCard(doc);
+          
+          // Manual Sort because older ads might miss createdAt
+          const docs = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+          docs.sort((a,b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0));
+
+          docs.forEach(ad => {
+              adList.innerHTML += createAdCard(ad);
           });
-      }, error => {
-          console.error("Firestore Error:", error);
-          document.getElementById('loader').innerHTML = "Check Firebase Index!";
       });
 }
 
-function createAdCard(doc) {
-    const ad = doc.data();
-    const adId = doc.id;
-    
-    // ✅ Safe Date Calculation
+function createAdCard(ad) {
+    const adId = ad.id;
     const now = new Date();
-    const createdAt = ad.createdAt?.toDate?.() || ad.timestamp?.toDate?.() || new Date();
     
-    // Expiry Check (30 Days)
-    const diffDays = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
-    const daysLeft = 30 - diffDays;
-
-    const imgUrl = ad.images?.[0] || 'https://via.placeholder.com/90?text=No+Image';
-    const title = escapeHtml(ad.title || "Property Listing");
-
-    let statusLabel = "";
-    let actionUI = "";
-    let daysStyle = daysLeft <= 5 ? "color: #d32f2f; font-weight: bold;" : "color: #666;";
-
-    if (daysLeft <= 0) {
-        statusLabel = `<span style="color: #d32f2f; font-weight: bold;">● EXPIRED</span>`;
-        actionUI = `<button class="renew-btn" onclick="renewAd('${adId}', this)"><i class="fa fa-sync"></i> Renew Ad</button>`;
+    // ✅ Logic: check expiresAt first (new system), fallback to createdAt (old system)
+    let isExpired = false;
+    let daysLeft = 0;
+    
+    if (ad.expiresAt) {
+        const expiryDate = ad.expiresAt.toDate();
+        daysLeft = Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24));
+        if (daysLeft <= 0) isExpired = true;
     } else {
-        statusLabel = `<span style="color: #2e7d32; font-weight: bold;">● ACTIVE</span>`;
-        actionUI = `<div class="live-badge"><i class="fa fa-check-circle"></i> LIVE</div>`;
+        // Fallback for very old ads
+        const created = ad.createdAt?.toDate() || new Date();
+        daysLeft = 30 - Math.floor((now - created) / (1000 * 60 * 60 * 24));
+        if (daysLeft <= 0) isExpired = true;
     }
+
+    // ✅ Image Handling for Cloudinary Objects or Strings
+    let imgUrl = 'https://via.placeholder.com/90?text=No+Image';
+    if (ad.images && ad.images.length > 0) {
+        imgUrl = typeof ad.images[0] === 'object' ? ad.images[0].url : ad.images[0];
+    }
+
+    let statusLabel = isExpired ? 
+        `<span style="color: #d32f2f; font-weight: bold;">● EXPIRED</span>` : 
+        `<span style="color: #2e7d32; font-weight: bold;">● ACTIVE</span>`;
+    
+    let actionUI = isExpired ? 
+        `<button class="renew-btn" onclick="renewAd('${adId}', this)"><i class="fa fa-sync"></i> Renew Ad</button>` : 
+        `<div class="live-badge"><i class="fa fa-check-circle"></i> LIVE</div>`;
 
     return `
     <div class="ad-card" id="card-${adId}">
         <div class="ad-info">
             <img src="${imgUrl}" class="ad-img" onerror="this.src='https://via.placeholder.com/90?text=No+Image'">
             <div class="ad-details">
-                <h4>${title}</h4>
+                <h4>${ad.title || "Property Listing"}</h4>
                 <div class="price">₹${Number(ad.price || 0).toLocaleString('en-IN')}</div>
-                <div style="font-size:12px; ${daysStyle}">
-                    ${daysLeft > 0 ? '<i class="fa fa-clock"></i> ' + daysLeft + ' days left' : '<i class="fa fa-exclamation-triangle"></i> Validity Expired'}
+                <div style="font-size:12px; color: ${daysLeft <= 5 ? '#d32f2f' : '#666'}; font-weight: ${daysLeft <= 5 ? 'bold' : 'normal'}">
+                    ${!isExpired ? '<i class="fa fa-clock"></i> ' + daysLeft + ' days left' : '<i class="fa fa-exclamation-triangle"></i> Validity Expired'}
                 </div>
             </div>
         </div>
         <div class="status-row">
             <div>Status: ${statusLabel}</div>
-            <div style="color:#999; font-size: 11px;">Posted: ${createdAt.toLocaleDateString()}</div>
+            <div style="color:#999; font-size: 11px;">Updated: ${ad.updatedAt?.toDate().toLocaleDateString() || 'Recently'}</div>
         </div>
         <div class="btn-group">
-            <button class="edit-btn" onclick="location.href='post.html?edit=${adId}'"><i class="fa fa-edit"></i> Edit</button>
+            <button class="edit-btn" onclick="location.href='upload.html?edit=${adId}'"><i class="fa fa-edit"></i> Edit</button>
             ${actionUI}
             <button class="delete-btn" onclick="deleteAd('${adId}', this)"><i class="fa fa-trash"></i></button>
         </div>
     </div>`;
 }
 
-function showToast(msg) {
-    const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
-    document.body.appendChild(t); setTimeout(() => t.remove(), 3000);
-}
-
 async function renewAd(adId, btn) {
-    if(renewingAds.has(adId)) return;
     if(!confirm("Extend this ad for another 30 days?")) return;
-    
-    renewingAds.add(adId);
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>...';
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+
+    const newExpiry = new Date();
+    newExpiry.setDate(newExpiry.getDate() + 30);
 
     try {
         await db.collection("properties").doc(adId).update({
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            expiresAt: firebase.firestore.Timestamp.fromDate(newExpiry),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            status: "active"
         });
-        showToast("Success! Ad extended. 🎉");
+        alert("Success! Ad extended. 🎉");
     } catch (e) {
         alert("Failed: " + e.message);
         btn.disabled = false;
-    } finally {
-        renewingAds.delete(adId);
     }
 }
 
 async function deleteAd(adId, btn) {
-    if(!confirm("Are you sure? Images will also be deleted.")) return;
+    if(!confirm("Are you sure? This cannot be undone.")) return;
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
-
     try {
-        const docSnap = await db.collection("properties").doc(adId).get();
-        const data = docSnap.data();
-
-        // Storage Cleanup
-        if (data.images && data.images.length > 0) {
-            for (let url of data.images) {
-                if(url.includes("firebasestorage")) {
-                    try { await storage.refFromURL(url).delete(); } catch (err) {}
-                }
-            }
-        }
         await db.collection("properties").doc(adId).delete();
-        showToast("Ad deleted successfully.");
+        alert("Ad deleted.");
     } catch (e) {
-        alert("Delete failed: " + e.message);
+        alert("Error: " + e.message);
         btn.disabled = false;
     }
 }
