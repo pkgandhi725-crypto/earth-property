@@ -20,7 +20,7 @@
         .status-row { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid #f5f5f5; font-size: 13px; }
         
         .btn-group { display: flex; gap: 10px; margin-top: 12px; }
-        button { cursor: pointer; font-family: inherit; transition: 0.2s; border: none; font-weight: 600; border-radius: 8px; font-size: 14px; }
+        button { cursor: pointer; font-family: inherit; transition: 0.2s; border: none; font-weight: 600; border-radius: 8px; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 5px; }
         button:disabled { opacity: 0.5; cursor: not-allowed; }
         
         .edit-btn { flex: 1; background: #f5f5f5; border: 1px solid #ddd; padding: 10px; color: #444; }
@@ -28,8 +28,7 @@
         .live-badge { flex: 1.5; background: #e8f5e9; color: #2e7d32; padding: 10px; border-radius: 8px; font-weight: 700; text-align: center; font-size: 13px; border: 1px solid #c8e6c9; }
         .delete-btn { background: #ffebee; color: #c62828; padding: 10px 15px; border: 1px solid #ffcdd2; }
 
-        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 25px; border-radius: 30px; z-index: 1000; font-size: 14px; animation: slideUp 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        @keyframes slideUp { from { bottom: -50px; opacity: 0; } to { bottom: 20px; opacity: 1; } }
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 25px; border-radius: 30px; z-index: 1000; font-size: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         
         #loader { text-align: center; margin-top: 50px; color: #2e7d32; }
         #noAds { text-align: center; margin-top: 50px; display: none; }
@@ -58,7 +57,6 @@
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-storage-compat.js"></script>
 
 <script>
-// Firebase Configuration
 const firebaseConfig = { 
     apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
     authDomain: "earth-properties-c3c56.firebaseapp.com", 
@@ -70,13 +68,8 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 const storage = firebase.storage();
 
-// Enable Offline Support ✅
-db.enablePersistence().catch(err => console.log("Offline mode unavailable"));
+let renewingAds = new Set();
 
-let unsubscribe = null;
-let renewingAds = new Set(); // Multi-click prevention ✅
-
-// XSS Protection Helper ✅
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text || '';
@@ -85,15 +78,14 @@ function escapeHtml(text) {
 
 auth.onAuthStateChanged(user => {
     if (!user) return location.href = 'login.html';
-    if (unsubscribe) unsubscribe(); // Cleanup memory leak ✅
-    unsubscribe = loadMyAds(user.uid);
+    loadMyAds(user.uid);
 });
 
 function loadMyAds(uid) {
-    return db.collection("properties")
+    // Note: Make sure to create Index in Firebase for ownerId + createdAt
+    db.collection("properties")
       .where("ownerId", "==", uid)
       .orderBy("createdAt", "desc")
-      .limit(30) // Performance optimization ✅
       .onSnapshot(snapshot => {
           document.getElementById('loader').style.display = 'none';
           const adList = document.getElementById('adList');
@@ -110,9 +102,7 @@ function loadMyAds(uid) {
           });
       }, error => {
           console.error("Firestore Error:", error);
-          if (error.code === 'failed-precondition') {
-              alert("Index needed! Please wait or check Firebase Console.");
-          }
+          document.getElementById('loader').innerHTML = "Check Firebase Index!";
       });
 }
 
@@ -120,16 +110,16 @@ function createAdCard(doc) {
     const ad = doc.data();
     const adId = doc.id;
     
-    // ⏳ 30-Day Expiry Calculation
+    // ✅ Safe Date Calculation
     const now = new Date();
-    const createdAt = ad.createdAt ? ad.createdAt.toDate() : new Date();
-    const diffDays = Math.floor(Math.abs(now - createdAt) / (1000 * 60 * 60 * 24));
+    const createdAt = ad.createdAt?.toDate?.() || ad.timestamp?.toDate?.() || new Date();
+    
+    // Expiry Check (30 Days)
+    const diffDays = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
     const daysLeft = 30 - diffDays;
 
-    // Safety checks for images & strings ✅
     const imgUrl = ad.images?.[0] || 'https://via.placeholder.com/90?text=No+Image';
-    const bhkText = escapeHtml(ad.bhk) + " BHK";
-    const furnishText = escapeHtml(ad.furnishing || 'Furnished');
+    const title = escapeHtml(ad.title || "Property Listing");
 
     let statusLabel = "";
     let actionUI = "";
@@ -140,7 +130,7 @@ function createAdCard(doc) {
         actionUI = `<button class="renew-btn" onclick="renewAd('${adId}', this)"><i class="fa fa-sync"></i> Renew Ad</button>`;
     } else {
         statusLabel = `<span style="color: #2e7d32; font-weight: bold;">● ACTIVE</span>`;
-        actionUI = `<div class="live-badge" title="Publicly Visible"><i class="fa fa-check-circle"></i> LIVE</div>`;
+        actionUI = `<div class="live-badge"><i class="fa fa-check-circle"></i> LIVE</div>`;
     }
 
     return `
@@ -148,83 +138,73 @@ function createAdCard(doc) {
         <div class="ad-info">
             <img src="${imgUrl}" class="ad-img" onerror="this.src='https://via.placeholder.com/90?text=No+Image'">
             <div class="ad-details">
-                <h4>${bhkText} - ${furnishText}</h4>
-                <div class="price">₹${Number(ad.price).toLocaleString('en-IN')}</div>
+                <h4>${title}</h4>
+                <div class="price">₹${Number(ad.price || 0).toLocaleString('en-IN')}</div>
                 <div style="font-size:12px; ${daysStyle}">
                     ${daysLeft > 0 ? '<i class="fa fa-clock"></i> ' + daysLeft + ' days left' : '<i class="fa fa-exclamation-triangle"></i> Validity Expired'}
                 </div>
             </div>
         </div>
-
         <div class="status-row">
             <div>Status: ${statusLabel}</div>
             <div style="color:#999; font-size: 11px;">Posted: ${createdAt.toLocaleDateString()}</div>
         </div>
-
         <div class="btn-group">
-            <button class="edit-btn" onclick="location.href='edit-ad.html?id=${adId}'"><i class="fa fa-edit"></i> Edit</button>
+            <button class="edit-btn" onclick="location.href='post.html?edit=${adId}'"><i class="fa fa-edit"></i> Edit</button>
             ${actionUI}
             <button class="delete-btn" onclick="deleteAd('${adId}', this)"><i class="fa fa-trash"></i></button>
         </div>
     </div>`;
 }
 
-// Show Toast Feedback ✅
 function showToast(msg) {
     const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
     document.body.appendChild(t); setTimeout(() => t.remove(), 3000);
 }
 
-// Renew Ad Function ✅
 async function renewAd(adId, btn) {
     if(renewingAds.has(adId)) return;
-    if(!confirm("Renew this listing for another 30 days?")) return;
+    if(!confirm("Extend this ad for another 30 days?")) return;
     
     renewingAds.add(adId);
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Renewing...';
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>...';
 
     try {
         await db.collection("properties").doc(adId).update({
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        showToast("Success! Ad extended for 30 days. 🎉");
+        showToast("Success! Ad extended. 🎉");
     } catch (e) {
-        alert("Update failed: " + e.message);
+        alert("Failed: " + e.message);
         btn.disabled = false;
-        btn.innerHTML = '<i class="fa fa-sync"></i> Renew Ad';
     } finally {
         renewingAds.delete(adId);
     }
 }
 
-// Delete Ad & Clean Storage ✅
 async function deleteAd(adId, btn) {
-    if(!confirm("Are you sure? This will delete the ad and all its photos forever.")) return;
-    
+    if(!confirm("Are you sure? Images will also be deleted.")) return;
     btn.disabled = true;
     btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
 
     try {
-        const doc = await db.collection("properties").doc(adId).get();
-        const data = doc.data();
+        const docSnap = await db.collection("properties").doc(adId).get();
+        const data = docSnap.data();
 
-        // 1. Delete images from Storage first ✅
+        // Storage Cleanup
         if (data.images && data.images.length > 0) {
             for (let url of data.images) {
-                try {
-                    await storage.refFromURL(url).delete();
-                } catch (err) { console.log("Storage cleanup skip:", err); }
+                if(url.includes("firebasestorage")) {
+                    try { await storage.refFromURL(url).delete(); } catch (err) {}
+                }
             }
         }
-
-        // 2. Delete document from Firestore
         await db.collection("properties").doc(adId).delete();
-        showToast("Ad and images deleted successfully.");
+        showToast("Ad deleted successfully.");
     } catch (e) {
         alert("Delete failed: " + e.message);
         btn.disabled = false;
-        btn.innerHTML = '<i class="fa fa-trash"></i>';
     }
 }
 </script>
