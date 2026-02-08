@@ -1,166 +1,182 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Verification Portal</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-<style>
-body{font-family:system-ui;background:#f4f7f6;margin:0;padding:20px}
-.container{max-width:1000px;margin:auto}
-.header{background:#fff;padding:20px;border-radius:12px;display:flex;justify-content:space-between;align-items:center}
-.card{background:#fff;margin-top:20px;padding:20px;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,.08)}
-.badge{background:#ffe082;padding:6px 14px;border-radius:20px;font-weight:bold}
-.btn{padding:14px;border:none;border-radius:10px;font-weight:bold;cursor:pointer}
-.btn-approve{background:#2e7d32;color:#fff}
-.btn-reject{background:#ffebee;color:#c62828}
-.doc-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:15px}
-.doc-grid img{width:100%;height:220px;object-fit:cover;border-radius:10px}
-.loader{text-align:center;padding:50px}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Verification Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; }
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { margin: 0; color: #1b5e20; display: flex; align-items: center; gap: 15px; }
+        .badge { background: #fff3cd; color: #856404; padding: 5px 15px; border-radius: 20px; font-size: 14px; font-weight: bold; }
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+            margin-bottom: 20px;
+        }
+        .doc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .doc-grid img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 3px solid #e0e0e0;
+            cursor: pointer;
+        }
+        .btn-group { display: flex; gap: 15px; margin-top: 25px; }
+        .btn {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-approve { background: #2e7d32; color: white; }
+        .btn-reject { background: #fff5f5; color: #d32f2f; border: 2px solid #ffccc7; }
+        .loader, .empty { text-align: center; padding: 60px; color: #777; }
+    </style>
 </head>
-
 <body>
 
 <div class="container">
-  <div class="header">
-    <h2><i class="fa-solid fa-user-shield"></i> Verification Portal</h2>
-    <span class="badge" id="countBadge">Loading…</span>
-  </div>
-
-  <div id="requestList">
-    <div class="loader">
-      <i class="fa-solid fa-spinner fa-spin"></i>
-      <p>Loading requests…</p>
+    <div class="header">
+        <h1>
+            <i class="fa-solid fa-user-shield"></i>
+            Verification Portal
+            <span class="badge" id="countBadge">Loading...</span>
+        </h1>
+        <button onclick="location.href='index.html'" style="background:none;border:none;cursor:pointer;">
+            <i class="fa-solid fa-house"></i> Home
+        </button>
     </div>
-  </div>
+
+    <div id="requestList" class="loader">
+        <i class="fa-solid fa-circle-notch fa-spin fa-2x"></i>
+        <p>Loading requests...</p>
+    </div>
 </div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-/* ================= FIREBASE CONFIG ================= */
-firebase.initializeApp({
-  apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
-  authDomain: "earth-properties-c3c56.firebaseapp.com",
-  projectId: "earth-properties-c3c56"
-});
+const firebaseConfig = {
+    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
+    authDomain: "earth-properties-c3c56.firebaseapp.com",
+    projectId: "earth-properties-c3c56"
+};
+firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-/* ================= ADMIN UID ================= */
 const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
 
-/* ================= AUTH CHECK + DEBUG ================= */
+/* ✅ FINAL AUTH CHECK (NO UID ALERT) */
 auth.onAuthStateChanged(user => {
-
-  alert("LOGGED IN UID = " + (user ? user.uid : "NOT LOGGED IN"));
-
-  if (!user) {
-    alert("Please login first");
-    location.href = "login.html";
-    return;
-  }
-
-  if (user.uid !== ADMIN_UID) {
-    alert("⛔ Admin access only");
-    location.href = "index.html";
-    return;
-  }
-
-  loadRequests();
+    if (!user || user.uid !== ADMIN_UID) {
+        alert("⛔ Admin access only!");
+        location.href = "login.html";
+    } else {
+        loadRequests();
+    }
 });
 
-/* ================= LOAD REQUESTS ================= */
 function loadRequests() {
+    db.collection("verification_requests")
+      .where("status", "==", "pending")
+      .onSnapshot(snapshot => {
+          const list = document.getElementById("requestList");
+          const badge = document.getElementById("countBadge");
+          list.innerHTML = "";
 
-  db.collection("verification_requests")
-    .where("status", "==", "pending")
-    .onSnapshot(snapshot => {
+          badge.innerText = snapshot.size === 0 ? "All Clear" : snapshot.size + " Pending";
 
-      const list = document.getElementById("requestList");
-      document.getElementById("countBadge").innerText =
-        snapshot.size === 0 ? "All Clear" : snapshot.size + " Pending";
+          if (snapshot.empty) {
+              list.innerHTML = `<div class="empty">No pending requests 🎉</div>`;
+              return;
+          }
 
-      list.innerHTML = "";
+          snapshot.forEach(doc => {
+              const d = doc.data();
+              const uid = doc.id;
 
-      if (snapshot.empty) {
-        list.innerHTML = "<div class='card'>No pending requests 🎉</div>";
-        return;
-      }
+              list.innerHTML += `
+                <div class="card" id="card-${uid}">
+                    <div class="card-header">
+                        <div>
+                            <h3>${d.businessName || "Unknown Business"}</h3>
+                            <small>${uid}</small>
+                        </div>
+                        <span>Pending</span>
+                    </div>
 
-      snapshot.forEach(doc => {
-        const d = doc.data();
-        const uid = doc.id;
+                    <div class="doc-grid">
+                        <img src="${d.idProofUrl}" onclick="window.open('${d.idProofUrl}')">
+                        <img src="${d.paymentUrl}" onclick="window.open('${d.paymentUrl}')">
+                    </div>
 
-        list.innerHTML += `
-          <div class="card" id="card-${uid}">
-            <h3>${d.businessName || "Unknown Business"}</h3>
-            <small>User UID: ${uid}</small>
-
-            <div class="doc-grid">
-              <img src="${d.idProofUrl}" onclick="window.open('${d.idProofUrl}')">
-              <img src="${d.paymentUrl}" onclick="window.open('${d.paymentUrl}')">
-            </div>
-
-            <br>
-            <button class="btn btn-approve" onclick="approve('${uid}','${d.businessName || ''}')">
-              APPROVE
-            </button>
-            <button class="btn btn-reject" onclick="rejectReq('${uid}')">
-              REJECT
-            </button>
-          </div>
-        `;
+                    <div class="btn-group">
+                        <button class="btn btn-approve" onclick="approveDealer('${uid}','${d.businessName}')">APPROVE</button>
+                        <button class="btn btn-reject" onclick="rejectDealer('${uid}')">REJECT</button>
+                    </div>
+                </div>
+              `;
+          });
       });
-    },
-    err => {
-      alert("Firestore error: " + err.message);
-    });
 }
 
-/* ================= APPROVE ================= */
-async function approve(uid, name) {
+async function approveDealer(uid, name) {
+    if (!confirm("Approve " + name + "?")) return;
 
-  if (!confirm("Approve this dealer?")) return;
+    const batch = db.batch();
 
-  const batch = db.batch();
+    batch.set(db.collection("users").doc(uid), {
+        isVerified: true,
+        premiumDealer: true,
+        role: "premium"
+    }, { merge: true });
 
-  batch.set(db.collection("users").doc(uid), {
-    isVerified: true,
-    premiumDealer: true,
-    role: "premium",
-    businessName: name,
-    verifiedAt: firebase.firestore.FieldValue.serverTimestamp()
-  }, { merge: true });
+    batch.set(db.collection("verification_requests").doc(uid), {
+        status: "approved",
+        approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
 
-  batch.set(db.collection("verification_requests").doc(uid), {
-    status: "approved",
-    approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    approvedBy: ADMIN_UID
-  }, { merge: true });
+    const props = await db.collection("properties").where("ownerId","==",uid).get();
+    props.forEach(p => batch.set(p.ref, { isVerified: true }, { merge: true }));
 
-  const props = await db.collection("properties")
-    .where("ownerId","==",uid).get();
-
-  props.forEach(p => {
-    batch.set(p.ref, { isVerified: true }, { merge: true });
-  });
-
-  await batch.commit();
-  alert("Approved ✅");
+    await batch.commit();
+    alert("✅ Approved!");
 }
 
-/* ================= REJECT ================= */
-async function rejectReq(uid) {
-  if (!confirm("Reject this request?")) return;
-  await db.collection("verification_requests").doc(uid).delete();
-  alert("Rejected ❌");
+async function rejectDealer(uid) {
+    if (!confirm("Reject this request?")) return;
+    await db.collection("verification_requests").doc(uid).delete();
+    alert("❌ Rejected");
 }
 </script>
 
