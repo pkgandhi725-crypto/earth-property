@@ -22,10 +22,10 @@
         .prop-info { padding: 15px; }
         .prop-price { font-size: 20px; font-weight: 800; color: var(--primary); margin: 0; }
         .btn-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 12px; }
-        .btn { padding: 8px 2px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 10px; display: flex; flex-direction: column; align-items: center; border: none; }
+        .btn { padding: 8px 2px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 10px; display: flex; flex-direction: column; align-items: center; border: none; cursor: pointer; }
         .btn-call { background: #e8f5e9; color: var(--primary); }
         .btn-wa { background: #25D366; color: white; }
-        .btn-chat { background: var(--primary); color: white; cursor: pointer; }
+        .btn-chat { background: var(--primary); color: white; }
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #eee; z-index: 1000; }
         .nav-item { display: flex; flex-direction: column; align-items: center; color: #888; text-decoration: none; font-size: 10px; }
         .nav-item.active { color: var(--primary); }
@@ -43,7 +43,7 @@
         <div style="display: flex; gap: 8px; align-items: center;">
             <div id="adminLink" class="icon-btn" style="display:none;" onclick="location.href='admin-verify.html'"><i class="fa fa-user-shield"></i></div>
             <div id="notifBell" class="icon-btn" style="display:none;" onclick="location.href='inbox.html'"><i class="fa fa-bell"></i><span id="notifBadge" style="display: none;">0</span></div>
-            <span onclick="location.href='login.html'" id="authBtn" style="cursor:pointer; font-size: 12px; font-weight: 700; background: #fff; color: var(--primary); padding: 6px 10px; border-radius: 6px;">Login</span>
+            <span id="authBtn" style="cursor:pointer; font-size: 12px; font-weight: 700; background: #fff; color: var(--primary); padding: 6px 10px; border-radius: 6px;">Login</span>
         </div>
     </div>
     <div class="search-box"><i class="fa fa-search" style="color:#ccc;"></i><input type="text" id="citySearch" placeholder="Search City, Business..." oninput="filterData()"></div>
@@ -77,16 +77,16 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 
 const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1"; [cite: 2026-02-02]
-let allProps = [], myFavs = [], searchTimeout;
+let allProps = [], searchTimeout;
 
-// ✅ FIXED: Updated Load Props with correct index order [cite: 2026-02-03]
+// 1. LOAD PROPERTIES WITH UPDATED INDEX ORDER [cite: 2026-02-03]
 async function loadProps() {
     const list = document.getElementById('propertyList');
     list.innerHTML = '<center style="padding:40px;"><i class="fa fa-spinner fa-spin fa-2x"></i></center>';
     try {
         const now = firebase.firestore.Timestamp.now(); [cite: 2026-02-03]
         
-        // Match New Index: status (Equality) -> expiryDate (Range) [cite: 2026-02-03]
+        // Match Enabled Index: status (Equality) -> expiryDate (Range)
         const snap = await db.collection("properties")
             .where("status", "==", "active")
             .where("expiryDate", ">", now)
@@ -96,32 +96,25 @@ async function loadProps() {
         allProps.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
         renderProps(allProps);
     } catch(e) { 
-        console.error("Index Error:", e);
-        list.innerHTML = `<center style="padding:40px; color: #888;">Ads loading soon... (Firebase Indexing in progress)</center>`; 
+        console.error("Query Error:", e);
+        list.innerHTML = `<center style="padding:40px;color:#888;">Refreshing data... Please wait a moment.</center>`; 
     }
 }
 
 function renderProps(data) {
     const list = document.getElementById('propertyList');
-    if(data.length === 0) { list.innerHTML = '<center style="padding:40px;color:#888;">No active properties found.</center>'; return; }
+    if(data.length === 0) { list.innerHTML = '<center style="padding:40px;color:#888;">No active listings found.</center>'; return; }
     
     list.innerHTML = data.map(p => {
         const imgs = p.images || [];
-        const isFav = myFavs.includes(p.id);
-        const firstImg = (imgs.length > 0) ? (typeof imgs[0] === 'object' ? imgs[0].url : imgs[0]) : 'https://via.placeholder.com/400x300';
-        
+        const firstImg = imgs.length > 0 ? (typeof imgs[0] === 'object' ? imgs[0].url : imgs[0]) : 'https://via.placeholder.com/400x300';
         return `
         <div class="prop-card">
             <div class="img-container">
-                <div class="img-slider">
-                    <img src="${firstImg}" loading="lazy" onclick="showOverlay(this.src)">
-                </div>
+                <div class="img-slider"><img src="${firstImg}" loading="lazy" onclick="showOverlay(this.src)"></div>
             </div>
             <div class="prop-info">
-                <div class="price-row" style="display:flex; justify-content:space-between;">
-                    <p class="prop-price">₹${Number(p.price || 0).toLocaleString('en-IN')}</p>
-                    <i class="${isFav?'fa-solid':'fa-regular'} fa-heart" style="color:${isFav?'#ff4757':'#ccc'}" onclick="toggleFavorite('${p.id}', this)"></i>
-                </div>
+                <p class="prop-price">₹${Number(p.price || 0).toLocaleString('en-IN')}</p>
                 <div style="font-weight:700;margin-top:5px;font-size:14px;">${p.title || 'Untitled'} ${p.isVerified ? '<i class="fa-solid fa-check-circle" style="color:#1d9bf0"></i>' : ''}</div>
                 <div style="font-size:11px;color:#777;margin-top:2px;"><i class="fa fa-store"></i> ${p.businessName || 'Individual'}</div>
                 <div class="btn-group">
@@ -134,31 +127,35 @@ function renderProps(data) {
     }).join('');
 }
 
+// 2. AUTH LOGIC FIXED (No Redirect Loop)
 auth.onAuthStateChanged(user => {
-    const adminIcon = document.getElementById('adminLink');
-    const bellIcon = document.getElementById('notifBell');
-    const portal = document.getElementById('premiumPortal');
     const authBtn = document.getElementById('authBtn');
-    
-    if(user) {
-        document.getElementById('welcomeText').innerText = `Hi, ${user.displayName || 'User'}`;
+    const welcome = document.getElementById('welcomeText');
+    const adminLink = document.getElementById('adminLink');
+    const portal = document.getElementById('premiumPortal');
+
+    if (user) {
+        welcome.innerText = `Hi, ${user.displayName || 'User'}`;
         authBtn.innerText = "Logout";
         authBtn.onclick = () => { if(confirm("Logout?")) auth.signOut().then(()=>location.reload()); };
-        document.getElementById('myAdsLink').style.display = document.getElementById('postLink').style.display = 'flex';
-        bellIcon.style.display = 'flex';
-        if(user.uid === ADMIN_UID) adminIcon.style.display = 'flex'; [cite: 2026-02-02]
+        
+        document.getElementById('notifBell').style.display = 'flex';
+        document.getElementById('myAdsLink').style.display = 'flex';
+        document.getElementById('postLink').style.display = 'flex';
+        if(user.uid === ADMIN_UID) adminLink.style.display = 'flex'; [cite: 2026-02-02]
 
         db.collection("users").doc(user.uid).onSnapshot(doc => {
             if(doc.exists && doc.data().isVerified) portal.style.display = 'none';
             else checkVerificationRequest(user.uid);
         });
     } else {
-        document.getElementById('welcomeText').innerText = "Welcome, Guest";
+        welcome.innerText = "Welcome, Guest";
         authBtn.innerText = "Login";
-        authBtn.onclick = () => location.href='login.html';
-        adminIcon.style.display = bellIcon.style.display = 'none';
+        authBtn.onclick = () => { location.href = 'login.html'; };
+        
+        adminLink.style.display = 'none';
         portal.style.display = 'block';
-        portal.innerHTML = `<div class="premium-box" style="background:var(--primary);color:white;border:none;"><h3>🏡 Join Earth Property</h3><button onclick="location.href='login.html'" style="background:white;color:var(--primary);padding:8px 15px;border:none;border-radius:5px;font-weight:bold;cursor:pointer;">Login Now</button></div>`;
+        portal.innerHTML = `<div class="premium-box" style="background:var(--primary);color:white;border:none;"><h3>🏡 Join Earth Property</h3><button onclick="location.href='login.html'" style="background:white;color:var(--primary);padding:8px 15px;border:none;border-radius:5px;font-weight:bold;">Login Now</button></div>`;
     }
 });
 
@@ -166,7 +163,7 @@ async function checkVerificationRequest(uid) {
     const vReq = await db.collection("verification_requests").doc(uid).get(); [cite: 2026-02-02]
     const portal = document.getElementById('premiumPortal');
     if(vReq.exists && vReq.data().status === 'pending') portal.innerHTML = `<div class="premium-box"><h3>⏳ Review Pending</h3></div>`;
-    else portal.innerHTML = `<div class="premium-box"><h3>💎 Become Premium Dealer</h3><button onclick="location.href='verify.html'" style="background:var(--primary);color:white;border:none;padding:8px 15px;border-radius:5px;cursor:pointer;margin-top:5px;">Verify Now</button></div>`;
+    else portal.innerHTML = `<div class="premium-box"><h3>💎 Become Premium Dealer</h3><button onclick="location.href='verify.html'" style="background:var(--primary);color:white;border:none;padding:8px 15px;border-radius:5px;margin-top:5px;">Verify Now</button></div>`;
 }
 
 function filterData() {
