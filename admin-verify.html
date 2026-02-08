@@ -3,33 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Earth Property</title>
+    <title>Admin - Verification Portal</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: system-ui; margin: 0; background: #f8f9fa; padding: 20px; }
-        .req-card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .req-header { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
-        .user-info h4 { margin: 0; color: #333; }
-        .user-info span { font-size: 12px; color: #777; }
-        .docs-row { display: flex; gap: 15px; margin-bottom: 15px; }
-        .doc-box { flex: 1; text-align: center; cursor: pointer; }
-        .doc-box img { width: 100%; height: 120px; object-fit: cover; border-radius: 10px; border: 1px solid #ddd; }
-        .doc-box p { font-size: 11px; font-weight: bold; margin-top: 5px; color: #2e7d32; }
-        .actions { display: flex; gap: 10px; }
-        .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .approve-btn { background: #2e7d32; color: white; }
-        .reject-btn { background: #ffebee; color: #c62828; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        #loader { text-align: center; padding: 50px; }
-        #imgModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; justify-content:center; align-items:center; }
-        #imgModal img { max-width: 90%; max-height: 90%; border-radius: 10px; }
+        body { font-family: 'Segoe UI', system-ui; margin: 0; background: #f4f7f6; padding: 20px; }
+        h2 { color: #1b5e20; display: flex; align-items: center; gap: 10px; }
+        .req-card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid #e0e0e0; }
+        .req-header { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 15px; }
+        .user-info h4 { margin: 0; color: #333; font-size: 18px; }
+        .user-info span { font-size: 11px; color: #888; background: #eee; padding: 2px 6px; border-radius: 4px; margin-top: 4px; display: inline-block; }
+        .docs-row { display: flex; gap: 15px; margin-bottom: 18px; }
+        .doc-box { flex: 1; text-align: center; cursor: pointer; transition: 0.3s; }
+        .doc-box:hover { transform: translateY(-3px); }
+        .doc-box img { width: 100%; height: 140px; object-fit: cover; border-radius: 12px; border: 2px solid #eee; }
+        .doc-box p { font-size: 11px; font-weight: bold; margin-top: 8px; color: #2e7d32; text-transform: uppercase; }
+        .actions { display: flex; gap: 12px; }
+        .btn { flex: 1; padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; }
+        .approve-btn { background: #2e7d32; color: white; box-shadow: 0 4px 10px rgba(46,125,50,0.2); }
+        .reject-btn { background: #fff1f0; color: #d32f2f; border: 1px solid #ffccc7; }
+        .btn:active { transform: scale(0.98); }
+        #loader { text-align: center; padding: 60px; color: #666; }
+        #imgModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; justify-content:center; align-items:center; padding: 20px; }
+        #imgModal img { max-width: 100%; max-height: 90%; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
 
-<h2><i class="fa fa-shield-alt"></i> Verification Requests</h2>
-<div id="loader"><i class="fa fa-spinner fa-spin fa-2x"></i><p>Loading requests...</p></div>
-<div id="requestContainer"></div>
+<div style="max-width: 600px; margin: auto;">
+    <button onclick="location.href='admin.html'" style="background:none; border:none; color:#2e7d32; font-weight:bold; cursor:pointer; margin-bottom:10px;"><i class="fa fa-arrow-left"></i> Back to Ads</button>
+    <h2><i class="fa fa-user-check"></i> Verification Desk</h2>
+    <div id="loader"><i class="fa fa-spinner fa-spin fa-2x"></i><p>Fetching new requests...</p></div>
+    <div id="requestContainer"></div>
+</div>
 
 <div id="imgModal" onclick="this.style.display='none'"><img id="modalImg"></div>
 
@@ -47,12 +52,20 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
+const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
+
+// Security check
 auth.onAuthStateChanged(user => {
-    if (!user) location.href = 'login.html';
-    loadRequests();
+    if (!user || user.uid !== ADMIN_UID) {
+        alert("Restricted Area!");
+        location.href = 'index.html';
+    } else {
+        loadRequests();
+    }
 });
 
 function loadRequests() {
+    // Listens for pending requests
     db.collection("verification_requests")
       .where("status", "==", "pending")
       .onSnapshot(snapshot => {
@@ -61,34 +74,34 @@ function loadRequests() {
           container.innerHTML = '';
 
           if (snapshot.empty) {
-              container.innerHTML = '<p style="text-align:center; color:#888;">No pending requests. Chill out! 😎</p>';
+              container.innerHTML = '<div style="text-align:center; padding:40px; color:#999;"><i class="fa fa-coffee fa-3x"></i><p>All caught up! No pending requests.</p></div>';
               return;
           }
 
-          snapshot.forEach(doc => {
-              const data = doc.data();
+          snapshot.forEach(docSnap => {
+              const data = docSnap.data();
+              const uid = docSnap.id;
               container.innerHTML += `
-              <div class="req-card" id="req-${doc.id}">
+              <div class="req-card">
                   <div class="req-header">
                       <div class="user-info">
-                          <h4>${data.businessName || 'Unnamed Business'}</h4>
-                          <span>User ID: ${doc.id}</span>
+                          <h4>${data.businessName || 'New Dealer'}</h4>
+                          <span>UID: ${uid}</span>
                       </div>
-                      <div style="font-size:11px; color:#999;">${data.timestamp?.toDate().toLocaleDateString() || 'N/A'}</div>
                   </div>
                   <div class="docs-row">
                       <div class="doc-box" onclick="viewImg('${data.idProofUrl}')">
-                          <img src="${data.idProofUrl}">
-                          <p>VIEW ID PROOF</p>
+                          <img src="${data.idProofUrl}" onerror="this.src='https://via.placeholder.com/150?text=No+ID'">
+                          <p>ID Proof</p>
                       </div>
                       <div class="doc-box" onclick="viewImg('${data.paymentUrl}')">
-                          <img src="${data.paymentUrl}">
-                          <p>VIEW PAYMENT</p>
+                          <img src="${data.paymentUrl}" onerror="this.src='https://via.placeholder.com/150?text=No+Payment'">
+                          <p>Payment Reciept</p>
                       </div>
                   </div>
                   <div class="actions">
-                      <button class="btn approve-btn" id="btn-app-${doc.id}" onclick="updateStatus('${doc.id}', 'approved')">APPROVE</button>
-                      <button class="btn reject-btn" id="btn-rej-${doc.id}" onclick="updateStatus('${doc.id}', 'rejected')">REJECT</button>
+                      <button class="btn approve-btn" onclick="processApproval('${uid}', '${data.businessName}')">APPROVE DEALER</button>
+                      <button class="btn reject-btn" onclick="processRejection('${uid}')">REJECT</button>
                   </div>
               </div>`;
           });
@@ -96,61 +109,57 @@ function loadRequests() {
 }
 
 function viewImg(url) {
+    if(!url) return;
     document.getElementById('modalImg').src = url;
     document.getElementById('imgModal').style.display = 'flex';
 }
 
-async function updateStatus(uid, newStatus) {
-    let reason = "";
-    if (newStatus === 'rejected') {
-        reason = prompt("Enter rejection reason (e.g., Blur images):");
-        if (!reason) return;
-    }
-
-    if (!confirm(`Are you sure you want to ${newStatus} this request?`)) return;
-
-    document.getElementById(`btn-app-${uid}`).disabled = true;
-    document.getElementById(`btn-rej-${uid}`).disabled = true;
+// ✅ ATOMIC APPROVAL: Updates User, Ads, and Request in one go
+async function processApproval(uid, bizName) {
+    if (!confirm("Confirm Verification for " + bizName + "?")) return;
 
     try {
         const batch = db.batch();
-        const reqRef = db.collection("verification_requests").doc(uid);
         
-        // Fetch request data to get the business name
-        const reqSnap = await reqRef.get();
-        const reqData = reqSnap.data() || {};
+        // 1. Mark User as Verified
+        const userRef = db.collection("users").doc(uid);
+        batch.set(userRef, { 
+            isVerified: true, 
+            premiumDealer: true,
+            businessName: bizName || "Verified Dealer",
+            role: "premium" 
+        }, { merge: true });
 
-        // 1. Update Verification Request
-        batch.update(reqRef, {
-            status: newStatus,
+        // 2. Remove from pending requests
+        const reqRef = db.collection("verification_requests").doc(uid);
+        batch.delete(reqRef);
+
+        // 3. Update all their properties with blue tick
+        const propsSnap = await db.collection("properties").where("ownerId", "==", uid).get();
+        propsSnap.forEach(prop => {
+            batch.update(prop.ref, { isVerified: true });
+        });
+
+        await batch.commit();
+        alert("Dealer Approved & Sync Complete! ✅");
+    } catch (e) {
+        alert("Sync Error: " + e.message);
+    }
+}
+
+async function processRejection(uid) {
+    const reason = prompt("Reason for rejection (e.g. Invalid ID):");
+    if (!reason) return;
+
+    try {
+        await db.collection("verification_requests").doc(uid).update({
+            status: 'rejected',
             reason: reason,
             reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-
-        // 2. If approved, sync User Profile and all existing Properties
-        if (newStatus === 'approved') {
-            const userRef = db.collection("users").doc(uid);
-            // ✅ Fix: Syncing businessName to user profile for upload.html to use
-            batch.set(userRef, { 
-                isVerified: true, 
-                premiumDealer: true,
-                businessName: reqData.businessName || "Verified Dealer"
-            }, { merge: true });
-
-            // ✅ Denormalization: Update all ads with the blue tick (isVerified: true)
-            const propsSnap = await db.collection("properties").where("ownerId", "==", uid).get();
-            propsSnap.forEach(propDoc => {
-                batch.update(propDoc.ref, { isVerified: true });
-            });
-        }
-
-        await batch.commit();
-        alert(`Request ${newStatus} successfully! All systems synced.`);
+        alert("Request Rejected.");
     } catch (e) {
-        console.error(e);
         alert("Error: " + e.message);
-        document.getElementById(`btn-app-${uid}`).disabled = false;
-        document.getElementById(`btn-rej-${uid}`).disabled = false;
     }
 }
 </script>
