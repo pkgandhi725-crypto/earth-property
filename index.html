@@ -29,6 +29,7 @@
         .price-row { display: flex; justify-content: space-between; align-items: center; }
         .prop-price { font-size: 22px; font-weight: 800; color: var(--primary); margin: 0; }
         .verified-badge { color: #1d9bf0; margin-left: 6px; font-size: 16px; }
+        .biz-name { font-size: 12px; color: #666; margin-top: 2px; display: flex; align-items: center; gap: 4px; }
         
         .btn-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 15px; }
         .btn { padding: 10px 2px; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 11px; display: flex; flex-direction: column; align-items: center; gap: 4px; border: none; cursor: pointer; }
@@ -42,9 +43,6 @@
         .nav-post { background: var(--primary); color: white !important; width: 50px; height: 50px; border-radius: 50%; justify-content: center; margin-top: -30px; box-shadow: 0 4px 12px rgba(46,125,50,0.4); }
         
         .expired-badge { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 6px; font-size: 10px; font-weight: bold; z-index: 10; }
-        
-        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-        .shimmer { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
         #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 3000; display: none; align-items: center; justify-content: center; }
         #overlay img { max-width: 100%; max-height: 100%; object-fit: contain; }
     </style>
@@ -70,7 +68,7 @@
 <div class="bottom-nav">
     <a href="index.html" class="nav-item active"><i class="fa fa-home"></i>Explore</a>
     <a href="my-ads.html" class="nav-item" id="myAdsLink" style="display:none;"><i class="fa fa-layer-group"></i>My Ads</a>
-    <a href="post.html" class="nav-item nav-post" id="postLink" style="display:none;"><i class="fa fa-plus"></i></a>
+    <a href="upload.html" class="nav-item nav-post" id="postLink" style="display:none;"><i class="fa fa-plus"></i></a>
     <a href="favorites.html" class="nav-item"><i class="fa-regular fa-heart"></i>Favs</a>
     <a href="profile.html" class="nav-item"><i class="fa fa-user-circle"></i>Profile</a>
 </div>
@@ -101,8 +99,17 @@ async function loadProps() {
             myFavs = favSnap.docs.map(doc => doc.data().propertyId);
         }
 
-        const snap = await db.collection("properties").orderBy("createdAt", "desc").limit(50).get();
+        // ✅ FIX: Removed orderBy temporarily to show all 10+ posts (even those without createdAt)
+        const snap = await db.collection("properties").limit(50).get();
+        
+        // Sorting manually in JavaScript to handle missing dates
         allProps = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        allProps.sort((a, b) => {
+            const dateA = a.createdAt?.seconds || 0;
+            const dateB = b.createdAt?.seconds || 0;
+            return dateB - dateA;
+        });
+
         renderProps(allProps);
     } catch(e) { 
         console.error(e);
@@ -121,14 +128,12 @@ function renderProps(data) {
         const isFav = myFavs.includes(p.id);
         const cleanPhone = (p.phone || "").replace(/\D/g, "");
         
-        // Expiry Check
         let isExpired = false;
         if (p.expiresAt) {
             const expiryDate = p.expiresAt.toDate();
             if (expiryDate < now) isExpired = true;
         }
 
-        // ✅ VERIFIED BADGE
         const badge = p.isVerified ? '<i class="fa-solid fa-check-circle verified-badge"></i>' : '';
 
         const imgHtml = imgs.map(img => {
@@ -148,6 +153,9 @@ function renderProps(data) {
                 </div>
                 <div style="font-weight:700;margin-top:5px; display: flex; align-items: center;">
                     ${p.title || 'Untitled'} ${badge}
+                </div>
+                <div class="biz-name">
+                    <i class="fa fa-store" style="font-size:10px"></i> ${p.businessName || 'Individual Dealer'}
                 </div>
                 <div class="btn-group">
                     ${!isExpired && cleanPhone ? `
@@ -185,10 +193,10 @@ auth.onAuthStateChanged(async user => {
         document.getElementById('authBtn').innerText = "Logout";
         document.getElementById('myAdsLink').style.display = document.getElementById('postLink').style.display = 'flex';
         
-        // Check Admin & Verification
         const uDoc = await db.collection("users").doc(user.uid).get();
         const userData = uDoc.exists ? uDoc.data() : {};
         
+        // Admin Access Logic
         if(userData.role === 'admin' || user.uid === "WOY9f67DachGVTuhR4tSJ1BHozx1") document.getElementById('adminLink').style.display = 'block';
         
         if(!userData.isVerified) {
