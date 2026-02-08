@@ -1,28 +1,45 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Admin Panel</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-body{font-family:Arial;background:#f2f2f2;padding:10px;}
-header{background:#2e7d32;color:white;padding:15px;text-align:center;border-radius:10px;}
-.card{background:white;margin:10px;padding:10px;border-radius:10px;}
-button{background:#c62828;color:white;border:none;padding:8px 12px;border-radius:10px;margin:3px;}
-.safe{background:#2e7d32;}
-</style>
+    <title>Admin Panel - Earth Property</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
+        header { background: #1b5e20; color: white; padding: 20px; text-align: center; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .stats-bar { display: flex; justify-content: space-around; background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; font-weight: bold; color: #2e7d32; }
+        .card { background: white; margin-bottom: 15px; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 5px solid #2e7d32; }
+        .card h3 { margin: 0 0 8px 0; color: #333; font-size: 18px; }
+        .card p { margin: 4px 0; color: #666; font-size: 14px; }
+        .report-badge { background: #ffebee; color: #c62828; padding: 2px 8px; border-radius: 5px; font-size: 12px; font-weight: bold; }
+        .btn-group { margin-top: 12px; display: flex; gap: 10px; }
+        button { flex: 1; padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .del-btn { background: #ff4757; color: white; }
+        .view-btn { background: #e8f5e9; color: #2e7d32; }
+        button:active { transform: scale(0.95); }
+        #loader { text-align: center; padding: 50px; display: none; }
+    </style>
 </head>
 <body>
 
 <header>
-<h2>👑 Earth Property Admin</h2>
-<p>Manage All Properties</p>
+    <div style="font-size: 12px; opacity: 0.8; margin-bottom: 5px;">Secure Admin Access</div>
+    <h2 style="margin:0;">👑 Admin Control</h2>
+    <p style="margin:5px 0 0 0; font-size: 14px;">Earth Property Management</p>
 </header>
 
+<div class="stats-bar">
+    <span>Total Ads: <span id="totalAds">0</span></span>
+    <button onclick="location.href='admin-verify.html'" class="view-btn" style="flex:none; padding: 5px 15px;">Verify Requests ➔</button>
+</div>
+
+<div id="loader"><i class="fa fa-spinner fa-spin fa-2x" style="color:#2e7d32"></i></div>
 <div id="list"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
@@ -35,30 +52,70 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
-async function load(){
- const qs = await getDocs(collection(db,"properties"));
- const list = document.getElementById("list");
- list.innerHTML="";
- qs.forEach(docSnap=>{
-  const d=docSnap.data();
-  list.innerHTML+=`
-   <div class="card">
-    <h3>${d.title}</h3>
-    <p>${d.location} | ${d.price}</p>
-    <p>Reports: ${d.reports||0}</p>
-    <button onclick="del('${docSnap.id}')">Delete</button>
-   </div>`;
- });
+const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
+
+// 1. Security Check: Only Admin can stay here
+onAuthStateChanged(auth, (user) => {
+    if (!user || user.uid !== ADMIN_UID) {
+        alert("Access Denied! Redirecting...");
+        window.location.href = "index.html";
+    } else {
+        loadProperties();
+    }
+});
+
+// 2. Load Properties with Real-time listener
+function loadProperties() {
+    const list = document.getElementById("list");
+    const loader = document.getElementById("loader");
+    loader.style.display = "block";
+
+    const q = query(collection(db, "properties"));
+
+    onSnapshot(q, (snapshot) => {
+        loader.style.display = "none";
+        list.innerHTML = "";
+        document.getElementById("totalAds").innerText = snapshot.size;
+
+        if (snapshot.empty) {
+            list.innerHTML = "<center style='padding:20px;'>No properties found.</center>";
+            return;
+        }
+
+        snapshot.forEach(docSnap => {
+            const d = docSnap.data();
+            const id = docSnap.id;
+            const reportCount = d.reports || 0;
+
+            list.innerHTML += `
+                <div class="card">
+                    <h3>${d.title || 'No Title'}</h3>
+                    <p><i class="fa fa-map-marker-alt"></i> ${d.location || 'N/A'}</p>
+                    <p><i class="fa fa-tag"></i> ₹${Number(d.price || 0).toLocaleString('en-IN')}</p>
+                    <p>Owner ID: <small style="color:#999;">${d.ownerId || 'Unknown'}</small></p>
+                    ${reportCount > 0 ? `<span class="report-badge"><i class="fa fa-warning"></i> ${reportCount} Reports</span>` : ''}
+                    <div class="btn-group">
+                        <button class="view-btn" onclick="window.open('index.html', '_blank')">View Post</button>
+                        <button class="del-btn" onclick="deletePost('${id}')">Delete Post</button>
+                    </div>
+                </div>`;
+        });
+    });
 }
-window.del=async function(id){
- if(confirm("Delete this post?")){
-  await deleteDoc(doc(db,"properties",id));
-  alert("Deleted");
-  load();
- }
+
+// 3. Delete Post Function
+window.deletePost = async function(id) {
+    if (confirm("Are you sure? This action cannot be undone!")) {
+        try {
+            await deleteDoc(doc(db, "properties", id));
+            alert("Property deleted successfully! 🗑️");
+        } catch (error) {
+            alert("Error: " + error.message);
+        }
+    }
 }
-window.onload=load;
 </script>
 
 </body>
