@@ -5,30 +5,37 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Verification Portal</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
 <style>
-body{font-family:system-ui;background:#f4f7f6;margin:0;padding:20px}
+*{box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f4f7f6;margin:0;padding:20px}
 .container{max-width:1000px;margin:auto}
-.header{background:#fff;padding:20px;border-radius:12px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
-.card{background:#fff;border-radius:12px;padding:20px;margin-bottom:20px}
-.doc-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
-.doc-grid img{width:100%;height:220px;object-fit:cover;border-radius:10px;cursor:pointer}
-.btn{padding:14px;border:none;border-radius:10px;font-weight:bold;cursor:pointer}
-.btn-approve{background:#2e7d32;color:#fff}
-.btn-reject{background:#ffecec;color:#c62828}
-.badge{background:#fff3cd;padding:5px 15px;border-radius:20px}
+.header{background:#fff;padding:25px;border-radius:15px;margin-bottom:30px;box-shadow:0 2px 10px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center}
+.header h1{margin:0;color:#1b5e20;display:flex;align-items:center;gap:15px}
+.badge{background:#fff3cd;color:#856404;padding:5px 15px;border-radius:20px;font-size:14px;font-weight:bold}
+.card{background:#fff;border-radius:15px;padding:30px;margin-bottom:25px;box-shadow:0 4px 15px rgba(0,0,0,.08)}
+.loader{text-align:center;padding:60px;color:#2e7d32}
 </style>
 </head>
-
 <body>
 
 <div class="container">
   <div class="header">
-    <h2><i class="fa-solid fa-user-shield"></i> Verification Portal</h2>
-    <span class="badge" id="countBadge">Loading...</span>
+    <h1>
+      <i class="fa-solid fa-user-shield"></i>
+      Verification Portal
+      <span class="badge" id="countBadge">0 Pending</span>
+    </h1>
+    <button onclick="location.href='index.html'" style="background:none;border:none;color:#666;font-size:15px;font-weight:bold">
+      <i class="fa-solid fa-house"></i> Home
+    </button>
   </div>
 
-  <div id="requestList">Loading...</div>
+  <div id="requestList">
+    <div class="loader">
+      <i class="fa-solid fa-circle-notch fa-spin fa-3x"></i>
+      <p>Loading requests...</p>
+    </div>
+  </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -36,22 +43,22 @@ body{font-family:system-ui;background:#f4f7f6;margin:0;padding:20px}
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-/* 🔥 FIREBASE CONFIG */
-firebase.initializeApp({
+/* ================= FIREBASE INIT ================= */
+const firebaseConfig = {
   apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
   authDomain: "earth-properties-c3c56.firebaseapp.com",
   projectId: "earth-properties-c3c56"
-});
+};
+firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-/* 🔴 ADMIN UID (MUST MATCH LOGIN UID + RULES UID) */
+/* ================= ADMIN UID ================= */
 const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
 
-/* ✅ AUTH CHECK + DEBUG UID */
+/* ================= UID DEBUG (FINAL ADD) ================= */
 auth.onAuthStateChanged(user => {
-
   alert("LOGGED IN UID = " + (user ? user.uid : "NOT LOGGED IN"));
 
   if (!user || user.uid !== ADMIN_UID) {
@@ -63,83 +70,35 @@ auth.onAuthStateChanged(user => {
   loadRequests();
 });
 
-/* 📥 LOAD REQUESTS */
-function loadRequests(){
+/* ================= LOAD REQUESTS ================= */
+function loadRequests() {
   db.collection("verification_requests")
     .where("status","==","pending")
-    .onSnapshot(snapshot=>{
-      const box=document.getElementById("requestList");
-      document.getElementById("countBadge").innerText =
-        snapshot.empty ? "All Clear" : snapshot.size+" Pending";
+    .onSnapshot(snapshot => {
 
-      box.innerHTML="";
-      if(snapshot.empty){
-        box.innerHTML="<div class='card'>No pending requests</div>";
+      const list = document.getElementById("requestList");
+      document.getElementById("countBadge").innerText =
+        snapshot.size === 0 ? "All Clear" : snapshot.size + " Pending";
+
+      list.innerHTML = "";
+
+      if (snapshot.empty) {
+        list.innerHTML = "<div class='card'>No pending requests</div>";
         return;
       }
 
-      snapshot.forEach(doc=>{
-        const d=doc.data();
-        box.innerHTML+=`
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        list.innerHTML += `
           <div class="card">
-            <h3>${d.businessName}</h3>
-            <small>UID: ${doc.id}</small>
-
-            <div class="doc-grid">
-              <img src="${d.idProofUrl}" onclick="window.open('${d.idProofUrl}')">
-              <img src="${d.paymentUrl}" onclick="window.open('${d.paymentUrl}')">
-            </div>
-
-            <br>
-            <button class="btn btn-approve"
-              onclick="approve('${doc.id}','${d.businessName}')">
-              APPROVE
-            </button>
-
-            <button class="btn btn-reject"
-              onclick="rejectReq('${doc.id}')">
-              REJECT
-            </button>
+            <h3>${d.businessName || "Unknown"}</h3>
+            <p>UID: ${doc.id}</p>
+            <img src="${d.idProofUrl}" width="100"><br><br>
+            <img src="${d.paymentUrl}" width="100">
           </div>
         `;
       });
-    },e=>{
-      alert("Firestore error: "+e.message);
     });
-}
-
-/* ✅ APPROVE */
-async function approve(uid,biz){
-  if(!confirm("Approve "+biz+" ?"))return;
-
-  const batch=db.batch();
-
-  batch.set(db.collection("users").doc(uid),{
-    isVerified:true,
-    premiumDealer:true,
-    role:"premium"
-  },{merge:true});
-
-  batch.update(db.collection("verification_requests").doc(uid),{
-    status:"approved"
-  });
-
-  const props=await db.collection("properties")
-    .where("ownerId","==",uid).get();
-
-  props.forEach(p=>{
-    batch.update(p.ref,{isVerified:true});
-  });
-
-  await batch.commit();
-  alert("Approved successfully");
-}
-
-/* ❌ REJECT */
-async function rejectReq(uid){
-  if(!confirm("Reject request?"))return;
-  await db.collection("verification_requests").doc(uid).delete();
-  alert("Rejected");
 }
 </script>
 </body>
