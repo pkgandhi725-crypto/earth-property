@@ -25,7 +25,7 @@
         .btn { padding: 8px 2px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 10px; display: flex; flex-direction: column; align-items: center; border: none; }
         .btn-call { background: #e8f5e9; color: var(--primary); }
         .btn-wa { background: #25D366; color: white; }
-        .btn-chat { background: var(--primary); color: white; }
+        .btn-chat { background: var(--primary); color: white; cursor: pointer; }
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #eee; z-index: 1000; }
         .nav-item { display: flex; flex-direction: column; align-items: center; color: #888; text-decoration: none; font-size: 10px; }
         .nav-item.active { color: var(--primary); }
@@ -43,7 +43,7 @@
         <div style="display: flex; gap: 8px; align-items: center;">
             <div id="adminLink" class="icon-btn" style="display:none;" onclick="location.href='admin-verify.html'"><i class="fa fa-user-shield"></i></div>
             <div id="notifBell" class="icon-btn" style="display:none;" onclick="location.href='inbox.html'"><i class="fa fa-bell"></i><span id="notifBadge" style="display: none;">0</span></div>
-            <span onclick="toggleAuth()" id="authBtn" style="cursor:pointer; font-size: 12px; font-weight: 700; background: #fff; color: var(--primary); padding: 6px 10px; border-radius: 6px;">Login</span>
+            <span onclick="location.href='login.html'" id="authBtn" style="cursor:pointer; font-size: 12px; font-weight: 700; background: #fff; color: var(--primary); padding: 6px 10px; border-radius: 6px;">Login</span>
         </div>
     </div>
     <div class="search-box"><i class="fa fa-search" style="color:#ccc;"></i><input type="text" id="citySearch" placeholder="Search City, Business..." oninput="filterData()"></div>
@@ -79,39 +79,44 @@ const auth = firebase.auth();
 const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1"; [cite: 2026-02-02]
 let allProps = [], myFavs = [], searchTimeout;
 
-// 1. LOAD PROPERTIES WITH 30-DAY FILTER [cite: 2026-02-03]
+// ✅ FIXED: Updated Load Props with correct index order [cite: 2026-02-03]
 async function loadProps() {
     const list = document.getElementById('propertyList');
     list.innerHTML = '<center style="padding:40px;"><i class="fa fa-spinner fa-spin fa-2x"></i></center>';
     try {
         const now = firebase.firestore.Timestamp.now(); [cite: 2026-02-03]
         
-        // Query only active and non-expired ads
+        // Match New Index: status (Equality) -> expiryDate (Range) [cite: 2026-02-03]
         const snap = await db.collection("properties")
-            .where("expiryDate", ">", now) [cite: 2026-02-03]
             .where("status", "==", "active")
+            .where("expiryDate", ">", now)
             .get();
 
         allProps = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         allProps.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
         renderProps(allProps);
     } catch(e) { 
-        console.error(e);
-        list.innerHTML = `<center style="padding:40px;">Error loading posts. Check Indexing.</center>`; 
+        console.error("Index Error:", e);
+        list.innerHTML = `<center style="padding:40px; color: #888;">Ads loading soon... (Firebase Indexing in progress)</center>`; 
     }
 }
 
-// 2. RENDER INTERFACE
 function renderProps(data) {
     const list = document.getElementById('propertyList');
-    if(data.length === 0) { list.innerHTML = '<center style="padding:40px;color:#888;">No properties available.</center>'; return; }
+    if(data.length === 0) { list.innerHTML = '<center style="padding:40px;color:#888;">No active properties found.</center>'; return; }
     
     list.innerHTML = data.map(p => {
         const imgs = p.images || [];
         const isFav = myFavs.includes(p.id);
+        const firstImg = (imgs.length > 0) ? (typeof imgs[0] === 'object' ? imgs[0].url : imgs[0]) : 'https://via.placeholder.com/400x300';
+        
         return `
         <div class="prop-card">
-            <div class="img-container"><div class="img-slider">${imgs.map(img => `<img src="${img}" loading="lazy" onclick="showOverlay(this.src)">`).join('')}</div></div>
+            <div class="img-container">
+                <div class="img-slider">
+                    <img src="${firstImg}" loading="lazy" onclick="showOverlay(this.src)">
+                </div>
+            </div>
             <div class="prop-info">
                 <div class="price-row" style="display:flex; justify-content:space-between;">
                     <p class="prop-price">₹${Number(p.price || 0).toLocaleString('en-IN')}</p>
@@ -129,15 +134,16 @@ function renderProps(data) {
     }).join('');
 }
 
-// 3. AUTH & VERIFICATION LOGIC
 auth.onAuthStateChanged(user => {
     const adminIcon = document.getElementById('adminLink');
     const bellIcon = document.getElementById('notifBell');
     const portal = document.getElementById('premiumPortal');
+    const authBtn = document.getElementById('authBtn');
     
     if(user) {
         document.getElementById('welcomeText').innerText = `Hi, ${user.displayName || 'User'}`;
-        document.getElementById('authBtn').innerText = "Logout";
+        authBtn.innerText = "Logout";
+        authBtn.onclick = () => { if(confirm("Logout?")) auth.signOut().then(()=>location.reload()); };
         document.getElementById('myAdsLink').style.display = document.getElementById('postLink').style.display = 'flex';
         bellIcon.style.display = 'flex';
         if(user.uid === ADMIN_UID) adminIcon.style.display = 'flex'; [cite: 2026-02-02]
@@ -148,7 +154,8 @@ auth.onAuthStateChanged(user => {
         });
     } else {
         document.getElementById('welcomeText').innerText = "Welcome, Guest";
-        document.getElementById('authBtn').innerText = "Login";
+        authBtn.innerText = "Login";
+        authBtn.onclick = () => location.href='login.html';
         adminIcon.style.display = bellIcon.style.display = 'none';
         portal.style.display = 'block';
         portal.innerHTML = `<div class="premium-box" style="background:var(--primary);color:white;border:none;"><h3>🏡 Join Earth Property</h3><button onclick="location.href='login.html'" style="background:white;color:var(--primary);padding:8px 15px;border:none;border-radius:5px;font-weight:bold;cursor:pointer;">Login Now</button></div>`;
@@ -171,7 +178,6 @@ function filterData() {
 }
 
 function showOverlay(src) { document.getElementById('overlayImg').src = src; document.getElementById('overlay').style.display = 'flex'; }
-function toggleAuth() { if(auth.currentUser) { if(confirm("Logout?")) auth.signOut().then(()=>location.reload()); } else location.href='login.html'; }
 
 loadProps();
 </script>
