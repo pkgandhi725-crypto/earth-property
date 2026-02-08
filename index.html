@@ -13,10 +13,9 @@
         .search-box { background: white; border-radius: 12px; display: flex; padding: 2px 15px; margin-top: 10px; align-items: center; }
         .search-box input { border: none; padding: 10px; width: 100%; outline: none; font-size: 15px; }
         
-        #notifBadge { position: absolute; top: -5px; right: -5px; background: #ff0000; color: white; font-size: 10px; padding: 2px 6px; border-radius: 50%; font-weight: bold; border: 2px solid var(--primary); }
-        
+        .pull-hint { text-align: center; padding: 8px; font-size: 11px; color: #666; background: #f9f9f9; }
         .premium-box { background: white; margin: 12px; padding: 20px; border-radius: 16px; border: 2px dashed var(--primary); text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .premium-box h3 { color: var(--primary); margin: 0 0 5px 0; }
+        .guest-banner { background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%); color: white; border: none !important; }
         .verify-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         
         .prop-card { background: white; border-radius: 16px; margin: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06); position: relative; }
@@ -62,6 +61,7 @@
     <div class="search-box"><i class="fa fa-search" style="color:#ccc;"></i><input type="text" id="citySearch" placeholder="Search City, Area..." oninput="filterData()"></div>
 </header>
 
+<div class="pull-hint">↓ Swipe down to refresh</div>
 <div id="premiumPortal" style="display:none;"></div>
 <div id="propertyList"></div>
 
@@ -89,27 +89,24 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-let allProps = [], myFavs = [];
+let allProps = [], myFavs = [], userUnsubscribe = null, searchTimeout;
 
-// ✅ Real-time User Data & Verification Status
+// ✅ Optimized Auth & Real-time Verification
 auth.onAuthStateChanged(user => {
+    if (userUnsubscribe) userUnsubscribe();
+    const portal = document.getElementById('premiumPortal');
+    
     if(user) {
         document.getElementById('welcomeText').innerText = `Hi, ${user.displayName || user.email.split('@')[0]}`;
         document.getElementById('authBtn').innerText = "Logout";
         document.getElementById('myAdsLink').style.display = document.getElementById('postLink').style.display = 'flex';
         
-        // Real-time listener to hide portal immediately after approval
-        db.collection("users").doc(user.uid).onSnapshot(uDoc => {
+        userUnsubscribe = db.collection("users").doc(user.uid).onSnapshot(uDoc => {
             const userData = uDoc.exists ? uDoc.data() : {};
-            
-            // Admin Check
-            if(userData.role === 'admin' || user.uid === "WOY9f67DachGVTuhR4tSJ1BHozx1") {
-                document.getElementById('adminLink').style.display = 'block';
-            }
+            if(userData.role === 'admin') document.getElementById('adminLink').style.display = 'block';
 
-            const portal = document.getElementById('premiumPortal');
             if(userData.isVerified === true) {
-                portal.style.display = 'none'; // Approved users don't see the verify portal
+                portal.style.display = 'none';
             } else {
                 portal.style.display = 'block';
                 checkVerificationRequest(user.uid);
@@ -118,6 +115,16 @@ auth.onAuthStateChanged(user => {
     } else {
         document.getElementById('welcomeText').innerText = "Welcome, Guest";
         document.getElementById('authBtn').innerText = "Login";
+        document.getElementById('myAdsLink').style.display = document.getElementById('postLink').style.display = 'none';
+        
+        portal.style.display = 'block';
+        portal.innerHTML = `
+            <div class="premium-box guest-banner">
+                <h3 style="color: white;">🏡 Join Earth Property</h3>
+                <p style="font-size:12px; opacity:0.9">Post properties, save favorites, and connect with buyers</p>
+                <button class="verify-btn" style="background: white; color: #2e7d32;" onclick="location.href='login.html'">Login / Sign Up</button>
+            </div>
+        `;
     }
     loadProps();
 });
@@ -141,73 +148,84 @@ async function loadProps() {
             myFavs = favSnap.docs.map(doc => doc.data().propertyId);
         }
 
-        const snap = await db.collection("properties").limit(50).get();
+        let snap;
+        try {
+            snap = await db.collection("properties").orderBy("updatedAt", "desc").limit(50).get();
+        } catch(e) {
+            snap = await db.collection("properties").limit(50).get();
+        }
+
         allProps = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        
-        // Manual Sort for missing timestamps
-        allProps.sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0));
-        
+        if (!snap.metadata.fromCache && allProps.length > 0 && !allProps[0].updatedAt) {
+            allProps.sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0));
+        }
         renderProps(allProps);
     } catch(e) { 
-        console.error(e);
-        list.innerHTML = "<center style='padding:50px;'>Error: "+e.message+"</center>"; 
+        list.innerHTML = `<center style='padding:50px;'>Error: ${e.message}</center>`; 
     }
 }
 
 function renderProps(data) {
     const list = document.getElementById('propertyList');
     if(!data.length) { list.innerHTML = "<center style='padding:50px;'>No Ads Found</center>"; return; }
-
     const now = new Date();
 
     list.innerHTML = data.map((p) => {
         const imgs = Array.isArray(p.images) ? p.images : [];
         const isFav = myFavs.includes(p.id);
         const cleanPhone = (p.phone || "").replace(/\D/g, "");
+        const whatsappNumber = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
         
         let isExpired = false;
         if (p.expiresAt) {
-            const expiryDate = p.expiresAt.toDate();
-            if (expiryDate < now) isExpired = true;
+            if (p.expiresAt.toDate() < now) isExpired = true;
         }
 
         const badge = p.isVerified ? '<i class="fa-solid fa-check-circle verified-badge"></i>' : '';
-
         const imgHtml = imgs.map(img => {
             const src = typeof img === 'object' ? (img.url || img.downloadURL) : img;
-            return `<img src="${src}" onclick="document.getElementById('overlayImg').src=this.src;document.getElementById('overlay').style.display='flex';">`;
+            return src ? `<img src="${src}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x300?text=Property'" onclick="showOverlay(this.src)">` : '';
         }).join('');
         
         return `<div class="prop-card" style="opacity: ${isExpired ? '0.7' : '1'}">
-            ${isExpired ? '<div class="expired-badge"><i class="fa fa-clock"></i> EXPIRED</div>' : ''}
-            <div class="img-container">
-                <div class="img-slider">${imgHtml || '<center style="padding-top:80px">No Image</center>'}</div>
-            </div>
+            ${isExpired ? '<div class="expired-badge">EXPIRED</div>' : ''}
+            <div class="img-container"><div class="img-slider">${imgHtml || 'No Image'}</div></div>
             <div class="prop-info">
                 <div class="price-row">
                     <p class="prop-price">₹${Number(p.price || 0).toLocaleString('en-IN')}</p>
-                    <i class="${isFav?'fa-solid':'fa-regular'} fa-heart" style="color:${isFav?'#ff4757':'#666'}" onclick="toggleFavorite('${p.id}')"></i>
+                    <i class="${isFav?'fa-solid':'fa-regular'} fa-heart" style="color:${isFav?'#ff4757':'#666'}" onclick="toggleFavorite('${p.id}', this)"></i>
                 </div>
                 <div style="font-weight:700;margin-top:5px; display: flex; align-items: center;">
                     ${p.title || 'Untitled'} ${badge}
                 </div>
-                <div class="biz-name">
-                    <i class="fa fa-store" style="font-size:10px"></i> ${p.businessName || 'Individual Dealer'}
-                </div>
+                <div class="biz-name"><i class="fa fa-store" style="font-size:10px"></i> ${p.businessName || 'Individual'}</div>
                 <div class="btn-group">
-                    ${!isExpired && cleanPhone ? `
+                    ${!isExpired && cleanPhone.length >= 10 ? `
                         <a href="tel:${cleanPhone}" class="btn btn-call"><i class="fa fa-phone"></i>Call</a>
-                        <a href="https://wa.me/91${cleanPhone}" class="btn btn-wa"><i class="fa-brands fa-whatsapp"></i>WA</a>
-                    ` : '<div style="font-size:11px;color:#999;grid-column: span 2;text-align:center">Ad Expired</div>'}
-                    <button onclick="location.href='chat.html?to=${p.ownerId}&p=${p.id}'" class="btn btn-chat" ${isExpired ? 'disabled style="opacity:0.5"' : ''}><i class="fa-regular fa-comment-dots"></i>Chat</button>
+                        <a href="https://wa.me/${whatsappNumber}" class="btn btn-wa"><i class="fa-brands fa-whatsapp"></i>WA</a>
+                    ` : '<div style="font-size:11px;color:#999;grid-column: span 2;text-align:center">Ad Inactive</div>'}
+                    <button onclick="location.href='chat.html?to=${p.ownerId}&p=${p.id}'" class="btn btn-chat" ${isExpired ? 'disabled' : ''}><i class="fa-regular fa-comment-dots"></i>Chat</button>
                 </div>
             </div>
         </div>`;
     }).join('');
 }
 
-async function toggleFavorite(pId) {
+function filterData() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        const s = document.getElementById('citySearch').value.toLowerCase();
+        renderProps(allProps.filter(p => 
+            (p.location||"").toLowerCase().includes(s) || 
+            (p.title||"").toLowerCase().includes(s) ||
+            (p.businessName||"").toLowerCase().includes(s)
+        ));
+    }, 300);
+}
+
+async function toggleFavorite(pId, element) {
     if (!auth.currentUser) return alert("Login First!");
+    element.style.opacity = '0.5';
     const favRef = db.collection("favorites").doc(`${auth.currentUser.uid}_${pId}`);
     try {
         const doc = await favRef.get();
@@ -219,15 +237,18 @@ async function toggleFavorite(pId) {
             myFavs.push(pId);
         }
         renderProps(allProps);
-    } catch(e) { alert("Error: " + e.message); }
+    } catch(e) { 
+        alert(e.message); 
+        element.style.opacity = '1';
+    }
+}
+
+function showOverlay(src) {
+    document.getElementById('overlayImg').src = src;
+    document.getElementById('overlay').style.display = 'flex';
 }
 
 function toggleAuth() { if(auth.currentUser) { if(confirm("Logout?")) auth.signOut().then(()=>location.reload()); } else location.href='login.html'; }
-
-function filterData() {
-    const s = document.getElementById('citySearch').value.toLowerCase();
-    renderProps(allProps.filter(p => (p.location||"").toLowerCase().includes(s) || (p.title||"").toLowerCase().includes(s)));
-}
 </script>
 </body>
 </html>
