@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Earth Property</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: system-ui; margin: 0; background: #f8f9fa; padding: 20px; }
+        .req-card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .req-header { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
+        .user-info h4 { margin: 0; color: #333; }
+        .user-info span { font-size: 12px; color: #777; }
+        .docs-row { display: flex; gap: 15px; margin-bottom: 15px; }
+        .doc-box { flex: 1; text-align: center; cursor: pointer; }
+        .doc-box img { width: 100%; height: 120px; object-fit: cover; border-radius: 10px; border: 1px solid #ddd; }
+        .doc-box p { font-size: 11px; font-weight: bold; margin-top: 5px; color: #2e7d32; }
+        .actions { display: flex; gap: 10px; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .approve-btn { background: #2e7d32; color: white; }
+        .reject-btn { background: #ffebee; color: #c62828; }
+        .btn:disabled { opacity: 0.5; }
+        #loader { text-align: center; padding: 50px; }
+        /* Modal for Full Image View */
+        #imgModal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; justify-content:center; align-items:center; }
+        #imgModal img { max-width: 90%; max-height: 90%; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+<h2><i class="fa fa-shield-alt"></i> Verification Requests</h2>
+<div id="loader"><i class="fa fa-spinner fa-spin fa-2x"></i><p>Loading requests...</p></div>
+<div id="requestContainer"></div>
+
+<div id="imgModal" onclick="this.style.display='none'"><img id="modalImg"></div>
+
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = { 
+    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
+    authDomain: "earth-properties-c3c56.firebaseapp.com", 
+    projectId: "earth-properties-c3c56" 
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+auth.onAuthStateChanged(user => {
+    if (!user) location.href = 'login.html';
+    // Logic: Only Admin can fetch these (Rules will handle security)
+    loadRequests();
+});
+
+function loadRequests() {
+    db.collection("verification_requests")
+      .where("status", "==", "pending")
+      .onSnapshot(snapshot => {
+          document.getElementById('loader').style.display = 'none';
+          const container = document.getElementById('requestContainer');
+          container.innerHTML = '';
+
+          if (snapshot.empty) {
+              container.innerHTML = '<p style="text-align:center; color:#888;">No pending requests. Chill out! 😎</p>';
+              return;
+          }
+
+          snapshot.forEach(doc => {
+              const data = doc.data();
+              container.innerHTML += `
+              <div class="req-card" id="req-${doc.id}">
+                  <div class="req-header">
+                      <div class="user-info">
+                          <h4>${data.businessName}</h4>
+                          <span>User ID: ${data.userId}</span>
+                      </div>
+                      <div style="font-size:11px; color:#999;">${data.timestamp?.toDate().toLocaleDateString()}</div>
+                  </div>
+                  <div class="docs-row">
+                      <div class="doc-box" onclick="viewImg('${data.idProofUrl}')">
+                          <img src="${data.idProofUrl}">
+                          <p>VIEW ID PROOF</p>
+                      </div>
+                      <div class="doc-box" onclick="viewImg('${data.paymentUrl}')">
+                          <img src="${data.paymentUrl}">
+                          <p>VIEW PAYMENT</p>
+                      </div>
+                  </div>
+                  <div class="actions">
+                      <button class="btn approve-btn" onclick="updateStatus('${doc.id}', 'approved')">APPROVE</button>
+                      <button class="btn reject-btn" onclick="updateStatus('${doc.id}', 'rejected')">REJECT</button>
+                  </div>
+              </div>`;
+          });
+      });
+}
+
+function viewImg(url) {
+    document.getElementById('modalImg').src = url;
+    document.getElementById('imgModal').style.display = 'flex';
+}
+
+async function updateStatus(uid, newStatus) {
+    let reason = "";
+    if (newStatus === 'rejected') {
+        reason = prompt("Enter rejection reason (e.g., Blur images):");
+        if (!reason) return;
+    }
+
+    if (!confirm(`Are you sure you want to ${newStatus} this request?`)) return;
+
+    try {
+        // 1. Update verification request
+        await db.collection("verification_requests").doc(uid).update({
+            status: newStatus,
+            reason: reason,
+            reviewedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 2. If approved, update User's main profile to set 'isVerified: true'
+        if (newStatus === 'approved') {
+            await db.collection("users").doc(uid).set({
+                isVerified: true,
+                premiumDealer: true
+            }, { merge: true });
+        }
+
+        alert(`Request ${newStatus}!`);
+    } catch (e) {
+        alert("Error updating: " + e.message);
+    }
+}
+</script>
+</body>
+</html>
