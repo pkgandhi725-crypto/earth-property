@@ -7,24 +7,22 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --primary: #2e7d32; --bg: #f0f2f5; }
-        body { font-family: system-ui, -apple-system, sans-serif; margin: 0; background: var(--bg); padding-bottom: 80px; -webkit-tap-highlight-color: transparent; }
+        body { font-family: system-ui, sans-serif; margin: 0; background: var(--bg); padding-bottom: 80px; }
         header { background: var(--primary); padding: 15px; color: white; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .user-identity { font-size: 11px; opacity: 0.8; margin-bottom: 2px; }
-        .icon-btn { color: #fff; background: rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; text-decoration: none; border: none; }
-        #notifBadge { position: absolute; top: -2px; right: -2px; background: #ff4757; color: white; font-size: 10px; padding: 2px 5px; border-radius: 50%; border: 1.5px solid var(--primary); font-weight: bold; }
+        .icon-btn { color: #fff; background: rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; text-decoration: none; }
+        #notifBadge { position: absolute; top: -2px; right: -2px; background: #ff4757; color: white; font-size: 10px; padding: 2px 5px; border-radius: 50%; font-weight: bold; }
         .search-box { background: white; border-radius: 12px; display: flex; padding: 2px 15px; margin-top: 10px; align-items: center; }
-        .search-box input { border: none; padding: 10px; width: 100%; outline: none; font-size: 14px; color: #333; }
+        .search-box input { border: none; padding: 10px; width: 100%; outline: none; font-size: 14px; }
         .premium-box { background: white; margin: 12px; padding: 15px; border-radius: 15px; border: 2px dashed var(--primary); text-align: center; }
         .prop-card { background: white; border-radius: 16px; margin: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06); position: relative; }
-        .img-container { position: relative; width: 100%; aspect-ratio: 4/3; background: #eee; overflow: hidden; }
+        .img-container { position: relative; width: 100%; aspect-ratio: 4/3; background: #eee; }
         .img-slider { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; height: 100%; scrollbar-width: none; }
         .img-slider img { width: 100%; flex-shrink: 0; object-fit: cover; scroll-snap-align: start; }
         .prop-info { padding: 15px; }
-        .price-row { display: flex; justify-content: space-between; align-items: center; }
         .prop-price { font-size: 20px; font-weight: 800; color: var(--primary); margin: 0; }
-        .biz-name { font-size: 11px; color: #777; margin-top: 2px; }
         .btn-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 12px; }
-        .btn { padding: 8px 2px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 3px; border: none; }
+        .btn { padding: 8px 2px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 10px; display: flex; flex-direction: column; align-items: center; border: none; }
         .btn-call { background: #e8f5e9; color: var(--primary); }
         .btn-wa { background: #25D366; color: white; }
         .btn-chat { background: var(--primary); color: white; }
@@ -42,7 +40,6 @@
     <div id="welcomeText" class="user-identity">Welcome, Guest</div>
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <h2 style="margin:0; font-weight: 800; font-size: 1.4rem;">Earth Property</h2>
-        
         <div style="display: flex; gap: 8px; align-items: center;">
             <div id="adminLink" class="icon-btn" style="display:none;" onclick="location.href='admin-verify.html'"><i class="fa fa-user-shield"></i></div>
             <div id="notifBell" class="icon-btn" style="display:none;" onclick="location.href='inbox.html'"><i class="fa fa-bell"></i><span id="notifBadge" style="display: none;">0</span></div>
@@ -58,16 +55,16 @@
 <div class="bottom-nav">
     <a href="index.html" class="nav-item active"><i class="fa fa-home"></i>Explore</a>
     <a href="my-ads.html" class="nav-item" id="myAdsLink" style="display:none;"><i class="fa fa-layer-group"></i>My Ads</a>
-    <a href="upload.html" class="nav-item nav-post" id="postLink" style="display:none;"><i class="fa fa-plus"></i></a>
+    <a href="add-property.html" class="nav-item nav-post" id="postLink" style="display:none;"><i class="fa fa-plus"></i></a>
     <a href="favorites.html" class="nav-item"><i class="fa-regular fa-heart"></i>Favs</a>
     <a href="profile.html" class="nav-item"><i class="fa fa-user-circle"></i>Profile</a>
 </div>
 
 <div id="overlay" onclick="this.style.display='none'"><img id="overlayImg" src=""></div>
 
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
 const firebaseConfig = { 
@@ -79,83 +76,52 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1"; // ✅ EXACT FIX
+const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1"; [cite: 2026-02-02]
 let allProps = [], myFavs = [], searchTimeout;
 
-loadProps();
-
-auth.onAuthStateChanged(user => {
-    const adminIcon = document.getElementById('adminLink');
-    const bellIcon = document.getElementById('notifBell');
-    const portal = document.getElementById('premiumPortal');
-    
-    if(user) {
-        document.getElementById('welcomeText').innerText = `Hi, ${user.displayName || user.email.split('@')[0]}`;
-        document.getElementById('authBtn').innerText = "Logout";
-        document.getElementById('myAdsLink').style.display = document.getElementById('postLink').style.display = 'flex';
-        bellIcon.style.display = 'flex';
-
-        // ✅ ADMIN CHECK BY UID
-        if(user.uid === ADMIN_UID) {
-            adminIcon.style.display = 'flex';
-        } else {
-            adminIcon.style.display = 'none';
-        }
-
-        // Verification & Unread Logic
-        db.collection("users").doc(user.uid).onSnapshot(doc => {
-            if(doc.exists && doc.data().isVerified) portal.style.display = 'none';
-            else { portal.style.display = 'block'; checkVerificationRequest(user.uid); }
-        });
-
-        db.collection("chats").where("receiverId", "==", user.uid).where("read", "==", false).onSnapshot(snap => {
-            const badge = document.getElementById('notifBadge');
-            badge.style.display = snap.size > 0 ? 'block' : 'none';
-            badge.innerText = snap.size;
-        });
-
-        db.collection("favorites").where("userId", "==", user.uid).get().then(snap => {
-            myFavs = snap.docs.map(d => d.data().propertyId);
-            renderProps(allProps);
-        });
-    } else {
-        document.getElementById('welcomeText').innerText = "Welcome, Guest";
-        document.getElementById('authBtn').innerText = "Login";
-        adminIcon.style.display = 'none';
-        bellIcon.style.display = 'none';
-        portal.style.display = 'block';
-        portal.innerHTML = `<div class="premium-box" style="background:var(--primary);color:white;border:none;"><h3>🏡 Join Earth Property</h3><button onclick="location.href='login.html'" style="background:white;color:var(--primary);padding:8px 15px;border:none;border-radius:5px;font-weight:bold;margin-top:5px;">Login Now</button></div>`;
-    }
-});
-
+// 1. LOAD PROPERTIES WITH 30-DAY FILTER [cite: 2026-02-03]
 async function loadProps() {
     const list = document.getElementById('propertyList');
     list.innerHTML = '<center style="padding:40px;"><i class="fa fa-spinner fa-spin fa-2x"></i></center>';
     try {
-        const snap = await db.collection("properties").limit(50).get();
+        const now = firebase.firestore.Timestamp.now(); [cite: 2026-02-03]
+        
+        // Query only active and non-expired ads
+        const snap = await db.collection("properties")
+            .where("expiryDate", ">", now) [cite: 2026-02-03]
+            .where("status", "==", "active")
+            .get();
+
         allProps = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        allProps.sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0));
+        allProps.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
         renderProps(allProps);
-    } catch(e) { list.innerHTML = `<center style="padding:40px;">Error loading posts</center>`; }
+    } catch(e) { 
+        console.error(e);
+        list.innerHTML = `<center style="padding:40px;">Error loading posts. Check Indexing.</center>`; 
+    }
 }
 
+// 2. RENDER INTERFACE
 function renderProps(data) {
     const list = document.getElementById('propertyList');
+    if(data.length === 0) { list.innerHTML = '<center style="padding:40px;color:#888;">No properties available.</center>'; return; }
+    
     list.innerHTML = data.map(p => {
         const imgs = p.images || [];
         const isFav = myFavs.includes(p.id);
-        const phone = (p.phone || "").replace(/\D/g, "");
-        const wa = phone.length === 10 ? `91${phone}` : phone;
         return `
         <div class="prop-card">
-            <div class="img-container"><div class="img-slider">${imgs.map(img => `<img src="${typeof img === 'object' ? img.url : img}" loading="lazy" onclick="showOverlay(this.src)">`).join('') || 'No Image'}</div></div>
+            <div class="img-container"><div class="img-slider">${imgs.map(img => `<img src="${img}" loading="lazy" onclick="showOverlay(this.src)">`).join('')}</div></div>
             <div class="prop-info">
-                <div class="price-row"><p class="prop-price">₹${Number(p.price || 0).toLocaleString('en-IN')}</p><i class="${isFav?'fa-solid':'fa-regular'} fa-heart" style="color:${isFav?'#ff4757':'#ccc'}" onclick="toggleFavorite('${p.id}', this)"></i></div>
+                <div class="price-row" style="display:flex; justify-content:space-between;">
+                    <p class="prop-price">₹${Number(p.price || 0).toLocaleString('en-IN')}</p>
+                    <i class="${isFav?'fa-solid':'fa-regular'} fa-heart" style="color:${isFav?'#ff4757':'#ccc'}" onclick="toggleFavorite('${p.id}', this)"></i>
+                </div>
                 <div style="font-weight:700;margin-top:5px;font-size:14px;">${p.title || 'Untitled'} ${p.isVerified ? '<i class="fa-solid fa-check-circle" style="color:#1d9bf0"></i>' : ''}</div>
-                <div class="biz-name"><i class="fa fa-store"></i> ${p.businessName || 'Individual'}</div>
+                <div style="font-size:11px;color:#777;margin-top:2px;"><i class="fa fa-store"></i> ${p.businessName || 'Individual'}</div>
                 <div class="btn-group">
-                    <a href="tel:${phone}" class="btn btn-call"><i class="fa fa-phone"></i>Call</a>
-                    <a href="https://wa.me/${wa}" class="btn btn-wa"><i class="fa-brands fa-whatsapp"></i>WA</a>
+                    <a href="tel:${p.phone || ''}" class="btn btn-call"><i class="fa fa-phone"></i>Call</a>
+                    <a href="https://wa.me/91${p.phone || ''}" class="btn btn-wa"><i class="fa-brands fa-whatsapp"></i>WA</a>
                     <button onclick="location.href='chat.html?to=${p.ownerId}&p=${p.id}'" class="btn btn-chat"><i class="fa-regular fa-comment-dots"></i>Chat</button>
                 </div>
             </div>
@@ -163,34 +129,51 @@ function renderProps(data) {
     }).join('');
 }
 
+// 3. AUTH & VERIFICATION LOGIC
+auth.onAuthStateChanged(user => {
+    const adminIcon = document.getElementById('adminLink');
+    const bellIcon = document.getElementById('notifBell');
+    const portal = document.getElementById('premiumPortal');
+    
+    if(user) {
+        document.getElementById('welcomeText').innerText = `Hi, ${user.displayName || 'User'}`;
+        document.getElementById('authBtn').innerText = "Logout";
+        document.getElementById('myAdsLink').style.display = document.getElementById('postLink').style.display = 'flex';
+        bellIcon.style.display = 'flex';
+        if(user.uid === ADMIN_UID) adminIcon.style.display = 'flex'; [cite: 2026-02-02]
+
+        db.collection("users").doc(user.uid).onSnapshot(doc => {
+            if(doc.exists && doc.data().isVerified) portal.style.display = 'none';
+            else checkVerificationRequest(user.uid);
+        });
+    } else {
+        document.getElementById('welcomeText').innerText = "Welcome, Guest";
+        document.getElementById('authBtn').innerText = "Login";
+        adminIcon.style.display = bellIcon.style.display = 'none';
+        portal.style.display = 'block';
+        portal.innerHTML = `<div class="premium-box" style="background:var(--primary);color:white;border:none;"><h3>🏡 Join Earth Property</h3><button onclick="location.href='login.html'" style="background:white;color:var(--primary);padding:8px 15px;border:none;border-radius:5px;font-weight:bold;cursor:pointer;">Login Now</button></div>`;
+    }
+});
+
 async function checkVerificationRequest(uid) {
-    const vReq = await db.collection("verification_requests").doc(uid).get();
+    const vReq = await db.collection("verification_requests").doc(uid).get(); [cite: 2026-02-02]
     const portal = document.getElementById('premiumPortal');
     if(vReq.exists && vReq.data().status === 'pending') portal.innerHTML = `<div class="premium-box"><h3>⏳ Review Pending</h3></div>`;
-    else portal.innerHTML = `<div class="premium-box"><h3>💎 Premium Dealer</h3><button class="verify-btn" onclick="location.href='verify.html'">Verify Now</button></div>`;
+    else portal.innerHTML = `<div class="premium-box"><h3>💎 Become Premium Dealer</h3><button onclick="location.href='verify.html'" style="background:var(--primary);color:white;border:none;padding:8px 15px;border-radius:5px;cursor:pointer;margin-top:5px;">Verify Now</button></div>`;
 }
 
 function filterData() {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
         const s = document.getElementById('citySearch').value.toLowerCase();
-        renderProps(allProps.filter(p => (p.location||"").toLowerCase().includes(s) || (p.title||"").toLowerCase().includes(s) || (p.businessName||"").toLowerCase().includes(s)));
+        renderProps(allProps.filter(p => (p.city||"").toLowerCase().includes(s) || (p.title||"").toLowerCase().includes(s)));
     }, 300);
-}
-
-async function toggleFavorite(pId, el) {
-    if (!auth.currentUser) return alert("Login First!");
-    const favRef = db.collection("favorites").doc(`${auth.currentUser.uid}_${pId}`);
-    try {
-        const doc = await favRef.get();
-        if (doc.exists) { await favRef.delete(); myFavs = myFavs.filter(id => id !== pId); }
-        else { await favRef.set({ userId: auth.currentUser.uid, propertyId: pId }); myFavs.push(pId); }
-        renderProps(allProps);
-    } catch(e) { console.error(e); }
 }
 
 function showOverlay(src) { document.getElementById('overlayImg').src = src; document.getElementById('overlay').style.display = 'flex'; }
 function toggleAuth() { if(auth.currentUser) { if(confirm("Logout?")) auth.signOut().then(()=>location.reload()); } else location.href='login.html'; }
+
+loadProps();
 </script>
 </body>
 </html>
