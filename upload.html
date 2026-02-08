@@ -45,12 +45,13 @@
             <option value="Rent">For Rent</option>
         </select>
 
-        <label>BHK</label>
+        <label>BHK / Category</label>
         <select id="bhk">
             <option value="1">1 BHK</option>
             <option value="2">2 BHK</option>
             <option value="3">3 BHK</option>
             <option value="4">4+ BHK</option>
+            <option value="Plot">Plot / Land</option>
         </select>
 
         <label>Property Title</label>
@@ -94,8 +95,6 @@ let existingImages = [];
 let editID = new URLSearchParams(window.location.search).get('edit');
 let isUploading = false;
 
-window.onbeforeunload = () => isUploading ? "Upload in progress. Don't leave!" : null;
-
 auth.onAuthStateChanged(async (user) => {
     if (!user) { location.href = 'login.html'; return; }
     
@@ -106,22 +105,21 @@ auth.onAuthStateChanged(async (user) => {
             const doc = await db.collection("properties").doc(editID).get();
             if (doc.exists) {
                 const data = doc.data();
-                if (data.ownerId !== user.uid) {
-                    alert("Unauthorized access!");
-                    location.href = 'my-ads.html';
-                    return;
-                }
+                if (data.ownerId !== user.uid) { alert("Unauthorized!"); location.href = 'index.html'; return; }
+                
+                // Fields Fill
                 document.getElementById('title').value = data.title || '';
                 document.getElementById('price').value = data.price || '';
                 document.getElementById('location').value = data.location || '';
                 document.getElementById('phone').value = data.phone || '';
-                document.getElementById('desc').value = data.description || '';
+                // ✅ Fix: Loading 'desc' (earlier it was 'description')
+                document.getElementById('desc').value = data.desc || data.description || '';
                 document.getElementById('type').value = data.purpose || 'Sell';
                 document.getElementById('bhk').value = data.bhk || '1';
                 existingImages = data.images || [];
                 render();
             }
-        } catch(e) { alert("Error loading property data."); }
+        } catch(e) { console.error(e); }
     } else {
         render();
     }
@@ -134,38 +132,23 @@ function render() {
     
     existingImages.forEach((img, i) => {
         const url = img.url || img;
-        grid.innerHTML += `
-            <div class="photo-box" style="border-style:solid">
-                <button class="del-btn" onclick="removeExisting(${i})">×</button>
-                <img src="${url}">
-            </div>`;
+        grid.innerHTML += `<div class="photo-box" style="border-style:solid"><button class="del-btn" onclick="removeExisting(${i})">×</button><img src="${url}"></div>`;
     });
 
     selectedFiles.forEach((file, i) => {
-        grid.innerHTML += `
-            <div class="photo-box" style="border-style:dashed; border-color:#2e7d32">
-                <button class="del-btn" onclick="removePhoto(${i})">×</button>
-                <img src="${URL.createObjectURL(file)}">
-            </div>`;
+        grid.innerHTML += `<div class="photo-box" style="border-style:dashed; border-color:#2e7d32"><button class="del-btn" onclick="removePhoto(${i})">×</button><img src="${URL.createObjectURL(file)}"></div>`;
     });
     
     const total = selectedFiles.length + existingImages.length;
     countEl.textContent = `${total}/5 photos`;
-    if (total < 5) {
-        grid.innerHTML += `<div class="photo-box" onclick="document.getElementById('fileInput').click()" style="cursor:pointer; color:#ccc; font-size:40px;">+</div>`;
-    }
+    if (total < 5) grid.innerHTML += `<div class="photo-box" onclick="document.getElementById('fileInput').click()" style="cursor:pointer; font-size:40px; color:#ccc">+</div>`;
 }
 
 document.getElementById('fileInput').onchange = (e) => {
     const files = Array.from(e.target.files);
     const available = 5 - (selectedFiles.length + existingImages.length);
-    if (files.length > available) alert(`Only ${available} more photo(s) allowed.`);
     files.slice(0, available).forEach(f => {
-        if (f.type.startsWith('image/') && f.size <= 5 * 1024 * 1024) {
-            selectedFiles.push(f);
-        } else {
-            alert("Invalid file or size too large (Max 5MB).");
-        }
+        if (f.type.startsWith('image/') && f.size <= 5 * 1024 * 1024) selectedFiles.push(f);
     });
     e.target.value = ""; render();
 };
@@ -178,39 +161,38 @@ async function uploadToCloudinary(file) {
     formData.append("file", file);
     formData.append("upload_preset", UPLOAD_PRESET);
     const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: "POST", body: formData });
-    if (!res.ok) throw new Error("Upload Failed");
-    const data = await res.json();
-    return { url: data.secure_url, id: data.public_id };
+    return await res.json();
 }
 
 document.getElementById('submitBtn').onclick = async () => {
+    const user = auth.currentUser;
     const title = document.getElementById('title').value.trim();
     const price = document.getElementById('price').value;
     const loc = document.getElementById('location').value.trim();
-    const phoneRaw = document.getElementById('phone').value.trim();
-    const cleanPhone = phoneRaw.replace(/\D/g, ''); 
+    const phone = document.getElementById('phone').value.trim().replace(/\D/g, ''); 
 
-    if (!title || title.length < 5) return alert("Title too short.");
-    if (!price || price <= 0) return alert("Valid price required.");
-    if (!loc) return alert("Location required.");
-    if (cleanPhone.length < 10) return alert("Valid WhatsApp number required.");
-    if (selectedFiles.length === 0 && existingImages.length === 0) return alert("Add at least 1 photo.");
+    if (!title || title.length < 5 || !price || !loc || phone.length < 10) return alert("Please fill all details correctly.");
+    if (selectedFiles.length + existingImages.length === 0) return alert("Add at least 1 photo.");
 
     const btn = document.getElementById('submitBtn');
     const status = document.getElementById('statusText');
     btn.disabled = true;
-    isUploading = true;
     status.style.display = "block";
 
     try {
+        // 🔥 Denormalization: Get User Info
+        const uDoc = await db.collection("users").doc(user.uid).get();
+        const userData = uDoc.exists ? uDoc.data() : {};
+        const isVerified = userData.isVerified === true;
+        const bizName = userData.businessName || "Individual Dealer";
+
         const newImages = [];
         for (let i = 0; i < selectedFiles.length; i++) {
             status.innerText = `Uploading Photo ${i+1}/${selectedFiles.length}...`;
             const data = await uploadToCloudinary(selectedFiles[i]);
-            newImages.push(data);
+            newImages.push({ url: data.secure_url, id: data.public_id });
         }
 
-        // 🔥 Logic: Expiry date after 30 days [cite: 2026-02-03]
         const expiryDate = new Date();
         expiryDate.setDate(expiryDate.getDate() + 30);
 
@@ -218,33 +200,32 @@ document.getElementById('submitBtn').onclick = async () => {
             title,
             price: Number(price),
             location: loc,
-            phone: cleanPhone,
-            description: document.getElementById('desc').value,
+            phone: phone,
+            desc: document.getElementById('desc').value, // ✅ Fixed consistency
             purpose: document.getElementById('type').value,
             bhk: document.getElementById('bhk').value,
             images: [...existingImages, ...newImages],
-            ownerId: auth.currentUser.uid, // Required for Rules [cite: 2026-02-03]
-            ownerEmail: auth.currentUser.email,
-            status: "active", // Initial status [cite: 2026-02-03]
+            ownerId: user.uid,
+            isVerified: isVerified,
+            businessName: bizName,
+            status: "active",
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
         if (editID) {
             await db.collection("properties").doc(editID).update(propertyData);
+            alert("Property Updated!");
         } else {
-            propertyData.createdAt = firebase.firestore.FieldValue.serverTimestamp(); // [cite: 2026-02-03]
-            propertyData.expiresAt = firebase.firestore.Timestamp.fromDate(expiryDate); // [cite: 2026-02-03]
+            propertyData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            propertyData.expiresAt = firebase.firestore.Timestamp.fromDate(expiryDate);
             await db.collection("properties").add(propertyData);
+            alert("Property Posted!");
         }
 
-        status.innerText = "✅ Successfully Saved!";
-        isUploading = false;
-        setTimeout(() => location.href='index.html', 1500);
+        location.href = 'index.html';
     } catch(e) { 
-        console.error(e);
-        alert(e.message.includes("permission") ? "Security Error: Check ownership." : "Upload failed.");
+        alert("Error: " + e.message);
         btn.disabled = false;
-        isUploading = false;
         status.style.display = "none";
     }
 };
