@@ -3,40 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Earth Chat - Secure</title>
+    <title>Earth Chat - Professional</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body, html { height: 100%; margin: 0; font-family: system-ui; background: #e5ddd5; display: flex; flex-direction: column; overflow: hidden; }
-        header { background: #2e7d32; color: white; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+        header { background: #2e7d32; color: white; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; height: 50px;}
         .header-left { display: flex; align-items: center; gap: 12px; }
         header a { color: white; text-decoration: none; }
         #chatPartner { font-weight: 700; font-size: 16px; }
         #propStatus { font-size: 11px; opacity: 0.9; }
         
-        /* Dropdown */
+        /* Dropdown Menu */
         .menu-container { position: relative; }
         .dropdown { position: absolute; right: 0; top: 35px; background: white; color: #333; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: none; min-width: 150px; z-index: 200; }
         .dropdown div { padding: 12px 15px; font-size: 14px; cursor: pointer; border-bottom: 1px solid #eee; }
-        .dropdown div.report { color: #d32f2f; }
 
         #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; }
         
-        /* Input Area */
-        .chat-input-container { background: #f0f0f0; padding: 10px; display: flex; gap: 10px; align-items: center; }
-        #msgInput { flex: 1; border: none; padding: 12px 18px; border-radius: 25px; outline: none; font-size: 15px; }
-        .chat-btn { background: none; border: none; font-size: 20px; color: #555; cursor: pointer; }
+        /* Input Area - WhatsApp Style */
+        .chat-input-container { background: #f0f0f0; padding: 10px; display: flex; gap: 8px; align-items: center; }
+        .input-wrapper { flex: 1; background: white; border-radius: 25px; display: flex; align-items: center; padding: 2px 15px; }
+        #msgInput { flex: 1; border: none; padding: 10px 5px; outline: none; font-size: 15px; background: transparent; }
+        
+        .chat-btn { background: none; border: none; font-size: 20px; color: #555; cursor: pointer; padding: 5px; }
         .send-btn { background: #2e7d32; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .send-btn:disabled { background: #ccc; }
 
-        /* Bubbles */
-        .msg { max-width: 75%; padding: 8px 12px; border-radius: 12px; font-size: 14px; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
+        /* Message Bubbles */
+        .msg { max-width: 75%; padding: 8px 12px; border-radius: 12px; font-size: 14px; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.1); line-height: 1.4; word-wrap: break-word; }
         .sent { align-self: flex-end; background: #dcf8c6; border-top-right-radius: 2px; }
         .received { align-self: flex-start; background: white; border-top-left-radius: 2px; }
         .msg-img { width: 100%; max-width: 250px; border-radius: 8px; cursor: pointer; display: block; margin-top: 5px; }
         .time { font-size: 10px; color: #888; margin-top: 4px; text-align: right; display: block; }
         
         #blockBanner { background: #ffebee; color: #c62828; padding: 8px; text-align: center; font-size: 12px; font-weight: 600; display: none; }
-        #imgLoading { display: none; font-size: 12px; color: #2e7d32; padding: 5px 15px; background: #f0f0f0; }
+        #imgLoading { display: none; font-size: 12px; color: #2e7d32; padding: 5px 15px; background: #f0f0f0; border-top: 1px solid #ddd; }
     </style>
 </head>
 <body>
@@ -45,33 +46,38 @@
     <div class="header-left">
         <a href="inbox.html"><i class="fa fa-arrow-left"></i></a>
         <div class="partner-info">
-            <div id="chatPartner">Loading...</div>
+            <div id="chatPartner">Chat</div>
             <div id="propStatus">Connecting...</div>
         </div>
     </div>
     <div class="menu-container">
-        <div id="menuBtn" style="cursor:pointer; padding:5px;"><i class="fa fa-ellipsis-v"></i></div>
+        <div id="menuBtn" style="padding: 5px;"><i class="fa fa-ellipsis-v"></i></div>
         <div class="dropdown" id="myDropdown">
             <div id="blockAction">Block User</div>
-            <div class="report" id="reportBtn">Report User</div>
+            <div id="reportBtn" style="color: #d32f2f;">Report User</div>
         </div>
     </div>
 </header>
 
 <div id="blockBanner"></div>
+
 <div id="messages">
-    <div id="msgLoader" style="text-align:center; padding:50px; color:#999;">
-        <i class="fa fa-circle-notch fa-spin fa-2x"></i>
-        <p>Loading messages...</p>
+    <div id="msgLoader" style="text-align: center; padding: 50px; color: #999;">
+        <i class="fa fa-spinner fa-spin fa-2x"></i>
+        <p style="margin-top: 10px;">Loading messages...</p>
     </div>
 </div>
 
-<div id="imgLoading"><i class="fa fa-spinner fa-spin"></i> Sending photo...</div>
+<div id="imgLoading"><i class="fa fa-spinner fa-spin"></i> Uploading photo...</div>
 
 <div class="chat-input-container" id="inputArea">
-    <button class="chat-btn" id="camBtn" onclick="document.getElementById('chatFileInput').click()"><i class="fa fa-camera"></i></button>
-    <input type="file" id="chatFileInput" hidden accept="image/jpeg,image/png,image/webp" onchange="sendChatImage(event)">
-    <input type="text" id="msgInput" placeholder="Type a message..." autocomplete="off">
+    <div class="input-wrapper">
+        <button class="chat-btn" id="camBtn" onclick="document.getElementById('chatFileInput').click()">
+            <i class="fa fa-camera"></i>
+        </button>
+        <input type="file" id="chatFileInput" hidden accept="image/jpeg,image/png,image/webp" onchange="sendChatImage(event)">
+        <input type="text" id="msgInput" placeholder="Type a message..." autocomplete="off">
+    </div>
     <button class="send-btn" id="sendBtn" onclick="sendMessage()"><i class="fa fa-paper-plane"></i></button>
 </div>
 
@@ -99,7 +105,7 @@ let amIBlocked = false;
 const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dmod7m66u/image/upload";
 const CLOUDINARY_PRESET = "Earth_Property";
 
-// --- XSS PROTECTION ---
+// 🛡️ XSS Protection - Friend's recommendation
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
@@ -121,12 +127,12 @@ auth.onAuthStateChanged(async user => {
     const ids = [user.uid, partnerId].sort();
     currentRoomId = `${ids[0]}_${ids[1]}_${propId}`;
 
-    // Get Partner Profile
+    // Get Partner Name
     db.collection("users").doc(partnerId).get().then(doc => {
         if(doc.exists) document.getElementById("chatPartner").innerText = doc.data().name || "User";
     });
 
-    // Property Status
+    // Property Header Update
     db.collection("properties").doc(propId).onSnapshot(doc => {
         if(doc.exists && doc.data().status === 'active') {
             const p = doc.data();
@@ -139,10 +145,9 @@ auth.onAuthStateChanged(async user => {
 
     checkBlockStatus(user.uid);
     loadMessages();
-    setupTypingIndicator();
 });
 
-// --- BLOCK / REPORT LOGIC ---
+// 🚫 Block Logic
 function checkBlockStatus(myUid) {
     db.collection("users").doc(myUid).onSnapshot(doc => {
         isPartnerBlocked = (doc.data()?.blockedUsers || []).includes(partnerId);
@@ -171,49 +176,7 @@ function updateUIForBlock() {
     }
 }
 
-document.getElementById('blockAction').onclick = async () => {
-    const myUid = auth.currentUser.uid;
-    const ref = db.collection("users").doc(myUid);
-    if(isPartnerBlocked) {
-        await ref.update({ blockedUsers: firebase.firestore.FieldValue.arrayRemove(partnerId) });
-    } else {
-        if(confirm("Block this user?")) await ref.update({ blockedUsers: firebase.firestore.FieldValue.arrayUnion(partnerId) });
-    }
-};
-
-document.getElementById('reportBtn').onclick = async () => {
-    const reason = prompt("Reason for reporting?");
-    if(reason) {
-        await db.collection("reports").add({
-            reporterId: auth.currentUser.uid,
-            reportedUserId: partnerId,
-            reason: reason,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        alert("Reported successfully.");
-    }
-};
-
-// --- TYPING INDICATOR ---
-function setupTypingIndicator() {
-    const input = document.getElementById('msgInput');
-    let typingTimer;
-    input.addEventListener('input', () => {
-        db.collection("chats").doc(currentRoomId).set({ typing: { [auth.currentUser.uid]: true } }, { merge: true });
-        clearTimeout(typingTimer);
-        typingTimer = setTimeout(() => {
-            db.collection("chats").doc(currentRoomId).set({ typing: { [auth.currentUser.uid]: false } }, { merge: true });
-        }, 2000);
-    });
-
-    db.collection("chats").doc(currentRoomId).onSnapshot(doc => {
-        if(doc.exists && doc.data().typing?.[partnerId]) {
-            document.getElementById('propStatus').innerText = "typing...";
-        }
-    });
-}
-
-// --- MESSAGE LOGIC ---
+// 💬 Messaging Logic
 function loadMessages() {
     db.collection("chats").doc(currentRoomId).collection("messages").orderBy("timestamp", "asc")
     .onSnapshot(snap => {
@@ -224,7 +187,9 @@ function loadMessages() {
         snap.forEach(doc => {
             const d = doc.data();
             const isMe = d.senderId === auth.currentUser.uid;
-            const time = d.timestamp ? new Date(d.timestamp.seconds * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : 'Sending...';
+            
+            // Time handling
+            const time = d.timestamp ? new Date(d.timestamp.seconds * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '...';
             
             const content = d.type === 'image' 
                 ? `<img src="${d.text}" class="msg-img" onclick="window.open('${d.text}')">` 
@@ -244,27 +209,34 @@ async function sendMessage() {
     const text = document.getElementById('msgInput').value.trim();
     if (!text || isPartnerBlocked || amIBlocked) return;
     document.getElementById('msgInput').value = '';
-    await saveMessage(text, 'text');
+    await saveToFirebase(text, 'text');
 }
 
 async function sendChatImage(e) {
     const file = e.target.files[0];
     if(!file || isPartnerBlocked || amIBlocked) return;
-    if(file.size > 5 * 1024 * 1024) return alert("Max 5MB allowed");
-
+    
+    // 📸 Validation
+    if(file.size > 5 * 1024 * 1024) return alert("Image must be under 5MB");
+    
     document.getElementById('imgLoading').style.display = 'block';
+    
     try {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('upload_preset', CLOUDINARY_PRESET);
         const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
         const data = await res.json();
-        await saveMessage(data.secure_url, 'image');
-    } catch(err) { alert("Upload failed"); }
-    finally { document.getElementById('imgLoading').style.display = 'none'; e.target.value = ''; }
+        await saveToFirebase(data.secure_url, 'image');
+    } catch(err) {
+        alert("Upload failed!");
+    } finally {
+        document.getElementById('imgLoading').style.display = 'none';
+        e.target.value = '';
+    }
 }
 
-async function saveMessage(content, type) {
+async function saveToFirebase(content, type) {
     const myUid = auth.currentUser.uid;
     const batch = db.batch();
     const msgRef = db.collection("chats").doc(currentRoomId).collection("messages").doc();
