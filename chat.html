@@ -3,38 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Earth Chat</title>
+    <title>Earth Chat - Secure</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body, html { height: 100%; margin: 0; font-family: system-ui; background: #e5ddd5; display: flex; flex-direction: column; }
-        header { background: #2e7d32; color: white; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        body, html { height: 100%; margin: 0; font-family: system-ui; background: #e5ddd5; display: flex; flex-direction: column; overflow: hidden; }
+        header { background: #2e7d32; color: white; padding: 10px 15px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
         .header-left { display: flex; align-items: center; gap: 12px; }
-        header a { color: white; text-decoration: none; font-size: 18px; }
-        .partner-info { display: flex; flex-direction: column; }
+        header a { color: white; text-decoration: none; }
         #chatPartner { font-weight: 700; font-size: 16px; }
-        #propStatus { font-size: 11px; opacity: 0.9; font-weight: 400; }
+        #propStatus { font-size: 11px; opacity: 0.9; }
         
+        /* Dropdown */
         .menu-container { position: relative; }
-        #menuBtn { cursor: pointer; padding: 5px 10px; font-size: 18px; }
-        .dropdown { position: absolute; right: 0; top: 35px; background: white; color: #333; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: none; min-width: 150px; overflow: hidden; }
+        .dropdown { position: absolute; right: 0; top: 35px; background: white; color: #333; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: none; min-width: 150px; z-index: 200; }
         .dropdown div { padding: 12px 15px; font-size: 14px; cursor: pointer; border-bottom: 1px solid #eee; }
-        .dropdown div:hover { background: #f5f5f5; }
         .dropdown div.report { color: #d32f2f; }
 
-        #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; scroll-behavior: smooth; }
-        .chat-input-container { background: #f0f0f0; padding: 10px; display: flex; gap: 8px; align-items: center; position: sticky; bottom: 0; }
-        .chat-input-container input { flex: 1; border: none; padding: 12px 18px; border-radius: 25px; outline: none; font-size: 15px; }
-        .chat-input-container input:disabled { background: #ddd; color: #888; }
+        #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; }
         
+        /* Input Area */
+        .chat-input-container { background: #f0f0f0; padding: 10px; display: flex; gap: 10px; align-items: center; }
+        #msgInput { flex: 1; border: none; padding: 12px 18px; border-radius: 25px; outline: none; font-size: 15px; }
+        .chat-btn { background: none; border: none; font-size: 20px; color: #555; cursor: pointer; }
         .send-btn { background: #2e7d32; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .send-btn:disabled { background: #ccc; }
 
-        .msg { max-width: 75%; padding: 8px 12px; border-radius: 12px; font-size: 14px; position: relative; line-height: 1.4; word-wrap: break-word; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
+        /* Bubbles */
+        .msg { max-width: 75%; padding: 8px 12px; border-radius: 12px; font-size: 14px; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
         .sent { align-self: flex-end; background: #dcf8c6; border-top-right-radius: 2px; }
         .received { align-self: flex-start; background: white; border-top-left-radius: 2px; }
+        .msg-img { width: 100%; max-width: 250px; border-radius: 8px; cursor: pointer; display: block; margin-top: 5px; }
         .time { font-size: 10px; color: #888; margin-top: 4px; text-align: right; display: block; }
+        
         #blockBanner { background: #ffebee; color: #c62828; padding: 8px; text-align: center; font-size: 12px; font-weight: 600; display: none; }
-        #removedBanner { background: #f5f5f5; color: #666; padding: 15px; text-align: center; font-size: 14px; border-top: 1px solid #ddd; display: none; }
+        #imgLoading { display: none; font-size: 12px; color: #2e7d32; padding: 5px 15px; background: #f0f0f0; }
     </style>
 </head>
 <body>
@@ -43,12 +45,12 @@
     <div class="header-left">
         <a href="inbox.html"><i class="fa fa-arrow-left"></i></a>
         <div class="partner-info">
-            <div id="chatPartner">Chat</div>
-            <div id="propStatus">Loading...</div>
+            <div id="chatPartner">Loading...</div>
+            <div id="propStatus">Connecting...</div>
         </div>
     </div>
     <div class="menu-container">
-        <div id="menuBtn"><i class="fa fa-ellipsis-v"></i></div>
+        <div id="menuBtn" style="cursor:pointer; padding:5px;"><i class="fa fa-ellipsis-v"></i></div>
         <div class="dropdown" id="myDropdown">
             <div id="blockAction">Block User</div>
             <div class="report" id="reportBtn">Report User</div>
@@ -57,12 +59,20 @@
 </header>
 
 <div id="blockBanner"></div>
-<div id="messages"></div>
-<div id="removedBanner"><i class="fa fa-info-circle"></i> This property is no longer active.</div>
+<div id="messages">
+    <div id="msgLoader" style="text-align:center; padding:50px; color:#999;">
+        <i class="fa fa-circle-notch fa-spin fa-2x"></i>
+        <p>Loading messages...</p>
+    </div>
+</div>
+
+<div id="imgLoading"><i class="fa fa-spinner fa-spin"></i> Sending photo...</div>
 
 <div class="chat-input-container" id="inputArea">
+    <button class="chat-btn" id="camBtn" onclick="document.getElementById('chatFileInput').click()"><i class="fa fa-camera"></i></button>
+    <input type="file" id="chatFileInput" hidden accept="image/jpeg,image/png,image/webp" onchange="sendChatImage(event)">
     <input type="text" id="msgInput" placeholder="Type a message..." autocomplete="off">
-    <button class="send-btn" id="sendBtn"><i class="fa fa-paper-plane"></i></button>
+    <button class="send-btn" id="sendBtn" onclick="sendMessage()"><i class="fa fa-paper-plane"></i></button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -86,49 +96,58 @@ let currentRoomId = null;
 let isPartnerBlocked = false;
 let amIBlocked = false;
 
+const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dmod7m66u/image/upload";
+const CLOUDINARY_PRESET = "Earth_Property";
+
+// --- XSS PROTECTION ---
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // Dropdown Logic
-const menuBtn = document.getElementById('menuBtn');
-const dropdown = document.getElementById('myDropdown');
-menuBtn.onclick = () => dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-window.onclick = (e) => { if(!e.target.closest('.menu-container')) dropdown.style.display = 'none'; };
+document.getElementById('menuBtn').onclick = (e) => {
+    e.stopPropagation();
+    const dd = document.getElementById('myDropdown');
+    dd.style.display = dd.style.display === 'block' ? 'none' : 'block';
+};
+window.onclick = () => document.getElementById('myDropdown').style.display = 'none';
 
 auth.onAuthStateChanged(async user => {
     if (!user) { location.href = 'login.html'; return; }
-    if (!partnerId || !propId) { location.href='index.html'; return; }
+    if (!partnerId || !propId) { location.href='inbox.html'; return; }
 
     const ids = [user.uid, partnerId].sort();
     currentRoomId = `${ids[0]}_${ids[1]}_${propId}`;
 
-    // Get Partner Name
+    // Get Partner Profile
     db.collection("users").doc(partnerId).get().then(doc => {
         if(doc.exists) document.getElementById("chatPartner").innerText = doc.data().name || "User";
     });
 
-    // Property Check [cite: 2026-02-03]
+    // Property Status
     db.collection("properties").doc(propId).onSnapshot(doc => {
         if(doc.exists && doc.data().status === 'active') {
             const p = doc.data();
-            document.getElementById("propStatus").innerText = `${p.bhk || ''} BHK - ₹${Number(p.price).toLocaleString('en-IN')}`;
-            document.getElementById("removedBanner").style.display = 'none';
-            document.getElementById("inputArea").style.display = 'flex';
+            document.getElementById("propStatus").innerText = `${p.propertyType || 'Property'} - ₹${Number(p.price).toLocaleString('en-IN')}`;
         } else {
             document.getElementById("propStatus").innerText = "Ad Inactive";
             document.getElementById("inputArea").style.display = 'none';
-            document.getElementById("removedBanner").style.display = 'block';
         }
     });
 
     checkBlockStatus(user.uid);
     loadMessages();
+    setupTypingIndicator();
 });
 
+// --- BLOCK / REPORT LOGIC ---
 function checkBlockStatus(myUid) {
-    // Check if I blocked them [cite: 2026-02-03]
     db.collection("users").doc(myUid).onSnapshot(doc => {
         isPartnerBlocked = (doc.data()?.blockedUsers || []).includes(partnerId);
         updateUIForBlock();
     });
-    // Check if they blocked me [cite: 2026-02-03]
     db.collection("users").doc(partnerId).onSnapshot(doc => {
         amIBlocked = (doc.data()?.blockedUsers || []).includes(myUid);
         updateUIForBlock();
@@ -136,95 +155,139 @@ function checkBlockStatus(myUid) {
 }
 
 function updateUIForBlock() {
-    const input = document.getElementById('msgInput');
-    const btn = document.getElementById('sendBtn');
+    const blocked = isPartnerBlocked || amIBlocked;
+    document.getElementById('msgInput').disabled = blocked;
+    document.getElementById('sendBtn').disabled = blocked;
+    document.getElementById('camBtn').disabled = blocked;
+    document.getElementById('blockAction').innerText = isPartnerBlocked ? "Unblock User" : "Block User";
+    
     const banner = document.getElementById('blockBanner');
-    const blockActionText = document.getElementById('blockAction');
-
     if (isPartnerBlocked) {
         banner.style.display = 'block'; banner.innerText = "You have blocked this user.";
-        input.disabled = true; btn.disabled = true;
-        blockActionText.innerText = "Unblock User";
     } else if (amIBlocked) {
-        banner.style.display = 'block'; banner.innerText = "User is unavailable for chat.";
-        input.disabled = true; btn.disabled = true;
+        banner.style.display = 'block'; banner.innerText = "User is unavailable.";
     } else {
         banner.style.display = 'none';
-        input.disabled = false; btn.disabled = false;
-        blockActionText.innerText = "Block User";
     }
 }
 
 document.getElementById('blockAction').onclick = async () => {
     const myUid = auth.currentUser.uid;
     const ref = db.collection("users").doc(myUid);
-    try {
-        if (isPartnerBlocked) {
-            await ref.update({ blockedUsers: firebase.firestore.FieldValue.arrayRemove(partnerId) });
-        } else if(confirm("Block this user? They won't be able to message you.")) {
-            await ref.update({ blockedUsers: firebase.firestore.FieldValue.arrayUnion(partnerId) });
-        }
-    } catch(e) { alert("Error updating block status"); }
-    dropdown.style.display = 'none';
+    if(isPartnerBlocked) {
+        await ref.update({ blockedUsers: firebase.firestore.FieldValue.arrayRemove(partnerId) });
+    } else {
+        if(confirm("Block this user?")) await ref.update({ blockedUsers: firebase.firestore.FieldValue.arrayUnion(partnerId) });
+    }
 };
 
 document.getElementById('reportBtn').onclick = async () => {
-    const reason = prompt("Describe the issue (e.g. Fraud, Misbehavior):");
-    if (reason) {
+    const reason = prompt("Reason for reporting?");
+    if(reason) {
         await db.collection("reports").add({
             reporterId: auth.currentUser.uid,
             reportedUserId: partnerId,
-            propertyId: propId,
             reason: reason,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            status: "pending"
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
-        alert("Thank you. Admin will review this report."); [cite: 2026-02-03]
+        alert("Reported successfully.");
     }
-    dropdown.style.display = 'none';
 };
 
+// --- TYPING INDICATOR ---
+function setupTypingIndicator() {
+    const input = document.getElementById('msgInput');
+    let typingTimer;
+    input.addEventListener('input', () => {
+        db.collection("chats").doc(currentRoomId).set({ typing: { [auth.currentUser.uid]: true } }, { merge: true });
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => {
+            db.collection("chats").doc(currentRoomId).set({ typing: { [auth.currentUser.uid]: false } }, { merge: true });
+        }, 2000);
+    });
+
+    db.collection("chats").doc(currentRoomId).onSnapshot(doc => {
+        if(doc.exists && doc.data().typing?.[partnerId]) {
+            document.getElementById('propStatus').innerText = "typing...";
+        }
+    });
+}
+
+// --- MESSAGE LOGIC ---
 function loadMessages() {
     db.collection("chats").doc(currentRoomId).collection("messages").orderBy("timestamp", "asc")
     .onSnapshot(snap => {
         const msgDiv = document.getElementById('messages');
+        document.getElementById('msgLoader')?.remove();
         msgDiv.innerHTML = '';
+        
         snap.forEach(doc => {
             const d = doc.data();
-            const time = d.timestamp ? new Date(d.timestamp.seconds * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
-            msgDiv.innerHTML += `<div class="msg ${d.senderId === auth.currentUser.uid ? 'sent' : 'received'}">${d.text}<span class="time">${time}</span></div>`;
+            const isMe = d.senderId === auth.currentUser.uid;
+            const time = d.timestamp ? new Date(d.timestamp.seconds * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : 'Sending...';
+            
+            const content = d.type === 'image' 
+                ? `<img src="${d.text}" class="msg-img" onclick="window.open('${d.text}')">` 
+                : escapeHtml(d.text);
+
+            msgDiv.innerHTML += `
+                <div class="msg ${isMe ? 'sent' : 'received'}">
+                    ${content}
+                    <span class="time">${time}</span>
+                </div>`;
         });
         msgDiv.scrollTop = msgDiv.scrollHeight;
     });
-    // Mark as seen
-    db.collection("chats").doc(currentRoomId).update({ isSeen: true }).catch(()=>{});
 }
 
 async function sendMessage() {
     const text = document.getElementById('msgInput').value.trim();
     if (!text || isPartnerBlocked || amIBlocked) return;
     document.getElementById('msgInput').value = '';
+    await saveMessage(text, 'text');
+}
 
-    const msg = { senderId: auth.currentUser.uid, text, timestamp: firebase.firestore.FieldValue.serverTimestamp() };
-    
+async function sendChatImage(e) {
+    const file = e.target.files[0];
+    if(!file || isPartnerBlocked || amIBlocked) return;
+    if(file.size > 5 * 1024 * 1024) return alert("Max 5MB allowed");
+
+    document.getElementById('imgLoading').style.display = 'block';
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', CLOUDINARY_PRESET);
+        const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
+        const data = await res.json();
+        await saveMessage(data.secure_url, 'image');
+    } catch(err) { alert("Upload failed"); }
+    finally { document.getElementById('imgLoading').style.display = 'none'; e.target.value = ''; }
+}
+
+async function saveMessage(content, type) {
+    const myUid = auth.currentUser.uid;
     const batch = db.batch();
     const msgRef = db.collection("chats").doc(currentRoomId).collection("messages").doc();
     const chatRef = db.collection("chats").doc(currentRoomId);
 
-    batch.set(msgRef, msg);
+    batch.set(msgRef, {
+        senderId: myUid,
+        text: content,
+        type: type,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
     batch.set(chatRef, {
-        lastMessage: text,
+        lastMessage: type === 'image' ? '📸 Photo' : content,
         lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
-        lastSenderId: auth.currentUser.uid,
-        isSeen: false,
-        users: [auth.currentUser.uid, partnerId],
-        propId: propId
+        users: [myUid, partnerId],
+        propId: propId,
+        isSeen: false
     }, { merge: true });
 
     await batch.commit();
 }
 
-document.getElementById('sendBtn').onclick = sendMessage;
 document.getElementById('msgInput').onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
 </script>
 </body>
