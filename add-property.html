@@ -2,135 +2,255 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Post Property - Earth Property</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Post/Edit Property - Earth Property</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary: #2e7d32; --bg: #f4f7f6; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
-        h2 { color: var(--primary); text-align: center; }
+        :root { --primary: #2e7d32; --bg: #f8f9fa; --danger: #d32f2f; }
+        body { font-family: system-ui, sans-serif; margin: 0; background: var(--bg); padding-bottom: 30px; }
+        header { background: var(--primary); color: white; padding: 15px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; }
+        .container { padding: 20px; max-width: 500px; margin: auto; }
         .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: 600; }
-        input, textarea, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; }
-        .upload-area { border: 2px dashed var(--primary); padding: 20px; text-align: center; border-radius: 10px; cursor: pointer; background: #f1f8f4; }
-        .preview-container { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
-        .preview-img { width: 80px; height: 80px; object-fit: cover; border-radius: 5px; }
-        .btn-post { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 20px; }
-        .btn-post:disabled { background: #ccc; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; color: #444; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        
+        /* Image Upload Grid with Remove Button */
+        .img-upload-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+        .img-box { aspect-ratio: 1/1; border: 2px dashed #ccc; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #fff; cursor: pointer; }
+        .img-box img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .remove-btn { 
+            position: absolute; top: 5px; right: 5px; background: rgba(211, 47, 47, 0.9); 
+            color: white; width: 22px; height: 22px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; font-size: 10px; z-index: 10;
+        }
+
+        .btn-post { background: var(--primary); color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-size: 16px; font-weight: 700; margin-top: 20px; cursor: pointer; }
+        .btn-post:disabled { background: #ccc; cursor: not-allowed; }
+        
+        #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; text-align: center; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2><i class="fa-solid fa-house-medical"></i> Post New Property</h2>
-    <form id="propertyForm">
-        <div class="form-group">
-            <label>Property Title</label>
-            <input type="text" id="title" placeholder="e.g. 2BHK Flat in Sonipat" required>
-        </div>
-        <div class="form-group">
-            <label>Price (₹)</label>
-            <input type="number" id="price" placeholder="Price" required>
-        </div>
-        <div class="form-group">
-            <label>Location (City)</label>
-            <input type="text" id="city" placeholder="e.g. Sonipat" required>
-        </div>
-        <div class="form-group">
-            <label>Description</label>
-            <textarea id="desc" rows="4" placeholder="Detail about property..." required></textarea>
-        </div>
-
-        <div class="upload-area" id="uploadWidgetBtn">
-            <i class="fa-solid fa-camera fa-2x"></i>
-            <p>Click to Upload Property Images</p>
-        </div>
-        <div class="preview-container" id="imagePreview"></div>
-
-        <button type="submit" class="btn-post" id="postBtn">Post Property (Live for 30 Days)</button>
-    </form>
+<div id="loadingOverlay">
+    <i class="fa fa-circle-notch fa-spin fa-3x" style="color: var(--primary);"></i>
+    <p id="loadingText" style="margin-top:15px; font-weight:600; color: #333;">Processing...</p>
 </div>
 
-<script src="https://upload-widget.cloudinary.com/global/all.js"></script>
+<header>
+    <div onclick="history.back()" style="cursor:pointer; padding:5px;"><i class="fa fa-arrow-left"></i></div>
+    <div id="headerTitle" style="font-weight: 700;">Post New Property</div>
+</header>
+
+<div class="container">
+    <div class="form-group">
+        <label>Property Title</label>
+        <input type="text" id="title" placeholder="e.g. 3BHK Flat in Civil Lines">
+    </div>
+
+    <div class="form-group" style="display: flex; gap: 10px;">
+        <div style="flex: 1;">
+            <label>Price (₹)</label>
+            <input type="number" id="price" placeholder="Total Price">
+        </div>
+        <div style="flex: 1;">
+            <label>Type</label>
+            <select id="type">
+                <option value="Residential">Residential</option>
+                <option value="Commercial">Commercial</option>
+                <option value="Plot">Plot/Land</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Location</label>
+        <input type="text" id="location" placeholder="City or Area">
+    </div>
+
+    <div class="form-group">
+        <label>Description</label>
+        <textarea id="desc" rows="3" placeholder="Additional details..."></textarea>
+    </div>
+
+    <label>Photos (Max 3 - Each under 5MB)</label>
+    <div class="img-upload-grid">
+        <div class="img-box" id="box0" onclick="triggerUpload(0)"><i class="fa fa-camera" id="icon0"></i><img id="prev0" style="display:none;"></div>
+        <div class="img-box" id="box1" onclick="triggerUpload(1)"><i class="fa fa-camera" id="icon1"></i><img id="prev1" style="display:none;"></div>
+        <div class="img-box" id="box2" onclick="triggerUpload(2)"><i class="fa fa-camera" id="icon2"></i><img id="prev2" style="display:none;"></div>
+    </div>
+    <input type="file" id="fileInput" hidden accept="image/jpeg,image/png,image/webp" onchange="handleFile(event)">
+
+    <button class="btn-post" id="postBtn" onclick="submitProperty()">Post Property</button>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-    // Firebase Init (Same as your previous config)
-    const firebaseConfig = {
-        apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
-        authDomain: "earth-properties-c3c56.firebaseapp.com",
-        projectId: "earth-properties-c3c56"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const auth = firebase.auth();
+const firebaseConfig = { 
+    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
+    authDomain: "earth-properties-c3c56.firebaseapp.com", 
+    projectId: "earth-properties-c3c56" 
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
 
-    const CLOUDINARY_CLOUD_NAME = "dnkhurnbv";
-    const CLOUDINARY_UPLOAD_PRESET = "earth_property";
-    let uploadedImages = [];
+let selectedImages = [null, null, null];
+let activeSlot = 0;
+const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dmod7m66u/image/upload";
+const CLOUDINARY_PRESET = "Earth_Property";
 
-    // Cloudinary Widget
-    const myWidget = cloudinary.createUploadWidget({
-        cloudName: CLOUDINARY_CLOUD_NAME,
-        uploadPreset: CLOUDINARY_UPLOAD_PRESET,
-        folder: "property_images"
-    }, (error, result) => {
-        if (!error && result && result.event === "success") {
-            uploadedImages.push(result.info.secure_url);
-            const img = document.createElement('img');
-            img.src = result.info.secure_url;
-            img.className = 'preview-img';
-            document.getElementById('imagePreview').appendChild(img);
+// Check if Edit Mode
+const editId = new URLSearchParams(window.location.search).get('edit');
+
+window.onload = async () => {
+    if(editId) {
+        document.getElementById('headerTitle').textContent = "Edit Property";
+        document.getElementById('postBtn').textContent = "Update Changes";
+        loadEditData(editId);
+    }
+};
+
+async function loadEditData(id) {
+    const doc = await db.collection("properties").doc(id).get();
+    if(doc.exists) {
+        const d = doc.data();
+        document.getElementById('title').value = d.title;
+        document.getElementById('price').value = d.price;
+        document.getElementById('location').value = d.location;
+        document.getElementById('desc').value = d.description || "";
+        document.getElementById('type').value = d.propertyType;
+        
+        if(d.images) {
+            d.images.forEach((url, i) => {
+                if(i < 3) {
+                    showPreview(i, url);
+                    selectedImages[i] = url; // Keeping existing URL
+                }
+            });
         }
-    });
+    }
+}
 
-    document.getElementById("uploadWidgetBtn").addEventListener("click", () => myWidget.open());
+function triggerUpload(slot) {
+    activeSlot = slot;
+    document.getElementById('fileInput').click();
+}
 
-    // Submit Logic with 30-Day Expiry
-    document.getElementById('propertyForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const user = auth.currentUser;
-        if (!user) return alert("Login first!");
-        if (uploadedImages.length === 0) return alert("Upload at least one image!");
+function handleFile(e) {
+    const file = e.target.files[0];
+    if(!file) return;
 
-        const btn = document.getElementById('postBtn');
-        btn.disabled = true;
-        btn.innerText = "Posting...";
+    // VALIDATION (Security Check)
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if(!validTypes.includes(file.type)) return alert("Only JPG, PNG or WEBP allowed!");
+    if(file.size > 5 * 1024 * 1024) return alert("Image size must be less than 5MB!");
 
-        // --- EXPIRY LOGIC START ---
+    selectedImages[activeSlot] = file;
+    const reader = new FileReader();
+    reader.onload = (event) => showPreview(activeSlot, event.target.result);
+    reader.readAsDataURL(file);
+}
+
+function showPreview(slot, src) {
+    const box = document.getElementById(`box${slot}`);
+    document.getElementById(`prev${slot}`).src = src;
+    document.getElementById(`prev${slot}`).style.display = 'block';
+    document.getElementById(`icon${slot}`).style.display = 'none';
+    
+    if(!box.querySelector('.remove-btn')) {
+        const btn = document.createElement('div');
+        btn.className = 'remove-btn';
+        btn.innerHTML = '<i class="fa fa-times"></i>';
+        btn.onclick = (e) => { e.stopPropagation(); removeImage(slot); };
+        box.appendChild(btn);
+    }
+}
+
+function removeImage(slot) {
+    selectedImages[slot] = null;
+    document.getElementById(`prev${slot}`).style.display = 'none';
+    document.getElementById(`icon${slot}`).style.display = 'block';
+    const rb = document.getElementById(`box${slot}`).querySelector('.remove-btn');
+    if(rb) rb.remove();
+}
+
+async function uploadToCloudinary(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', CLOUDINARY_PRESET);
+    const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
+    const data = await res.json();
+    return data.secure_url;
+}
+
+async function submitProperty() {
+    const user = auth.currentUser;
+    if(!user) return alert("Please login!");
+
+    const title = document.getElementById('title').value.trim();
+    const price = document.getElementById('price').value;
+    const location = document.getElementById('location').value.trim();
+    
+    if(!title || !price || !location) return alert("Please fill Title, Price and Location!");
+
+    document.getElementById('loadingOverlay').style.display = 'flex';
+    document.getElementById('postBtn').disabled = true;
+
+    try {
+        const imageUrls = [];
+        for(let i=0; i<3; i++) {
+            let img = selectedImages[i];
+            if(img) {
+                if(typeof img === 'string') {
+                    imageUrls.push(img); // Existing URL (No need to re-upload)
+                } else {
+                    document.getElementById('loadingText').textContent = `Uploading Photo ${i+1}...`;
+                    const url = await uploadToCloudinary(img);
+                    imageUrls.push(url);
+                }
+            }
+        }
+
         const now = new Date();
         const expiry = new Date();
-        expiry.setDate(now.getDate() + 30); // Aaj se exactly 30 din baad [cite: 2026-02-03]
-        // --- EXPIRY LOGIC END ---
+        expiry.setDate(now.getDate() + 30); // 30 Day Auto-Expiry [cite: 2026-02-03]
 
-        // Get user verification status
-        const userDoc = await db.collection("users").doc(user.uid).get();
-        const isVerified = userDoc.exists ? (userDoc.data().isVerified || false) : false;
+        const propertyData = {
+            ownerId: user.uid,
+            title,
+            price: Number(price),
+            location,
+            description: document.getElementById('desc').value,
+            propertyType: document.getElementById('type').value,
+            images: imageUrls,
+            status: "active",
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            expiryDate: firebase.firestore.Timestamp.fromDate(expiry)
+        };
 
-        try {
-            await db.collection("properties").add({
-                title: document.getElementById('title').value,
-                price: Number(document.getElementById('price').value),
-                city: document.getElementById('city').value.toLowerCase(),
-                desc: document.getElementById('desc').value,
-                images: uploadedImages,
-                ownerId: user.uid,
-                isVerified: isVerified, // Dealer blue tick logic
-                createdAt: firebase.firestore.Timestamp.fromDate(now),
-                expiryDate: firebase.firestore.Timestamp.fromDate(expiry), // 30-day limit [cite: 2026-02-03]
-                status: "active"
-            });
-
-            alert("Property Posted Successfully! It will expire in 30 days."); [cite: 2026-02-03]
-            location.href = "index.html";
-        } catch (err) {
-            alert("Error: " + err.message);
-            btn.disabled = false;
+        if(!editId) {
+            propertyData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            await db.collection("properties").add(propertyData);
+            alert("Property Posted Successfully! 🎉");
+        } else {
+            await db.collection("properties").doc(editId).update(propertyData);
+            alert("Property Updated Successfully! ✓");
         }
-    });
+
+        window.location.href = "My-properties.html";
+
+    } catch (err) {
+        alert("Error: " + err.message);
+    } finally {
+        document.getElementById('loadingOverlay').style.display = 'none';
+        document.getElementById('postBtn').disabled = false;
+    }
+}
 </script>
 </body>
 </html>
