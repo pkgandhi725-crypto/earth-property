@@ -6,25 +6,20 @@
     <title>Earth Property - Home</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { 
-            --primary: #2e7d32; 
-            --bg: #f0f2f5; 
-            --wa-dark: #128C7E; /* Deep WhatsApp Green */
-            --call-dark: #2E7D32; /* Deep Call Green */
-        }
+        :root { --primary: #2e7d32; --bg: #f0f2f5; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: system-ui, sans-serif; background: var(--bg); padding-bottom: 80px; overflow-x: hidden; }
         
-        /* Header - Original Font as requested */
-        header { background: var(--primary); padding: 15px; color: white; position: sticky; top: 0; z-index: 1000; }
+        /* Header */
+        header { background: var(--primary); padding: 15px; color: white; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
         .header-left { display: flex; align-items: center; gap: 10px; }
         .menu-btn { font-size: 20px; cursor: pointer; } 
         .logo-text { font-size: 1.2rem; font-weight: 700; } 
         .header-icons { display: flex; gap: 10px; align-items: center; }
         
-        /* Drawer with Language */
-        .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s ease; }
+        /* Side Panel */
+        .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s ease; box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
         .drawer.open { left: 0; }
         .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; }
         .drawer-item { padding: 15px 20px; display: flex; align-items: center; gap: 15px; color: #333; text-decoration: none; font-weight: 600; border-bottom: 1px solid #f0f0f0; }
@@ -33,22 +28,29 @@
         .icon-btn { color: #fff; background: rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .auth-btn { cursor: pointer; font-size: 12px; font-weight: 700; background: #fff; color: var(--primary); padding: 8px 16px; border-radius: 8px; border: none; }
 
+        .search-box { background: white; border-radius: 12px; display: flex; padding: 8px 15px; align-items: center; gap: 10px; }
+        .search-box input { border: none; width: 100%; outline: none; }
+
         /* Property Card */
         .prop-card { background: white; border-radius: 16px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; }
-        .img-container { position: relative; width: 100%; height: 220px; background: #ddd; }
-        .img-container img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .img-container { position: relative; width: 100%; height: 220px; background: #eee; }
+        .img-container img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 1 !important; z-index: 1; }
         
+        .action-btns { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; gap: 10px; z-index: 10; }
+        .circle-btn { background: #fff; border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+
         .prop-info { padding: 15px; }
         .prop-price { font-size: 20px; font-weight: 800; color: var(--primary); }
         .prop-title { font-weight: 700; font-size: 16px; margin-top: 5px; color: #333; }
 
-        /* DARKENED ACTION BUTTONS */
+        /* ORIGINAL BUTTON COLORS */
         .btn-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 15px; }
         .btn { padding: 12px 5px; border-radius: 10px; font-weight: 700; font-size: 12px; text-align: center; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
-        .btn-call { background: #2E7D32; color: white; } /* Darker Solid Green */
-        .btn-wa { background: #075E54; color: white; } /* Darker WhatsApp Teal */
-        .btn-chat { background: #1565C0; color: white; } /* Better Blue for contrast */
+        .btn-call { background: #e8f5e9; color: #2e7d32; } 
+        .btn-wa { background: #25D366; color: white; } 
+        .btn-chat { background: #2e7d32; color: white; }
 
+        /* Bottom Nav */
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 8px 0; border-top: 1px solid #e0e0e0; z-index: 2000; }
         .nav-item { display: flex; flex-direction: column; align-items: center; color: #888; text-decoration: none; font-size: 11px; font-weight: 600; flex: 1; }
         .nav-item.active { color: var(--primary); }
@@ -63,7 +65,7 @@
 <div class="drawer" id="sideDrawer">
     <div class="drawer-header"><i class="fa fa-user-circle fa-3x"></i><div id="dName" style="margin-top:10px; font-weight:700;">Earth Guest</div></div>
     <a href="profile.html" class="drawer-item"><i class="fa fa-user"></i> My Profile</a>
-    <a href="#" class="drawer-item" onclick="alert('Language Selection')"><i class="fa fa-language"></i> Language</a>
+    <a href="#" class="drawer-item" onclick="alert('Language: Hindi/English')"><i class="fa fa-language"></i> Language</a>
     <a href="support.html" class="drawer-item"><i class="fa fa-headset"></i> Support</a>
     <a href="about.html" class="drawer-item"><i class="fa fa-info-circle"></i> About Us</a>
 </div>
@@ -79,6 +81,10 @@
             <div class="icon-btn" onclick="location.href='inbox.html'"><i class="fa fa-bell"></i></div>
             <button id="authBtn" class="auth-btn">Login</button>
         </div>
+    </div>
+    <div class="search-box">
+        <i class="fa fa-search" style="color:#aaa;"></i>
+        <input type="text" id="citySearch" placeholder="Search city or area..." oninput="filterData()">
     </div>
 </header>
 
@@ -131,23 +137,18 @@ function renderProps(data) {
     list.innerHTML = data.map(p => {
         const isFav = userFavs.includes(p.id) ? 'active' : '';
         
-        // --- BULLETPROOF PHOTO LOGIC ---
         let imgUrl = 'https://via.placeholder.com/400x300?text=No+Image';
-        if (Array.isArray(p.images) && p.images.length > 0) {
-            imgUrl = p.images[0];
-        } else if (typeof p.images === 'string' && p.images.length > 5) {
-            imgUrl = p.images;
-        } else if (Array.isArray(p.gallery) && p.gallery.length > 0) {
-            imgUrl = p.gallery[0];
-        } else if (p.image) {
-            imgUrl = p.image;
-        }
-        // -------------------------------
+        if (p.images && p.images.length > 0) { imgUrl = p.images[0]; }
+        else if (p.image) { imgUrl = p.image; }
 
         return `
         <div class="prop-card">
             <div class="img-container">
-                <img src="${imgUrl}" onclick="showImg('${imgUrl}')" onerror="this.src='https://via.placeholder.com/400x300?text=Photo+Unavailable'">
+                <div class="action-btns">
+                    <button class="circle-btn" onclick="shareProp('${p.id}')"><i class="fa fa-share-nodes"></i></button>
+                    <button class="circle-btn fav-btn ${isFav}" onclick="toggleFav('${p.id}', this)"><i class="fa fa-heart"></i></button>
+                </div>
+                <img src="${imgUrl}" onclick="showImg('${imgUrl}')" onerror="this.src='https://via.placeholder.com/400x300?text=Reloading...'">
             </div>
             <div class="prop-info">
                 <div class="prop-price">₹${Number(p.price||0).toLocaleString('en-IN')}</div>
@@ -164,7 +165,7 @@ function renderProps(data) {
 }
 
 async function revealContact(id, btn, wa) {
-    if(!auth.currentUser) { alert("Please login!"); location.href='login.html'; return; }
+    if(!auth.currentUser) { alert("Login please!"); location.href='login.html'; return; }
     if(btn.dataset.number) {
         if(wa) window.open(`https://wa.me/91${btn.dataset.number}`);
         else window.location.href = `tel:${btn.dataset.number}`;
@@ -175,13 +176,26 @@ async function revealContact(id, btn, wa) {
         const doc = await db.collection("properties").doc(id).get();
         const num = doc.data().phone;
         btn.dataset.number = num;
-        btn.innerHTML = wa ? `WhatsApp` : `${num}`;
+        btn.innerHTML = wa ? `<i class='fa-brands fa-whatsapp'></i> Chat` : `<i class='fa fa-phone'></i> ${num}`;
         if(wa) window.open(`https://wa.me/91${num}`);
     } catch(e) { btn.innerHTML = "Error"; }
 }
 
 function showImg(src) { document.getElementById('fullImg').src = src; document.getElementById('overlay').style.display = 'flex'; }
-
+function toggleFav(id, btn) {
+    if(userFavs.includes(id)) { userFavs = userFavs.filter(i => i !== id); btn.classList.remove('active'); }
+    else { userFavs.push(id); btn.classList.add('active'); }
+    localStorage.setItem('favs', JSON.stringify(userFavs));
+}
+function shareProp(id) {
+    const url = window.location.origin + "/index.html?p=" + id;
+    if(navigator.share) navigator.share({title: 'Property', url: url});
+    else { navigator.clipboard.writeText(url); alert("Link Copied!"); }
+}
+function filterData() {
+    const s = document.getElementById('citySearch').value.toLowerCase();
+    renderProps(allProps.filter(p => (p.location||'').toLowerCase().includes(s) || (p.title||'').toLowerCase().includes(s)));
+}
 function openChat(owner, id) { if(!auth.currentUser) location.href='login.html'; else location.href=`chat.html?to=${owner}&p=${id}`; }
 
 auth.onAuthStateChanged(user => {
