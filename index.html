@@ -8,91 +8,87 @@
     <style>
         :root { --primary: #2e7d32; --bg: #f0f2f5; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: system-ui, sans-serif; background: var(--bg); padding-bottom: 70px; overflow-x: hidden; }
+        body { font-family: system-ui, sans-serif; background: var(--bg); padding-bottom: 80px; overflow-x: hidden; }
         
-        /* Header */
+        /* Header Fix */
         header { background: var(--primary); padding: 15px; color: white; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header-top { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; }
-        .menu-btn { font-size: 20px; cursor: pointer; padding: 5px; }
-        .header-icons { display: flex; gap: 10px; align-items: center; margin-left: auto; }
+        .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .menu-btn { font-size: 20px; cursor: pointer; padding-right: 15px; }
+        .header-icons { display: flex; gap: 10px; align-items: center; }
         
-        /* Side Panel (Drawer) */
-        .drawer { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: white; z-index: 4000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
+        /* Drawer (Side Panel) */
+        .drawer { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s ease; box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
         .drawer.open { left: 0; }
-        .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; text-align: left; }
-        .drawer-header i { font-size: 45px; margin-bottom: 10px; display: block; }
-        .drawer-menu { padding: 10px 0; }
-        .drawer-item { padding: 15px 20px; display: flex; align-items: center; gap: 15px; color: #333; text-decoration: none; font-size: 14px; font-weight: 600; border-bottom: 1px solid #f9f9f9; }
-        .drawer-item i { width: 20px; color: var(--primary); font-size: 18px; }
-        .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 3500; display: none; backdrop-filter: blur(2px); }
+        .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; }
+        .drawer-item { padding: 15px 20px; display: flex; align-items: center; gap: 15px; color: #333; text-decoration: none; font-size: 14px; font-weight: 600; border-bottom: 1px solid #f5f5f5; }
+        .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 4500; display: none; }
 
-        .icon-btn { color: #fff; background: rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; transition: 0.2s; }
-        .auth-btn { cursor: pointer; font-size: 12px; font-weight: 700; background: #fff; color: var(--primary); padding: 6px 14px; border-radius: 8px; transition: 0.2s; }
+        /* Buttons & Auth */
+        .icon-btn { color: #fff; background: rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .auth-btn { cursor: pointer; font-size: 12px; font-weight: 700; background: #fff; color: var(--primary); padding: 8px 16px; border-radius: 8px; border: none; }
+
         .search-box { background: white; border-radius: 12px; display: flex; padding: 8px 15px; align-items: center; gap: 10px; }
-        .search-box input { border: none; padding: 6px; width: 100%; outline: none; font-size: 14px; }
+        .search-box input { border: none; padding: 6px; width: 100%; outline: none; }
 
-        /* Property Card (As per Friend's Code) */
-        .prop-card { background: white; border-radius: 16px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; transition: 0.2s; }
-        .img-container { position: relative; width: 100%; height: 220px; background: #e0e0e0; overflow: hidden; }
+        /* Property Card */
+        .prop-card { background: white; border-radius: 16px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; }
+        .img-container { position: relative; width: 100%; height: 220px; background: #ddd; }
         .img-container img { width: 100%; height: 100%; object-fit: cover; }
         .action-btns { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; gap: 10px; z-index: 10; }
-        .circle-btn { background: rgba(255,255,255,0.95); border: none; border-radius: 50%; width: 40px; height: 40px; color: #555; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); cursor: pointer; font-size: 16px; }
+        .circle-btn { background: #fff; border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2); cursor: pointer; }
         .fav-btn.active { color: #e74c3c; }
+
         .prop-info { padding: 15px; }
-        .prop-price { font-size: 22px; font-weight: 800; color: var(--primary); margin-bottom: 8px; }
-        .prop-title { font-weight: 700; font-size: 16px; margin-bottom: 6px; color: #333; line-height: 1.3; }
-        .prop-location { font-size: 13px; color: #777; margin-bottom: 12px; display: flex; align-items: center; gap: 5px; }
+        .prop-price { font-size: 20px; font-weight: 800; color: var(--primary); }
         .btn-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
-        .btn { padding: 11px 5px; border-radius: 10px; font-weight: 700; font-size: 11px; text-align: center; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; text-decoration: none; transition: 0.2s; }
+        .btn { padding: 11px 5px; border-radius: 10px; font-weight: 700; font-size: 11px; text-align: center; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; text-decoration: none; }
         .btn-call { background: #e8f5e9; color: var(--primary); }
         .btn-wa { background: #25D366; color: white; }
         .btn-chat { background: var(--primary); color: white; }
 
-        /* Bottom Nav (Strictly Friend's Design) */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; width: 100%; background: white; display: flex; justify-content: space-around; align-items: flex-end; padding: 8px 0; border-top: 1px solid #e0e0e0; z-index: 2000; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: #888; text-decoration: none; font-size: 11px; font-weight: 600; flex: 1; transition: 0.2s; }
-        .nav-item i { font-size: 22px; margin-bottom: 4px; }
+        /* Bottom Nav */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; padding: 8px 0; border-top: 1px solid #e0e0e0; z-index: 2000; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #888; text-decoration: none; font-size: 11px; font-weight: 600; flex: 1; }
         .nav-item.active { color: var(--primary); }
-        .post-nav { position: relative; display: flex; flex-direction: column; align-items: center; }
-        .post-btn-main { background: var(--primary); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 4px 15px rgba(46, 125, 50, 0.4); position: absolute; bottom: 10px; transition: 0.2s; }
-        .post-nav span { margin-top: 50px; font-size: 11px; }
+        .post-nav { position: relative; }
+        .post-btn-main { background: var(--primary); color: white; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; position: absolute; bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .post-nav span { margin-top: 45px; }
 
-        /* Gallery/Overlay */
-        #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 5000; display: none; align-items: center; justify-content: center; }
-        #overlayImg { max-width: 95%; max-height: 80%; border-radius: 8px; object-fit: contain; }
+        /* Overlay */
+        #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 6000; display: none; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
-<div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer()"></div>
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
 <div class="drawer" id="sideDrawer">
     <div class="drawer-header">
-        <i class="fa fa-circle-user"></i>
-        <div id="drawerUser" style="font-weight: 700; font-size: 18px;">Earth Guest</div>
-        <div style="font-size: 12px; opacity: 0.8;">Welcome to Earth Property</div>
+        <i class="fa fa-user-circle fa-3x"></i>
+        <div id="drawerUser" style="margin-top:10px; font-weight:700;">Earth Guest</div>
     </div>
     <div class="drawer-menu">
-        <a href="profile.html" class="drawer-item"><i class="fa fa-user-gear"></i> My Profile</a>
-        <a href="#" class="drawer-item" onclick="alert('Hindi / English support coming soon!')"><i class="fa fa-language"></i> Languages</a>
-        <a href="support.html" class="drawer-item"><i class="fa fa-circle-question"></i> Help & Support</a>
-        <a href="about.html" class="drawer-item"><i class="fa fa-circle-info"></i> About Us</a>
-        <a href="#" class="drawer-item" onclick="shareApp()"><i class="fa fa-share-nodes"></i> Share App</a>
+        <a href="profile.html" class="drawer-item"><i class="fa fa-user"></i> My Profile</a>
+        <a href="#" class="drawer-item" onclick="alert('Hindi/English Support Coming Soon')"><i class="fa fa-language"></i> Languages</a>
+        <a href="support.html" class="drawer-item"><i class="fa fa-headset"></i> Help & Support</a>
+        <a href="about.html" class="drawer-item"><i class="fa fa-info-circle"></i> About Us</a>
     </div>
 </div>
 
 <header>
     <div class="header-top">
-        <div class="menu-btn" onclick="toggleDrawer()"><i class="fa fa-bars"></i></div>
-        <h2 style="margin: 0; font-size: 1.3rem; flex: 1;">Earth Property</h2>
+        <div style="display:flex; align-items:center;">
+            <div class="menu-btn" onclick="openDrawer()"><i class="fa fa-bars"></i></div>
+            <h2 style="font-size: 1.2rem;">Earth Property</h2>
+        </div>
         <div class="header-icons">
             <div id="adminLink" class="icon-btn" style="display:none;" onclick="location.href='admin.html'"><i class="fa fa-user-shield"></i></div>
             <div class="icon-btn" onclick="location.href='inbox.html'"><i class="fa fa-bell"></i></div>
-            <div id="authBtn" class="auth-btn">Login</div>
+            <button id="authBtn" class="auth-btn">Login</button>
         </div>
     </div>
     <div class="search-box">
         <i class="fa fa-search" style="color:#aaa;"></i>
-        <input type="text" id="citySearch" placeholder="Search city or property..." oninput="filterData()">
+        <input type="text" id="citySearch" placeholder="Search city or area..." oninput="filterData()">
     </div>
 </header>
 
@@ -109,10 +105,7 @@
     <a href="profile.html" class="nav-item"><i class="fa fa-user-circle"></i><span>Profile</span></a>
 </div>
 
-<div id="overlay" onclick="this.style.display='none'">
-    <img id="overlayImg" alt="Property View">
-    <div style="position: absolute; bottom: 20px; color: white; font-size: 14px;">Tap anywhere to close</div>
-</div>
+<div id="overlay" onclick="this.style.display='none'"><img id="overlayImg" style="max-width:90%;"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -128,23 +121,14 @@ const auth = firebase.auth();
 let allProps = [];
 let userFavs = JSON.parse(localStorage.getItem('favs') || '[]');
 
-// Sidebar Toggle
-function toggleDrawer() {
-    const drawer = document.getElementById('sideDrawer');
-    const overlay = document.getElementById('drawerOverlay');
-    const isOpen = drawer.classList.contains('open');
-    if(isOpen) {
-        drawer.classList.remove('open');
-        setTimeout(() => overlay.style.display = 'none', 300);
-    } else {
-        overlay.style.display = 'block';
-        setTimeout(() => drawer.classList.add('open'), 10);
-    }
+// Sidebar Functions (Manual Toggle for stability)
+function openDrawer() {
+    document.getElementById('sideDrawer').classList.add('open');
+    document.getElementById('drawerOverlay').style.display = 'block';
 }
-
-function shareApp() {
-    if(navigator.share) navigator.share({title: 'Earth Property', url: window.location.origin});
-    else alert("Link copied to clipboard!");
+function closeDrawer() {
+    document.getElementById('sideDrawer').classList.remove('open');
+    document.getElementById('drawerOverlay').style.display = 'none';
 }
 
 function escapeHtml(text) { 
@@ -154,19 +138,23 @@ function escapeHtml(text) {
     return div.innerHTML; 
 }
 
+// Load Properties Fix
 async function loadProps() {
     const list = document.getElementById('propertyList');
-    list.innerHTML = '<div style="text-align:center; padding:50px; color:var(--primary)"><i class="fa fa-spinner fa-spin fa-2x"></i></div>';
+    list.innerHTML = '<center style="padding:40px;"><i class="fa fa-spinner fa-spin fa-2x" style="color:var(--primary)"></i></center>';
     try {
-        const snap = await db.collection("properties").orderBy("createdAt", "desc").limit(50).get();
+        const snap = await db.collection("properties").orderBy("createdAt", "desc").limit(40).get();
         allProps = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderProps(allProps);
-    } catch(e) { list.innerHTML = "<center>Error loading data.</center>"; }
+    } catch(e) { 
+        console.error(e);
+        list.innerHTML = "<center style='padding:20px;'>Data load nahi ho raha. Check Internet.</center>"; 
+    }
 }
 
 function renderProps(data) {
     const list = document.getElementById('propertyList');
-    if (data.length === 0) { list.innerHTML = '<center style="padding:40px; color:#888;">No properties found.</center>'; return; }
+    if(data.length === 0) { list.innerHTML = "<center style='padding:40px;'>No Ads Found.</center>"; return; }
     
     list.innerHTML = data.map(p => {
         const isFav = userFavs.includes(p.id) ? 'active' : '';
@@ -175,33 +163,34 @@ function renderProps(data) {
         <div class="prop-card">
             <div class="img-container">
                 <div class="action-btns">
-                    <button class="circle-btn" onclick="shareProp('${escapeHtml(p.title)}', '${p.id}')"><i class="fa fa-share-alt"></i></button>
+                    <button class="circle-btn" onclick="shareProp('${p.id}')"><i class="fa fa-share-alt"></i></button>
                     <button class="circle-btn fav-btn ${isFav}" onclick="toggleFav('${p.id}', this)"><i class="fa fa-heart"></i></button>
                 </div>
-                <img src="${img}" loading="lazy" onclick="showImg('${img}')">
+                <img src="${img}" onclick="showImg('${img}')">
             </div>
             <div class="prop-info">
-                <div class="prop-price">₹${Number(p.price || 0).toLocaleString('en-IN')} <span>(${p.propertyType || 'Sale'})</span></div>
-                <div class="prop-title">${escapeHtml(p.title)}</div>
-                <div class="prop-location"><i class="fa fa-map-marker-alt"></i> ${escapeHtml(p.location)}</div>
+                <div class="prop-price">₹${Number(p.price||0).toLocaleString('en-IN')} <span style="font-size:12px; color:#888;">(${p.propertyType || 'Sale'})</span></div>
+                <div style="font-weight:700; margin:5px 0;">${escapeHtml(p.title)}</div>
+                <div style="font-size:12px; color:#666;"><i class="fa fa-map-marker-alt"></i> ${escapeHtml(p.location)}</div>
                 <div class="btn-group">
-                    <button class="btn btn-call" onclick="revealContact('${p.phone}', this, false)"><i class="fa fa-phone"></i> Call</button>
+                    <button class="btn btn-call" onclick="revealContact('${p.phone}', this)"><i class="fa fa-phone"></i> Call</button>
                     <button class="btn btn-wa" onclick="revealContact('${p.phone}', this, true)"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
-                    <button onclick="openChat('${p.ownerId}', '${p.id}')" class="btn btn-chat"><i class="fa-regular fa-comment-dots"></i> Chat</button>
+                    <button class="btn btn-chat" onclick="openChat('${p.ownerId}', '${p.id}')"><i class="fa-regular fa-comment-dots"></i> Chat</button>
                 </div>
             </div>
         </div>`;
     }).join('');
 }
 
-function revealContact(phone, btn, isWA) {
-    if (!auth.currentUser) { alert("Please login first!"); location.href = 'login.html'; return; }
-    if (isWA) window.open(`https://wa.me/91${phone}`);
-    else { btn.innerHTML = `<i class="fa fa-phone"></i> ${phone}`; btn.onclick = () => window.location.href = `tel:${phone}`; }
+// Contact Reveal Fix
+function revealContact(num, btn, wa=false) {
+    if(!auth.currentUser) { alert("Pehle login karein!"); location.href='login.html'; return; }
+    if(wa) window.open(`https://wa.me/91${num}`);
+    else { btn.innerHTML = `<i class="fa fa-phone"></i> ${num}`; window.location.href=`tel:${num}`; }
 }
 
 function toggleFav(id, btn) {
-    if (userFavs.includes(id)) { userFavs = userFavs.filter(i => i !== id); btn.classList.remove('active'); }
+    if(userFavs.includes(id)) { userFavs = userFavs.filter(i => i !== id); btn.classList.remove('active'); }
     else { userFavs.push(id); btn.classList.add('active'); }
     localStorage.setItem('favs', JSON.stringify(userFavs));
 }
@@ -211,31 +200,30 @@ function filterData() {
     renderProps(allProps.filter(p => (p.location||'').toLowerCase().includes(s) || (p.title||'').toLowerCase().includes(s)));
 }
 
-function shareProp(title, id) {
-    const url = `${window.location.origin}/property.html?id=${id}`;
-    if (navigator.share) navigator.share({ title: title, url: url });
+function showImg(src) { document.getElementById('overlayImg').src=src; document.getElementById('overlay').style.display='flex'; }
+
+function openChat(owner, id) { 
+    if(!auth.currentUser) location.href='login.html'; 
+    else location.href=`chat.html?to=${owner}&p=${id}`; 
+}
+
+function shareProp(id) {
+    const url = window.location.origin + "/index.html?p=" + id;
+    if(navigator.share) navigator.share({title: 'Property', url: url});
     else { navigator.clipboard.writeText(url); alert("Link Copied!"); }
 }
 
-function openChat(ownerId, propId) {
-    if (!auth.currentUser) location.href = 'login.html';
-    else location.href = `chat.html?to=${ownerId}&p=${propId}`;
-}
-
-function showImg(src) { 
-    document.getElementById('overlayImg').src = src; 
-    document.getElementById('overlay').style.display = 'flex'; 
-}
-
+// Auth State Fix (Isse login button chalne lagega)
 auth.onAuthStateChanged(user => {
+    const authBtn = document.getElementById('authBtn');
     if (user) {
-        document.getElementById('welcomeText').innerText = "Hi, " + (user.displayName || "User");
         document.getElementById('drawerUser').innerText = user.displayName || "Earth User";
-        document.getElementById('authBtn').innerText = "Logout";
-        document.getElementById('authBtn').onclick = () => auth.signOut().then(() => location.reload());
+        authBtn.innerText = "Logout";
+        authBtn.onclick = () => auth.signOut().then(() => location.reload());
         if (user.uid === "WOY9f67DachGVTuhR4tSJ1BHozx1") document.getElementById('adminLink').style.display = 'flex';
     } else {
-        document.getElementById('authBtn').onclick = () => location.href = 'login.html';
+        authBtn.innerText = "Login";
+        authBtn.onclick = () => { location.href = 'login.html'; };
     }
     loadProps();
 });
