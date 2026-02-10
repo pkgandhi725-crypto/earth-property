@@ -35,8 +35,21 @@
     </div>
 
     <div class="form-group">
+        <label>Property For</label>
+        <select id="propertyType">
+            <option value="Sale">For Sale</option>
+            <option value="Rent">For Rent</option>
+        </select>
+    </div>
+
+    <div class="form-group">
         <label>Price (₹)</label>
         <input type="number" id="price" placeholder="Enter Amount">
+    </div>
+
+    <div class="form-group">
+        <label>Contact Number</label>
+        <input type="tel" id="phone" placeholder="10-digit mobile number" maxlength="10">
     </div>
 
     <div class="form-group">
@@ -61,27 +74,22 @@
     </div>
 
     <div class="form-group">
-        <label>Property Images</label>
-        <input type="file" id="imageInput" multiple accept="image/*" onchange="previewImages()">
+        <label>Property Images (Max 5)</label>
+        <input type="file" id="imageInput" multiple accept="image/jpeg,image/png,image/webp" onchange="handleFileSelect(event)">
         <div id="imagePreview"></div>
+        <small id="imgCount" style="color: #666;">0 / 5 selected</small>
     </div>
 
     <button id="mainBtn" class="submit-btn" onclick="handleSubmission()">Post Property</button>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
 <script>
-// Firebase Init
-const firebaseConfig = { 
-    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
-    authDomain: "earth-properties-c3c56.firebaseapp.com", 
-    projectId: "earth-properties-c3c56",
-    storageBucket: "earth-properties-c3c56.appspot.com"
-};
+const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56", storageBucket: "earth-properties-c3c56.appspot.com" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
@@ -90,129 +98,111 @@ const storage = firebase.storage();
 const urlParams = new URLSearchParams(window.location.search);
 const editId = urlParams.get('edit');
 let existingImages = [];
+let compressedFiles = [];
 
-auth.onAuthStateChanged(user => {
-    if (!user) location.href = 'login.html';
-    if (editId) prepareEditMode(user.uid);
-});
+auth.onAuthStateChanged(user => { if (!user) location.href = 'login.html'; if (editId) prepareEditMode(user.uid); });
 
-async function prepareEditMode(currentUid) {
+function sanitize(str, max = 200) { return str ? str.trim().replace(/[<>"']/g, "").slice(0, max) : ""; }
+
+async function prepareEditMode(uid) {
     document.getElementById('loader').style.display = 'block';
-    try {
-        const doc = await db.collection("properties").doc(editId).get();
-        if (doc.exists) {
-            const data = doc.data();
-            if (data.ownerId !== currentUid) {
-                alert("Unauthorized Access!");
-                location.href = "index.html";
-                return;
-            }
-            document.getElementById('pageTitle').innerText = "Edit Property";
-            document.getElementById('mainBtn').innerText = "Update Changes";
-            document.getElementById('title').value = data.title || '';
-            document.getElementById('price').value = data.price || '';
-            document.getElementById('location').value = data.location || '';
-            document.getElementById('bhk').value = data.bhk || '1';
-            document.getElementById('desc').value = data.desc || '';
-            existingImages = data.images || [];
-            
-            const preview = document.getElementById('imagePreview');
-            existingImages.forEach(url => {
-                preview.innerHTML += `<img src="${url}" class="preview-img">`;
-            });
-        }
-    } catch (e) { alert("Error loading data: " + e.message); }
+    const doc = await db.collection("properties").doc(editId).get();
+    if (doc.exists && doc.data().ownerId === uid) {
+        const d = doc.data();
+        document.getElementById('pageTitle').innerText = "Edit Ad";
+        document.getElementById('title').value = d.title;
+        document.getElementById('price').value = d.price;
+        document.getElementById('location').value = d.location;
+        document.getElementById('phone').value = d.phone;
+        document.getElementById('desc').value = d.desc;
+        document.getElementById('propertyType').value = d.propertyType || "Sale";
+        existingImages = d.images || [];
+        renderPreview(existingImages);
+    }
     document.getElementById('loader').style.display = 'none';
 }
 
-function previewImages() {
-    const preview = document.getElementById('imagePreview');
-    const files = document.getElementById('imageInput').files;
+async function handleFileSelect(e) {
+    const files = Array.from(e.target.files);
+    const ALLOWED = ['image/jpeg', 'image/png', 'image/webp'];
+    if (files.length > 5) { alert("Max 5 photos!"); e.target.value = ""; return; }
     
-    // Reset existing images if user chooses to upload new ones
-    if(files.length > 0) existingImages = []; 
-    
-    preview.innerHTML = "";
+    compressedFiles = [];
+    document.getElementById('imagePreview').innerHTML = "";
+    document.getElementById('loader').style.display = 'block';
+
     for (let f of files) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            preview.innerHTML += `<img src="${e.target.result}" class="preview-img">`;
+        if (!ALLOWED.includes(f.type) || f.size > 10 * 1024 * 1024) {
+            alert("Sahi format (JPG/PNG) aur size (10MB) check karein!");
+            e.target.value = ""; document.getElementById('loader').style.display = 'none'; return;
         }
-        reader.readAsDataURL(f);
+        const comp = await compressImage(f);
+        compressedFiles.push(comp);
+        const reader = new FileReader();
+        reader.onload = (ev) => { document.getElementById('imagePreview').innerHTML += `<img src="${ev.target.result}" class="preview-img">`; }
+        reader.readAsDataURL(comp);
     }
+    document.getElementById('imgCount').innerText = `${compressedFiles.length} / 5 selected`;
+    document.getElementById('loader').style.display = 'none';
 }
 
+function compressImage(file) {
+    return new Promise((resolve) => {
+        const reader = new FileReader(); reader.readAsDataURL(file);
+        reader.onload = (e) => {
+            const img = new Image(); img.src = e.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_W = 1000; canvas.width = MAX_W;
+                canvas.height = img.height * (MAX_W / img.width);
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                canvas.toBlob((b) => resolve(new File([b], file.name, {type:'image/jpeg'})), 'image/jpeg', 0.7);
+            };
+        };
+    });
+}
+
+function renderPreview(urls) { document.getElementById('imagePreview').innerHTML = urls.map(u => `<img src="${u}" class="preview-img">`).join(''); }
+
 async function handleSubmission() {
-    const user = auth.currentUser;
-    const title = document.getElementById('title').value.trim();
-    const price = document.getElementById('price').value;
-    const locationVal = document.getElementById('location').value.trim();
-    const bhk = document.getElementById('bhk').value;
-    const desc = document.getElementById('desc').value.trim();
-    const files = document.getElementById('imageInput').files;
-
-    // Validation
-    if (title.length < 5) return alert("Title must be at least 5 characters");
-    if (!price || price <= 0) return alert("Please enter a valid price");
-    if (!locationVal) return alert("Location is required");
-    if (!editId && files.length === 0) return alert("Please upload at least one image");
-
-    const btn = document.getElementById('mainBtn');
-    btn.disabled = true;
+    const title = sanitize(document.getElementById('title').value, 100);
+    const phone = document.getElementById('phone').value.trim();
+    const desc = sanitize(document.getElementById('desc').value, 1000);
+    
+    if (title.length < 5 || !/^[6-9]\d{9}$/.test(phone) || desc.length < 10) return alert("Sahi details bhariye!");
+    
+    document.getElementById('mainBtn').disabled = true;
     document.getElementById('loader').style.display = 'block';
 
     try {
-        let imageUrls = [...existingImages];
-
-        if (files.length > 0) {
-            // Cleanup old storage files if replacing
-            if (editId && existingImages.length > 0) {
-                for (let oldUrl of existingImages) {
-                    if (oldUrl.includes("firebasestorage")) {
-                        try { await storage.refFromURL(oldUrl).delete(); } catch(err) {}
-                    }
-                }
-            }
-            
-            imageUrls = []; 
-            for (let file of files) {
-                const ref = storage.ref(`properties/${Date.now()}_${file.name}`);
-                await ref.put(file);
-                const url = await ref.getDownloadURL();
-                imageUrls.push(url);
+        let finalImages = [...existingImages];
+        if (compressedFiles.length > 0) {
+            if (editId) { for (let url of existingImages) { try { await storage.refFromURL(url).delete(); } catch(e){} } }
+            finalImages = [];
+            for (let f of compressedFiles) {
+                const ref = storage.ref(`properties/${Date.now()}_${f.name}`);
+                await ref.put(f);
+                finalImages.push(await ref.getDownloadURL());
             }
         }
 
-        const expiryDate = new Date();
-        expiryDate.setDate(expiryDate.getDate() + 30);
-
-        const propertyData = {
-            title,
-            price: Number(price),
-            location: locationVal,
-            bhk,
-            desc,
-            images: imageUrls,
-            ownerId: user.uid,
+        const data = {
+            title, phone, desc, price: Number(document.getElementById('price').value),
+            location: sanitize(document.getElementById('location').value, 100),
+            propertyType: document.getElementById('propertyType').value,
+            bhk: document.getElementById('bhk').value,
+            images: finalImages, ownerId: auth.currentUser.uid,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            expiresAt: firebase.firestore.Timestamp.fromDate(expiryDate)
+            expiresAt: firebase.firestore.Timestamp.fromDate(new Date(Date.now() + 30*24*60*60*1000))
         };
 
-        if (editId) {
-            await db.collection("properties").doc(editId).update(propertyData);
-            alert("Property updated successfully!");
-        } else {
-            propertyData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-            await db.collection("properties").add(propertyData);
-            alert("Property posted successfully!");
-        }
-        location.href = "my-ads.html";
-
-    } catch (e) {
-        alert("Action failed: " + e.message);
-        btn.disabled = false;
-        document.getElementById('loader').style.display = 'none';
-    }
+        if (editId) await db.collection("properties").doc(editId).update(data);
+        else { data.createdAt = firebase.firestore.FieldValue.serverTimestamp(); await db.collection("properties").add(data); }
+        
+        alert("Success!"); location.href = "my-ads.html";
+    } catch (e) { alert("Error: " + e.message); document.getElementById('mainBtn').disabled = false; }
+    document.getElementById('loader').style.display = 'none';
 }
 </script>
 </body>
