@@ -7,50 +7,78 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --primary: #2e7d32; --bg: #f0f2f5; }
-        body { font-family: system-ui, sans-serif; margin: 0; background: var(--bg); padding-bottom: 80px; }
+        body { font-family: system-ui, sans-serif; margin: 0; background: var(--bg); padding-bottom: 100px; }
+        
+        /* Header & Icons */
         header { background: var(--primary); padding: 15px; color: white; position: sticky; top: 0; z-index: 1000; }
-        .icon-btn { color: #fff; background: rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .search-box { background: white; border-radius: 12px; display: flex; padding: 2px 15px; margin-top: 10px; align-items: center; }
-        .search-box input { border: none; padding: 10px; width: 100%; outline: none; }
-        .prop-card { background: white; border-radius: 16px; margin: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06); position: relative; }
-        .img-container { position: relative; aspect-ratio: 4/3; background: #eee; }
-        .fav-btn { position: absolute; top: 10px; right: 10px; background: white; border: none; border-radius: 50%; width: 35px; height: 35px; color: #ccc; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; }
+        .header-icons { display: flex; gap: 12px; align-items: center; }
+        .icon-btn { color: #fff; background: rgba(255,255,255,0.2); width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; }
+        
+        .search-box { background: white; border-radius: 12px; display: flex; padding: 2px 15px; margin-top: 12px; align-items: center; }
+        .search-box input { border: none; padding: 10px; width: 100%; outline: none; flex: 1; }
+
+        /* Property Card */
+        .prop-card { background: white; border-radius: 16px; margin: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; }
+        .img-container { position: relative; width: 100%; height: 220px; background: #ddd; }
+        .img-container img { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* Fav & Share (Upar Neeche Ek hi side) */
+        .action-btns { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 8px; z-index: 10; }
+        .circle-btn { background: white; border: none; border-radius: 50%; width: 38px; height: 38px; color: #555; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer; }
         .fav-btn.active { color: #e74c3c; }
-        .share-btn { position: absolute; top: 10px; left: 10px; background: white; border: none; border-radius: 50%; width: 35px; height: 35px; color: #555; }
+
         .prop-info { padding: 15px; }
-        .prop-price { font-size: 20px; font-weight: 800; color: var(--primary); margin: 0; }
-        .btn-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 12px; }
-        .btn { padding: 10px 2px; border-radius: 8px; font-weight: 700; font-size: 11px; text-align: center; border: none; cursor: pointer; text-decoration: none; }
+        .prop-price { font-size: 22px; font-weight: 800; color: var(--primary); margin: 0; }
+        
+        /* Action Buttons with Logos */
+        .btn-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 15px; }
+        .btn { padding: 12px 5px; border-radius: 10px; font-weight: 700; font-size: 12px; text-align: center; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; }
         .btn-call { background: #e8f5e9; color: var(--primary); }
         .btn-wa { background: #25D366; color: white; }
         .btn-chat { background: var(--primary); color: white; }
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #eee; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: #888; text-decoration: none; font-size: 10px; }
+
+        /* Floating Post Button & Big Nav */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 12px 0; border-top: 1px solid #eee; z-index: 2000; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #888; text-decoration: none; font-size: 12px; font-weight: 600; }
+        .nav-item i { font-size: 24px; margin-bottom: 4px; }
+        .nav-item.active { color: var(--primary); }
+        
+        .post-nav { position: relative; top: -30px; }
+        .post-btn-main { background: var(--primary); color: white; width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 15px rgba(46, 125, 50, 0.4); border: 4px solid white; }
+
         #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; display: none; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
 <header>
-    <div id="welcomeText" style="font-size:11px; opacity:0.8;">Welcome, Guest</div>
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 style="margin:0; font-size: 1.2rem;">Earth Property</h2>
-        <div style="display: flex; gap: 8px;">
+    <div class="header-top">
+        <div id="welcomeText" style="font-size:13px; font-weight: 600;">Hi, Guest</div>
+        <div class="header-icons">
             <div id="adminLink" class="icon-btn" style="display:none;" onclick="location.href='admin-verify.html'"><i class="fa fa-user-shield"></i></div>
-            <div id="authBtn" style="cursor:pointer; font-size: 11px; font-weight: 700; background: #fff; color: var(--primary); padding: 5px 8px; border-radius: 5px;">Login</div>
+            <div class="icon-btn" onclick="location.href='inbox.html'"><i class="fa fa-bell"></i></div>
+            <div id="authBtn" style="cursor:pointer; font-size: 12px; font-weight: 700; background: #fff; color: var(--primary); padding: 6px 12px; border-radius: 8px;">Login</div>
         </div>
     </div>
-    <div class="search-box"><i class="fa fa-search" style="color:#ccc;"></i><input type="text" id="citySearch" placeholder="Search Location..." oninput="filterData()"></div>
+    <h2 style="margin:10px 0 0 0; font-size: 1.4rem;">Earth Property</h2>
+    <div class="search-box">
+        <i class="fa fa-search" style="color:#ccc;"></i>
+        <input type="text" id="citySearch" placeholder="Search City or Property..." oninput="filterData()">
+    </div>
 </header>
 
 <div id="propertyList"></div>
 
 <div class="bottom-nav">
-    <a href="index.html" class="nav-item"><i class="fa fa-home"></i>Explore</a>
-    <a href="my-ads.html" class="nav-item"><i class="fa fa-layer-group"></i>My Ads</a>
-    <a href="post.html" class="nav-item"><i class="fa fa-plus-circle" style="font-size:20px; color:var(--primary);"></i>Post</a>
-    <a href="favorites.html" class="nav-item"><i class="fa-regular fa-heart"></i>Favs</a>
-    <a href="profile.html" class="nav-item"><i class="fa fa-user-circle"></i>Profile</a>
+    <a href="index.html" class="nav-item active"><i class="fa fa-house"></i><span>Explore</span></a>
+    <a href="my-ads.html" class="nav-item"><i class="fa fa-layer-group"></i><span>My Ads</span></a>
+    <a href="post.html" class="nav-item post-nav">
+        <div class="post-btn-main"><i class="fa fa-plus"></i></div>
+        <span style="margin-top: 35px;">Post</span>
+    </a>
+    <a href="favorites.html" class="nav-item"><i class="fa-regular fa-heart"></i><span>Favs</span></a>
+    <a href="profile.html" class="nav-item"><i class="fa fa-user-circle"></i><span>Profile</span></a>
 </div>
 
 <div id="overlay" onclick="this.style.display='none'"><img id="overlayImg" style="max-width:90%;"></div>
@@ -60,45 +88,53 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
+// Firebase Config (Same as before)
 const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
+
 let allProps = [];
+let userFavs = JSON.parse(localStorage.getItem('favs') || '[]');
 
 function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 
 async function loadProps() {
     const list = document.getElementById('propertyList');
-    list.innerHTML = '<center style="padding:50px;"><i class="fa fa-spinner fa-spin fa-2x"></i></center>';
+    list.innerHTML = '<center style="padding:50px;"><i class="fa fa-spinner fa-spin fa-2x" style="color:var(--primary)"></i></center>';
     try {
-        const now = firebase.firestore.Timestamp.now();
-        // Index required: expiryDate > now
-        const snap = await db.collection("properties").where("expiresAt", ">", now).limit(50).get();
+        const snap = await db.collection("properties").orderBy("createdAt", "desc").limit(50).get();
         allProps = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderProps(allProps);
-    } catch(e) { list.innerHTML = "<center>Check Firestore Indexes.</center>"; console.log(e); }
+    } catch(e) { list.innerHTML = "<center style='padding:20px;'>Error loading ads. Please refresh.</center>"; }
 }
 
 function renderProps(data) {
     const list = document.getElementById('propertyList');
+    if(data.length === 0) { list.innerHTML = "<center style='padding:20px;'>No properties found.</center>"; return; }
+    
     list.innerHTML = data.map(p => {
-        const masked = p.phone ? p.phone.slice(0,5) + "xxxxx" : "Login";
+        const isFav = userFavs.includes(p.id) ? 'active' : '';
+        const img = (p.images && p.images.length > 0) ? p.images[0] : 'https://via.placeholder.com/400x300?text=No+Image';
+        
         return `
         <div class="prop-card">
             <div class="img-container">
-                <button class="share-btn" onclick="shareProp('${p.title}', '${p.id}')"><i class="fa fa-share-alt"></i></button>
-                <button class="fav-btn" onclick="toggleFav('${p.id}', this)"><i class="fa fa-heart"></i></button>
-                <img src="${p.images?.[0] || ''}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onclick="showImg(this.src)">
+                <div class="action-btns">
+                    <button class="circle-btn share-btn" onclick="shareProp('${p.title}', '${p.id}')"><i class="fa fa-share-alt"></i></button>
+                    <button class="circle-btn fav-btn ${isFav}" onclick="toggleFav('${p.id}', this)"><i class="fa fa-heart"></i></button>
+                </div>
+                <img src="${img}" loading="lazy" onclick="showImg('${img}')">
             </div>
             <div class="prop-info">
-                <p class="prop-price">₹${Number(p.price).toLocaleString('en-IN')} <span style="font-size:10px;color:#888;">(${p.propertyType || 'Sale'})</span></p>
-                <div style="font-weight:700;">${escapeHtml(p.title)}</div>
-                <div style="font-size:11px;color:#777;"><i class="fa fa-map-marker-alt"></i> ${escapeHtml(p.location)}</div>
+                <p class="prop-price">₹${Number(p.price).toLocaleString('en-IN')} <span style="font-size:12px; color:#888;">(${p.propertyType || 'Sale'})</span></p>
+                <div style="font-weight:700; font-size:16px; margin: 4px 0;">${escapeHtml(p.title)}</div>
+                <div style="font-size:13px; color:#777;"><i class="fa fa-map-marker-alt"></i> ${escapeHtml(p.location)}</div>
+                
                 <div class="btn-group">
-                    <button class="btn btn-call" onclick="revealContact('${p.phone}', this)">Call ${masked}</button>
-                    <button class="btn btn-wa" onclick="revealContact('${p.phone}', this, true)">WhatsApp</button>
-                    <button onclick="openChat('${p.ownerId}', '${p.id}')" class="btn btn-chat">Chat</button>
+                    <button class="btn btn-call" onclick="revealContact('${p.phone}', this)"><i class="fa fa-phone"></i> Call</button>
+                    <button class="btn btn-wa" onclick="revealContact('${p.phone}', this, true)"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+                    <button onclick="openChat('${p.ownerId}', '${p.id}')" class="btn btn-chat"><i class="fa-regular fa-comment-dots"></i> Chat</button>
                 </div>
             </div>
         </div>`;
@@ -106,22 +142,43 @@ function renderProps(data) {
 }
 
 function revealContact(num, btn, wa = false) {
-    if (!auth.currentUser) { alert("Please login first!"); location.href='login.html'; return; }
+    if (!auth.currentUser) { alert("Please login to see contact!"); location.href='login.html'; return; }
     if (wa) window.open(`https://wa.me/91${num}`);
-    else btn.innerHTML = `<a href="tel:${num}" style="text-decoration:none;color:inherit;">${num}</a>`;
+    else {
+        btn.innerHTML = `<i class="fa fa-phone"></i> ${num}`;
+        setTimeout(() => { window.location.href = `tel:${num}`; }, 100);
+    }
 }
 
-function openChat(owner, id) { if (!auth.currentUser) location.href='login.html'; else location.href=`chat.html?to=${owner}&p=${id}`; }
+function toggleFav(id, btn) {
+    if (userFavs.includes(id)) {
+        userFavs = userFavs.filter(i => i !== id);
+        btn.classList.remove('active');
+    } else {
+        userFavs.push(id);
+        btn.classList.add('active');
+    }
+    localStorage.setItem('favs', JSON.stringify(userFavs));
+}
 
 function filterData() {
     const s = document.getElementById('citySearch').value.toLowerCase();
-    renderProps(allProps.filter(p => (p.location||"").toLowerCase().includes(s) || (p.title||"").toLowerCase().includes(s)));
+    const filtered = allProps.filter(p => 
+        (p.location||"").toLowerCase().includes(s) || 
+        (p.title||"").toLowerCase().includes(s)
+    );
+    renderProps(filtered);
 }
 
 function shareProp(t, id) {
-    const url = `${window.location.origin}/index.html?p=${id}`;
-    if (navigator.share) navigator.share({title: t, url: url});
-    else { navigator.clipboard.writeText(url); alert("Link Copied!"); }
+    const url = window.location.origin + "/index.html?p=" + id;
+    if(navigator.share) navigator.share({title: t, url: url});
+    else { alert("Link Copied!"); navigator.clipboard.writeText(url); }
+}
+
+function openChat(owner, id) {
+    if (!auth.currentUser) location.href='login.html';
+    else location.href=`chat.html?to=${owner}&p=${id}`;
 }
 
 auth.onAuthStateChanged(user => {
@@ -130,7 +187,9 @@ auth.onAuthStateChanged(user => {
         document.getElementById('authBtn').innerText = "Logout";
         document.getElementById('authBtn').onclick = () => auth.signOut().then(()=>location.reload());
         if(user.uid === "WOY9f67DachGVTuhR4tSJ1BHozx1") document.getElementById('adminLink').style.display='flex';
-    } else { document.getElementById('authBtn').onclick = () => location.href='login.html'; }
+    } else {
+        document.getElementById('authBtn').onclick = () => location.href='login.html';
+    }
     loadProps();
 });
 
