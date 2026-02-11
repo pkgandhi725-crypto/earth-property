@@ -8,59 +8,48 @@
     <style>
         :root { --primary: #2e7d32; --bg: #f0f2f5; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); padding-bottom: 90px; overflow-x: hidden; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); padding-bottom: 90px; }
         
-        /* Header & Mast Interface */
-        header { background: var(--primary); padding: 12px 15px; color: white; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        header { background: var(--primary); padding: 12px 15px; color: white; position: sticky; top: 0; z-index: 1000; }
+        .header-top { display: flex; align-items: center; justify-content: space-between; }
         .header-left { display: flex; align-items: center; gap: 12px; }
-        .brand-info { display: flex; flex-direction: column; }
-        .logo-text { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px; line-height: 1; }
-        .user-welcome { font-size: 12px; font-weight: 500; opacity: 0.95; margin-top: 3px; }
-        .header-icons { display: flex; align-items: center; gap: 15px; }
+        .header-icons { display: flex; align-items: center; gap: 18px; }
         
-        .search-box { background: white; border-radius: 12px; display: flex; padding: 10px 15px; align-items: center; gap: 10px; margin-top: 5px; }
-        .search-box input { border: none; width: 100%; outline: none; font-size: 15px; color: #333; }
+        .search-box { background: white; border-radius: 12px; display: flex; padding: 10px 15px; align-items: center; gap: 10px; margin-top: 10px; }
+        .search-box input { border: none; width: 100%; outline: none; }
 
-        /* Drawer */
-        .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s ease; box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
+        .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s; }
         .drawer.open { left: 0; }
         .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; }
-        .drawer-item { padding: 16px 20px; display: flex; align-items: center; gap: 15px; color: #333; text-decoration: none; font-weight: 600; border-bottom: 1px solid #f5f5f5; }
-        .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 4500; display: none; }
+        .drawer-item { padding: 16px 20px; display: flex; align-items: center; gap: 15px; color: #333; text-decoration: none; font-weight: 600; border-bottom: 1px solid #eee; }
 
-        /* Property Cards - Mast Design */
-        .prop-card { background: white; border-radius: 18px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; }
-        .img-container { position: relative; width: 100%; height: 240px; background: #eee; overflow-x: auto; display: flex; scroll-snap-type: x mandatory; scrollbar-width: none; }
-        .img-container::-webkit-scrollbar { display: none; }
-        .img-container img { min-width: 100%; height: 100%; object-fit: cover; scroll-snap-align: start; }
+        .prop-card { background: white; border-radius: 18px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .img-container { width: 100%; height: 220px; background: #eee; }
+        .img-container img { width: 100%; height: 100%; object-fit: cover; }
         
-        .btn-group { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 10px; margin-top: 15px; }
-        .btn { padding: 12px 2px; border-radius: 10px; font-weight: 700; font-size: 14px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .btn-call { background: #f1f8e9; color: #2e7d32; } 
+        .btn-group { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 8px; margin-top: 15px; }
+        .btn { padding: 10px 2px; border-radius: 10px; font-weight: 700; font-size: 13px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .btn-call { background: #e8f5e9; color: #2e7d32; } 
         .btn-wa { background: #25D366; color: white; } 
         .btn-chat { background: var(--primary); color: white; }
 
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 10px 0; border-top: 1px solid #eee; z-index: 1000; }
-        .nav-item { flex: 1; text-align: center; color: #888; text-decoration: none; font-size: 11px; font-weight: 600; }
-        .nav-item.active { color: var(--primary); }
-        .post-btn-main { background: var(--primary); color: white !important; width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: -35px auto 5px; box-shadow: 0 5px 15px rgba(46,125,50,0.4); }
+        .nav-item { flex: 1; text-align: center; color: #888; text-decoration: none; font-size: 11px; }
+        .post-btn { background: var(--primary); color: white !important; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-top: -30px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
 
-<div class="drawer-overlay" id="dOverlay" onclick="toggleDrawer()"></div>
 <div class="drawer" id="sideDrawer">
     <div class="drawer-header">
-        <i class="fa fa-user-circle fa-4x"></i>
-        <div id="dName" style="margin-top:12px; font-weight:700;">Earth Guest</div>
+        <i class="fa fa-user-circle fa-3x"></i>
+        <div id="dName" style="margin-top:10px; font-weight:bold;">Earth Guest</div>
     </div>
-    <a href="profile.html" class="drawer-item"><i class="fa fa-user"></i> <span data-i18n="profile">Profile</span></a>
-    <a href="my-ads.html" class="drawer-item"><i class="fa fa-layer-group"></i> <span data-i18n="myAds">My Ads</span></a>
-    
+    <a href="profile.html" class="drawer-item"><i class="fa fa-user"></i> Profile</a>
+    <a href="my-ads.html" class="drawer-item"><i class="fa fa-layer-group"></i> My Ads</a>
     <div style="padding: 20px;">
-        <p style="font-size: 12px; font-weight: bold; color: #888; margin-bottom: 10px;">LANGUAGE</p>
-        <select onchange="setLanguage(this.value)" id="langSelect" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+        <label style="font-size:12px; color:#888;">LANGUAGE</p>
+        <select id="langSwitch" onchange="changeLang(this.value)" style="width:100%; padding:8px; border-radius:5px;">
             <option value="en">English</option>
             <option value="hi">Hindi</option>
             <option value="ar">Arabic</option>
@@ -71,128 +60,108 @@
 <header>
     <div class="header-top">
         <div class="header-left">
-            <button onclick="toggleDrawer()" style="background:none; border:none; color:white; font-size:22px;"><i class="fa fa-bars"></i></button>
+            <i class="fa fa-bars" onclick="document.getElementById('sideDrawer').classList.toggle('open')" style="font-size:20px;"></i>
             <div class="brand-info">
-                <span class="logo-text">Earth Property</span>
-                <span id="welcomeUser" class="user-welcome">Hi, Guest</span>
+                <span style="font-weight:800; font-size:18px;">Earth Property</span>
+                <div id="welcomeUser" style="font-size:11px;">Hi, Guest</div>
             </div>
         </div>
         <div class="header-icons">
-            <i class="fa fa-user-shield" style="font-size:20px; cursor:pointer;" onclick="location.href='admin-verification.html'"></i>
-            <i class="fa-regular fa-bell" style="font-size:20px; cursor:pointer;" onclick="location.href='notifications.html'"></i>
-            <button id="authBtn" style="border:none; background:white; color:var(--primary); padding:6px 14px; border-radius:8px; font-weight:800; font-size:11px;">LOGIN</button>
+            <i class="fa fa-user-shield" onclick="location.href='admin-verification.html'" style="font-size:18px; cursor:pointer;"></i>
+            <i class="fa-regular fa-bell" onclick="location.href='notifications.html'" style="font-size:18px;"></i>
+            <button id="authBtn" style="background:white; color:var(--primary); border:none; padding:5px 10px; border-radius:5px; font-weight:bold; font-size:11px;">LOGIN</button>
         </div>
     </div>
     <div class="search-box">
-        <i class="fa fa-search" style="color:#aaa;"></i>
-        <input type="text" id="citySearch" data-i18n-placeholder="searchPlaceholder" oninput="filterAds()">
+        <i class="fa fa-search" style="color:#ccc;"></i>
+        <input type="text" id="citySearch" placeholder="Search city..." oninput="filterAds()">
     </div>
 </header>
 
 <div id="propertyList"></div>
 
 <div class="bottom-nav">
-    <a href="index.html" class="nav-item active"><i class="fa fa-house fa-lg"></i><br>Explore</a>
+    <a href="index.html" class="nav-item" style="color:var(--primary);"><i class="fa fa-house fa-lg"></i><br>Explore</a>
     <a href="my-ads.html" class="nav-item"><i class="fa fa-layer-group fa-lg"></i><br>My Ads</a>
-    <a href="add-property.html" class="nav-item"><div class="post-btn-main"><i class="fa fa-plus"></i></div>Post</a>
+    <a href="add-property.html" class="nav-item"><div class="post-btn"><i class="fa fa-plus"></i></div></a>
     <a href="favorites.html" class="nav-item"><i class="fa-regular fa-heart fa-lg"></i><br>Favs</a>
     <a href="profile.html" class="nav-item"><i class="fa fa-user-circle fa-lg"></i><br>Profile</a>
 </div>
 
-<script src="translations.js"></script>
-<script src="lang.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
+// CONFIG
 const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-const DOM = {
-    propertyList: document.getElementById('propertyList'),
-    welcomeUser: document.getElementById('welcomeUser'),
-    authBtn: document.getElementById('authBtn'),
-    sideDrawer: document.getElementById('sideDrawer'),
-    dOverlay: document.getElementById('dOverlay')
+// UI TEXT (NO EXTERNAL JS NEEDED)
+const texts = {
+    en: { call: "Call", wa: "WhatsApp", chat: "Chat" },
+    hi: { call: "कॉल करें", wa: "व्हाट्सएप", chat: "चैट" },
+    ar: { call: "اتصال", wa: "واتساب", chat: "دردشة" }
 };
+let currentLang = localStorage.getItem('lang') || 'en';
 
-function toggleDrawer() {
-    const isOpen = DOM.sideDrawer.classList.toggle('open');
-    DOM.dOverlay.style.display = isOpen ? 'block' : 'none';
+function changeLang(l) {
+    localStorage.setItem('lang', l);
+    location.reload();
 }
 
-// WhatsApp Link Fixed
-async function revealContact(id, btn, isWa) {
-    if(!auth.currentUser) { alert("Please login first"); return; }
-    const original = btn.innerHTML;
-    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+// WHATSAPP & CALL FIX
+async function contact(id, type) {
+    if(!auth.currentUser) return alert("Please Login");
     try {
         const doc = await db.collection("properties").doc(id).get();
-        const num = doc.data().phone;
-        const cleanNum = num.toString().replace(/\D/g, ''); 
-        const finalNum = cleanNum.startsWith('91') ? cleanNum : `91${cleanNum}`;
-        
-        if(isWa) window.open(`https://api.whatsapp.com/send?phone=${finalNum}`, '_blank');
-        else window.location.href = `tel:+${finalNum}`;
-    } catch(e) { alert("Error fetching contact"); }
-    btn.innerHTML = original;
+        const phone = doc.data().phone;
+        const cleanPhone = phone.toString().replace(/\D/g, '');
+        const finalPhone = cleanPhone.startsWith('91') ? cleanPhone : '91' + cleanPhone;
+
+        if(type === 'wa') window.open(`https://wa.me/${finalPhone}`, '_blank');
+        else window.location.href = `tel:+${finalPhone}`;
+    } catch(e) { alert("Error: Field 'phone' missing in Firestore!"); }
 }
 
-function createPropertyCard(p) {
+function createCard(p) {
+    const t = texts[currentLang];
     const card = document.createElement('div');
     card.className = 'prop-card';
-    const imgs = p.images || ['https://via.placeholder.com/400x300'];
-    
     card.innerHTML = `
-        <div class="img-container">
-            ${imgs.map(url => `<img src="${url}" loading="lazy">`).join('')}
-        </div>
+        <div class="img-container"><img src="${p.images[0] || 'https://via.placeholder.com/400x220'}"></div>
         <div style="padding:15px;">
-            <div style="font-size:22px; font-weight:800; color:var(--primary);">₹${Number(p.price).toLocaleString('en-IN')}</div>
-            <div style="font-weight:700; margin:5px 0;">${p.title}</div>
-            <div style="font-size:13px; color:#666;"><i class="fa fa-map-marker-alt"></i> ${p.location}</div>
+            <div style="font-size:20px; font-weight:800; color:var(--primary);">₹${Number(p.price).toLocaleString('en-IN')}</div>
+            <div style="font-weight:bold; margin:5px 0;">${p.title}</div>
+            <div style="font-size:12px; color:#666;"><i class="fa fa-map-marker-alt"></i> ${p.location}</div>
             <div class="btn-group">
-                <button class="btn btn-call" onclick="revealContact('${p.id}', this, false)"><i class="fa fa-phone"></i> ${t('call') || 'Call'}</button>
-                <button class="btn btn-wa" onclick="revealContact('${p.id}', this, true)"><i class="fa-brands fa-whatsapp"></i> ${t('whatsapp') || 'WhatsApp'}</button>
-                <button class="btn btn-chat" onclick="location.href='chat.html?p=${p.id}'"><i class="fa-regular fa-comment-dots"></i> ${t('chat') || 'Chat'}</button>
+                <button class="btn btn-call" onclick="contact('${p.id}', 'tel')"><i class="fa fa-phone"></i> ${t.call}</button>
+                <button class="btn btn-wa" onclick="contact('${p.id}', 'wa')"><i class="fa-brands fa-whatsapp"></i> ${t.wa}</button>
+                <button class="btn btn-chat" onclick="location.href='chat.html?p=${p.id}'"><i class="fa-regular fa-comment-dots"></i> ${t.chat}</button>
             </div>
         </div>`;
     return card;
 }
 
-function renderAds(data) {
-    DOM.propertyList.innerHTML = '';
-    data.forEach(p => DOM.propertyList.appendChild(createPropertyCard(p)));
-}
-
-// Auth State
 auth.onAuthStateChanged(async user => {
+    document.getElementById('langSwitch').value = currentLang;
     if(user) {
-        DOM.authBtn.textContent = "LOGOUT";
-        DOM.authBtn.onclick = () => auth.signOut().then(()=>location.reload());
+        document.getElementById('authBtn').textContent = "LOGOUT";
+        document.getElementById('authBtn').onclick = () => auth.signOut().then(()=>location.reload());
         const uDoc = await db.collection("users").doc(user.uid).get();
         const name = uDoc.exists ? uDoc.data().name : "User";
+        document.getElementById('welcomeUser').innerText = "Hi, " + name;
         document.getElementById('dName').innerText = name;
-        DOM.welcomeUser.innerText = `Hi, ${name}`;
     } else {
-        DOM.authBtn.textContent = "LOGIN";
-        DOM.authBtn.onclick = () => location.href='login.html';
-        DOM.welcomeUser.innerText = "Hi, Guest";
+        document.getElementById('authBtn').onclick = () => location.href='login.html';
     }
     
     db.collection("properties").where("isExpired","==",false).onSnapshot(s => {
-        const ads = s.docs.map(d => ({id: d.id, ...d.data()}));
-        renderAds(ads);
+        document.getElementById('propertyList').innerHTML = '';
+        s.docs.forEach(d => document.getElementById('propertyList').appendChild(createCard({id: d.id, ...d.data()})));
     });
-});
-
-// Default Language Setup
-document.addEventListener('DOMContentLoaded', () => {
-    const savedLang = localStorage.getItem('earthLang') || 'en';
-    document.getElementById('langSelect').value = savedLang;
 });
 </script>
 </body>
