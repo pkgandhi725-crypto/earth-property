@@ -10,7 +10,6 @@
         :root { --primary: #2e7d32; --bg: #f0f2f5; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        /* Language Banner Fix: Google Translate ki bar hide karne ke liye */
         body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); padding-bottom: 80px; overflow-x: hidden; top: 0px !important; position: static !important; }
         .goog-te-banner-frame.skiptranslate, .goog-te-banner-frame { display: none !important; }
         #goog-gt-tt, .goog-te-balloon-frame { display: none !important; }
@@ -25,11 +24,8 @@
         .icon-btn { color: #fff; background: rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .auth-btn { cursor: pointer; font-size: 12px; font-weight: 700; background: #fff; color: var(--primary); padding: 8px 16px; border-radius: 8px; border: none; }
 
-        /* Drawer Design */
         .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 5px 0 15px rgba(0,0,0,0.2); overflow-y: auto; }
         .drawer.open { left: 0; }
-        
-        /* RTL support: Jab Urdu/Arabic ho toh drawer right se khulega */
         [dir="rtl"] .drawer { left: auto; right: -285px; }
         [dir="rtl"] .drawer.open { right: 0; left: auto; }
 
@@ -40,7 +36,6 @@
         .search-box { background: white; border-radius: 12px; display: flex; padding: 8px 15px; align-items: center; gap: 10px; margin: 0 10px 10px 10px; border: 1px solid #ddd; }
         .search-box input { border: none; width: 100%; outline: none; padding: 5px 0; font-size: 14px; }
 
-        /* Property Card */
         .prop-card { background: white; border-radius: 16px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; border: 1px solid #eee; }
         .img-container { position: relative; width: 100%; height: 230px; background: #e0e0e0; }
         .img-container img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -55,23 +50,19 @@
         .btn-wa { background: #25D366; color: white; } 
         .btn-chat { background: var(--primary); color: white; }
 
-        /* Bottom Nav */
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 8px 0; border-top: 1px solid #e0e0e0; z-index: 2000; }
         .nav-item { display: flex; flex-direction: column; align-items: center; color: #888; text-decoration: none; font-size: 11px; font-weight: 600; flex: 1; }
         .nav-item.active { color: var(--primary); }
         .post-btn-main { background: var(--primary); color: white; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
 
-        /* Modal Design */
         #langModal { position: fixed; bottom: -100%; left: 0; width: 100%; max-height: 70%; background: white; z-index: 9999; border-radius: 20px 20px 0 0; overflow-y: auto; box-shadow: 0 -5px 20px rgba(0,0,0,0.2); padding: 20px; transition: 0.3s ease-in-out; }
         #langModal.show { bottom: 0; }
-        .lang-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: 600; color: #333; }
-        .lang-item:active { background: #f0f0f0; }
+        .lang-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: 600; }
     </style>
 </head>
 <body>
 
 <div id="google_translate_element" style="display:none;"></div>
-
 <div class="drawer-overlay" id="overlayPanel" onclick="toggleDrawer()"></div>
 
 <div class="drawer" id="sideDrawer">
@@ -144,10 +135,16 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-let allProps = []; // Search ke liye global data
+let allProps = [];
 let searchTimeout;
 
-// 🌍 Language Logic
+// 🔒 Security: Escape HTML to prevent XSS
+function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text || "";
+    return div.innerHTML;
+}
+
 const languages = [
     ["en","English"],["hi","Hindi"],["mr","Marathi"],["ta","Tamil"],["te","Telugu"],["kn","Kannada"],["gu","Gujarati"],["pa","Punjabi"],["bn","Bengali"],["ur","Urdu"],
     ["ar","Arabic"],["ru","Russian"],["fr","French"],["de","German"],["es","Spanish"]
@@ -172,16 +169,16 @@ function setLanguage(lang){
         select.value = lang;
         select.dispatchEvent(new Event("change", {bubbles: true}));
     }
-    
     const isRTL = ["ar","ur","fa","he"].includes(lang);
     document.body.dir = isRTL ? "rtl" : "ltr";
-    
     closeLangModal();
     if(document.getElementById('sideDrawer').classList.contains('open')) toggleDrawer();
 }
 
 function setDefaultEnglish(){
-    localStorage.clear();
+    localStorage.removeItem("siteLang");
+    document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
+    document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + location.hostname;
     location.reload();
 }
 
@@ -200,7 +197,6 @@ function toggleDrawer() {
     o.style.display = d.classList.contains('open') ? 'block' : 'none';
 }
 
-// 🔥 Search Logic (Debounced)
 function filterDataDebounced() {
     clearTimeout(searchTimeout);
     const term = document.getElementById('citySearch').value.toLowerCase();
@@ -213,7 +209,6 @@ function filterDataDebounced() {
     }, 400);
 }
 
-// 🔥 Load & Render Data
 function loadProps() {
     db.collection("properties").where("isExpired","==",false).orderBy("createdAt","desc").onSnapshot(s => {
         allProps = s.docs.map(d => ({id:d.id, ...d.data()}));
@@ -234,22 +229,44 @@ function renderProps(data) {
             </div>
             <div class="prop-info">
                 <div class="prop-price notranslate">₹${Number(p.price||0).toLocaleString('en-IN')}</div>
-                <div class="prop-title">${p.title}</div>
-                <div style="font-size:12px; color:#666; margin-bottom:10px;"><i class="fa fa-map-marker-alt"></i> ${p.location || ''}</div>
+                <div class="prop-title">${escapeHtml(p.title)}</div>
+                <div style="font-size:12px; color:#666; margin-bottom:10px;"><i class="fa fa-map-marker-alt"></i> ${escapeHtml(p.location)}</div>
                 <div class="btn-group notranslate">
                     <button class="btn btn-call" onclick="revealContact('${p.id}', this, false)"><i class="fa fa-phone"></i> Call</button>
                     <button class="btn btn-wa" onclick="revealContact('${p.id}', this, true)"><i class="fa-brands fa-whatsapp"></i> Chat</button>
-                    <button class="btn btn-chat" onclick="location.href='chat.html?to=${p.ownerId}'">Chat</button>
+                    <button class="btn btn-chat" onclick="location.href='chat.html?to=${p.ownerId}&p=${p.id}'">Chat</button>
                 </div>
             </div>
         </div>`).join('');
 }
 
+// 🛡️ Security: Robust Null Safety & Error Handling
 async function revealContact(id, btn, wa) {
-    const pDoc = await db.collection("properties").doc(id).get();
-    const uDoc = await db.collection("users").doc(pDoc.data().ownerId).get();
-    const num = uDoc.data().phone;
-    if(wa) window.open(`https://wa.me/91${num}`); else window.location.href=`tel:${num}`;
+    try {
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+        const pDoc = await db.collection("properties").doc(id).get();
+        if(!pDoc.exists) throw new Error("Property not found");
+
+        const ownerId = pDoc.data().ownerId;
+        const uDoc = await db.collection("users").doc(ownerId).get();
+        if(!uDoc.exists) throw new Error("Seller not found");
+
+        const num = uDoc.data()?.phone;
+        if(!num) {
+            alert("Contact number not shared by seller");
+            btn.innerHTML = wa ? '<i class="fa-brands fa-whatsapp"></i> Chat' : '<i class="fa fa-phone"></i> Call';
+            return;
+        }
+
+        if(wa) window.open(`https://wa.me/91${num}`); 
+        else window.location.href=`tel:${num}`;
+        
+        btn.innerHTML = wa ? '<i class="fa-brands fa-whatsapp"></i> Chat' : `<i class="fa fa-phone"></i> ${num}`;
+    } catch(e) {
+        console.error("Contact Error:", e);
+        alert("Unable to fetch contact details");
+        btn.innerHTML = "Error";
+    }
 }
 
 auth.onAuthStateChanged(async user => {
