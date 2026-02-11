@@ -13,11 +13,18 @@
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; color: #444; }
         input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        
+        /* Photo Grid & Progress Bar */
         .img-upload-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
         .img-box { aspect-ratio: 1/1; border: 2px dashed #ccc; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #fff; cursor: pointer; }
         .img-box img { width: 100%; height: 100%; object-fit: cover; }
-        .remove-btn { position: absolute; top: 5px; right: 5px; background: rgba(211, 47, 47, 0.9); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; }
-        .btn-post { background: var(--primary); color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-size: 16px; font-weight: 700; margin-top: 20px; cursor: pointer; }
+        
+        .upload-progress-container { width: 100%; background: #eee; border-radius: 5px; margin-top: 5px; display: none; height: 8px; overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s; }
+        
+        .btn-post { background: var(--primary); color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-size: 16px; font-weight: 700; margin-top: 20px; cursor: pointer; opacity: 1; }
+        .btn-post:disabled { background: #ccc; cursor: not-allowed; opacity: 0.7; }
+        
         #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; }
     </style>
 </head>
@@ -25,16 +32,16 @@
 
 <div id="loadingOverlay">
     <i class="fa fa-circle-notch fa-spin fa-3x" style="color: var(--primary);"></i>
-    <p id="loadingText" style="margin-top:15px; font-weight:600;">Processing...</p>
+    <p style="margin-top:15px; font-weight:600;">Saving Property...</p>
 </div>
 
 <header>
-    <div onclick="history.back()" style="cursor:pointer;"><i class="fa fa-arrow-left"></i></div>
-    <div style="font-weight: 700;">Post Property</div>
+    <div onclick="history.back()" style="cursor:pointer; padding:5px;"><i class="fa fa-arrow-left"></i></div>
+    <div style="font-weight: 700;">Post New Property</div>
 </header>
 
 <div class="container">
-    <div class="form-group"><label>Title</label><input type="text" id="title" placeholder="3BHK Flat..."></div>
+    <div class="form-group"><label>Property Title</label><input type="text" id="title" placeholder="e.g. 3BHK Flat"></div>
     <div class="form-group" style="display: flex; gap: 10px;">
         <div style="flex: 1;"><label>Price (₹)</label><input type="number" id="price"></div>
         <div style="flex: 1;"><label>Type</label><select id="type"><option>Residential</option><option>Commercial</option><option>Plot</option></select></div>
@@ -42,15 +49,27 @@
     <div class="form-group"><label>Location</label><input type="text" id="location"></div>
     <div class="form-group"><label>Description</label><textarea id="desc" rows="3"></textarea></div>
 
-    <label>Photos (Max 3)</label>
+    <label>Photos (Max 3) <span id="statusText" style="font-size: 12px; color: var(--primary); font-weight: normal;"></span></label>
     <div class="img-upload-grid">
-        <div class="img-box" id="box0" onclick="triggerUpload(0)"><i class="fa fa-camera" id="icon0"></i><img id="prev0" style="display:none;"></div>
-        <div class="img-box" id="box1" onclick="triggerUpload(1)"><i class="fa fa-camera" id="icon1"></i><img id="prev1" style="display:none;"></div>
-        <div class="img-box" id="box2" onclick="triggerUpload(2)"><i class="fa fa-camera" id="icon2"></i><img id="prev2" style="display:none;"></div>
+        <div class="img-box" id="box0" onclick="triggerUpload(0)">
+            <i class="fa fa-camera" id="icon0"></i>
+            <img id="prev0" style="display:none;">
+            <div class="upload-progress-container" id="progCont0"><div class="progress-bar" id="bar0"></div></div>
+        </div>
+        <div class="img-box" id="box1" onclick="triggerUpload(1)">
+            <i class="fa fa-camera" id="icon1"></i>
+            <img id="prev1" style="display:none;">
+            <div class="upload-progress-container" id="progCont1"><div class="progress-bar" id="bar1"></div></div>
+        </div>
+        <div class="img-box" id="box2" onclick="triggerUpload(2)">
+            <i class="fa fa-camera" id="icon2"></i>
+            <img id="prev2" style="display:none;">
+            <div class="upload-progress-container" id="progCont2"><div class="progress-bar" id="bar2"></div></div>
+        </div>
     </div>
     <input type="file" id="fileInput" hidden accept="image/*" onchange="handleFile(event)">
 
-    <button class="btn-post" id="postBtn" onclick="submitProperty()">Post Property</button>
+    <button class="btn-post" id="postBtn" onclick="submitProperty()" disabled>Upload Photos First</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -58,7 +77,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-// Firebase Config
 const firebaseConfig = { 
     apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
     authDomain: "earth-properties-c3c56.firebaseapp.com", 
@@ -68,77 +86,116 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// Cloudinary Config (Based on your screenshot)
 const CLOUD_NAME = "dmod7m66u";
-const UPLOAD_PRESET = "earth_property"; 
+const UPLOAD_PRESET = "earth_property";
 
-let selectedImages = [null, null, null];
+let uploadedUrls = [null, null, null];
+let uploadingCount = 0;
 let activeSlot = 0;
 let userData = null;
 
 auth.onAuthStateChanged(async (user) => {
     if (user) {
         const doc = await db.collection("users").doc(user.uid).get();
-        userData = doc.exists ? doc.data() : { isVerified: false, businessName: "Dealer" };
+        userData = doc.exists ? doc.data() : { isVerified: false, businessName: "Individual Dealer" };
     } else { location.href = 'login.html'; }
 });
 
-function triggerUpload(slot) { activeSlot = slot; document.getElementById('fileInput').click(); }
+function triggerUpload(slot) { 
+    if(uploadingCount > 0) return alert("Wait! Upload in progress...");
+    activeSlot = slot; 
+    document.getElementById('fileInput').click(); 
+}
 
-function handleFile(e) {
+async function handleFile(e) {
     const file = e.target.files[0];
     if(!file) return;
-    selectedImages[activeSlot] = file;
-    const reader = new FileReader();
-    reader.onload = (event) => showPreview(activeSlot, event.target.result);
-    reader.readAsDataURL(file);
-}
 
-function showPreview(slot, src) {
-    document.getElementById(`prev${slot}`).src = src;
-    document.getElementById(`prev${slot}`).style.display = 'block';
-    document.getElementById(`icon${slot}`).style.display = 'none';
-}
+    // UI Update
+    const barCont = document.getElementById(`progCont${activeSlot}`);
+    const bar = document.getElementById(`bar${activeSlot}`);
+    const icon = document.getElementById(`icon${activeSlot}`);
+    const preview = document.getElementById(`prev${activeSlot}`);
+    const postBtn = document.getElementById('postBtn');
 
-// ✅ CLEAN CLOUDINARY UPLOAD (Fixes "Unknown API Key")
-async function uploadToCloudinary(file) {
+    icon.style.display = 'none';
+    barCont.style.display = 'block';
+    bar.style.width = '0%';
+    postBtn.disabled = true;
+    postBtn.textContent = "Uploading Photo...";
+    uploadingCount++;
+
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('upload_preset', UPLOAD_PRESET); // ✅ Strictly using Unsigned Preset
+    formData.append('upload_preset', UPLOAD_PRESET);
 
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-        method: 'POST',
-        body: formData // ❌ No headers, no API keys
-    });
+    try {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, true);
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error?.message || "Upload Failed");
-    return data.secure_url;
+        xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+                const percent = (event.loaded / event.total) * 100;
+                bar.style.width = percent + '%';
+            }
+        };
+
+        xhr.onload = function() {
+            const data = JSON.parse(xhr.responseText);
+            if (xhr.status === 200) {
+                uploadedUrls[activeSlot] = data.secure_url;
+                preview.src = data.secure_url;
+                preview.style.display = 'block';
+                barCont.style.display = 'none';
+                checkUploadStatus();
+            } else {
+                throw new Error(data.error?.message || "Upload Failed");
+            }
+        };
+
+        xhr.onerror = () => { throw new Error("Network Error"); };
+        xhr.send(formData);
+
+    } catch (err) {
+        alert("Upload Error: " + err.message);
+        icon.style.display = 'block';
+        barCont.style.display = 'none';
+        uploadingCount--;
+        checkUploadStatus();
+    }
+}
+
+function checkUploadStatus() {
+    uploadingCount = Math.max(0, uploadingCount - 1);
+    const postBtn = document.getElementById('postBtn');
+    
+    if(uploadingCount === 0) {
+        const hasImages = uploadedUrls.some(url => url !== null);
+        if(hasImages) {
+            postBtn.disabled = false;
+            postBtn.textContent = "Post Property";
+        } else {
+            postBtn.disabled = true;
+            postBtn.textContent = "Upload Photos First";
+        }
+    }
 }
 
 async function submitProperty() {
     const user = auth.currentUser;
-    const title = document.getElementById('title').value;
+    const title = document.getElementById('title').value.trim();
     const price = document.getElementById('price').value;
-    const location = document.getElementById('location').value;
+    const location = document.getElementById('location').value.trim();
 
-    if(!title || !price || !location) return alert("Fill all fields!");
+    if(!title || !price || !location) return alert("Please fill all fields!");
 
     document.getElementById('loadingOverlay').style.display = 'flex';
-    
-    try {
-        const imageUrls = [];
-        for(let img of selectedImages) {
-            if(img) {
-                const url = await uploadToCloudinary(img);
-                imageUrls.push(url);
-            }
-        }
 
+    try {
+        const finalImages = uploadedUrls.filter(url => url !== null);
         const expiry = new Date();
         expiry.setDate(expiry.getDate() + 30);
 
-        // ✅ FIXED FIRESTORE DATA (Fixes "Undefined" error)
         await db.collection("properties").add({
             ownerId: user.uid,
             title: title,
@@ -146,19 +203,20 @@ async function submitProperty() {
             location: location,
             description: document.getElementById('desc').value || "",
             propertyType: document.getElementById('type').value,
-            images: imageUrls,
+            images: finalImages,
             status: "active",
             isExpired: false,
-            isVerified: userData.isVerified || false,
-            businessName: userData.businessName || "Dealer",
+            isVerified: (userData && userData.isVerified === true) ? true : false,
+            businessName: (userData && userData.businessName) ? userData.businessName : "Individual Dealer",
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
             expiryDate: firebase.firestore.Timestamp.fromDate(expiry)
         });
 
-        alert("Property Posted! 🎉");
+        alert("Property Posted Successfully! 🎉");
         window.location.href = "my-ads.html";
     } catch (err) {
-        alert("Error: " + err.message);
+        alert("Firestore Error: " + err.message);
     } finally {
         document.getElementById('loadingOverlay').style.display = 'none';
     }
