@@ -3,109 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verification Portal</title>
+    <title>Admin - Verification Portal</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 20px; }
+        body { font-family: system-ui, sans-serif; background: #f4f7f6; padding: 20px; }
         .container { max-width: 800px; margin: auto; }
         .card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .doc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0; }
-        .doc-item img { width: 100%; height: 180px; object-fit: cover; border-radius: 10px; cursor: pointer; border: 1px solid #ddd; }
-        .btn-group { display: flex; gap: 10px; }
-        .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        .btn-approve { background: #2e7d32; color: white; }
-        .btn-reject { background: #fff1f0; color: #cf1322; border: 1px solid #ffa39e; }
+        .img-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+        .img-grid img { width: 100%; height: 200px; object-fit: cover; border-radius: 10px; border: 1px solid #ddd; }
+        .btn-approve { background: #2e7d32; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        .btn-reject { background: #d32f2f; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        .badge { background: #fff3e0; color: #ef6c00; padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: 700; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <button onclick="location.href='Admin.html'" style="margin-bottom:10px; cursor:pointer;"><i class="fa fa-arrow-left"></i> Back</button>
-    <div id="requestList"></div>
+    <h2><i class="fa fa-user-shield"></i> Verification Requests</h2>
+    <div id="requestList">Loading requests...</div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-import { getFirestore, collection, doc, setDoc, updateDoc, onSnapshot, query, where, writeBatch, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
+<script>
 const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
-const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
-
-function escape(str) { return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-
-onAuthStateChanged(auth, (user) => {
-    if (!user || user.uid !== ADMIN_UID) window.location.href = "index.html";
-    else loadRequests();
-});
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
 function loadRequests() {
-    onSnapshot(query(collection(db, "verification_requests"), where("status", "==", "pending")), (snap) => {
+    db.collection("verification_requests").where("status", "==", "pending").onSnapshot(snap => {
         const list = document.getElementById('requestList');
-        list.innerHTML = snap.empty ? '<p>No pending requests.</p>' : '';
-        snap.forEach(docSnap => {
-            const d = docSnap.data();
-            const uid = docSnap.id;
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `
-                <h3>${escape(d.businessName)}</h3>
-                <div class="doc-grid">
-                    <img src="${d.idProofUrl}" onclick="window.open(this.src)">
-                    <img src="${d.paymentUrl}" onclick="window.open(this.src)">
+        if(snap.empty) { list.innerHTML = "No pending requests."; return; }
+        
+        list.innerHTML = snap.docs.map(doc => {
+            const d = doc.data();
+            return `
+            <div class="card">
+                <div style="display:flex; justify-content:space-between;">
+                    <strong>${d.businessName}</strong>
+                    <span class="badge">PENDING</span>
                 </div>
-                <div class="btn-group">
-                    <button class="btn btn-approve" id="app-${uid}" onclick="approveDealer('${uid}', '${escape(d.businessName)}')">APPROVE</button>
-                    <button class="btn btn-reject" onclick="rejectDealer('${uid}')">REJECT</button>
-                </div>`;
-            list.appendChild(card);
-        });
+                <div class="img-grid">
+                    <div><small>ID Proof</small><br><img src="${d.idProofUrl}" onclick="window.open(this.src)"></div>
+                    <div><small>Payment</small><br><img src="${d.paymentUrl}" onclick="window.open(this.src)"></div>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-approve" onclick="approveDealer('${d.userId}', '${d.businessName}')">Approve</button>
+                    <button class="btn-reject" onclick="rejectDealer('${d.userId}')">Reject</button>
+                </div>
+            </div>`;
+        }).join('');
     });
 }
 
-window.approveDealer = async (uid, bizName) => {
-    if (!confirm(`Approve ${bizName}?`)) return;
-    const btn = document.getElementById(`app-${uid}`);
-    btn.disabled = true;
-
+async function approveDealer(uid, bizName) {
+    if(!confirm("Approve this dealer?")) return;
     try {
-        // 1. Update User & Request (Using setDoc with merge to prevent "not found" errors)
-        await setDoc(doc(db, "users", uid), { isVerified: true, premiumDealer: true, businessName: bizName }, { merge: true });
-        await updateDoc(doc(db, "verification_requests", uid), { status: "approved", approvedAt: serverTimestamp() });
-
-        // 2. Update properties (Handling 500+ batch limit)
-        const props = await getDocs(query(collection(db, "properties"), where("ownerId", "==", uid)));
-        let batch = writeBatch(db);
-        let count = 0;
-        const promises = [];
-
-        props.forEach(p => {
-            batch.update(p.ref, { isVerified: true, businessName: bizName });
-            count++;
-            if (count === 500) {
-                promises.push(batch.commit());
-                batch = writeBatch(db);
-                count = 0;
-            }
+        // 1. Update Request Status
+        await db.collection("verification_requests").doc(uid).update({ status: "approved" });
+        // 2. Update User Profile
+        await db.collection("users").doc(uid).update({ 
+            isVerified: true, 
+            premiumDealer: true, 
+            businessName: bizName 
         });
-        if (count > 0) promises.push(batch.commit());
-        await Promise.all(promises);
+        alert("Dealer Approved!");
+    } catch(e) { alert(e.message); }
+}
 
-        alert("Dealer Verified!");
-    } catch (e) { alert("Error: " + e.message); btn.disabled = false; }
-};
+async function rejectDealer(uid) {
+    const reason = prompt("Enter rejection reason:");
+    if(!reason) return;
+    await db.collection("verification_requests").doc(uid).update({ status: "rejected", reason: reason });
+    alert("Rejected.");
+}
 
-window.rejectDealer = async (uid) => {
-    const reason = prompt("Reason:");
-    if (!reason || !confirm("Confirm rejection?")) return;
-    try {
-        await updateDoc(doc(db, "verification_requests", uid), { status: "rejected", reason: reason, rejectedAt: serverTimestamp() });
-        alert("Rejected.");
-    } catch (e) { alert(e.message); }
-};
+loadRequests();
 </script>
 </body>
 </html>
