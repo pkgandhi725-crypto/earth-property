@@ -1,130 +1,125 @@
 <!DOCTYPE html>
-<html lang="en" class="notranslate" translate="no">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="google" content="notranslate">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Earth Property - Home</title>
+    <title>Earth Property</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --primary: #2e7d32; --bg: #f0f2f5; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); padding-bottom: 90px; overflow-x: hidden; }
         
-        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); padding-bottom: 80px; overflow-x: hidden; top: 0px !important; position: static !important; }
-        .goog-te-banner-frame.skiptranslate, .goog-te-banner-frame { display: none !important; }
-        #goog-gt-tt, .goog-te-balloon-frame { display: none !important; }
-
-        header { background: var(--primary); padding: 15px; color: white; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-        .header-left { display: flex; align-items: center; gap: 10px; }
-        .menu-btn { font-size: 20px; cursor: pointer; padding: 5px; display: flex; align-items: center; } 
-        .logo-text { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.5px; } 
+        header { background: var(--primary); padding: 12px 15px; color: white; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .brand-info { display: flex; flex-direction: column; }
+        .logo-text { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px; line-height: 1; }
+        .user-welcome { font-size: 12px; font-weight: 500; opacity: 0.95; margin-top: 3px; }
         
-        .header-icons { display: flex; gap: 10px; align-items: center; }
-        .icon-btn { color: #fff; background: rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .auth-btn { cursor: pointer; font-size: 12px; font-weight: 700; background: #fff; color: var(--primary); padding: 8px 16px; border-radius: 8px; border: none; }
+        .search-box { background: white; border-radius: 12px; display: flex; padding: 10px 15px; align-items: center; gap: 10px; margin-top: 5px; }
+        .search-box input { border: none; width: 100%; outline: none; font-size: 15px; color: #333; }
 
-        .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 5px 0 15px rgba(0,0,0,0.2); overflow-y: auto; }
+        .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
         .drawer.open { left: 0; }
-        [dir="rtl"] .drawer { left: auto; right: -285px; }
-        [dir="rtl"] .drawer.open { right: 0; left: auto; }
-
-        .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; text-align: center; }
-        .drawer-item { padding: 15px 20px; display: flex; align-items: center; gap: 15px; color: #333; text-decoration: none; font-weight: 600; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
+        .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; }
+        .drawer-item { padding: 16px 20px; display: flex; align-items: center; gap: 15px; color: #333; text-decoration: none; font-weight: 600; border-bottom: 1px solid #f5f5f5; cursor: pointer; }
         .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 4500; display: none; }
 
-        .search-box { background: white; border-radius: 12px; display: flex; padding: 8px 15px; align-items: center; gap: 10px; margin: 0 10px 10px 10px; border: 1px solid #ddd; }
-        .search-box input { border: none; width: 100%; outline: none; padding: 5px 0; font-size: 14px; }
+        .lang-section { padding: 15px 20px; border-top: 2px solid #f0f2f5; }
+        .lang-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 8px; }
+        .lang-btn { padding: 8px; border-radius: 8px; border: 1px solid #ddd; text-align: center; font-size: 12px; cursor: pointer; font-weight: 600; }
+        .lang-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        .prop-card { background: white; border-radius: 16px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; border: 1px solid #eee; }
-        .img-container { position: relative; width: 100%; height: 230px; background: #e0e0e0; }
-        .img-container img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .prop-card { background: white; border-radius: 18px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; }
+        .img-container { position: relative; width: 100%; height: 240px; background: #eee; overflow-x: auto; display: flex; scroll-snap-type: x mandatory; scrollbar-width: none; }
+        .img-container img { min-width: 100%; height: 100%; object-fit: cover; scroll-snap-align: start; cursor: pointer; }
+        .img-counter { position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.7); color: white; padding: 4px 10px; border-radius: 8px; font-size: 11px; z-index: 5; }
         
-        .prop-info { padding: 15px; }
-        .prop-price { font-size: 22px; font-weight: 800; color: var(--primary); }
-        .prop-title { font-weight: 700; font-size: 16px; margin: 5px 0; color: #333; }
+        .float-btns { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; gap: 10px; z-index: 10; }
+        .c-btn { background: rgba(255,255,255,0.95); border: none; border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.15); color: #333; cursor: pointer; transition: 0.2s; }
+        .c-btn:active { transform: scale(0.9); }
+        .fav-btn.active { color: #d32f2f; }
 
-        .btn-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 15px; }
-        .btn { padding: 12px 5px; border-radius: 10px; font-weight: 700; font-size: 12px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
-        .btn-call { background: #e8f5e9; color: #2e7d32; } 
+        .prop-info { padding: 18px; }
+        .prop-price { font-size: 24px; font-weight: 800; color: var(--primary); }
+        .prop-title { font-weight: 700; font-size: 17px; margin: 5px 0; color: #333; }
+        
+        .btn-group { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 10px; margin-top: 15px; }
+        .btn { padding: 12px 2px; border-radius: 10px; font-weight: 700; font-size: 14px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn-call { background: #f1f8e9; color: #2e7d32; } 
         .btn-wa { background: #25D366; color: white; } 
         .btn-chat { background: var(--primary); color: white; }
 
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 8px 0; border-top: 1px solid #e0e0e0; z-index: 2000; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: #888; text-decoration: none; font-size: 11px; font-weight: 600; flex: 1; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 10px 0; border-top: 1px solid #eee; z-index: 1000; }
+        .nav-item { flex: 1; text-align: center; color: #888; text-decoration: none; font-size: 11px; font-weight: 600; }
         .nav-item.active { color: var(--primary); }
-        .post-btn-main { background: var(--primary); color: white; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-
-        #langModal { position: fixed; bottom: -100%; left: 0; width: 100%; max-height: 70%; background: white; z-index: 9999; border-radius: 20px 20px 0 0; overflow-y: auto; box-shadow: 0 -5px 20px rgba(0,0,0,0.2); padding: 20px; transition: 0.3s ease-in-out; }
-        #langModal.show { bottom: 0; }
-        .lang-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: 600; }
+        .post-btn-main { background: var(--primary); color: white !important; width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: -35px auto 5px; box-shadow: 0 5px 15px rgba(46,125,50,0.4); }
+        
+        #fullOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 6000; display: none; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
-<div id="google_translate_element" style="display:none;"></div>
-<div class="drawer-overlay" id="overlayPanel" onclick="toggleDrawer()"></div>
-
+<div class="drawer-overlay" id="dOverlay" onclick="toggleDrawer()"></div>
 <div class="drawer" id="sideDrawer">
-    <div class="drawer-header notranslate">
-        <i class="fa fa-user-circle fa-3x"></i>
-        <div id="dName" style="margin-top:10px; font-weight:700;">Loading...</div>
+    <div class="drawer-header">
+        <i class="fa fa-user-circle fa-4x"></i>
+        <div id="dName" style="margin-top:12px; font-weight:700; font-size:1.1rem;">Earth Guest</div>
     </div>
-    <a href="profile.html" class="drawer-item"><i class="fa fa-user"></i> My Profile</a>
-    <a href="my-ads.html" class="drawer-item"><i class="fa fa-layer-group"></i> My Ads</a>
-    <a href="favorites.html" class="drawer-item"><i class="fa-regular fa-heart"></i> My Favorites</a>
+    <a href="profile.html" class="drawer-item"><i class="fa fa-user"></i> <span data-i18n="profile">Profile</span></a>
+    <a href="my-ads.html" class="drawer-item"><i class="fa fa-layer-group"></i> <span data-i18n="myAds">My Ads</span></a>
+    <a href="favorites.html" class="drawer-item"><i class="fa-regular fa-heart"></i> <span data-i18n="favs">Favs</span></a>
     
-    <div class="drawer-item notranslate" onclick="openLangModal()">
-        <i class="fa fa-globe"></i> Language / भाषा
+    <div class="lang-section">
+        <div style="font-size:12px; font-weight:700; color:#888;" data-i18n="language">LANGUAGE</div>
+        <div class="lang-grid">
+            <div class="lang-btn" data-lang="en" onclick="setLanguage('en')">English</div>
+            <div class="lang-btn" data-lang="hi" onclick="setLanguage('hi')">हिंदी</div>
+            <div class="lang-btn" data-lang="ar" onclick="setLanguage('ar')">العربية</div>
+        </div>
     </div>
-    <div class="drawer-item notranslate" onclick="setDefaultEnglish()" style="color:#2e7d32;">
-        <i class="fa fa-language"></i> Reset to English
-    </div>
-    
-    <div class="drawer-item notranslate" onclick="auth.signOut().then(()=>location.reload())" style="color:red; margin-top:20px;">
-        <i class="fa fa-sign-out-alt"></i> Logout
+
+    <div class="drawer-item" id="logoutBtn" style="margin-top:20px; color:#666;">
+        <i class="fa fa-sign-out-alt"></i> <span data-i18n="logout">Logout</span>
     </div>
 </div>
 
 <header>
-    <div class="header-top notranslate">
+    <div class="header-top">
         <div class="header-left">
-            <div class="menu-btn" onclick="toggleDrawer()"><i class="fa fa-bars"></i></div>
-            <span class="logo-text">Earth Property</span>
+            <button onclick="toggleDrawer()" aria-label="Menu" id="menuToggle" style="background:none; border:none; color:white; cursor:pointer; font-size:22px;">
+                <i class="fa fa-bars"></i>
+            </button>
+            <div class="brand-info">
+                <span class="logo-text">Earth Property</span>
+                <span id="welcomeUser" class="user-welcome"></span>
+            </div>
         </div>
         <div class="header-icons">
-            <div id="adminLink" style="display:none;" onclick="location.href='admin-dashboard.html'" class="icon-btn"><i class="fa fa-user-shield"></i></div>
-            <div class="icon-btn" onclick="location.href='inbox.html'"><i class="fa fa-bell"></i></div>
-            <button id="authBtn" class="auth-btn">Login</button>
+            <button id="authBtn" style="border:none; background:white; color:var(--primary); padding:6px 14px; border-radius:8px; font-weight:800; font-size:11px;" data-i18n="login">LOGIN</button>
         </div>
     </div>
     <div class="search-box">
         <i class="fa fa-search" style="color:#aaa;"></i>
-        <input type="text" id="citySearch" placeholder="Search city or area..." oninput="filterDataDebounced()">
+        <input type="text" id="citySearch" data-i18n-placeholder="searchPlaceholder" oninput="filterAds()">
     </div>
 </header>
 
 <div id="propertyList"></div>
 
-<div class="bottom-nav notranslate">
-    <a href="index.html" class="nav-item active"><i class="fa fa-house"></i><span>Explore</span></a>
-    <a href="my-ads.html" class="nav-item"><i class="fa fa-layer-group"></i><span>My Ads</span></a>
-    <a href="add-property.html" class="nav-item" style="position:relative;">
-        <div class="post-btn-main"><i class="fa fa-plus"></i></div>
-        <span style="margin-top:40px;">Post</span>
-    </a>
-    <a href="favorites.html" class="nav-item"><i class="fa-regular fa-heart"></i><span>Favs</span></a>
-    <a href="profile.html" class="nav-item"><i class="fa fa-user-circle"></i><span>Profile</span></a>
+<div class="bottom-nav">
+    <a href="index.html" class="nav-item active"><i class="fa fa-house fa-lg"></i><br><span data-i18n="explore">Explore</span></a>
+    <a href="my-ads.html" class="nav-item"><i class="fa fa-layer-group fa-lg"></i><br><span data-i18n="myAds">My Ads</span></a>
+    <a href="add-property.html" class="nav-item"><div class="post-btn-main"><i class="fa fa-plus"></i></div><span data-i18n="post">Post</span></a>
+    <a href="favorites.html" class="nav-item"><i class="fa-regular fa-heart fa-lg"></i><br><span data-i18n="favs">Favs</span></a>
+    <a href="profile.html" class="nav-item"><i class="fa fa-user-circle fa-lg"></i><br><span data-i18n="profile">Profile</span></a>
 </div>
 
-<div id="langModal" class="notranslate">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-        <h3 style="margin:0;">Select Language</h3>
-        <i class="fa fa-times" onclick="closeLangModal()" style="font-size:20px; cursor:pointer; color:#666;"></i>
-    </div>
-    <div id="langList"></div>
-</div>
+<div id="fullOverlay" onclick="this.style.display='none'"><img id="fullImg" style="max-width:95%; max-height:85%; border-radius:8px;"></div>
 
+<script src="translations.js"></script>
+<script src="lang.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -135,158 +130,170 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-let allProps = [];
-let searchTimeout;
+const DOM = {
+    propertyList: document.getElementById('propertyList'),
+    welcomeUser: document.getElementById('welcomeUser'),
+    authBtn: document.getElementById('authBtn'),
+    sideDrawer: document.getElementById('sideDrawer'),
+    dOverlay: document.getElementById('dOverlay'),
+    citySearch: document.getElementById('citySearch'),
+    menuToggle: document.getElementById('menuToggle'),
+    logoutBtn: document.getElementById('logoutBtn')
+};
 
-// 🔒 Security: Escape HTML to prevent XSS
-function escapeHtml(text) {
-    const div = document.createElement("div");
-    div.textContent = text || "";
-    return div.innerHTML;
-}
+let allAds = [];
+let userFavorites = [];
+let unsubscribeAds;
 
-const languages = [
-    ["en","English"],["hi","Hindi"],["mr","Marathi"],["ta","Tamil"],["te","Telugu"],["kn","Kannada"],["gu","Gujarati"],["pa","Punjabi"],["bn","Bengali"],["ur","Urdu"],
-    ["ar","Arabic"],["ru","Russian"],["fr","French"],["de","German"],["es","Spanish"]
-];
+// Security & Sanitization
+const escapeHtml = str => { const div = document.createElement('div'); div.textContent = str || ""; return div.innerHTML; };
+const sanitizeImageUrl = url => { try { const p = new URL(url); return ['http:','https:'].includes(p.protocol) ? url : 'https://via.placeholder.com/400x300?text=Invalid+Image'; } catch { return 'https://via.placeholder.com/400x300?text=Invalid+Image'; } };
 
-function openLangModal(){
-    const modal = document.getElementById("langModal");
-    const list = document.getElementById("langList");
-    list.innerHTML = languages.map(l => `<div class="lang-item" onclick="setLanguage('${l[0]}')">${l[1]}</div>`).join("");
-    modal.classList.add('show');
-    document.getElementById('overlayPanel').style.display = 'block';
-}
-
-function closeLangModal(){
-    document.getElementById("langModal").classList.remove('show');
-}
-
-function setLanguage(lang){
-    localStorage.setItem("siteLang", lang);
-    const select = document.querySelector(".goog-te-combo");
-    if(select){
-        select.value = lang;
-        select.dispatchEvent(new Event("change", {bubbles: true}));
-    }
-    const isRTL = ["ar","ur","fa","he"].includes(lang);
-    document.body.dir = isRTL ? "rtl" : "ltr";
-    closeLangModal();
-    if(document.getElementById('sideDrawer').classList.contains('open')) toggleDrawer();
-}
-
-function setDefaultEnglish(){
-    localStorage.removeItem("siteLang");
-    document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
-    document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + location.hostname;
-    location.reload();
-}
-
-function googleTranslateElementInit() {
-    new google.translate.TranslateElement({pageLanguage: 'en', autoDisplay: false}, 'google_translate_element');
-    const saved = localStorage.getItem("siteLang");
-    if(saved && saved !== "en"){
-        setTimeout(() => setLanguage(saved), 1200);
-    }
-}
-
+// UX Logic
 function toggleDrawer() {
-    const d = document.getElementById('sideDrawer');
-    const o = document.getElementById('overlayPanel');
-    d.classList.toggle('open');
-    o.style.display = d.classList.contains('open') ? 'block' : 'none';
+    const isOpen = DOM.sideDrawer.classList.toggle('open');
+    DOM.dOverlay.style.display = isOpen ? 'block' : 'none';
+    DOM.menuToggle.setAttribute('aria-expanded', isOpen);
 }
 
-function filterDataDebounced() {
-    clearTimeout(searchTimeout);
-    const term = document.getElementById('citySearch').value.toLowerCase();
-    searchTimeout = setTimeout(() => {
-        const filtered = allProps.filter(p => 
-            (p.title || "").toLowerCase().includes(term) || 
-            (p.location || "").toLowerCase().includes(term)
-        );
-        renderProps(filtered);
-    }, 400);
-}
+// Fixed Translation & Card Logic (Issue #1, #10)
+function createPropertyCard(p) {
+    const card = document.createElement('div');
+    card.className = 'prop-card';
+    const isFav = userFavorites.includes(p.id) ? 'active' : '';
+    const imgs = (p.images?.length > 0) ? p.images.map(sanitizeImageUrl) : ['https://via.placeholder.com/400x300?text=No+Image'];
 
-function loadProps() {
-    db.collection("properties").where("isExpired","==",false).orderBy("createdAt","desc").onSnapshot(s => {
-        allProps = s.docs.map(d => ({id:d.id, ...d.data()}));
-        renderProps(allProps);
-    });
-}
-
-function renderProps(data) {
-    const list = document.getElementById('propertyList');
-    if(data.length === 0) {
-        list.innerHTML = '<center style="padding:50px; color:#666;">No ads found.</center>';
-        return;
-    }
-    list.innerHTML = data.map(p => `
-        <div class="prop-card">
+    card.innerHTML = `
+        <div style="position:relative;">
+            <div class="float-btns">
+                <button class="c-btn share-btn"><i class="fa fa-share-nodes"></i></button>
+                <button class="c-btn fav-btn ${isFav}"><i class="fa fa-heart"></i></button>
+            </div>
             <div class="img-container">
-                <img src="${p.images?.[0] || 'https://via.placeholder.com/400x300'}" loading="lazy">
+                ${imgs.map((url, i) => `<img src="${escapeHtml(url)}" alt="Property" loading="lazy" data-idx="${i}">`).join('')}
             </div>
-            <div class="prop-info">
-                <div class="prop-price notranslate">₹${Number(p.price||0).toLocaleString('en-IN')}</div>
-                <div class="prop-title">${escapeHtml(p.title)}</div>
-                <div style="font-size:12px; color:#666; margin-bottom:10px;"><i class="fa fa-map-marker-alt"></i> ${escapeHtml(p.location)}</div>
-                <div class="btn-group notranslate">
-                    <button class="btn btn-call" onclick="revealContact('${p.id}', this, false)"><i class="fa fa-phone"></i> Call</button>
-                    <button class="btn btn-wa" onclick="revealContact('${p.id}', this, true)"><i class="fa-brands fa-whatsapp"></i> Chat</button>
-                    <button class="btn btn-chat" onclick="location.href='chat.html?to=${p.ownerId}&p=${p.id}'">Chat</button>
-                </div>
+            <div class="img-counter">${imgs.length} Photos</div>
+        </div>
+        <div class="prop-info">
+            <div class="prop-price">₹${Number(p.price||0).toLocaleString('en-IN')}</div>
+            <div class="prop-title">${escapeHtml(p.title)}</div>
+            <div style="font-size:13px; color:#666; margin-bottom:10px;"><i class="fa fa-map-marker-alt"></i> ${escapeHtml(p.location)}</div>
+            <div class="btn-group">
+                <button class="btn btn-call"><i class="fa fa-phone"></i> <span>${t('call')}</span></button>
+                <button class="btn btn-wa"><i class="fa-brands fa-whatsapp"></i> <span>${t('whatsapp')}</span></button>
+                <button class="btn btn-chat"><i class="fa-regular fa-comment-dots"></i> <span>${t('chat')}</span></button>
             </div>
-        </div>`).join('');
+        </div>`;
+
+    card.querySelector('.share-btn').onclick = () => shareAd(p.id);
+    card.querySelector('.fav-btn').onclick = (e) => toggleFav(p.id, e.currentTarget);
+    card.querySelector('.btn-call').onclick = (e) => revealContact(p.id, e.currentTarget, false);
+    card.querySelector('.btn-wa').onclick = (e) => revealContact(p.id, e.currentTarget, true);
+    card.querySelector('.btn-chat').onclick = () => location.href = `chat.html?to=${encodeURIComponent(p.ownerId)}&p=${encodeURIComponent(p.id)}`;
+    card.querySelectorAll('img').forEach(img => img.onclick = () => openFull(imgs[img.dataset.idx]));
+
+    return card;
 }
 
-// 🛡️ Security: Robust Null Safety & Error Handling
-async function revealContact(id, btn, wa) {
+function renderAds(data) {
+    DOM.propertyList.innerHTML = '';
+    if(data.length === 0) { 
+        DOM.propertyList.innerHTML = `<center style="padding:50px; color:#666;">${t('noAds')}</center>`; 
+        return; 
+    }
+    const fragment = document.createDocumentFragment();
+    data.forEach(p => fragment.appendChild(createPropertyCard(p)));
+    DOM.propertyList.appendChild(fragment);
+}
+
+// Feature Logic
+async function revealContact(id, btn, isWa) {
+    if(!auth.currentUser) { alert(t('loginRequired') || "Login Required"); location.href='login.html'; return; }
+    const original = btn.innerHTML;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
     try {
-        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
-        const pDoc = await db.collection("properties").doc(id).get();
-        if(!pDoc.exists) throw new Error("Property not found");
-
-        const ownerId = pDoc.data().ownerId;
-        const uDoc = await db.collection("users").doc(ownerId).get();
-        if(!uDoc.exists) throw new Error("Seller not found");
-
-        const num = uDoc.data()?.phone;
-        if(!num) {
-            alert("Contact number not shared by seller");
-            btn.innerHTML = wa ? '<i class="fa-brands fa-whatsapp"></i> Chat' : '<i class="fa fa-phone"></i> Call';
-            return;
-        }
-
-        if(wa) window.open(`https://wa.me/91${num}`); 
-        else window.location.href=`tel:${num}`;
-        
-        btn.innerHTML = wa ? '<i class="fa-brands fa-whatsapp"></i> Chat' : `<i class="fa fa-phone"></i> ${num}`;
-    } catch(e) {
-        console.error("Contact Error:", e);
-        alert("Unable to fetch contact details");
-        btn.innerHTML = wa 
-    ? '<i class="fa-brands fa-whatsapp"></i> Chat' 
-    : '<i class="fa fa-phone"></i> Call';
-    }
+        const doc = await db.collection("properties").doc(id).get();
+        if(!doc.exists) throw new Error();
+        const num = doc.data().phone;
+        if(isWa) window.open(`https://wa.me/91${num}`);
+        else window.location.href = `tel:${num}`;
+    } catch(e) { alert(t('errorLoadingContact') || "Contact error"); }
+    btn.innerHTML = original;
 }
 
+async function shareAd(id) {
+    const url = `${window.location.origin}/index.html?id=${encodeURIComponent(id)}`;
+    try {
+        if(navigator.share) await navigator.share({title: 'Earth Property', url});
+        else { await navigator.clipboard.writeText(url); alert(t('linkCopied')); }
+    } catch(e) { if(e.name !== 'AbortError') prompt(t('copyLink') || "Link:", url); }
+}
+
+async function toggleFav(id, btn) {
+    if(!auth.currentUser) return alert(t('loginRequired'));
+    const isActive = btn.classList.toggle('active');
+    try {
+        await db.collection("users").doc(auth.currentUser.uid).update({ 
+            favorites: isActive ? firebase.firestore.FieldValue.arrayUnion(id) : firebase.firestore.FieldValue.arrayRemove(id) 
+        });
+    } catch(e) { btn.classList.toggle('active'); alert(t('errorUpdatingFavorites')); }
+}
+
+function openFull(url) { document.getElementById('fullImg').src = url; document.getElementById('fullOverlay').style.display = 'flex'; }
+function filterAds() {
+    const val = DOM.citySearch.value.toLowerCase();
+    const filtered = allAds.filter(a => (a.location||'').toLowerCase().includes(val) || (a.title||'').toLowerCase().includes(val));
+    renderAds(filtered);
+}
+
+// Global UI Listeners (Issue #5, #6)
+document.addEventListener('keydown', e => { if(e.key==='Escape' && DOM.sideDrawer.classList.contains('open')) toggleDrawer(); });
+document.querySelectorAll('.drawer-item[href]').forEach(link => link.onclick = () => { if(DOM.sideDrawer.classList.contains('open')) toggleDrawer(); });
+window.addEventListener('beforeunload', () => { if (unsubscribeAds) unsubscribeAds(); });
+
+// Auth Observer
 auth.onAuthStateChanged(async user => {
-    const btn = document.getElementById('authBtn');
-    const dName = document.getElementById('dName');
+    if (unsubscribeAds) unsubscribeAds();
+    DOM.propertyList.innerHTML = `<center style="padding:100px;"><i class="fa fa-spinner fa-spin fa-3x" style="color:var(--primary);"></i><p style="margin-top:15px; color:#666;">${t('loading') || 'Loading...'}</p></center>`;
+
     if(user) {
+        DOM.authBtn.onclick = () => auth.signOut().then(()=>location.reload());
+        DOM.logoutBtn.onclick = () => auth.signOut().then(()=>location.reload());
+        
         const uDoc = await db.collection("users").doc(user.uid).get();
-        dName.innerText = uDoc.data()?.name || "Earth User";
-        btn.innerText = "Logout";
-        btn.onclick = () => auth.signOut().then(() => location.reload());
-        if(user.uid === "WOY9f67DachGVTuhR4tSJ1BHozx1") document.getElementById('adminLink').style.display = 'flex';
+        if(uDoc.exists) {
+            const name = uDoc.data().name || "User";
+            document.getElementById('dName').innerText = name;
+            userFavorites = uDoc.data().favorites || [];
+            updateWelcome(name);
+        }
     } else {
-        dName.innerText = "Earth Guest";
-        btn.onclick = () => location.href = 'login.html';
+        userFavorites = [];
+        updateWelcome("Guest");
+        DOM.authBtn.onclick = () => location.href='login.html';
     }
-    loadProps();
+    
+    unsubscribeAds = db.collection("properties").where("isExpired","==",false).orderBy("createdAt", "desc").onSnapshot(s => {
+        allAds = s.docs.map(d => ({id: d.id, ...d.data()}));
+        renderAds(allAds);
+    }, err => { 
+        DOM.propertyList.innerHTML = `<center style="padding:50px; color:red;">${t('errorLoadingAds') || 'Error loading ads.'}</center>`;
+    });
 });
+
+function updateWelcome(name) {
+    const welcomeTxt = t('welcome') || "Hi, Guest";
+    DOM.welcomeUser.textContent = welcomeTxt.replace('Guest', name).replace('मेहमान', name);
+}
+
+// Language Override for Re-rendering (Issue #1, #11)
+const originalSetLanguage = window.setLanguage;
+window.setLanguage = function(lang) {
+    if(typeof originalSetLanguage === 'function') originalSetLanguage(lang);
+    renderAds(allAds); // Re-render all cards with new t() values
+    if(auth.currentUser) updateWelcome(document.getElementById('dName').innerText);
+    else updateWelcome("Guest");
+};
 </script>
-<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
 </html>
