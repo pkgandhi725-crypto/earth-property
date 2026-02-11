@@ -19,7 +19,6 @@
         .ad-details h4 { margin: 0; font-size: 17px; color: #222; font-weight: 700; line-height: 1.3; }
         .price { font-size: 20px; font-weight: 900; color: var(--primary); margin: 6px 0; }
         
-        /* Status Badges */
         .status-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 800; padding: 5px 10px; border-radius: 20px; text-transform: uppercase; }
         .active-badge { background: #e8f5e9; color: #2e7d32; }
         .expired-badge { background: #ffebee; color: #d32f2f; }
@@ -66,6 +65,23 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
+// ✅ 1. TIME AGO LOGIC
+function getTimeAgo(timestamp) {
+    if (!timestamp) return "Just now";
+    const now = new Date();
+    const postedDate = timestamp.toDate();
+    const diffInSeconds = Math.floor((now - postedDate) / 1000);
+
+    if (diffInSeconds < 60) return "Just now";
+    const mins = Math.floor(diffInSeconds / 60);
+    if (mins < 60) return `${mins} mins ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours} hours ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days} days ago`;
+    return postedDate.toLocaleDateString();
+}
+
 auth.onAuthStateChanged(user => {
     if (!user) return location.href = 'login.html';
     loadUserAds(user.uid);
@@ -85,7 +101,6 @@ function loadUserAds(uid) {
           }
 
           document.getElementById('noAds').style.display = 'none';
-          
           snapshot.forEach(doc => {
               const ad = doc.data();
               ad.id = doc.id;
@@ -96,16 +111,15 @@ function loadUserAds(uid) {
 
 function createCard(ad) {
     const now = new Date();
-    let isExpired = ad.isExpired || false; // Database flag
-    let daysLeft = 0;
+    let isExpired = ad.isExpired || false;
     
-    // Check if expiry date has passed manually (for extra safety)
+    // Check Expiry Logic
     if (ad.expiryDate) {
         const expiry = ad.expiryDate.toDate();
-        daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
-        if (daysLeft <= 0) isExpired = true;
+        if (now > expiry) isExpired = true;
     }
 
+    const timeAgoText = getTimeAgo(ad.createdAt);
     const img = (ad.images && ad.images.length > 0) ? ad.images[0] : 'https://via.placeholder.com/150';
 
     return `
@@ -116,7 +130,7 @@ function createCard(ad) {
                 <h4>${ad.title || 'Property'}</h4>
                 <div class="price">₹${Number(ad.price || 0).toLocaleString('en-IN')}</div>
                 <div class="status-badge ${isExpired ? 'expired-badge' : 'active-badge'}">
-                    <i class="fa fa-circle"></i> ${isExpired ? 'Expired' : 'Active - ' + daysLeft + ' Days Left'}
+                    <i class="fa fa-clock"></i> ${isExpired ? 'Expired' : 'Active - Posted ' + timeAgoText}
                 </div>
             </div>
         </div>
@@ -134,9 +148,8 @@ function createCard(ad) {
 async function renewAd(id, btn) {
     if(!confirm("Bhai, kya aap is ad ko 30 din ke liye badhana chahte ho?")) return;
     
-    const originalText = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>...';
     
     const newExpiry = new Date();
     newExpiry.setDate(newExpiry.getDate() + 30);
@@ -144,22 +157,22 @@ async function renewAd(id, btn) {
     try {
         await db.collection("properties").doc(id).update({
             expiryDate: firebase.firestore.Timestamp.fromDate(newExpiry),
-            isExpired: false, // Ad wapas active ho gayi
+            isExpired: false,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(), // Date reset taaki "Just now" dikhaye
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        alert("Ad Renewed! Ab ye phir se 30 din tak dikhegi. 🎉");
+        alert("Ad Renewed! 🎉");
     } catch(e) { 
         alert("Error: " + e.message); 
         btn.disabled = false; 
-        btn.innerHTML = originalText;
+        btn.innerHTML = '<i class="fa fa-sync-alt"></i> Renew Ad';
     }
 }
 
 async function deleteAd(id) {
-    if(confirm("Delete this listing permanently?")) {
+    if(confirm("Permanently delete?")) {
         try {
             await db.collection("properties").doc(id).delete();
-            alert("Deleted.");
         } catch(e) { alert("Error: " + e.message); }
     }
 }
