@@ -10,7 +10,7 @@
         :root { --primary: #2e7d32; --bg: #f0f2f5; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        /* Language Banner Fix */
+        /* Language Banner Fix: Google Translate ki bar hide karne ke liye */
         body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); padding-bottom: 80px; overflow-x: hidden; top: 0px !important; position: static !important; }
         .goog-te-banner-frame.skiptranslate, .goog-te-banner-frame { display: none !important; }
         #goog-gt-tt, .goog-te-balloon-frame { display: none !important; }
@@ -21,7 +21,6 @@
         .menu-btn { font-size: 20px; cursor: pointer; padding: 5px; display: flex; align-items: center; } 
         .logo-text { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.5px; } 
         
-        /* Header Icons logic */
         .header-icons { display: flex; gap: 10px; align-items: center; }
         .icon-btn { color: #fff; background: rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .auth-btn { cursor: pointer; font-size: 12px; font-weight: 700; background: #fff; color: var(--primary); padding: 8px 16px; border-radius: 8px; border: none; }
@@ -29,7 +28,8 @@
         /* Drawer Design */
         .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 5px 0 15px rgba(0,0,0,0.2); overflow-y: auto; }
         .drawer.open { left: 0; }
-        /* RTL support for Drawer */
+        
+        /* RTL support: Jab Urdu/Arabic ho toh drawer right se khulega */
         [dir="rtl"] .drawer { left: auto; right: -285px; }
         [dir="rtl"] .drawer.open { right: 0; left: auto; }
 
@@ -44,8 +44,6 @@
         .prop-card { background: white; border-radius: 16px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; border: 1px solid #eee; }
         .img-container { position: relative; width: 100%; height: 230px; background: #e0e0e0; }
         .img-container img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .action-btns { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; gap: 10px; z-index: 10; }
-        .circle-btn { background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); font-size: 16px; color: #333; }
         
         .prop-info { padding: 15px; }
         .prop-price { font-size: 22px; font-weight: 800; color: var(--primary); }
@@ -63,10 +61,11 @@
         .nav-item.active { color: var(--primary); }
         .post-btn-main { background: var(--primary); color: white; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
 
-        /* Modal RTL Protection */
+        /* Modal Design */
         #langModal { position: fixed; bottom: -100%; left: 0; width: 100%; max-height: 70%; background: white; z-index: 9999; border-radius: 20px 20px 0 0; overflow-y: auto; box-shadow: 0 -5px 20px rgba(0,0,0,0.2); padding: 20px; transition: 0.3s ease-in-out; }
         #langModal.show { bottom: 0; }
-        .lang-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: 600; }
+        .lang-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; font-weight: 600; color: #333; }
+        .lang-item:active { background: #f0f0f0; }
     </style>
 </head>
 <body>
@@ -140,12 +139,15 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-// Firebase initialization remains same...
 const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
+let allProps = []; // Search ke liye global data
+let searchTimeout;
+
+// 🌍 Language Logic
 const languages = [
     ["en","English"],["hi","Hindi"],["mr","Marathi"],["ta","Tamil"],["te","Telugu"],["kn","Kannada"],["gu","Gujarati"],["pa","Punjabi"],["bn","Bengali"],["ur","Urdu"],
     ["ar","Arabic"],["ru","Russian"],["fr","French"],["de","German"],["es","Spanish"]
@@ -171,12 +173,11 @@ function setLanguage(lang){
         select.dispatchEvent(new Event("change", {bubbles: true}));
     }
     
-    // RTL Check
     const isRTL = ["ar","ur","fa","he"].includes(lang);
     document.body.dir = isRTL ? "rtl" : "ltr";
     
     closeLangModal();
-    toggleDrawer();
+    if(document.getElementById('sideDrawer').classList.contains('open')) toggleDrawer();
 }
 
 function setDefaultEnglish(){
@@ -199,42 +200,42 @@ function toggleDrawer() {
     o.style.display = d.classList.contains('open') ? 'block' : 'none';
 }
 
-// Auth & Data loading logic (Slightly improved)
-auth.onAuthStateChanged(async user => {
-    const btn = document.getElementById('authBtn');
-    const dName = document.getElementById('dName');
-    if(user) {
-        const uDoc = await db.collection("users").doc(user.uid).get();
-        dName.innerText = uDoc.data()?.name || "Earth User";
-        btn.innerText = "Logout";
-        btn.onclick = () => auth.signOut().then(() => location.reload());
-        if(user.uid === "WOY9f67DachGVTuhR4tSJ1BHozx1") document.getElementById('adminLink').style.display = 'flex';
-    } else {
-        dName.innerText = "Earth Guest";
-        btn.onclick = () => location.href = 'login.html';
-    }
-    loadProps();
-});
+// 🔥 Search Logic (Debounced)
+function filterDataDebounced() {
+    clearTimeout(searchTimeout);
+    const term = document.getElementById('citySearch').value.toLowerCase();
+    searchTimeout = setTimeout(() => {
+        const filtered = allProps.filter(p => 
+            (p.title || "").toLowerCase().includes(term) || 
+            (p.location || "").toLowerCase().includes(term)
+        );
+        renderProps(filtered);
+    }, 400);
+}
 
-// Load Props and other functions...
-// (Rendering and revealContact logic remains same as your perfect version)
+// 🔥 Load & Render Data
 function loadProps() {
     db.collection("properties").where("isExpired","==",false).orderBy("createdAt","desc").onSnapshot(s => {
-        const data = s.docs.map(d => ({id:d.id, ...d.data()}));
-        renderProps(data);
+        allProps = s.docs.map(d => ({id:d.id, ...d.data()}));
+        renderProps(allProps);
     });
 }
 
 function renderProps(data) {
     const list = document.getElementById('propertyList');
+    if(data.length === 0) {
+        list.innerHTML = '<center style="padding:50px; color:#666;">No ads found.</center>';
+        return;
+    }
     list.innerHTML = data.map(p => `
         <div class="prop-card">
             <div class="img-container">
                 <img src="${p.images?.[0] || 'https://via.placeholder.com/400x300'}" loading="lazy">
             </div>
             <div class="prop-info">
-                <div class="prop-price">₹${Number(p.price||0).toLocaleString('en-IN')}</div>
+                <div class="prop-price notranslate">₹${Number(p.price||0).toLocaleString('en-IN')}</div>
                 <div class="prop-title">${p.title}</div>
+                <div style="font-size:12px; color:#666; margin-bottom:10px;"><i class="fa fa-map-marker-alt"></i> ${p.location || ''}</div>
                 <div class="btn-group notranslate">
                     <button class="btn btn-call" onclick="revealContact('${p.id}', this, false)"><i class="fa fa-phone"></i> Call</button>
                     <button class="btn btn-wa" onclick="revealContact('${p.id}', this, true)"><i class="fa-brands fa-whatsapp"></i> Chat</button>
@@ -250,6 +251,22 @@ async function revealContact(id, btn, wa) {
     const num = uDoc.data().phone;
     if(wa) window.open(`https://wa.me/91${num}`); else window.location.href=`tel:${num}`;
 }
+
+auth.onAuthStateChanged(async user => {
+    const btn = document.getElementById('authBtn');
+    const dName = document.getElementById('dName');
+    if(user) {
+        const uDoc = await db.collection("users").doc(user.uid).get();
+        dName.innerText = uDoc.data()?.name || "Earth User";
+        btn.innerText = "Logout";
+        btn.onclick = () => auth.signOut().then(() => location.reload());
+        if(user.uid === "WOY9f67DachGVTuhR4tSJ1BHozx1") document.getElementById('adminLink').style.display = 'flex';
+    } else {
+        dName.innerText = "Earth Guest";
+        btn.onclick = () => location.href = 'login.html';
+    }
+    loadProps();
+});
 </script>
 <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
