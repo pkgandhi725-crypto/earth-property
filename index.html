@@ -10,34 +10,33 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); padding-bottom: 90px; overflow-x: hidden; }
         
+        /* Header & Mast Interface */
         header { background: var(--primary); padding: 12px 15px; color: white; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
         .header-left { display: flex; align-items: center; gap: 12px; }
         .brand-info { display: flex; flex-direction: column; }
         .logo-text { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px; line-height: 1; }
         .user-welcome { font-size: 12px; font-weight: 500; opacity: 0.95; margin-top: 3px; }
-        
         .header-icons { display: flex; align-items: center; gap: 15px; }
-        .bell-icon { font-size: 20px; color: white; cursor: pointer; transition: 0.2s; }
-        .bell-icon:active { transform: scale(0.9); }
-
+        
         .search-box { background: white; border-radius: 12px; display: flex; padding: 10px 15px; align-items: center; gap: 10px; margin-top: 5px; }
         .search-box input { border: none; width: 100%; outline: none; font-size: 15px; color: #333; }
 
-        .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
+        /* Drawer */
+        .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s ease; box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
         .drawer.open { left: 0; }
         .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; }
-        .drawer-item { padding: 16px 20px; display: flex; align-items: center; gap: 15px; color: #333; text-decoration: none; font-weight: 600; border-bottom: 1px solid #f5f5f5; cursor: pointer; }
+        .drawer-item { padding: 16px 20px; display: flex; align-items: center; gap: 15px; color: #333; text-decoration: none; font-weight: 600; border-bottom: 1px solid #f5f5f5; }
         .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 4500; display: none; }
 
+        /* Property Cards - Mast Design */
         .prop-card { background: white; border-radius: 18px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; }
         .img-container { position: relative; width: 100%; height: 240px; background: #eee; overflow-x: auto; display: flex; scroll-snap-type: x mandatory; scrollbar-width: none; }
         .img-container::-webkit-scrollbar { display: none; }
-        .img-container img { min-width: 100%; height: 100%; object-fit: cover; scroll-snap-align: start; cursor: pointer; }
+        .img-container img { min-width: 100%; height: 100%; object-fit: cover; scroll-snap-align: start; }
         
         .btn-group { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 10px; margin-top: 15px; }
-        .btn { padding: 12px 2px; border-radius: 10px; font-weight: 700; font-size: 14px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; }
-        .btn:active { transform: scale(0.98); }
+        .btn { padding: 12px 2px; border-radius: 10px; font-weight: 700; font-size: 14px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
         .btn-call { background: #f1f8e9; color: #2e7d32; } 
         .btn-wa { background: #25D366; color: white; } 
         .btn-chat { background: var(--primary); color: white; }
@@ -46,8 +45,6 @@
         .nav-item { flex: 1; text-align: center; color: #888; text-decoration: none; font-size: 11px; font-weight: 600; }
         .nav-item.active { color: var(--primary); }
         .post-btn-main { background: var(--primary); color: white !important; width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: -35px auto 5px; box-shadow: 0 5px 15px rgba(46,125,50,0.4); }
-        
-        #fullOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 6000; display: none; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
@@ -56,35 +53,39 @@
 <div class="drawer" id="sideDrawer">
     <div class="drawer-header">
         <i class="fa fa-user-circle fa-4x"></i>
-        <div id="dName" style="margin-top:12px; font-weight:700; font-size:1.1rem;">Earth Guest</div>
+        <div id="dName" style="margin-top:12px; font-weight:700;">Earth Guest</div>
     </div>
-    <a href="profile.html" class="drawer-item"><i class="fa fa-user"></i> <span>Profile</span></a>
-    <a href="my-ads.html" class="drawer-item"><i class="fa fa-layer-group"></i> <span>My Ads</span></a>
-    <a href="favorites.html" class="drawer-item"><i class="fa-regular fa-heart"></i> <span>Favs</span></a>
-    <div class="drawer-item" id="logoutBtn" style="margin-top:20px; color:#666; display:none;">
-        <i class="fa fa-sign-out-alt"></i> <span>Logout</span>
+    <a href="profile.html" class="drawer-item"><i class="fa fa-user"></i> <span data-i18n="profile">Profile</span></a>
+    <a href="my-ads.html" class="drawer-item"><i class="fa fa-layer-group"></i> <span data-i18n="myAds">My Ads</span></a>
+    
+    <div style="padding: 20px;">
+        <p style="font-size: 12px; font-weight: bold; color: #888; margin-bottom: 10px;">LANGUAGE</p>
+        <select onchange="setLanguage(this.value)" id="langSelect" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+            <option value="en">English</option>
+            <option value="hi">Hindi</option>
+            <option value="ar">Arabic</option>
+        </select>
     </div>
 </div>
 
 <header>
     <div class="header-top">
         <div class="header-left">
-            <button onclick="toggleDrawer()" id="menuToggle" style="background:none; border:none; color:white; cursor:pointer; font-size:22px;">
-                <i class="fa fa-bars"></i>
-            </button>
+            <button onclick="toggleDrawer()" style="background:none; border:none; color:white; font-size:22px;"><i class="fa fa-bars"></i></button>
             <div class="brand-info">
                 <span class="logo-text">Earth Property</span>
                 <span id="welcomeUser" class="user-welcome">Hi, Guest</span>
             </div>
         </div>
         <div class="header-icons">
-            <i class="fa-regular fa-bell bell-icon" onclick="location.href='notifications.html'"></i>
+            <i class="fa fa-user-shield" style="font-size:20px; cursor:pointer;" onclick="location.href='admin-verification.html'"></i>
+            <i class="fa-regular fa-bell" style="font-size:20px; cursor:pointer;" onclick="location.href='notifications.html'"></i>
             <button id="authBtn" style="border:none; background:white; color:var(--primary); padding:6px 14px; border-radius:8px; font-weight:800; font-size:11px;">LOGIN</button>
         </div>
     </div>
     <div class="search-box">
         <i class="fa fa-search" style="color:#aaa;"></i>
-        <input type="text" id="citySearch" placeholder="Search city or property..." oninput="filterAds()">
+        <input type="text" id="citySearch" data-i18n-placeholder="searchPlaceholder" oninput="filterAds()">
     </div>
 </header>
 
@@ -98,8 +99,8 @@
     <a href="profile.html" class="nav-item"><i class="fa fa-user-circle fa-lg"></i><br>Profile</a>
 </div>
 
-<div id="fullOverlay" onclick="this.style.display='none'"><img id="fullImg" style="max-width:95%; max-height:85%; border-radius:8px;"></div>
-
+<script src="translations.js"></script>
+<script src="lang.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -115,40 +116,27 @@ const DOM = {
     welcomeUser: document.getElementById('welcomeUser'),
     authBtn: document.getElementById('authBtn'),
     sideDrawer: document.getElementById('sideDrawer'),
-    dOverlay: document.getElementById('dOverlay'),
-    citySearch: document.getElementById('citySearch'),
-    logoutBtn: document.getElementById('logoutBtn')
+    dOverlay: document.getElementById('dOverlay')
 };
-
-let allAds = [];
-let userFavorites = [];
-let unsubscribeAds;
-
-// Security & Formatting
-const escapeHtml = str => { const div = document.createElement('div'); div.textContent = str || ""; return div.innerHTML; };
-const sanitizeImageUrl = url => { try { const p = new URL(url); return ['http:','https:'].includes(p.protocol) ? url : 'https://via.placeholder.com/400x300'; } catch { return 'https://via.placeholder.com/400x300'; } };
 
 function toggleDrawer() {
     const isOpen = DOM.sideDrawer.classList.toggle('open');
     DOM.dOverlay.style.display = isOpen ? 'block' : 'none';
 }
 
-// Fixed WhatsApp Logic
+// WhatsApp Link Fixed
 async function revealContact(id, btn, isWa) {
-    if(!auth.currentUser) { alert("Please login to see contact details"); location.href='login.html'; return; }
+    if(!auth.currentUser) { alert("Please login first"); return; }
     const original = btn.innerHTML;
     btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
     try {
         const doc = await db.collection("properties").doc(id).get();
-        if(!doc.exists) return;
         const num = doc.data().phone;
-        if(isWa) {
-            const cleanNum = num.toString().replace(/\D/g, ''); 
-            const finalNum = cleanNum.startsWith('91') ? cleanNum : `91${cleanNum}`;
-            window.open(`https://wa.me/${finalNum}`, '_blank');
-        } else {
-            window.location.href = `tel:${num}`;
-        }
+        const cleanNum = num.toString().replace(/\D/g, ''); 
+        const finalNum = cleanNum.startsWith('91') ? cleanNum : `91${cleanNum}`;
+        
+        if(isWa) window.open(`https://api.whatsapp.com/send?phone=${finalNum}`, '_blank');
+        else window.location.href = `tel:+${finalNum}`;
     } catch(e) { alert("Error fetching contact"); }
     btn.innerHTML = original;
 }
@@ -156,94 +144,55 @@ async function revealContact(id, btn, isWa) {
 function createPropertyCard(p) {
     const card = document.createElement('div');
     card.className = 'prop-card';
-    const isFav = userFavorites.includes(p.id) ? 'active' : '';
-    const imgs = (p.images?.length > 0) ? p.images.map(sanitizeImageUrl) : ['https://via.placeholder.com/400x300'];
-
+    const imgs = p.images || ['https://via.placeholder.com/400x300'];
+    
     card.innerHTML = `
-        <div style="position:relative;">
-            <div class="float-btns" style="position:absolute; top:12px; right:12px; z-index:10; display:flex; flex-direction:column; gap:8px;">
-                <button class="c-btn share-btn" style="background:white; border:none; border-radius:50%; width:35px; height:35px; box-shadow:0 2px 5px rgba(0,0,0,0.2);"><i class="fa fa-share-nodes"></i></button>
-                <button class="c-btn fav-btn ${isFav}" style="background:white; border:none; border-radius:50%; width:35px; height:35px; box-shadow:0 2px 5px rgba(0,0,0,0.2);"><i class="fa fa-heart"></i></button>
-            </div>
-            <div class="img-container">
-                ${imgs.map((url, i) => `<img src="${escapeHtml(url)}" loading="lazy" data-idx="${i}">`).join('')}
-            </div>
+        <div class="img-container">
+            ${imgs.map(url => `<img src="${url}" loading="lazy">`).join('')}
         </div>
-        <div class="prop-info" style="padding:15px;">
-            <div class="prop-price" style="font-size:22px; font-weight:800; color:var(--primary);">₹${Number(p.price||0).toLocaleString('en-IN')}</div>
-            <div class="prop-title" style="font-weight:700; margin:5px 0;">${escapeHtml(p.title)}</div>
-            <div style="font-size:13px; color:#666;"><i class="fa fa-map-marker-alt"></i> ${escapeHtml(p.location)}</div>
+        <div style="padding:15px;">
+            <div style="font-size:22px; font-weight:800; color:var(--primary);">₹${Number(p.price).toLocaleString('en-IN')}</div>
+            <div style="font-weight:700; margin:5px 0;">${p.title}</div>
+            <div style="font-size:13px; color:#666;"><i class="fa fa-map-marker-alt"></i> ${p.location}</div>
             <div class="btn-group">
-                <button class="btn btn-call"><i class="fa fa-phone"></i> Call</button>
-                <button class="btn btn-wa"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
-                <button class="btn btn-chat"><i class="fa-regular fa-comment-dots"></i> Chat</button>
+                <button class="btn btn-call" onclick="revealContact('${p.id}', this, false)"><i class="fa fa-phone"></i> ${t('call') || 'Call'}</button>
+                <button class="btn btn-wa" onclick="revealContact('${p.id}', this, true)"><i class="fa-brands fa-whatsapp"></i> ${t('whatsapp') || 'WhatsApp'}</button>
+                <button class="btn btn-chat" onclick="location.href='chat.html?p=${p.id}'"><i class="fa-regular fa-comment-dots"></i> ${t('chat') || 'Chat'}</button>
             </div>
         </div>`;
-
-    card.querySelector('.share-btn').onclick = () => shareAd(p.id);
-    card.querySelector('.fav-btn').onclick = (e) => toggleFav(p.id, e.currentTarget);
-    card.querySelector('.btn-call').onclick = () => revealContact(p.id, card.querySelector('.btn-call'), false);
-    card.querySelector('.btn-wa').onclick = () => revealContact(p.id, card.querySelector('.btn-wa'), true);
-    card.querySelector('.btn-chat').onclick = () => location.href = `chat.html?to=${encodeURIComponent(p.ownerId)}&p=${encodeURIComponent(p.id)}`;
     return card;
 }
 
 function renderAds(data) {
     DOM.propertyList.innerHTML = '';
-    const fragment = document.createDocumentFragment();
-    data.forEach(p => fragment.appendChild(createPropertyCard(p)));
-    DOM.propertyList.appendChild(fragment);
+    data.forEach(p => DOM.propertyList.appendChild(createPropertyCard(p)));
 }
 
-async function shareAd(id) {
-    const url = `${window.location.origin}/index.html?id=${id}`;
-    if(navigator.share) await navigator.share({title: 'Earth Property', url});
-    else { navigator.clipboard.writeText(url); alert("Link Copied!"); }
-}
-
-async function toggleFav(id, btn) {
-    if(!auth.currentUser) return alert("Please login first");
-    const isActive = btn.classList.toggle('active');
-    btn.style.color = isActive ? 'red' : 'black';
-    await db.collection("users").doc(auth.currentUser.uid).update({ 
-        favorites: isActive ? firebase.firestore.FieldValue.arrayUnion(id) : firebase.firestore.FieldValue.arrayRemove(id) 
-    });
-}
-
-function filterAds() {
-    const val = DOM.citySearch.value.toLowerCase();
-    const filtered = allAds.filter(a => (a.location||'').toLowerCase().includes(val) || (a.title||'').toLowerCase().includes(val));
-    renderAds(filtered);
-}
-
-// Auth Observer - Critical Fix
+// Auth State
 auth.onAuthStateChanged(async user => {
-    if (unsubscribeAds) unsubscribeAds();
-    
     if(user) {
         DOM.authBtn.textContent = "LOGOUT";
         DOM.authBtn.onclick = () => auth.signOut().then(()=>location.reload());
-        DOM.logoutBtn.style.display = 'flex';
-        DOM.logoutBtn.onclick = () => auth.signOut().then(()=>location.reload());
-        
         const uDoc = await db.collection("users").doc(user.uid).get();
-        const name = uDoc.exists ? (uDoc.data().name || "User") : (user.displayName || "User");
-        DOM.welcomeUser.textContent = `Hi, ${name}`;
+        const name = uDoc.exists ? uDoc.data().name : "User";
         document.getElementById('dName').innerText = name;
-        userFavorites = uDoc.exists ? (uDoc.data().favorites || []) : [];
+        DOM.welcomeUser.innerText = `Hi, ${name}`;
     } else {
         DOM.authBtn.textContent = "LOGIN";
         DOM.authBtn.onclick = () => location.href='login.html';
-        DOM.logoutBtn.style.display = 'none';
-        DOM.welcomeUser.textContent = "Hi, Guest";
-        document.getElementById('dName').innerText = "Earth Guest";
-        userFavorites = [];
+        DOM.welcomeUser.innerText = "Hi, Guest";
     }
     
-    unsubscribeAds = db.collection("properties").where("isExpired","==",false).onSnapshot(s => {
-        allAds = s.docs.map(d => ({id: d.id, ...d.data()}));
-        renderAds(allAds);
+    db.collection("properties").where("isExpired","==",false).onSnapshot(s => {
+        const ads = s.docs.map(d => ({id: d.id, ...d.data()}));
+        renderAds(ads);
     });
+});
+
+// Default Language Setup
+document.addEventListener('DOMContentLoaded', () => {
+    const savedLang = localStorage.getItem('earthLang') || 'en';
+    document.getElementById('langSelect').value = savedLang;
 });
 </script>
 </body>
