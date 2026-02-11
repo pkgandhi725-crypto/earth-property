@@ -3,28 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verification Portal - Secure</title>
+    <title>Admin - Earth Property Verification</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 20px; }
         .container { max-width: 800px; margin: auto; }
-        .card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-left: 5px solid #2e7d32; position: relative; }
         .doc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0; }
-        .doc-item img { width: 100%; height: 180px; object-fit: cover; border-radius: 10px; cursor: pointer; border: 1px solid #ddd; }
+        .doc-grid img { width: 100%; height: 200px; object-fit: cover; border-radius: 10px; border: 1px solid #ddd; cursor: pointer; }
         .btn-group { display: flex; gap: 10px; }
         .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         .btn-approve { background: #2e7d32; color: white; }
-        .btn-approve:disabled { background: #ccc; }
         .btn-reject { background: #fff1f0; color: #cf1322; border: 1px solid #ffa39e; }
-        .loading-text { font-size: 12px; color: #666; margin-top: 5px; display: none; }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        .status-badge { position: absolute; top: 20px; right: 20px; padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; background: #e8f5e9; color: #2e7d32; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <button onclick="location.href='admin.html'" style="margin-bottom:10px; cursor:pointer; border:none; background:none; color:#2e7d32; font-weight:bold;">
-        <i class="fa fa-arrow-left"></i> Back to Dashboard
-    </button>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="color:#2e7d32;"><i class="fa fa-user-shield"></i> Pending Requests</h2>
+        <button onclick="location.reload()" class="btn" style="flex:none; background:#fff; border:1px solid #ddd; padding:8px 15px;">Refresh</button>
+    </div>
     <div id="requestList">Loading requests...</div>
 </div>
 
@@ -33,24 +34,33 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebas
 import { getFirestore, collection, doc, setDoc, updateDoc, onSnapshot, query, where, writeBatch, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 
-const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
+const firebaseConfig = { 
+    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
+    authDomain: "earth-properties-c3c56.firebaseapp.com", 
+    projectId: "earth-properties-c3c56" 
+};
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
+
+// ✅ YOUR CONFIG
 const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
 
-// Helper for display escaping
-function escape(str) { return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
-
 onAuthStateChanged(auth, (user) => {
-    if (!user || user.uid !== ADMIN_UID) window.location.href = "index.html";
-    else loadRequests();
+    if (!user || user.uid !== ADMIN_UID) {
+        alert("Restricted Access: Admin Only!");
+        window.location.href = "index.html";
+    } else {
+        loadRequests();
+    }
 });
 
 function loadRequests() {
-    onSnapshot(query(collection(db, "verification_requests"), where("status", "==", "pending")), (snap) => {
+    const q = query(collection(db, "verification_requests"), where("status", "==", "pending"));
+    
+    onSnapshot(q, (snap) => {
         const list = document.getElementById('requestList');
-        list.innerHTML = snap.empty ? '<p>No pending requests.</p>' : '';
+        list.innerHTML = snap.empty ? '<div class="card">No pending requests found.</div>' : '';
         
         snap.forEach(docSnap => {
             const d = docSnap.data();
@@ -59,107 +69,97 @@ function loadRequests() {
             const card = document.createElement('div');
             card.className = 'card';
             card.innerHTML = `
-                <h3>${escape(d.businessName)}</h3>
+                <span class="status-badge">PENDING</span>
+                <h3>${d.businessName || 'Unnamed Business'}</h3>
+                <p style="font-size:12px; color:#666;">User ID: ${uid}</p>
                 <div class="doc-grid">
-                    <img src="${d.idProofUrl}" class="doc-img" alt="ID Proof">
-                    <img src="${d.paymentUrl}" class="doc-img" alt="Payment Proof">
+                    <img src="${d.idProofUrl}" onclick="window.open(this.src)" title="ID Proof">
+                    <img src="${d.paymentUrl}" onclick="window.open(this.src)" title="Payment Proof">
                 </div>
                 <div class="btn-group">
-                    <button class="btn btn-approve">APPROVE</button>
-                    <button class="btn btn-reject">REJECT</button>
+                    <button class="btn btn-approve" id="app-${uid}">APPROVE DEALER</button>
+                    <button class="btn btn-reject" id="rej-${uid}">REJECT</button>
                 </div>
-                <div class="loading-text" id="load-${uid}">Processing property updates...</div>
             `;
 
-            // ✅ Security Fix: Event Listeners instead of string-based onclick
-            const approveBtn = card.querySelector('.btn-approve');
-            const rejectBtn = card.querySelector('.btn-reject');
-            
-            approveBtn.addEventListener('click', () => approveDealer(uid, d.businessName, approveBtn, rejectBtn));
-            rejectBtn.addEventListener('click', () => rejectDealer(uid, approveBtn, rejectBtn));
-
-            // Image handling
-            card.querySelectorAll('.doc-img').forEach(img => {
-                img.style.cursor = 'pointer';
-                img.onclick = () => window.open(img.src, '_blank');
-                img.onerror = () => { img.src = 'https://via.placeholder.com/180?text=Error+Loading+Image'; };
-            });
-
             list.appendChild(card);
+
+            document.getElementById(`app-${uid}`).onclick = () => approveDealer(uid, d.businessName);
+            document.getElementById(`rej-${uid}`).onclick = () => rejectDealer(uid);
         });
+    }, (err) => {
+        console.error("Firestore Error:", err);
+        alert("Permission Denied. Check Firestore Rules!");
     });
 }
 
-async function approveDealer(uid, bizName, btn, rBtn) {
-    if (!confirm(`Approve ${bizName}?`)) return;
+// ✅ IMPROVED APPROVE LOGIC (Based on your Suggestion)
+async function approveDealer(uid, bizName) {
+    if(!confirm(`Are you sure you want to approve ${bizName}?`)) return;
     
-    // UI Loading State
-    btn.disabled = true;
-    rBtn.disabled = true;
-    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
-    document.getElementById(`load-${uid}`).style.display = 'block';
+    const appBtn = document.getElementById(`app-${uid}`);
+    const rejBtn = document.getElementById(`rej-${uid}`);
+    appBtn.disabled = true; rejBtn.disabled = true;
+    appBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
 
     try {
-        // 1. Update User Profile
+        // Step 1: Update User Profile
+        console.log("Step 1: Updating User...");
         await setDoc(doc(db, "users", uid), { 
             isVerified: true, 
             premiumDealer: true, 
-            businessName: bizName 
+            businessName: bizName,
+            verifiedAt: serverTimestamp()
         }, { merge: true });
 
-        // 2. Update Request Status
+        // Step 2: Update Request Status
+        console.log("Step 2: Updating Request Status...");
         await updateDoc(doc(db, "verification_requests", uid), { 
             status: "approved", 
             approvedAt: serverTimestamp() 
         });
 
-        // 3. Batch Update all properties of this owner
-        const props = await getDocs(query(collection(db, "properties"), where("ownerId", "==", uid)));
-        let batch = writeBatch(db);
-        let count = 0;
-        const promises = [];
-
-        props.forEach(p => {
-            batch.update(p.ref, { isVerified: true, businessName: bizName });
-            count++;
-            if (count === 500) {
-                promises.push(batch.commit());
-                batch = writeBatch(db);
-                count = 0;
-            }
-        });
+        // Step 3: Update Properties (Safe Check)
+        console.log("Step 3: Updating Properties...");
+        const propsSnap = await getDocs(query(collection(db, "properties"), where("ownerId", "==", uid)));
         
-        if (count > 0) promises.push(batch.commit());
-        await Promise.all(promises);
+        if (!propsSnap.empty) {
+            const batch = writeBatch(db);
+            propsSnap.forEach(p => {
+                batch.update(p.ref, { 
+                    isVerified: true, 
+                    dealerName: bizName 
+                });
+            });
+            await batch.commit();
+            console.log(`Step 3: ${propsSnap.size} properties updated.`);
+        } else {
+            console.log("Step 3: No properties found for this user.");
+        }
 
-        alert("Dealer Verified & All Ads Updated!");
-    } catch (e) { 
-        alert("Error: " + e.message); 
-        btn.disabled = false;
-        rBtn.disabled = false;
-        btn.innerText = 'APPROVE';
-        document.getElementById(`load-${uid}`).style.display = 'none';
+        alert(`Success! ${bizName} is now a Verified Dealer.`);
+    } catch(e) { 
+        console.error("Full Error Object:", e);
+        alert("Error at step: " + e.message); 
+        appBtn.disabled = false; rejBtn.disabled = false;
+        appBtn.innerText = "APPROVE DEALER";
     }
 }
 
-async function rejectDealer(uid, aBtn, rBtn) {
-    const reason = prompt("Enter Rejection Reason:");
-    if (!reason) return;
-    
-    aBtn.disabled = true;
-    rBtn.disabled = true;
+async function rejectDealer(uid) {
+    const reason = prompt("Enter Rejection Reason (User will see this):");
+    if(!reason) return;
 
     try {
         await updateDoc(doc(db, "verification_requests", uid), { 
             status: "rejected", 
-            reason: reason, 
-            rejectedAt: serverTimestamp() 
+            rejectionReason: reason,
+            rejectedAt: serverTimestamp()
         });
         alert("Request Rejected.");
-    } catch (e) { 
+    } catch(e) { 
+        console.error("Reject Error:", e);
         alert(e.message); 
-        aBtn.disabled = false;
-        rBtn.disabled = false;
     }
 }
 </script>
