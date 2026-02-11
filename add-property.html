@@ -65,7 +65,7 @@
         <textarea id="desc" rows="3" placeholder="Additional details..."></textarea>
     </div>
 
-    <label>Photos (Max 3) <span style="color:#888; font-size:12px;">(Min 1 Required, Max 5MB)</span></label>
+    <label>Photos (Max 3) <span style="color:#888; font-size:12px;">(Min 1 Required)</span></label>
     <div class="img-upload-grid">
         <div class="img-box" id="box0" onclick="triggerUpload(0)"><i class="fa fa-camera" id="icon0"></i><img id="prev0" style="display:none;"></div>
         <div class="img-box" id="box1" onclick="triggerUpload(1)"><i class="fa fa-camera" id="icon1"></i><img id="prev1" style="display:none;"></div>
@@ -73,7 +73,7 @@
     </div>
     <input type="file" id="fileInput" hidden accept="image/*" onchange="handleFile(event)">
 
-    <button class="btn-post" id="postBtn" onclick="submitProperty()" disabled>Loading User Data...</button>
+    <button class="btn-post" id="postBtn" onclick="submitProperty()" disabled>Initializing...</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -81,19 +81,24 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
+const firebaseConfig = { 
+    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
+    authDomain: "earth-properties-c3c56.firebaseapp.com", 
+    projectId: "earth-properties-c3c56" 
+};
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
 let selectedImages = [null, null, null];
 let activeSlot = 0;
-let userData = null; // High Priority Fix: Race Condition
+let userData = null;
 
 const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dmod7m66u/image/upload";
 const CLOUDINARY_PRESET = "Earth_Property";
 const editId = new URLSearchParams(window.location.search).get('edit');
 
+// ✅ High Priority Fix: Race Condition & Data Loading
 auth.onAuthStateChanged(async (user) => {
     if (user) {
         try {
@@ -101,11 +106,10 @@ auth.onAuthStateChanged(async (user) => {
             userData = userDoc.exists ? userDoc.data() : { isVerified: false, businessName: "Individual Dealer" };
             document.getElementById('postBtn').disabled = false;
             document.getElementById('postBtn').textContent = editId ? "Update Changes" : "Post Property";
-            
             if(editId) loadEditData(editId, user.uid);
         } catch(e) {
-            console.error("Auth Error:", e);
-            alert("Error loading user profile.");
+            console.error("Auth Data Load Error:", e);
+            alert("Error loading profile. Check internet.");
         }
     } else {
         location.href = 'login.html';
@@ -116,20 +120,16 @@ async function loadEditData(id, currentUid) {
     const doc = await db.collection("properties").doc(id).get();
     if(doc.exists) {
         const d = doc.data();
-        
-        // High Priority Fix: Edit Security
         if (d.ownerId !== currentUid) {
-            alert("Unauthorized! You can only edit your own ads.");
+            alert("Unauthorized!");
             location.href = 'my-ads.html';
             return;
         }
-
-        document.getElementById('headerTitle').textContent = "Edit Property";
-        document.getElementById('title').value = d.title;
-        document.getElementById('price').value = d.price;
-        document.getElementById('location').value = d.location;
+        document.getElementById('title').value = d.title || "";
+        document.getElementById('price').value = d.price || "";
+        document.getElementById('location').value = d.location || "";
         document.getElementById('desc').value = d.description || "";
-        document.getElementById('type').value = d.propertyType;
+        document.getElementById('type').value = d.propertyType || "Residential";
         if(d.images) d.images.forEach((url, i) => { if(i < 3) { showPreview(i, url); selectedImages[i] = url; } });
     }
 }
@@ -139,11 +139,7 @@ function triggerUpload(slot) { activeSlot = slot; document.getElementById('fileI
 function handleFile(e) {
     const file = e.target.files[0];
     if(!file) return;
-
-    // High Priority Fix: File Validation
     if(file.size > 5 * 1024 * 1024) return alert("Image too large! Max 5MB allowed.");
-    if(!file.type.startsWith('image/')) return alert("Please select an image file.");
-
     selectedImages[activeSlot] = file;
     const reader = new FileReader();
     reader.onload = (event) => showPreview(activeSlot, event.target.result);
@@ -152,13 +148,9 @@ function handleFile(e) {
 
 function showPreview(slot, src) {
     const box = document.getElementById(`box${slot}`);
-    const imgEl = document.getElementById(`prev${slot}`);
-    const iconEl = document.getElementById(`icon${slot}`);
-    
-    imgEl.src = src;
-    imgEl.style.display = 'block';
-    iconEl.style.display = 'none';
-    
+    document.getElementById(`prev${slot}`).src = src;
+    document.getElementById(`prev${slot}`).style.display = 'block';
+    document.getElementById(`icon${slot}`).style.display = 'none';
     if(!box.querySelector('.remove-btn')) {
         const btn = document.createElement('div');
         btn.className = 'remove-btn';
@@ -176,30 +168,31 @@ function removeImage(slot) {
     if(rb) rb.remove();
 }
 
+// ✅ Fix for Cloudinary Upload Failure (19194.jpg)
 async function uploadToCloudinary(file) {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', CLOUDINARY_PRESET);
     
     const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
-    if (!res.ok) throw new Error("Cloudinary Upload Failed"); // Error Handling Fix
-    
+    if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error?.message || "Cloudinary Upload Failed");
+    }
     const data = await res.json();
     return data.secure_url;
 }
 
 async function submitProperty() {
     const user = auth.currentUser;
-    if(!user || !userData) return alert("Please wait for data to load.");
+    if(!user || !userData) return alert("Waiting for user data...");
 
     const title = document.getElementById('title').value.trim();
     const price = Number(document.getElementById('price').value);
     const location = document.getElementById('location').value.trim();
     
-    // Validation Fixes
-    if(!title || !location) return alert("Title and Location are mandatory!");
-    if(price <= 0) return alert("Please enter a valid price!");
-    if(!selectedImages.some(img => img !== null)) return alert("At least one photo is required!");
+    if(!title || !location || price <= 0) return alert("Please fill all fields correctly!");
+    if(!selectedImages.some(img => img !== null)) return alert("Please upload at least one photo!");
 
     document.getElementById('loadingOverlay').style.display = 'flex';
     document.getElementById('postBtn').disabled = true;
@@ -221,13 +214,14 @@ async function submitProperty() {
         const expiry = new Date();
         expiry.setDate(expiry.getDate() + 30);
 
+        // ✅ Final Fix for Undefined Data (19192.jpg)
         const propertyData = {
             ownerId: user.uid,
-            title,
-            price,
-            location,
+            title: title || "Property",
+            price: price || 0,
+            location: location || "N/A",
             description: document.getElementById('desc').value || "",
-            propertyType: document.getElementById('type').value,
+            propertyType: document.getElementById('type').value || "Residential",
             images: imageUrls,
             status: "active",
             isExpired: false,
