@@ -42,6 +42,9 @@
         .nav-item.active { color: var(--primary); }
         .post-nav .post-btn-main { background: var(--primary); color: white; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 6000; display: none; align-items: center; justify-content: center; }
+        
+        /* ✅ New Premium Badge Style */
+        .premium-badge { position: absolute; bottom: 10px; left: 10px; background: #ffd700; color: #000; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 800; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
@@ -62,7 +65,7 @@
             <span class="logo-text">Earth Property</span>
         </div>
         <div class="header-icons">
-            <div id="adminLink" style="display:none;" onclick="location.href='admin.html'" class="icon-btn"><i class="fa fa-user-shield"></i></div>
+            <div id="adminLink" style="display:none;" onclick="location.href='admin-dashboard.html'" class="icon-btn"><i class="fa fa-user-shield"></i></div>
             <div class="icon-btn" onclick="location.href='inbox.html'"><i class="fa fa-bell"></i></div>
             <button id="authBtn" class="auth-btn">Login</button>
         </div>
@@ -107,14 +110,26 @@ function toggleDrawer() {
 
 function escapeHtml(t) { if(!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 
+// ✅ FIXED: Real-time Listener with isExpired Filter
 async function loadProps() {
     const list = document.getElementById('propertyList');
     list.innerHTML = '<center style="padding:60px;"><i class="fa fa-spinner fa-spin fa-2x" style="color:var(--primary)"></i></center>';
-    try {
-        const snap = await db.collection("properties").orderBy("createdAt", "desc").limit(40).get();
-        allProps = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderProps(allProps);
-    } catch(e) { list.innerHTML = "<center>Check Connection.</center>"; }
+    
+    db.collection("properties")
+      .where("isExpired", "==", false) // 👈 Expired ads hide ho jayengi
+      .orderBy("createdAt", "desc")
+      .limit(40)
+      .onSnapshot(snap => {
+          allProps = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          renderProps(allProps);
+          
+          if (allProps.length === 0) {
+              list.innerHTML = "<center style='padding:50px; color:#666;'>No active properties found.</center>";
+          }
+      }, err => {
+          console.error("Index Error:", err);
+          list.innerHTML = "<center style='padding:20px;'>Error loading data. <br> <small>Note: If you just added a filter, check console to create Firebase Index link.</small></center>";
+      });
 }
 
 function renderProps(data) {
@@ -123,6 +138,10 @@ function renderProps(data) {
         const isFav = userFavs.includes(p.id) ? 'active' : '';
         let imgUrl = 'https://via.placeholder.com/400x300?text=No+Image';
         if (Array.isArray(p.images) && p.images.length > 0) { imgUrl = p.images[0]; }
+        
+        // ✅ Premium Badge logic
+        const premiumBadge = p.isPremium ? `<div class="premium-badge"><i class="fa fa-star"></i> VERIFIED</div>` : '';
+
         return `
         <div class="prop-card">
             <div class="img-container">
@@ -131,6 +150,7 @@ function renderProps(data) {
                     <button class="circle-btn fav-btn ${isFav}" onclick="toggleFav('${p.id}', this)"><i class="fa fa-heart"></i></button>
                 </div>
                 <img src="${imgUrl}" onclick="showImg('${imgUrl}')" onerror="this.src='https://via.placeholder.com/400x300?text=Reloading...'">
+                ${premiumBadge}
             </div>
             <div class="prop-info">
                 <div class="prop-price">₹${Number(p.price||0).toLocaleString('en-IN')}</div>
@@ -186,6 +206,7 @@ auth.onAuthStateChanged(user => {
         document.getElementById('dName').innerText = user.displayName || "Earth User";
         btn.innerText = "Logout";
         btn.onclick = () => auth.signOut().then(() => location.reload());
+        // ✅ ADMIN CHECK
         if(user.uid === "WOY9f67DachGVTuhR4tSJ1BHozx1") document.getElementById('adminLink').style.display = 'flex';
     } else {
         btn.onclick = () => location.href = 'login.html';
