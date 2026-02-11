@@ -19,7 +19,7 @@ const TRANSLATIONS = Object.freeze({
     daysLeft: "शेष दिन",
     renew: "नवीनीकरण करें",      // ✅ Formal & Professional
     delete: "हटाएं",
-    renewSuccess: "आपका विज्ञापन 30 दिनों के लिए बढ़ा दिया गया!", // ✅ Polished: User-friendly
+    renewSuccess: "आपका विज्ञापन 30 दिनों के लिए बढ़ा दिया गया!", // ✅ Polished: User-friendl
     noAds: "इस क्षेत्र में कोई विज्ञापन नहीं मिला।"
   },
 
