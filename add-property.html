@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Post/Edit Property - Earth Property</title>
+    <title>Post Property - Earth Property</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --primary: #2e7d32; --bg: #f8f9fa; --danger: #d32f2f; }
@@ -65,7 +65,7 @@
         <textarea id="desc" rows="3" placeholder="Additional details..."></textarea>
     </div>
 
-    <label>Photos (Max 3)</label>
+    <label>Photos (Max 3) <span style="color:#888; font-size:12px;">(Min 1 Required, Max 5MB)</span></label>
     <div class="img-upload-grid">
         <div class="img-box" id="box0" onclick="triggerUpload(0)"><i class="fa fa-camera" id="icon0"></i><img id="prev0" style="display:none;"></div>
         <div class="img-box" id="box1" onclick="triggerUpload(1)"><i class="fa fa-camera" id="icon1"></i><img id="prev1" style="display:none;"></div>
@@ -73,7 +73,7 @@
     </div>
     <input type="file" id="fileInput" hidden accept="image/*" onchange="handleFile(event)">
 
-    <button class="btn-post" id="postBtn" onclick="submitProperty()">Post Property</button>
+    <button class="btn-post" id="postBtn" onclick="submitProperty()" disabled>Loading User Data...</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -88,36 +88,43 @@ const auth = firebase.auth();
 
 let selectedImages = [null, null, null];
 let activeSlot = 0;
-let userData = { isVerified: false, businessName: "Individual Dealer" }; // Default data
+let userData = null; // High Priority Fix: Race Condition
+
 const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dmod7m66u/image/upload";
 const CLOUDINARY_PRESET = "Earth_Property";
-
 const editId = new URLSearchParams(window.location.search).get('edit');
 
 auth.onAuthStateChanged(async (user) => {
     if (user) {
-        // User ka verification data load karo
-        const userDoc = await db.collection("users").doc(user.uid).get();
-        if (userDoc.exists) {
-            userData = userDoc.data();
+        try {
+            const userDoc = await db.collection("users").doc(user.uid).get();
+            userData = userDoc.exists ? userDoc.data() : { isVerified: false, businessName: "Individual Dealer" };
+            document.getElementById('postBtn').disabled = false;
+            document.getElementById('postBtn').textContent = editId ? "Update Changes" : "Post Property";
+            
+            if(editId) loadEditData(editId, user.uid);
+        } catch(e) {
+            console.error("Auth Error:", e);
+            alert("Error loading user profile.");
         }
     } else {
         location.href = 'login.html';
     }
 });
 
-window.onload = async () => {
-    if(editId) {
-        document.getElementById('headerTitle').textContent = "Edit Property";
-        document.getElementById('postBtn').textContent = "Update Changes";
-        loadEditData(editId);
-    }
-};
-
-async function loadEditData(id) {
+async function loadEditData(id, currentUid) {
     const doc = await db.collection("properties").doc(id).get();
     if(doc.exists) {
         const d = doc.data();
+        
+        // High Priority Fix: Edit Security
+        if (d.ownerId !== currentUid) {
+            alert("Unauthorized! You can only edit your own ads.");
+            location.href = 'my-ads.html';
+            return;
+        }
+
+        document.getElementById('headerTitle').textContent = "Edit Property";
         document.getElementById('title').value = d.title;
         document.getElementById('price').value = d.price;
         document.getElementById('location').value = d.location;
@@ -132,6 +139,11 @@ function triggerUpload(slot) { activeSlot = slot; document.getElementById('fileI
 function handleFile(e) {
     const file = e.target.files[0];
     if(!file) return;
+
+    // High Priority Fix: File Validation
+    if(file.size > 5 * 1024 * 1024) return alert("Image too large! Max 5MB allowed.");
+    if(!file.type.startsWith('image/')) return alert("Please select an image file.");
+
     selectedImages[activeSlot] = file;
     const reader = new FileReader();
     reader.onload = (event) => showPreview(activeSlot, event.target.result);
@@ -140,9 +152,13 @@ function handleFile(e) {
 
 function showPreview(slot, src) {
     const box = document.getElementById(`box${slot}`);
-    document.getElementById(`prev${slot}`).src = src;
-    document.getElementById(`prev${slot}`).style.display = 'block';
-    document.getElementById(`icon${slot}`).style.display = 'none';
+    const imgEl = document.getElementById(`prev${slot}`);
+    const iconEl = document.getElementById(`icon${slot}`);
+    
+    imgEl.src = src;
+    imgEl.style.display = 'block';
+    iconEl.style.display = 'none';
+    
     if(!box.querySelector('.remove-btn')) {
         const btn = document.createElement('div');
         btn.className = 'remove-btn';
@@ -164,18 +180,26 @@ async function uploadToCloudinary(file) {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', CLOUDINARY_PRESET);
+    
     const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
+    if (!res.ok) throw new Error("Cloudinary Upload Failed"); // Error Handling Fix
+    
     const data = await res.json();
     return data.secure_url;
 }
 
 async function submitProperty() {
     const user = auth.currentUser;
-    if(!user) return alert("Please login!");
+    if(!user || !userData) return alert("Please wait for data to load.");
+
     const title = document.getElementById('title').value.trim();
-    const price = document.getElementById('price').value;
+    const price = Number(document.getElementById('price').value);
     const location = document.getElementById('location').value.trim();
-    if(!title || !price || !location) return alert("Please fill Title, Price and Location!");
+    
+    // Validation Fixes
+    if(!title || !location) return alert("Title and Location are mandatory!");
+    if(price <= 0) return alert("Please enter a valid price!");
+    if(!selectedImages.some(img => img !== null)) return alert("At least one photo is required!");
 
     document.getElementById('loadingOverlay').style.display = 'flex';
     document.getElementById('postBtn').disabled = true;
@@ -200,14 +224,13 @@ async function submitProperty() {
         const propertyData = {
             ownerId: user.uid,
             title,
-            price: Number(price),
+            price,
             location,
             description: document.getElementById('desc').value || "",
             propertyType: document.getElementById('type').value,
             images: imageUrls,
             status: "active",
             isExpired: false,
-            // Security: Undefined se bachne ke liye checks
             isVerified: userData.isVerified || false,
             businessName: userData.businessName || "Individual Dealer",
             updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -223,8 +246,12 @@ async function submitProperty() {
             alert("Updated! ✓");
         }
         window.location.href = "my-ads.html";
-    } catch (err) { alert("Error: " + err.message); }
-    finally { document.getElementById('loadingOverlay').style.display = 'none'; document.getElementById('postBtn').disabled = false; }
+    } catch (err) { 
+        alert("Submission Failed: " + err.message); 
+    } finally { 
+        document.getElementById('loadingOverlay').style.display = 'none'; 
+        document.getElementById('postBtn').disabled = false; 
+    }
 }
 </script>
 </body>
