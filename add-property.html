@@ -2,67 +2,83 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Post Property - Earth Property</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary: #2e7d32; --bg: #f8f9fa; }
-        body { font-family: system-ui, sans-serif; margin: 0; background: var(--bg); padding-bottom: 30px; }
-        header { background: var(--primary); color: white; padding: 15px; display: flex; align-items: center; gap: 15px; }
+        :root { --primary: #2e7d32; --bg: #f8f9fa; --danger: #d32f2f; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); padding-bottom: 30px; }
+        header { background: var(--primary); color: white; padding: 15px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; }
         .container { padding: 20px; max-width: 500px; margin: auto; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; color: #444; }
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
         
-        /* Upload UI */
+        .form-group { margin-bottom: 18px; position: relative; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; color: #444; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 15px; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 5px rgba(46,125,50,0.2); }
+        
+        /* Photo Grid */
         .img-upload-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
         .img-box { aspect-ratio: 1/1; border: 2px dashed #ccc; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #fff; cursor: pointer; }
-        .img-box img { width: 100%; height: 100%; object-fit: cover; position: absolute; }
+        .img-box img { width: 100%; height: 100%; object-fit: cover; position: absolute; z-index: 2; }
         
-        .prog-container { width: 80%; height: 8px; background: #eee; border-radius: 10px; overflow: hidden; display: none; z-index: 5; }
-        .prog-bar { height: 100%; background: #2e7d32; width: 0%; transition: width 0.2s; }
+        /* Remove Button */
+        .remove-btn { position: absolute; top: 5px; right: 5px; background: var(--danger); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; z-index: 10; border: none; cursor: pointer; }
+
+        .prog-container { width: 80%; height: 6px; background: #eee; border-radius: 10px; overflow: hidden; display: none; z-index: 5; }
+        .prog-bar { height: 100%; background: var(--primary); width: 0%; transition: width 0.2s; }
         
-        .btn-post { background: var(--primary); color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-size: 16px; font-weight: 700; margin-top: 20px; cursor: pointer; }
-        .btn-post:disabled { background: #ccc; cursor: not-allowed; }
+        .btn-post { background: var(--primary); color: white; border: none; width: 100%; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 700; margin-top: 25px; cursor: pointer; transition: 0.3s; }
+        .btn-post:disabled { background: #999; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
 <header>
     <div onclick="history.back()" style="cursor:pointer; padding:5px;"><i class="fa fa-arrow-left"></i></div>
-    <div style="font-weight: 700;">Post New Property</div>
+    <div id="pageTitle" style="font-weight: 700; font-size: 18px;">Post Property</div>
 </header>
 
 <div class="container">
-    <div class="form-group"><label>Title</label><input type="text" id="title" placeholder="3BHK Flat"></div>
-    <div class="form-group" style="display: flex; gap: 10px;">
-        <div style="flex: 1;"><label>Price (₹)</label><input type="number" id="price"></div>
-        <div style="flex: 1;"><label>Type</label><select id="type"><option>Residential</option><option>Commercial</option></select></div>
+    <div class="form-group">
+        <label>Property Title <span id="titleCount" style="float:right; font-size:12px; color:#999;">0/100</span></label>
+        <input type="text" id="title" maxlength="100" placeholder="e.g. 3BHK Flat in City Center">
     </div>
-    <div class="form-group"><label>Location</label><input type="text" id="location"></div>
-    <div class="form-group"><label>Description</label><textarea id="desc" rows="3"></textarea></div>
+
+    <div class="form-group" style="display: flex; gap: 10px;">
+        <div style="flex: 1.2;"><label>Price (₹)</label><input type="number" id="price" placeholder="Amount"></div>
+        <div style="flex: 1;">
+            <label>Purpose</label>
+            <select id="purpose">
+                <option value="Sell">Sell (180d)</option>
+                <option value="Rent">Rent (30d)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-group"><label>Location</label><input type="text" id="location" placeholder="Area, City"></div>
+    <div class="form-group"><label>Description</label><textarea id="desc" rows="3" placeholder="Features, facilities, etc."></textarea></div>
 
     <label>Photos (Max 3)</label>
     <div class="img-upload-grid">
-        <div class="img-box" onclick="triggerUpload(0)">
+        <div class="img-box" id="box0" onclick="triggerUpload(0)">
             <i class="fa fa-camera" id="icon0"></i>
             <img id="prev0" style="display:none;">
             <div class="prog-container" id="cont0"><div class="prog-bar" id="bar0"></div></div>
         </div>
-        <div class="img-box" onclick="triggerUpload(1)">
+        <div class="img-box" id="box1" onclick="triggerUpload(1)">
             <i class="fa fa-camera" id="icon1"></i>
             <img id="prev1" style="display:none;">
             <div class="prog-container" id="cont1"><div class="prog-bar" id="bar1"></div></div>
         </div>
-        <div class="img-box" onclick="triggerUpload(2)">
+        <div class="img-box" id="box2" onclick="triggerUpload(2)">
             <i class="fa fa-camera" id="icon2"></i>
             <img id="prev2" style="display:none;">
             <div class="prog-container" id="cont2"><div class="prog-bar" id="bar2"></div></div>
         </div>
     </div>
+    
     <input type="file" id="fileInput" hidden accept="image/*" onchange="handleFile(event)">
-
-    <button class="btn-post" id="postBtn" onclick="submitProperty()" disabled>Upload Photos First</button>
+    <button class="btn-post" id="postBtn" onclick="submitProperty()">Post Property</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -70,15 +86,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-const firebaseConfig = { 
-    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
-    authDomain: "earth-properties-c3c56.firebaseapp.com", 
-    projectId: "earth-properties-c3c56" 
-};
+const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// ✅ FIX: Sahi Cloud Name aur Preset
 const CLOUD_NAME = "dnkhurnbv"; 
 const UPLOAD_PRESET = "earth_property"; 
 
@@ -86,82 +97,132 @@ let uploadedUrls = [null, null, null];
 let uploadingCount = 0;
 let activeSlot = 0;
 
-function triggerUpload(slot) { activeSlot = slot; document.getElementById('fileInput').click(); }
+// ✅ 1. EDIT MODE CHECK
+const urlParams = new URLSearchParams(window.location.search);
+const editId = urlParams.get('edit');
+
+firebase.auth().onAuthStateChanged(user => {
+    if (!user) return location.href = 'login.html';
+    if (editId) loadEditData(editId, user.uid);
+});
+
+async function loadEditData(id, uid) {
+    const doc = await db.collection("properties").doc(id).get();
+    if (!doc.exists || doc.data().ownerId !== uid) return history.back();
+    
+    const data = doc.data();
+    document.getElementById('pageTitle').innerText = "Edit Property";
+    document.getElementById('postBtn').innerText = "Update Property";
+    
+    document.getElementById('title').value = data.title || '';
+    document.getElementById('price').value = data.price || '';
+    document.getElementById('purpose').value = data.purpose || 'Sell';
+    document.getElementById('location').value = data.location || '';
+    document.getElementById('desc').value = data.description || '';
+    
+    data.images?.forEach((url, i) => {
+        if (i < 3) {
+            uploadedUrls[i] = url;
+            showImage(i, url);
+        }
+    });
+}
+
+// ✅ 2. IMAGE HANDLING
+function triggerUpload(slot) { 
+    if (uploadedUrls[slot]) return; // Stop if already has image
+    activeSlot = slot; 
+    document.getElementById('fileInput').click(); 
+}
 
 function handleFile(e) {
     const file = e.target.files[0];
     if(!file) return;
+    if(file.size > 5 * 1024 * 1024) return alert("File too large (Max 5MB)");
 
     const bar = document.getElementById(`bar${activeSlot}`);
     const cont = document.getElementById(`cont${activeSlot}`);
     const icon = document.getElementById(`icon${activeSlot}`);
-    const postBtn = document.getElementById('postBtn');
-
-    // UI Reset
-    cont.style.display = 'block';
-    icon.style.display = 'none';
-    bar.style.width = '0%';
-    postBtn.disabled = true;
-    postBtn.textContent = "Uploading Photo...";
-    uploadingCount++;
+    
+    cont.style.display = 'block'; icon.style.display = 'none';
+    uploadingCount++; document.getElementById('postBtn').disabled = true;
 
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', UPLOAD_PRESET);
 
     const xhr = new XMLHttpRequest();
-    // ✅ NO HEADERS -> Direct upload to your cloud
     xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
-
-    xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-            const percent = (event.loaded / event.total) * 100;
-            bar.style.width = percent + '%';
-        }
-    };
-
+    xhr.upload.onprogress = (ev) => bar.style.width = (ev.loaded / ev.total * 100) + '%';
+    
     xhr.onload = () => {
-        const response = JSON.parse(xhr.responseText);
         if (xhr.status === 200) {
-            uploadedUrls[activeSlot] = response.secure_url;
-            document.getElementById(`prev${activeSlot}`).src = response.secure_url;
-            document.getElementById(`prev${activeSlot}`).style.display = 'block';
-            cont.style.display = 'none';
-            uploadingCount--;
-            if(uploadingCount === 0) {
-                postBtn.disabled = false;
-                postBtn.textContent = "Post Property";
-            }
-        } else {
-            alert("Upload Failed: " + (response.error?.message || "Check settings"));
-            uploadingCount--;
-            icon.style.display = 'block';
+            const url = JSON.parse(xhr.responseText).secure_url;
+            uploadedUrls[activeSlot] = url;
+            showImage(activeSlot, url);
         }
+        cont.style.display = 'none'; uploadingCount--;
+        if(uploadingCount === 0) document.getElementById('postBtn').disabled = false;
     };
-
     xhr.send(formData);
 }
 
+function showImage(slot, url) {
+    const box = document.getElementById(`box${slot}`);
+    document.getElementById(`prev${slot}`).src = url;
+    document.getElementById(`prev${slot}`).style.display = 'block';
+    document.getElementById(`icon${slot}`).style.display = 'none';
+    
+    if(!box.querySelector('.remove-btn')) {
+        const btn = document.createElement('button');
+        btn.className = 'remove-btn'; btn.innerHTML = '×';
+        btn.onclick = (e) => { e.stopPropagation(); removeImage(slot); };
+        box.appendChild(btn);
+    }
+}
+
+function removeImage(slot) {
+    uploadedUrls[slot] = null;
+    document.getElementById(`prev${slot}`).style.display = 'none';
+    document.getElementById(`icon${slot}`).style.display = 'block';
+    const btn = document.getElementById(`box${slot}`).querySelector('.remove-btn');
+    if (btn) btn.remove();
+}
+
+// ✅ 3. SUBMIT (POST & UPDATE)
 async function submitProperty() {
     const user = firebase.auth().currentUser;
-    if(!user) return alert("Please Login!");
-
+    const title = document.getElementById('title').value.trim();
+    const price = Number(document.getElementById('price').value);
     const finalImages = uploadedUrls.filter(u => u !== null);
-    if(finalImages.length === 0) return alert("Add at least 1 photo!");
+
+    if(!title || price <= 0 || finalImages.length === 0) return alert("Invalid details!");
+
+    const propertyData = {
+        ownerId: user.uid, title, price,
+        purpose: document.getElementById('purpose').value,
+        location: document.getElementById('location').value.trim(),
+        description: document.getElementById('desc').value.trim(),
+        images: finalImages,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
 
     try {
-        await db.collection("properties").add({
-            ownerId: user.uid,
-            title: document.getElementById('title').value,
-            price: Number(document.getElementById('price').value),
-            location: document.getElementById('location').value,
-            images: finalImages,
-            status: "active",
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        alert("Property Posted! 🎉");
+        document.getElementById('postBtn').disabled = true;
+        if (editId) {
+            await db.collection("properties").doc(editId).update(propertyData);
+            alert("Updated! ✓");
+        } else {
+            const expiry = new Date();
+            expiry.setDate(expiry.getDate() + (propertyData.purpose === 'Rent' ? 30 : 180));
+            propertyData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            propertyData.isExpired = false;
+            propertyData.expiryDate = firebase.firestore.Timestamp.fromDate(expiry);
+            await db.collection("properties").add(propertyData);
+            alert("Posted! 🎉");
+        }
         window.location.href = "my-ads.html";
-    } catch(e) { alert("Firestore Error: " + e.message); }
+    } catch(e) { alert(e.message); document.getElementById('postBtn').disabled = false; }
 }
 </script>
 </body>
