@@ -34,7 +34,7 @@
         .prop-price { font-size: 22px; font-weight: 800; color: var(--primary); }
         .prop-title { font-weight: 700; font-size: 16px; margin: 5px 0; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .btn-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 15px; }
-        .btn { padding: 12px 5px; border-radius: 10px; font-weight: 700; font-size: 12px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: 0.2s; }
+        .btn { padding: 12px 5px; border-radius: 10px; font-weight: 700; font-size: 11px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: 0.2s; text-decoration: none; }
         .btn-call { background: #e8f5e9; color: #2e7d32; } 
         .btn-wa { background: #25D366; color: white; } 
         .btn-chat { background: var(--primary); color: white; }
@@ -51,7 +51,7 @@
 
 <div class="drawer-overlay" id="overlayPanel" onclick="toggleDrawer()"></div>
 <div class="drawer" id="sideDrawer">
-    <div class="drawer-header"><i class="fa fa-user-circle fa-3x"></i><div id="dName" style="margin-top:10px; font-weight:700;">Loading...</div></div>
+    <div class="drawer-header"><i class="fa fa-user-circle fa-3x"></i><div id="dName" style="margin-top:10px; font-weight:700;">Earth Guest</div></div>
     <a href="profile.html" class="drawer-item"><i class="fa fa-user"></i> My Profile</a>
     <a href="my-ads.html" class="drawer-item"><i class="fa fa-layer-group"></i> My Ads</a>
     <a href="favorites.html" class="drawer-item"><i class="fa-regular fa-heart"></i> My Favorites</a>
@@ -66,7 +66,7 @@
             <span class="logo-text">Earth Property</span>
         </div>
         <div class="header-icons">
-            <div id="adminLink" style="display:none;" onclick="location.href='admin-dashboard.html'" class="icon-btn"><i class="fa fa-user-shield"></i></div>
+            <div id="adminLink" style="display:none;" onclick="location.href='admin.html'" class="icon-btn"><i class="fa fa-user-shield"></i></div>
             <div class="icon-btn" onclick="location.href='inbox.html'"><i class="fa fa-bell"></i></div>
             <button id="authBtn" class="auth-btn">Login</button>
         </div>
@@ -127,7 +127,7 @@ async function loadProps() {
           console.error("Firestore Error:", err);
           const match = err.message.match(/(https:\/\/console\.firebase\.google\.com\/[^\s]+)/);
           if (match) {
-              list.innerHTML = `<div style="text-align:center; padding:40px;"><i class="fa fa-database fa-3x" style="color:#ff9800;"></i><h3 style="margin-top:15px;">Setup Required</h3><a href="${match[1]}" target="_blank" class="index-fix-btn">Authorize Index Filter</a></div>`;
+              list.innerHTML = `<div style="text-align:center; padding:40px;"><i class="fa fa-database fa-3x" style="color:#ff9800;"></i><h3 style="margin-top:15px;">Setup Required</h3><p style="margin-bottom:10px; color:#666;">Firestore needs an index to show ads.</p><a href="${match[1]}" target="_blank" class="index-fix-btn">Click to Authorize Index</a></div>`;
           }
       });
 }
@@ -155,7 +155,7 @@ function renderProps(data) {
                 <div style="font-size:12px; color:#666;"><i class="fa fa-map-marker-alt"></i> ${escapeHtml(p.location)}</div>
                 <div class="btn-group">
                     <button class="btn btn-call" onclick="revealContact('${p.id}', this, false)"><i class="fa fa-phone"></i> Call</button>
-                    <button class="btn btn-wa" onclick="revealContact('${p.id}', this, true)"><i class="fa-brands fa-whatsapp"></i> Chat</button>
+                    <button class="btn btn-wa" onclick="revealContact('${p.id}', this, true)"><i class="fa-brands fa-whatsapp"></i> WA</button>
                     <button class="btn btn-chat" onclick="openChat('${p.ownerId}', '${p.id}')"><i class="fa-regular fa-comment-dots"></i> Chat</button>
                 </div>
             </div>
@@ -164,7 +164,7 @@ function renderProps(data) {
 }
 
 async function revealContact(id, btn, wa) {
-    if(!auth.currentUser) { alert("Please login!"); location.href='login.html'; return; }
+    if(!auth.currentUser) { alert("Please login first!"); location.href='login.html'; return; }
     if(btn.dataset.number) {
         if(wa) window.open(`https://wa.me/91${btn.dataset.number}`);
         else window.location.href = `tel:${btn.dataset.number}`;
@@ -173,11 +173,14 @@ async function revealContact(id, btn, wa) {
     btn.innerHTML = "<i class='fa fa-spinner fa-spin'></i>";
     try {
         const propDoc = await db.collection("properties").doc(id).get();
-        const userDoc = await db.collection("users").doc(propDoc.data().ownerId).get();
-        const num = userDoc.data().phone;
-        if(!num) { alert("No contact."); btn.innerHTML = "Call"; return; }
+        const ownerId = propDoc.data().ownerId;
+        const userDoc = await db.collection("users").doc(ownerId).get();
+        const num = userDoc.data().phone || propDoc.data().phone; // Check both places
+        
+        if(!num) { alert("Contact not shared by owner."); btn.innerHTML = wa ? "WA" : "Call"; return; }
+        
         btn.dataset.number = num;
-        btn.innerHTML = wa ? `<i class='fa-brands fa-whatsapp'></i> Chat` : `<i class='fa fa-phone'></i> ${num}`;
+        btn.innerHTML = wa ? `<i class='fa-brands fa-whatsapp'></i> WA` : `<i class='fa fa-phone'></i> ${num.slice(-5)}...`;
         if(wa) window.open(`https://wa.me/91${num}`); else window.location.href = `tel:${num}`;
     } catch(e) { btn.innerHTML = "Error"; }
 }
@@ -213,29 +216,30 @@ function filterDataDebounced() {
 
 function openChat(owner, id) { if(!auth.currentUser) location.href='login.html'; else location.href=`chat.html?to=${owner}&p=${id}`; }
 
-// ✅ FIXED: Better Name Loading Logic
+// ✅ ROBUST AUTH SYSTEM
 auth.onAuthStateChanged(async user => {
     const btn = document.getElementById('authBtn');
     const dName = document.getElementById('dName');
     if(user) {
-        // Fallback: Agar displayName nahi hai toh Firestore se fetch karo
-        if(user.displayName) {
-            dName.innerText = user.displayName;
-        } else {
+        try {
             const userDoc = await db.collection("users").doc(user.uid).get();
-            dName.innerText = userDoc.data()?.name || "Earth User";
+            const userData = userDoc.data();
+            dName.innerText = userData?.name || user.displayName || "Earth User";
+            userFavs = userData?.favorites || [];
+            localStorage.setItem('favs', JSON.stringify(userFavs));
+            
+            btn.innerText = "Logout";
+            btn.onclick = () => auth.signOut().then(() => location.reload());
+            
+            // Admin Check (Your UID)
+            if(user.uid === "WOY9f67DachGVTuhR4tSJ1BHozx1") document.getElementById('adminLink').style.display = 'flex';
+        } catch(e) {
+            dName.innerText = user.displayName || "Earth User";
         }
-
-        btn.innerText = "Logout";
-        btn.onclick = () => auth.signOut().then(() => location.reload());
-        if(user.uid === "WOY9f67DachGVTuhR4tSJ1BHozx1") document.getElementById('adminLink').style.display = 'flex';
-        
-        const uDoc = await db.collection("users").doc(user.uid).get();
-        userFavs = uDoc.data()?.favorites || [];
-        localStorage.setItem('favs', JSON.stringify(userFavs));
     } else {
         dName.innerText = "Earth Guest";
         btn.onclick = () => location.href = 'login.html';
+        userFavs = [];
     }
     loadProps();
 });
