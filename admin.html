@@ -24,7 +24,7 @@
 
 <div class="stats-bar">
     <span>Total Ads: <span id="totalAds">0</span></span>
-    <button onclick="location.href='Admin-verify.html'" class="view-btn" style="flex:none; padding: 8px 15px;">Verify Requests ➔</button>
+    <button onclick="location.href='admin-verify.html'" class="view-btn" style="flex:none; padding: 8px 15px;">Verify Requests ➔</button>
 </div>
 
 <input type="text" id="searchBox" class="search-box" placeholder="🔍 Search by Title or Location...">
@@ -42,7 +42,6 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
 
-// XSS Protection Helper
 function escape(str) { return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
 onAuthStateChanged(auth, (user) => {
@@ -66,7 +65,7 @@ function loadProperties() {
                 <p>${escape(d.location)}</p>
                 <div class="btn-group">
                     <button class="view-btn" onclick="window.open('property-details.html?id=${id}', '_blank')">View</button>
-                    <button class="del-btn" id="del-${id}" onclick="deletePost('${id}')">Delete</button>
+                    <button class="del-btn" onclick="window.deletePost('${id}')">Delete</button>
                 </div>`;
             list.appendChild(card);
         });
