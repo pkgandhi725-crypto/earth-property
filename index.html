@@ -24,15 +24,12 @@
         .auth-btn { cursor: pointer; font-size: 12px; font-weight: 700; background: #fff; color: var(--primary); padding: 8px 16px; border-radius: 8px; border: none; }
         .search-box { background: white; border-radius: 12px; display: flex; padding: 8px 15px; align-items: center; gap: 10px; margin: 0 10px 10px 10px; border: 1px solid #ddd; }
         .search-box input { border: none; width: 100%; outline: none; padding: 5px 0; font-size: 14px; }
-        
-        /* Card Styles */
         .prop-card { background: white; border-radius: 16px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; border: 1px solid #eee; }
         .img-container { position: relative; width: 100%; height: 230px; background: #e0e0e0; }
         .img-container img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .action-btns { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; gap: 10px; z-index: 10; }
         .circle-btn { background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); font-size: 16px; }
         .premium-badge { position: absolute; bottom: 10px; left: 10px; background: #ffd700; color: #000; padding: 5px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        
         .prop-info { padding: 15px; }
         .prop-price { font-size: 22px; font-weight: 800; color: var(--primary); }
         .prop-title { font-weight: 700; font-size: 16px; margin: 5px 0; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -41,16 +38,12 @@
         .btn-call { background: #e8f5e9; color: #2e7d32; } 
         .btn-wa { background: #25D366; color: white; } 
         .btn-chat { background: var(--primary); color: white; }
-        
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 8px 0; border-top: 1px solid #e0e0e0; z-index: 2000; }
         .nav-item { display: flex; flex-direction: column; align-items: center; color: #888; text-decoration: none; font-size: 11px; font-weight: 600; flex: 1; }
         .nav-item.active { color: var(--primary); }
         .post-nav .post-btn-main { background: var(--primary); color: white; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        
         #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 6000; display: none; align-items: center; justify-content: center; }
         .fav-btn.active { color: #d32f2f; }
-        
-        /* Index Error UI */
         .index-fix-btn { background: #ff9800; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; display: inline-block; font-weight: 700; margin-top: 10px; }
     </style>
 </head>
@@ -58,7 +51,7 @@
 
 <div class="drawer-overlay" id="overlayPanel" onclick="toggleDrawer()"></div>
 <div class="drawer" id="sideDrawer">
-    <div class="drawer-header"><i class="fa fa-user-circle fa-3x"></i><div id="dName" style="margin-top:10px; font-weight:700;">Earth Guest</div></div>
+    <div class="drawer-header"><i class="fa fa-user-circle fa-3x"></i><div id="dName" style="margin-top:10px; font-weight:700;">Loading...</div></div>
     <a href="profile.html" class="drawer-item"><i class="fa fa-user"></i> My Profile</a>
     <a href="my-ads.html" class="drawer-item"><i class="fa fa-layer-group"></i> My Ads</a>
     <a href="favorites.html" class="drawer-item"><i class="fa-regular fa-heart"></i> My Favorites</a>
@@ -119,7 +112,6 @@ function toggleDrawer() {
 
 function escapeHtml(t) { if(!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 
-// ✅ Real-time Listener with isExpired Filter & Smart Error Handler
 async function loadProps() {
     const list = document.getElementById('propertyList');
     list.innerHTML = '<center style="padding:60px;"><i class="fa fa-spinner fa-spin fa-2x" style="color:var(--primary)"></i></center>';
@@ -135,21 +127,13 @@ async function loadProps() {
           console.error("Firestore Error:", err);
           const match = err.message.match(/(https:\/\/console\.firebase\.google\.com\/[^\s]+)/);
           if (match) {
-              list.innerHTML = `<div style="text-align:center; padding:40px;">
-                  <i class="fa fa-database fa-3x" style="color:#ff9800;"></i>
-                  <h3 style="margin-top:15px;">Setup Required</h3>
-                  <p style="color:#666; font-size:14px; margin:10px 20px;">Firebase index is missing for filters. Click below to fix it instantly.</p>
-                  <a href="${match[1]}" target="_blank" class="index-fix-btn">Authorize Index Filter</a>
-              </div>`;
-          } else {
-              list.innerHTML = "<center style='padding:20px;'>Error loading data.</center>";
+              list.innerHTML = `<div style="text-align:center; padding:40px;"><i class="fa fa-database fa-3x" style="color:#ff9800;"></i><h3 style="margin-top:15px;">Setup Required</h3><a href="${match[1]}" target="_blank" class="index-fix-btn">Authorize Index Filter</a></div>`;
           }
       });
 }
 
 function renderProps(data) {
     const list = document.getElementById('propertyList');
-    const user = auth.currentUser;
     list.innerHTML = data.map(p => {
         const isFav = userFavs.includes(p.id) ? 'active' : '';
         const imgUrl = (p.images && p.images.length > 0) ? p.images[0] : 'https://via.placeholder.com/400x300?text=No+Image';
@@ -179,62 +163,43 @@ function renderProps(data) {
     }).join('');
 }
 
-// ✅ FIXED: Fetch phone from Users collection, not Properties
 async function revealContact(id, btn, wa) {
-    if(!auth.currentUser) { alert("Please login to see contact details!"); location.href='login.html'; return; }
-    
+    if(!auth.currentUser) { alert("Please login!"); location.href='login.html'; return; }
     if(btn.dataset.number) {
         if(wa) window.open(`https://wa.me/91${btn.dataset.number}`);
         else window.location.href = `tel:${btn.dataset.number}`;
         return;
     }
-    
-    const originalText = btn.innerHTML;
     btn.innerHTML = "<i class='fa fa-spinner fa-spin'></i>";
-    
     try {
         const propDoc = await db.collection("properties").doc(id).get();
-        const ownerId = propDoc.data().ownerId;
-        const userDoc = await db.collection("users").doc(ownerId).get();
+        const userDoc = await db.collection("users").doc(propDoc.data().ownerId).get();
         const num = userDoc.data().phone;
-
-        if(!num) { alert("Contact not provided by owner."); btn.innerHTML = originalText; return; }
-        
+        if(!num) { alert("No contact."); btn.innerHTML = "Call"; return; }
         btn.dataset.number = num;
         btn.innerHTML = wa ? `<i class='fa-brands fa-whatsapp'></i> Chat` : `<i class='fa fa-phone'></i> ${num}`;
-        
-        if(wa) window.open(`https://wa.me/91${num}`);
-        else window.location.href = `tel:${num}`;
-    } catch(e) { 
-        console.error(e); 
-        btn.innerHTML = "Error"; 
-        setTimeout(() => btn.innerHTML = originalText, 2000);
-    }
+        if(wa) window.open(`https://wa.me/91${num}`); else window.location.href = `tel:${num}`;
+    } catch(e) { btn.innerHTML = "Error"; }
 }
 
 function showImg(src) { document.getElementById('fullImg').src = src; document.getElementById('overlay').style.display = 'flex'; }
 
 async function toggleFav(id, btn) {
-    if(!auth.currentUser) { alert("Login to save favorites!"); location.href='login.html'; return; }
-    
+    if(!auth.currentUser) { alert("Login required"); location.href='login.html'; return; }
     const userRef = db.collection("users").doc(auth.currentUser.uid);
     if(userFavs.includes(id)) {
-        userFavs = userFavs.filter(i => i !== id);
-        btn.classList.remove('active');
+        userFavs = userFavs.filter(i => i !== id); btn.classList.remove('active');
         await userRef.update({ favorites: firebase.firestore.FieldValue.arrayRemove(id) });
     } else {
-        userFavs.push(id);
-        btn.classList.add('active');
+        userFavs.push(id); btn.classList.add('active');
         await userRef.update({ favorites: firebase.firestore.FieldValue.arrayUnion(id) });
     }
     localStorage.setItem('favs', JSON.stringify(userFavs));
 }
 
 function shareProp(id) {
-    const p = allProps.find(item => item.id === id);
     const url = `${window.location.origin}/index.html?p=${id}`;
-    const text = `Check out this property: ${p.title} for ₹${p.price}`;
-    if(navigator.share) navigator.share({ title: 'Earth Property', text: text, url: url });
+    if(navigator.share) navigator.share({ title: 'Earth Property', url: url });
     else { navigator.clipboard.writeText(url); alert("Link Copied!"); }
 }
 
@@ -248,19 +213,28 @@ function filterDataDebounced() {
 
 function openChat(owner, id) { if(!auth.currentUser) location.href='login.html'; else location.href=`chat.html?to=${owner}&p=${id}`; }
 
+// ✅ FIXED: Better Name Loading Logic
 auth.onAuthStateChanged(async user => {
     const btn = document.getElementById('authBtn');
+    const dName = document.getElementById('dName');
     if(user) {
-        document.getElementById('dName').innerText = user.displayName || "Earth User";
+        // Fallback: Agar displayName nahi hai toh Firestore se fetch karo
+        if(user.displayName) {
+            dName.innerText = user.displayName;
+        } else {
+            const userDoc = await db.collection("users").doc(user.uid).get();
+            dName.innerText = userDoc.data()?.name || "Earth User";
+        }
+
         btn.innerText = "Logout";
         btn.onclick = () => auth.signOut().then(() => location.reload());
         if(user.uid === "WOY9f67DachGVTuhR4tSJ1BHozx1") document.getElementById('adminLink').style.display = 'flex';
         
-        // Sync favs from Firestore
         const uDoc = await db.collection("users").doc(user.uid).get();
         userFavs = uDoc.data()?.favorites || [];
         localStorage.setItem('favs', JSON.stringify(userFavs));
     } else {
+        dName.innerText = "Earth Guest";
         btn.onclick = () => location.href = 'login.html';
     }
     loadProps();
