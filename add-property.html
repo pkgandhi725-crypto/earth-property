@@ -2,38 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Post Property - Earth Property</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --primary: #2e7d32; --bg: #f8f9fa; }
         body { font-family: system-ui, sans-serif; margin: 0; background: var(--bg); padding-bottom: 30px; }
-        header { background: var(--primary); color: white; padding: 15px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; }
+        header { background: var(--primary); color: white; padding: 15px; display: flex; align-items: center; gap: 15px; }
         .container { padding: 20px; max-width: 500px; margin: auto; }
         .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; color: #444; }
         input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
         
-        /* Photo Grid & Progress Bar */
+        /* Progress Bar Styles */
         .img-upload-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
-        .img-box { aspect-ratio: 1/1; border: 2px dashed #ccc; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #fff; cursor: pointer; }
-        .img-box img { width: 100%; height: 100%; object-fit: cover; }
+        .img-box { aspect-ratio: 1/1; border: 2px dashed #ccc; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #fff; cursor: pointer; }
+        .img-box img { width: 100%; height: 100%; object-fit: cover; position: absolute; }
         
-        .upload-progress-container { width: 100%; background: #eee; border-radius: 5px; margin-top: 5px; display: none; height: 8px; overflow: hidden; }
-        .progress-bar { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s; }
+        .progress-container { width: 80%; height: 6px; background: #eee; border-radius: 10px; overflow: hidden; display: none; z-index: 5; }
+        .progress-bar { height: 100%; background: var(--primary); width: 0%; transition: width 0.2s; }
         
-        .btn-post { background: var(--primary); color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-size: 16px; font-weight: 700; margin-top: 20px; cursor: pointer; opacity: 1; }
-        .btn-post:disabled { background: #ccc; cursor: not-allowed; opacity: 0.7; }
-        
-        #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; }
+        .btn-post { background: var(--primary); color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-size: 16px; font-weight: 700; margin-top: 20px; cursor: pointer; }
+        .btn-post:disabled { background: #ccc; cursor: not-allowed; }
     </style>
 </head>
 <body>
-
-<div id="loadingOverlay">
-    <i class="fa fa-circle-notch fa-spin fa-3x" style="color: var(--primary);"></i>
-    <p style="margin-top:15px; font-weight:600;">Saving Property...</p>
-</div>
 
 <header>
     <div onclick="history.back()" style="cursor:pointer; padding:5px;"><i class="fa fa-arrow-left"></i></div>
@@ -41,35 +33,35 @@
 </header>
 
 <div class="container">
-    <div class="form-group"><label>Property Title</label><input type="text" id="title" placeholder="e.g. 3BHK Flat"></div>
+    <div class="form-group"><label>Property Title</label><input type="text" id="title" placeholder="3bhk"></div>
     <div class="form-group" style="display: flex; gap: 10px;">
         <div style="flex: 1;"><label>Price (₹)</label><input type="number" id="price"></div>
-        <div style="flex: 1;"><label>Type</label><select id="type"><option>Residential</option><option>Commercial</option><option>Plot</option></select></div>
+        <div style="flex: 1;"><label>Type</label><select id="type"><option>Residential</option><option>Commercial</option></select></div>
     </div>
     <div class="form-group"><label>Location</label><input type="text" id="location"></div>
     <div class="form-group"><label>Description</label><textarea id="desc" rows="3"></textarea></div>
 
-    <label>Photos (Max 3) <span id="statusText" style="font-size: 12px; color: var(--primary); font-weight: normal;"></span></label>
+    <label>Photos (Max 3)</label>
     <div class="img-upload-grid">
-        <div class="img-box" id="box0" onclick="triggerUpload(0)">
+        <div class="img-box" onclick="triggerUpload(0)">
             <i class="fa fa-camera" id="icon0"></i>
             <img id="prev0" style="display:none;">
-            <div class="upload-progress-container" id="progCont0"><div class="progress-bar" id="bar0"></div></div>
+            <div class="progress-container" id="cont0"><div class="progress-bar" id="bar0"></div></div>
         </div>
-        <div class="img-box" id="box1" onclick="triggerUpload(1)">
+        <div class="img-box" onclick="triggerUpload(1)">
             <i class="fa fa-camera" id="icon1"></i>
             <img id="prev1" style="display:none;">
-            <div class="upload-progress-container" id="progCont1"><div class="progress-bar" id="bar1"></div></div>
+            <div class="progress-container" id="cont1"><div class="progress-bar" id="bar1"></div></div>
         </div>
-        <div class="img-box" id="box2" onclick="triggerUpload(2)">
+        <div class="img-box" onclick="triggerUpload(2)">
             <i class="fa fa-camera" id="icon2"></i>
             <img id="prev2" style="display:none;">
-            <div class="upload-progress-container" id="progCont2"><div class="progress-bar" id="bar2"></div></div>
+            <div class="progress-container" id="cont2"><div class="progress-bar" id="bar2"></div></div>
         </div>
     </div>
     <input type="file" id="fileInput" hidden accept="image/*" onchange="handleFile(event)">
 
-    <button class="btn-post" id="postBtn" onclick="submitProperty()" disabled>Upload Photos First</button>
+    <button class="btn-post" id="postBtn" onclick="submitProperty()" disabled>Post Property</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -84,42 +76,29 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-const auth = firebase.auth();
 
+// Cloudinary Settings
 const CLOUD_NAME = "dmod7m66u";
 const UPLOAD_PRESET = "earth_property";
 
 let uploadedUrls = [null, null, null];
 let uploadingCount = 0;
 let activeSlot = 0;
-let userData = null;
 
-auth.onAuthStateChanged(async (user) => {
-    if (user) {
-        const doc = await db.collection("users").doc(user.uid).get();
-        userData = doc.exists ? doc.data() : { isVerified: false, businessName: "Individual Dealer" };
-    } else { location.href = 'login.html'; }
-});
+function triggerUpload(slot) { activeSlot = slot; document.getElementById('fileInput').click(); }
 
-function triggerUpload(slot) { 
-    if(uploadingCount > 0) return alert("Wait! Upload in progress...");
-    activeSlot = slot; 
-    document.getElementById('fileInput').click(); 
-}
-
-async function handleFile(e) {
+function handleFile(e) {
     const file = e.target.files[0];
     if(!file) return;
 
-    // UI Update
-    const barCont = document.getElementById(`progCont${activeSlot}`);
     const bar = document.getElementById(`bar${activeSlot}`);
+    const cont = document.getElementById(`cont${activeSlot}`);
     const icon = document.getElementById(`icon${activeSlot}`);
-    const preview = document.getElementById(`prev${activeSlot}`);
     const postBtn = document.getElementById('postBtn');
 
+    // UI Reset for this slot
+    cont.style.display = 'block';
     icon.style.display = 'none';
-    barCont.style.display = 'block';
     bar.style.width = '0%';
     postBtn.disabled = true;
     postBtn.textContent = "Uploading Photo...";
@@ -129,97 +108,59 @@ async function handleFile(e) {
     formData.append('file', file);
     formData.append('upload_preset', UPLOAD_PRESET);
 
-    try {
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, true);
+    const xhr = new XMLHttpRequest();
+    // ❌ Important: No headers added to keep it truly "Unsigned"
+    xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
 
-        xhr.upload.onprogress = (event) => {
-            if (event.lengthComputable) {
-                const percent = (event.loaded / event.total) * 100;
-                bar.style.width = percent + '%';
-            }
-        };
-
-        xhr.onload = function() {
-            const data = JSON.parse(xhr.responseText);
-            if (xhr.status === 200) {
-                uploadedUrls[activeSlot] = data.secure_url;
-                preview.src = data.secure_url;
-                preview.style.display = 'block';
-                barCont.style.display = 'none';
-                checkUploadStatus();
-            } else {
-                throw new Error(data.error?.message || "Upload Failed");
-            }
-        };
-
-        xhr.onerror = () => { throw new Error("Network Error"); };
-        xhr.send(formData);
-
-    } catch (err) {
-        alert("Upload Error: " + err.message);
-        icon.style.display = 'block';
-        barCont.style.display = 'none';
-        uploadingCount--;
-        checkUploadStatus();
-    }
-}
-
-function checkUploadStatus() {
-    uploadingCount = Math.max(0, uploadingCount - 1);
-    const postBtn = document.getElementById('postBtn');
-    
-    if(uploadingCount === 0) {
-        const hasImages = uploadedUrls.some(url => url !== null);
-        if(hasImages) {
-            postBtn.disabled = false;
-            postBtn.textContent = "Post Property";
-        } else {
-            postBtn.disabled = true;
-            postBtn.textContent = "Upload Photos First";
+    xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+            const percent = (event.loaded / event.total) * 100;
+            bar.style.width = percent + '%';
         }
-    }
+    };
+
+    xhr.onload = () => {
+        const response = JSON.parse(xhr.responseText);
+        if (xhr.status === 200) {
+            uploadedUrls[activeSlot] = response.secure_url;
+            document.getElementById(`prev${activeSlot}`).src = response.secure_url;
+            document.getElementById(`prev${activeSlot}`).style.display = 'block';
+            cont.style.display = 'none';
+            uploadingCount--;
+            if(uploadingCount === 0) {
+                postBtn.disabled = false;
+                postBtn.textContent = "Post Property";
+            }
+        } else {
+            alert("Error: " + (response.error?.message || "Upload Failed"));
+            uploadingCount--;
+            icon.style.display = 'block';
+        }
+    };
+
+    xhr.send(formData);
 }
 
 async function submitProperty() {
-    const user = auth.currentUser;
-    const title = document.getElementById('title').value.trim();
-    const price = document.getElementById('price').value;
-    const location = document.getElementById('location').value.trim();
+    const user = firebase.auth().currentUser;
+    if(!user) return alert("Login required!");
 
-    if(!title || !price || !location) return alert("Please fill all fields!");
-
-    document.getElementById('loadingOverlay').style.display = 'flex';
+    const title = document.getElementById('title').value;
+    const finalImages = uploadedUrls.filter(u => u !== null);
 
     try {
-        const finalImages = uploadedUrls.filter(url => url !== null);
-        const expiry = new Date();
-        expiry.setDate(expiry.getDate() + 30);
-
         await db.collection("properties").add({
             ownerId: user.uid,
             title: title,
-            price: Number(price),
-            location: location,
-            description: document.getElementById('desc').value || "",
-            propertyType: document.getElementById('type').value,
+            price: Number(document.getElementById('price').value),
+            location: document.getElementById('location').value,
             images: finalImages,
             status: "active",
-            isExpired: false,
-            isVerified: (userData && userData.isVerified === true) ? true : false,
-            businessName: (userData && userData.businessName) ? userData.businessName : "Individual Dealer",
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            expiryDate: firebase.firestore.Timestamp.fromDate(expiry)
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-
-        alert("Property Posted Successfully! 🎉");
-        window.location.href = "my-ads.html";
-    } catch (err) {
-        alert("Firestore Error: " + err.message);
-    } finally {
-        document.getElementById('loadingOverlay').style.display = 'none';
-    }
+        alert("Success!");
+        location.href = "my-ads.html";
+    } catch(e) { alert("Firestore Error: " + e.message); }
 }
 </script>
 </body>
