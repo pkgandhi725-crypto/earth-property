@@ -9,41 +9,55 @@
         :root { --primary: #2e7d32; --bg: #f0f2f5; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); padding-bottom: 80px; overflow-x: hidden; }
+        
+        /* Header & Search */
         header { background: var(--primary); padding: 15px; color: white; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
         .header-left { display: flex; align-items: center; gap: 10px; }
         .menu-btn { font-size: 20px; cursor: pointer; padding: 5px; } 
         .logo-text { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.5px; } 
         .header-icons { display: flex; gap: 10px; align-items: center; }
+        .search-box { background: white; border-radius: 12px; display: flex; padding: 8px 15px; align-items: center; gap: 10px; margin: 0 5px 5px 5px; border: 1px solid #ddd; }
+        .search-box input { border: none; width: 100%; outline: none; padding: 5px 0; font-size: 14px; color: #333; }
+
+        /* Side Drawer */
         .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
         .drawer.open { left: 0; }
-        .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; }
+        .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; text-align: center; }
         .drawer-item { padding: 15px 20px; display: flex; align-items: center; gap: 15px; color: #333; text-decoration: none; font-weight: 600; border-bottom: 1px solid #f0f0f0; }
         .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 4500; display: none; }
+        
         .icon-btn { color: #fff; background: rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .auth-btn { cursor: pointer; font-size: 12px; font-weight: 700; background: #fff; color: var(--primary); padding: 8px 16px; border-radius: 8px; border: none; }
-        .search-box { background: white; border-radius: 12px; display: flex; padding: 8px 15px; align-items: center; gap: 10px; margin: 0 10px 10px 10px; border: 1px solid #ddd; }
-        .search-box input { border: none; width: 100%; outline: none; padding: 5px 0; font-size: 14px; }
+
+        /* Property Cards */
         .prop-card { background: white; border-radius: 16px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; border: 1px solid #eee; }
         .img-container { position: relative; width: 100%; height: 230px; background: #e0e0e0; }
         .img-container img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .action-btns { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; gap: 10px; z-index: 10; }
-        .circle-btn { background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); font-size: 16px; }
+        .circle-btn { background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); font-size: 16px; cursor: pointer; }
+        .fav-btn.active { color: #d32f2f; }
         .premium-badge { position: absolute; bottom: 10px; left: 10px; background: #ffd700; color: #000; padding: 5px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+
         .prop-info { padding: 15px; }
         .prop-price { font-size: 22px; font-weight: 800; color: var(--primary); }
-        .prop-title { font-weight: 700; font-size: 16px; margin: 5px 0; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .prop-title { font-weight: 700; font-size: 16px; margin: 5px 0; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        /* Buttons Group */
         .btn-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 15px; }
-        .btn { padding: 12px 5px; border-radius: 10px; font-weight: 700; font-size: 12px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: 0.2s; }
+        .btn { padding: 12px 5px; border-radius: 10px; font-weight: 700; font-size: 11px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; text-decoration: none; transition: 0.2s; }
         .btn-call { background: #e8f5e9; color: #2e7d32; } 
         .btn-wa { background: #25D366; color: white; } 
         .btn-chat { background: var(--primary); color: white; }
+
+        /* Navigation */
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 8px 0; border-top: 1px solid #e0e0e0; z-index: 2000; }
         .nav-item { display: flex; flex-direction: column; align-items: center; color: #888; text-decoration: none; font-size: 11px; font-weight: 600; flex: 1; }
         .nav-item.active { color: var(--primary); }
         .post-nav .post-btn-main { background: var(--primary); color: white; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        
+        /* Fullscreen Image Overlay */
         #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 6000; display: none; align-items: center; justify-content: center; }
-        .fav-btn.active { color: #d32f2f; }
         .index-fix-btn { background: #ff9800; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; display: inline-block; font-weight: 700; margin-top: 10px; }
     </style>
 </head>
@@ -51,10 +65,14 @@
 
 <div class="drawer-overlay" id="overlayPanel" onclick="toggleDrawer()"></div>
 <div class="drawer" id="sideDrawer">
-    <div class="drawer-header"><i class="fa fa-user-circle fa-3x"></i><div id="dName" style="margin-top:10px; font-weight:700;">Earth User</div></div>
+    <div class="drawer-header">
+        <i class="fa fa-user-circle fa-4x"></i>
+        <div id="dName" style="margin-top:10px; font-weight:700; font-size:1.1rem;">Earth Guest</div>
+    </div>
     <a href="profile.html" class="drawer-item"><i class="fa fa-user"></i> My Profile</a>
     <a href="my-ads.html" class="drawer-item"><i class="fa fa-layer-group"></i> My Ads</a>
     <a href="favorites.html" class="drawer-item"><i class="fa-regular fa-heart"></i> My Favorites</a>
+    <div class="drawer-item" onclick="shareApp()"><i class="fa fa-share-nodes"></i> Share App</div>
     <a href="support.html" class="drawer-item"><i class="fa fa-headset"></i> Support</a>
     <a href="about.html" class="drawer-item"><i class="fa fa-info-circle"></i> About Us</a>
 </div>
@@ -87,7 +105,7 @@
     <a href="profile.html" class="nav-item"><i class="fa fa-user-circle"></i><span>Profile</span></a>
 </div>
 
-<div id="overlay" onclick="this.style.display='none'"><img id="fullImg" style="max-width:95%; border-radius:8px;"></div>
+<div id="overlay" onclick="this.style.display='none'"><img id="fullImg" style="max-width:95%; max-height:80%; border-radius:8px;"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -110,8 +128,13 @@ function toggleDrawer() {
     o.style.display = d.classList.contains('open') ? 'block' : 'none';
 }
 
+function shareApp() {
+    if(navigator.share) navigator.share({ title: 'Earth Property', url: window.location.origin });
+}
+
 function escapeHtml(t) { if(!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 
+// Load Ads with Real-time Updates
 async function loadProps() {
     const list = document.getElementById('propertyList');
     list.innerHTML = '<center style="padding:60px;"><i class="fa fa-spinner fa-spin fa-2x" style="color:var(--primary)"></i></center>';
@@ -122,12 +145,11 @@ async function loadProps() {
       .onSnapshot(snap => {
           allProps = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
           renderProps(allProps);
-          if (allProps.length === 0) list.innerHTML = "<center style='padding:50px; color:#666;'>No active properties found.</center>";
+          if (allProps.length === 0) list.innerHTML = "<center style='padding:50px; color:#666;'>No active ads found.</center>";
       }, err => {
-          console.error("Firestore Error:", err);
           const match = err.message.match(/(https:\/\/console\.firebase\.google\.com\/[^\s]+)/);
           if (match) {
-              list.innerHTML = `<div style="text-align:center; padding:40px;"><i class="fa fa-database fa-3x" style="color:#ff9800;"></i><h3 style="margin-top:15px;">Setup Required</h3><a href="${match[1]}" target="_blank" class="index-fix-btn">Authorize Index Filter</a></div>`;
+              list.innerHTML = `<div style="text-align:center; padding:40px;"><i class="fa fa-database fa-3x" style="color:#ff9800;"></i><h3>Setup Required</h3><a href="${match[1]}" target="_blank" class="index-fix-btn">Click to Authorize Index</a></div>`;
           }
       });
 }
@@ -146,16 +168,16 @@ function renderProps(data) {
                     <button class="circle-btn" onclick="shareProp('${p.id}')"><i class="fa fa-share-nodes"></i></button>
                     <button class="circle-btn fav-btn ${isFav}" onclick="toggleFav('${p.id}', this)"><i class="fa fa-heart"></i></button>
                 </div>
-                <img src="${imgUrl}" loading="lazy" onclick="showImg('${imgUrl}')" onerror="this.src='https://via.placeholder.com/400x300?text=Reloading...'">
+                <img src="${imgUrl}" loading="lazy" onclick="showImg('${imgUrl}')">
                 ${premiumBadge}
             </div>
             <div class="prop-info">
                 <div class="prop-price">₹${Number(p.price||0).toLocaleString('en-IN')}</div>
                 <div class="prop-title">${escapeHtml(p.title)}</div>
-                <div style="font-size:12px; color:#666;"><i class="fa fa-map-marker-alt"></i> ${escapeHtml(p.location)}</div>
+                <div style="font-size:12px; color:#666; margin-bottom:10px;"><i class="fa fa-map-marker-alt"></i> ${escapeHtml(p.location)}</div>
                 <div class="btn-group">
                     <button class="btn btn-call" onclick="revealContact('${p.id}', this, false)"><i class="fa fa-phone"></i> Call</button>
-                    <button class="btn btn-wa" onclick="revealContact('${p.id}', this, true)"><i class="fa-brands fa-whatsapp"></i> Chat</button>
+                    <button class="btn btn-wa" onclick="revealContact('${p.id}', this, true)"><i class="fa-brands fa-whatsapp"></i> WA</button>
                     <button class="btn btn-chat" onclick="openChat('${p.ownerId}', '${p.id}')"><i class="fa-regular fa-comment-dots"></i> Chat</button>
                 </div>
             </div>
@@ -164,7 +186,7 @@ function renderProps(data) {
 }
 
 async function revealContact(id, btn, wa) {
-    if(!auth.currentUser) { alert("Please login!"); location.href='login.html'; return; }
+    if(!auth.currentUser) { alert("Please Login first!"); location.href='login.html'; return; }
     if(btn.dataset.number) {
         if(wa) window.open(`https://wa.me/91${btn.dataset.number}`);
         else window.location.href = `tel:${btn.dataset.number}`;
@@ -173,11 +195,13 @@ async function revealContact(id, btn, wa) {
     btn.innerHTML = "<i class='fa fa-spinner fa-spin'></i>";
     try {
         const propDoc = await db.collection("properties").doc(id).get();
-        const userDoc = await db.collection("users").doc(propDoc.data().ownerId).get();
-        const num = userDoc.data().phone;
-        if(!num) { alert("No contact."); btn.innerHTML = "Call"; return; }
+        const pData = propDoc.data();
+        const userDoc = await db.collection("users").doc(pData.ownerId).get();
+        const num = userDoc.data()?.phone || pData.phone;
+        
+        if(!num) { alert("Contact not available."); btn.innerHTML = wa ? "WA" : "Call"; return; }
         btn.dataset.number = num;
-        btn.innerHTML = wa ? `<i class='fa-brands fa-whatsapp'></i> Chat` : `<i class='fa fa-phone'></i> ${num}`;
+        btn.innerHTML = wa ? `WA` : `${num.slice(-4)}`;
         if(wa) window.open(`https://wa.me/91${num}`); else window.location.href = `tel:${num}`;
     } catch(e) { btn.innerHTML = "Error"; }
 }
@@ -186,13 +210,12 @@ function showImg(src) { document.getElementById('fullImg').src = src; document.g
 
 async function toggleFav(id, btn) {
     if(!auth.currentUser) { alert("Login required"); location.href='login.html'; return; }
-    const userRef = db.collection("users").doc(auth.currentUser.uid);
     if(userFavs.includes(id)) {
         userFavs = userFavs.filter(i => i !== id); btn.classList.remove('active');
-        await userRef.update({ favorites: firebase.firestore.FieldValue.arrayRemove(id) });
+        await db.collection("users").doc(auth.currentUser.uid).update({ favorites: firebase.firestore.FieldValue.arrayRemove(id) });
     } else {
         userFavs.push(id); btn.classList.add('active');
-        await userRef.update({ favorites: firebase.firestore.FieldValue.arrayUnion(id) });
+        await db.collection("users").doc(auth.currentUser.uid).update({ favorites: firebase.firestore.FieldValue.arrayUnion(id) });
     }
     localStorage.setItem('favs', JSON.stringify(userFavs));
 }
@@ -213,37 +236,33 @@ function filterDataDebounced() {
 
 function openChat(owner, id) { if(!auth.currentUser) location.href='login.html'; else location.href=`chat.html?to=${owner}&p=${id}`; }
 
-// ✅ ROBUST: User Name & Admin Logic
+// ✅ ZIDDI AUTH & NAME SYNC
 auth.onAuthStateChanged(async user => {
     const btn = document.getElementById('authBtn');
     const dName = document.getElementById('dName');
-    
+    const adminLink = document.getElementById('adminLink');
+
     if(user) {
         btn.innerText = "Logout";
         btn.onclick = () => auth.signOut().then(() => location.reload());
-        
-        // Match Admin UID correctly
-        if(user.uid === "WOY9f67DachGVTuhR4tSJ1BHozx1") {
-            document.getElementById('adminLink').style.display = 'flex';
+        if(user.uid === "WOY9f67DachGVTuhR4tSJ1BHozx1") adminLink.style.display = 'flex';
+
+        const userDoc = await db.collection("users").doc(user.uid).get();
+        if(userDoc.exists) {
+            const ud = userDoc.data();
+            dName.innerText = ud.name || ud.businessName || user.displayName || "Earth User";
+            userFavs = ud.favorites || [];
+            localStorage.setItem('favs', JSON.stringify(userFavs));
+        } else {
+            // New Google User Setup
+            await db.collection("users").doc(user.uid).set({
+                name: user.displayName || "Earth User",
+                email: user.email,
+                favorites: [],
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, {merge: true});
+            dName.innerText = user.displayName || "Earth User";
         }
-
-        const updateName = async () => {
-            const userDoc = await db.collection("users").doc(user.uid).get();
-            if(userDoc.exists && userDoc.data().name) {
-                dName.innerText = userDoc.data().name;
-            } else if(user.displayName) {
-                dName.innerText = user.displayName;
-            } else {
-                dName.innerText = "Earth User";
-            }
-        };
-
-        updateName();
-        setTimeout(updateName, 2000); // Retry after 2 seconds for slow sync
-
-        const uDoc = await db.collection("users").doc(user.uid).get();
-        userFavs = uDoc.data()?.favorites || [];
-        localStorage.setItem('favs', JSON.stringify(userFavs));
     } else {
         dName.innerText = "Earth Guest";
         btn.onclick = () => location.href = 'login.html';
