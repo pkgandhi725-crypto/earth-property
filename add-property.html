@@ -13,21 +13,12 @@
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; color: #444; }
         input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
-        
-        /* Image Upload Grid with Remove Button */
         .img-upload-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
         .img-box { aspect-ratio: 1/1; border: 2px dashed #ccc; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #fff; cursor: pointer; }
         .img-box img { width: 100%; height: 100%; object-fit: cover; }
-        
-        .remove-btn { 
-            position: absolute; top: 5px; right: 5px; background: rgba(211, 47, 47, 0.9); 
-            color: white; width: 22px; height: 22px; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; font-size: 10px; z-index: 10;
-        }
-
+        .remove-btn { position: absolute; top: 5px; right: 5px; background: rgba(211, 47, 47, 0.9); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; z-index: 10; }
         .btn-post { background: var(--primary); color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-size: 16px; font-weight: 700; margin-top: 20px; cursor: pointer; }
         .btn-post:disabled { background: #ccc; cursor: not-allowed; }
-        
         #loadingOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 2000; text-align: center; }
     </style>
 </head>
@@ -74,13 +65,13 @@
         <textarea id="desc" rows="3" placeholder="Additional details..."></textarea>
     </div>
 
-    <label>Photos (Max 3 - Each under 5MB)</label>
+    <label>Photos (Max 3)</label>
     <div class="img-upload-grid">
         <div class="img-box" id="box0" onclick="triggerUpload(0)"><i class="fa fa-camera" id="icon0"></i><img id="prev0" style="display:none;"></div>
         <div class="img-box" id="box1" onclick="triggerUpload(1)"><i class="fa fa-camera" id="icon1"></i><img id="prev1" style="display:none;"></div>
         <div class="img-box" id="box2" onclick="triggerUpload(2)"><i class="fa fa-camera" id="icon2"></i><img id="prev2" style="display:none;"></div>
     </div>
-    <input type="file" id="fileInput" hidden accept="image/jpeg,image/png,image/webp" onchange="handleFile(event)">
+    <input type="file" id="fileInput" hidden accept="image/*" onchange="handleFile(event)">
 
     <button class="btn-post" id="postBtn" onclick="submitProperty()">Post Property</button>
 </div>
@@ -90,11 +81,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-const firebaseConfig = { 
-    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
-    authDomain: "earth-properties-c3c56.firebaseapp.com", 
-    projectId: "earth-properties-c3c56" 
-};
+const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
@@ -104,7 +91,6 @@ let activeSlot = 0;
 const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dmod7m66u/image/upload";
 const CLOUDINARY_PRESET = "Earth_Property";
 
-// Check if Edit Mode
 const editId = new URLSearchParams(window.location.search).get('edit');
 
 window.onload = async () => {
@@ -124,32 +110,15 @@ async function loadEditData(id) {
         document.getElementById('location').value = d.location;
         document.getElementById('desc').value = d.description || "";
         document.getElementById('type').value = d.propertyType;
-        
-        if(d.images) {
-            d.images.forEach((url, i) => {
-                if(i < 3) {
-                    showPreview(i, url);
-                    selectedImages[i] = url; // Keeping existing URL
-                }
-            });
-        }
+        if(d.images) d.images.forEach((url, i) => { if(i < 3) { showPreview(i, url); selectedImages[i] = url; } });
     }
 }
 
-function triggerUpload(slot) {
-    activeSlot = slot;
-    document.getElementById('fileInput').click();
-}
+function triggerUpload(slot) { activeSlot = slot; document.getElementById('fileInput').click(); }
 
 function handleFile(e) {
     const file = e.target.files[0];
     if(!file) return;
-
-    // VALIDATION (Security Check)
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    if(!validTypes.includes(file.type)) return alert("Only JPG, PNG or WEBP allowed!");
-    if(file.size > 5 * 1024 * 1024) return alert("Image size must be less than 5MB!");
-
     selectedImages[activeSlot] = file;
     const reader = new FileReader();
     reader.onload = (event) => showPreview(activeSlot, event.target.result);
@@ -161,7 +130,6 @@ function showPreview(slot, src) {
     document.getElementById(`prev${slot}`).src = src;
     document.getElementById(`prev${slot}`).style.display = 'block';
     document.getElementById(`icon${slot}`).style.display = 'none';
-    
     if(!box.querySelector('.remove-btn')) {
         const btn = document.createElement('div');
         btn.className = 'remove-btn';
@@ -191,11 +159,9 @@ async function uploadToCloudinary(file) {
 async function submitProperty() {
     const user = auth.currentUser;
     if(!user) return alert("Please login!");
-
     const title = document.getElementById('title').value.trim();
     const price = document.getElementById('price').value;
     const location = document.getElementById('location').value.trim();
-    
     if(!title || !price || !location) return alert("Please fill Title, Price and Location!");
 
     document.getElementById('loadingOverlay').style.display = 'flex';
@@ -206,9 +172,8 @@ async function submitProperty() {
         for(let i=0; i<3; i++) {
             let img = selectedImages[i];
             if(img) {
-                if(typeof img === 'string') {
-                    imageUrls.push(img); // Existing URL (No need to re-upload)
-                } else {
+                if(typeof img === 'string') imageUrls.push(img);
+                else {
                     document.getElementById('loadingText').textContent = `Uploading Photo ${i+1}...`;
                     const url = await uploadToCloudinary(img);
                     imageUrls.push(url);
@@ -216,9 +181,8 @@ async function submitProperty() {
             }
         }
 
-        const now = new Date();
         const expiry = new Date();
-        expiry.setDate(now.getDate() + 30); // 30 Day Auto-Expiry [cite: 2026-02-03]
+        expiry.setDate(expiry.getDate() + 30);
 
         const propertyData = {
             ownerId: user.uid,
@@ -236,20 +200,14 @@ async function submitProperty() {
         if(!editId) {
             propertyData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
             await db.collection("properties").add(propertyData);
-            alert("Property Posted Successfully! 🎉");
+            alert("Property Posted! 🎉");
         } else {
             await db.collection("properties").doc(editId).update(propertyData);
-            alert("Property Updated Successfully! ✓");
+            alert("Updated! ✓");
         }
-
-        window.location.href = "My-properties.html";
-
-    } catch (err) {
-        alert("Error: " + err.message);
-    } finally {
-        document.getElementById('loadingOverlay').style.display = 'none';
-        document.getElementById('postBtn').disabled = false;
-    }
+        window.location.href = "my-ads.html";
+    } catch (err) { alert("Error: " + err.message); }
+    finally { document.getElementById('loadingOverlay').style.display = 'none'; document.getElementById('postBtn').disabled = false; }
 }
 </script>
 </body>
