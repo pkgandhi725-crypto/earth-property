@@ -73,7 +73,7 @@
     </div>
     <input type="file" id="fileInput" hidden accept="image/*" onchange="handleFile(event)">
 
-    <button class="btn-post" id="postBtn" onclick="submitProperty()" disabled>Initializing...</button>
+    <button class="btn-post" id="postBtn" onclick="submitProperty()" disabled>Loading User Data...</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -81,6 +81,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
+// ✅ Firebase Configuration (Corrected)
 const firebaseConfig = { 
     apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
     authDomain: "earth-properties-c3c56.firebaseapp.com", 
@@ -90,15 +91,16 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
+// ✅ Cloudinary Settings (Corrected based on screenshots)
+const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dmod7m66u/image/upload";
+const CLOUDINARY_PRESET = "earth_property"; // Sab small letters mein
+
 let selectedImages = [null, null, null];
 let activeSlot = 0;
 let userData = null;
-
-const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dmod7m66u/image/upload";
-const CLOUDINARY_PRESET = "earth_property";
 const editId = new URLSearchParams(window.location.search).get('edit');
 
-// ✅ High Priority Fix: Race Condition & Data Loading
+// User status aur data load karna
 auth.onAuthStateChanged(async (user) => {
     if (user) {
         try {
@@ -108,8 +110,8 @@ auth.onAuthStateChanged(async (user) => {
             document.getElementById('postBtn').textContent = editId ? "Update Changes" : "Post Property";
             if(editId) loadEditData(editId, user.uid);
         } catch(e) {
-            console.error("Auth Data Load Error:", e);
-            alert("Error loading profile. Check internet.");
+            console.error("Auth Data Error:", e);
+            alert("Internet slow hai, dobara try karein.");
         }
     } else {
         location.href = 'login.html';
@@ -139,7 +141,7 @@ function triggerUpload(slot) { activeSlot = slot; document.getElementById('fileI
 function handleFile(e) {
     const file = e.target.files[0];
     if(!file) return;
-    if(file.size > 5 * 1024 * 1024) return alert("Image too large! Max 5MB allowed.");
+    if(file.size > 5 * 1024 * 1024) return alert("Photo bahut badi hai! Max 5MB allowed.");
     selectedImages[activeSlot] = file;
     const reader = new FileReader();
     reader.onload = (event) => showPreview(activeSlot, event.target.result);
@@ -168,31 +170,32 @@ function removeImage(slot) {
     if(rb) rb.remove();
 }
 
-// ✅ Fix for Cloudinary Upload Failure (19194.jpg)
+// ✅ Corrected Cloudinary Upload (No API Key needed for Unsigned)
 async function uploadToCloudinary(file) {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', CLOUDINARY_PRESET);
-    
+
     const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
-    if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error?.message || "Cloudinary Upload Failed");
-    }
     const data = await res.json();
+
+    if (!res.ok) {
+        console.error("Cloudinary Error:", data);
+        throw new Error(data.error?.message || "Upload Failed");
+    }
     return data.secure_url;
 }
 
 async function submitProperty() {
     const user = auth.currentUser;
-    if(!user || !userData) return alert("Waiting for user data...");
+    if(!user || !userData) return alert("Pehle user data load hone dein.");
 
     const title = document.getElementById('title').value.trim();
     const price = Number(document.getElementById('price').value);
     const location = document.getElementById('location').value.trim();
     
-    if(!title || !location || price <= 0) return alert("Please fill all fields correctly!");
-    if(!selectedImages.some(img => img !== null)) return alert("Please upload at least one photo!");
+    if(!title || !location || price <= 0) return alert("Sahi details bhariye!");
+    if(!selectedImages.some(img => img !== null)) return alert("Kam se kam ek photo zaruri hai!");
 
     document.getElementById('loadingOverlay').style.display = 'flex';
     document.getElementById('postBtn').disabled = true;
@@ -214,7 +217,7 @@ async function submitProperty() {
         const expiry = new Date();
         expiry.setDate(expiry.getDate() + 30);
 
-        // ✅ Final Fix for Undefined Data (19192.jpg)
+        // ✅ Final Fix for Undefined/Invalid Data
         const propertyData = {
             ownerId: user.uid,
             title: title || "Property",
@@ -225,8 +228,9 @@ async function submitProperty() {
             images: imageUrls,
             status: "active",
             isExpired: false,
-            isVerified: userData.isVerified || false,
-            businessName: userData.businessName || "Individual Dealer",
+            // Check for isVerified as boolean
+            isVerified: (userData && userData.isVerified === true) ? true : false,
+            businessName: (userData && userData.businessName) ? userData.businessName : "Individual Dealer",
             updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
             expiryDate: firebase.firestore.Timestamp.fromDate(expiry)
         };
@@ -234,10 +238,10 @@ async function submitProperty() {
         if(!editId) {
             propertyData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
             await db.collection("properties").add(propertyData);
-            alert("Property Posted! 🎉");
+            alert("Badhiya! Property post ho gayi. 🎉");
         } else {
             await db.collection("properties").doc(editId).update(propertyData);
-            alert("Updated! ✓");
+            alert("Property update ho gayi! ✓");
         }
         window.location.href = "my-ads.html";
     } catch (err) { 
