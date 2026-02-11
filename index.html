@@ -15,7 +15,11 @@
         .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
         .header-right { display: flex; align-items: center; gap: 18px; }
         .logo-area { display: flex; align-items: center; gap: 10px; }
-        .admin-btn { color: #ffd700; font-size: 20px; cursor: pointer; display: none; }
+        
+        /* Admin Shield Styling */
+        .admin-btn { color: #ffd700; font-size: 20px; cursor: pointer; display: none !important; }
+        .admin-active { display: block !important; }
+        
         .bell-icon { position: relative; font-size: 19px; cursor: pointer; }
         .bell-dot { position: absolute; top: -1px; right: -1px; width: 8px; height: 8px; background: #ff5252; border-radius: 50%; border: 1.5px solid var(--primary); }
 
@@ -136,17 +140,23 @@ const languages = [
 const langGrid = document.getElementById('langGrid');
 languages.forEach(l => {
     const btn = document.createElement('div');
-    const isCurrent = (localStorage.getItem('earthLang') || 'en') === l.c;
-    btn.className = `lang-btn ${isCurrent ? 'active' : ''}`;
+    // FIXED: Language persistence check
+    const savedLang = localStorage.getItem('earthLang') || 'en';
+    btn.className = `lang-btn ${savedLang === l.c ? 'active' : ''}`;
     btn.innerText = l.n;
-    btn.onclick = () => { localStorage.setItem('earthLang', l.c); location.reload(); };
+    btn.onclick = () => { 
+        localStorage.setItem('earthLang', l.c); 
+        // Force refresh with immediate effect
+        window.location.reload(); 
+    };
     langGrid.appendChild(btn);
 });
 
 function toggleDrawer() {
-    document.getElementById('sideDrawer').classList.toggle('open');
-    const o = document.getElementById('overlay');
-    o.style.display = o.style.display === 'block' ? 'none' : 'block';
+    const sideDrawer = document.getElementById('sideDrawer');
+    const overlay = document.getElementById('overlay');
+    sideDrawer.classList.toggle('open');
+    overlay.style.display = sideDrawer.classList.contains('open') ? 'block' : 'none';
 }
 
 auth.onAuthStateChanged(async user => {
@@ -159,11 +169,15 @@ auth.onAuthStateChanged(async user => {
         document.getElementById('authBtn').onclick = handleLogout;
         document.getElementById('logoutBtn').style.display = 'block';
 
+        // FIXED: Admin Shield logic for specific email
         if(user.email === "admin@earth.com") {
-            document.getElementById('adminIcon').style.display = 'block';
+            document.getElementById('adminIcon').classList.add('admin-active');
+        } else {
+            document.getElementById('adminIcon').classList.remove('admin-active');
         }
     } else {
         document.getElementById('authBtn').onclick = () => location.href='login.html';
+        document.getElementById('adminIcon').classList.remove('admin-active');
     }
     
     db.collection("properties").orderBy("createdAt", "desc").onSnapshot(snap => {
@@ -179,6 +193,7 @@ function renderAds(ads) {
     list.innerHTML = ads.length ? '' : '<center style="margin-top:50px; color:#888;">No properties found.</center>';
     ads.forEach(p => {
         const phone = p.phone || p.mobile || '';
+        // Title cleaning for WhatsApp message
         const cleanTitle = (p.title || 'Property').replace(/'/g, "\\'");
         list.innerHTML += `
         <div class="prop-card">
