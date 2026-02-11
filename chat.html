@@ -8,28 +8,23 @@
     <style>
         :root { --primary: #2e7d32; --chat-bg: #e5ddd5; }
         body { font-family: system-ui, sans-serif; margin: 0; background: var(--chat-bg); height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
-        
         header { background: var(--primary); color: white; padding: 10px 15px; display: flex; align-items: center; gap: 12px; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .back-btn { cursor: pointer; padding: 5px; font-size: 18px; }
         .user-info { flex: 1; overflow: hidden; }
         #chatName { margin: 0; font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         #userStatus { font-size: 11px; color: #e0e0e0; font-weight: 500; }
-
         #chatBox { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; scroll-behavior: smooth; }
-        
         .msg { max-width: 80%; padding: 8px 12px; border-radius: 12px; font-size: 14px; position: relative; word-wrap: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         .sent { align-self: flex-end; background: #dcf8c6; border-bottom-right-radius: 2px; }
         .received { align-self: flex-start; background: white; border-bottom-left-radius: 2px; }
-        
         .msg-footer { display: flex; align-items: center; justify-content: flex-end; gap: 4px; margin-top: 2px; font-size: 10px; color: #777; }
         .tick-blue { color: #34B7F1; }
-
-        .input-area { background: #f0f0f0; padding: 10px; display: flex; align-items: center; gap: 10px; border-top: 1px solid #ddd; }
+        .input-area { background: #f0f0f0; padding: 10px; display: flex; align-items: center; gap: 10px; border-top: 1px solid #ddd; min-height: 60px; }
         .input-area input { flex: 1; border: none; padding: 12px 18px; border-radius: 25px; outline: none; font-size: 15px; }
         .send-btn { background: var(--primary); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-
         .dropdown { display: none; position: absolute; right: 15px; top: 50px; background: white; color: black; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); min-width: 130px; z-index: 1000; }
         .dropdown div { padding: 12px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #eee; }
+        .unblock-btn { background: var(--primary); color: white; border: none; padding: 6px 15px; border-radius: 15px; cursor: pointer; margin-top: 5px; font-weight: 600; }
         .spinner { animation: rotate 2s linear infinite; }
         @keyframes rotate { 100% { transform: rotate(360deg); } }
     </style>
@@ -46,19 +41,15 @@
         <i class="fa fa-ellipsis-v menu-trigger" onclick="toggleMenu(event)" style="cursor:pointer; padding:5px;"></i>
         <div id="menuDropdown" class="dropdown">
             <div onclick="reportUser()">Report User</div>
-            <div onclick="blockUser()" style="color:red;">Block User</div>
+            <div id="blockMenuBtn" onclick="blockUser()" style="color:red;">Block User</div>
         </div>
     </div>
 </header>
 
 <div id="chatBox"></div>
 
-<div class="input-area">
-    <label for="photoInput" style="cursor:pointer;"><i class="fa fa-camera" id="camIcon" style="font-size:22px; color:#555;"></i></label>
-    <input type="file" id="photoInput" accept="image/*" hidden onchange="uploadPhoto(this)">
-    <input type="text" id="msgInput" placeholder="Type a message..." autocomplete="off">
-    <button class="send-btn" onclick="sendMsg()"><i class="fa fa-paper-plane"></i></button>
-</div>
+<div class="input-area" id="inputArea">
+    </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -75,8 +66,8 @@ const UPLOAD_PRESET = "earth_property";
 const urlParams = new URLSearchParams(window.location.search);
 const partnerId = urlParams.get('to');
 let currentUserId = "";
+let isIBlocked = false;
 
-// ✅ 1. Input Sanitization (XSS Fix)
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
@@ -86,138 +77,130 @@ function escapeHtml(text) {
 auth.onAuthStateChanged(user => {
     if (!user || !partnerId) { location.href = 'index.html'; return; }
     currentUserId = user.uid;
+    db.collection("users").doc(currentUserId).update({ status: "Online" });
     
-    // ✅ 2. Reliable Presence System
-    const userRef = db.collection("users").doc(currentUserId);
-    userRef.update({ status: "Online" });
-    
-    document.addEventListener('visibilitychange', () => {
-        userRef.update({ status: document.visibilityState === 'visible' ? "Online" : "Offline" });
-    });
-
+    // Listen to real-time status of both users (Blocking Logic)
+    checkBlockStatus();
     loadPartnerInfo();
     listenMessages();
 });
 
-async function loadPartnerInfo() {
-    db.collection("users").doc(partnerId).onSnapshot(doc => {
-        if(doc.exists) {
-            const data = doc.data();
-            document.getElementById('chatName').innerText = data.name || "User";
-            document.getElementById('userStatus').innerText = data.status || "Offline";
-            document.getElementById('userStatus').style.color = data.status === "Online" ? "#90EE90" : "#ccc";
-        } else {
-            alert("User not found!");
-            history.back();
-        }
+// ✅ REAL-TIME BLOCK STATUS LISTEN
+function checkBlockStatus() {
+    db.collection("users").doc(currentUserId).onSnapshot(myDoc => {
+        db.collection("users").doc(partnerId).onSnapshot(partnerDoc => {
+            isIBlocked = (myDoc.data()?.blockedUsers || []).includes(partnerId);
+            const partnerBlockedMe = (partnerDoc.data()?.blockedUsers || []).includes(currentUserId);
+            const inputArea = document.getElementById('inputArea');
+            const menuBtn = document.getElementById('blockMenuBtn');
+
+            if (isIBlocked) {
+                inputArea.innerHTML = `<div style="text-align:center; width:100%; color:#666; font-size:13px;">You blocked this user. <button class="unblock-btn" onclick="unblockUser()">Unblock</button></div>`;
+                menuBtn.style.display = 'none';
+            } else if (partnerBlockedMe) {
+                inputArea.innerHTML = `<div style="text-align:center; width:100%; color:#999; font-size:13px;">You can no longer message this user.</div>`;
+                menuBtn.innerText = "Block User";
+            } else {
+                inputArea.innerHTML = `
+                    <label for="photoInput" style="cursor:pointer;"><i class="fa fa-camera" id="camIcon" style="font-size:22px; color:#555;"></i></label>
+                    <input type="file" id="photoInput" accept="image/*" hidden onchange="uploadPhoto(this)">
+                    <input type="text" id="msgInput" placeholder="Type a message..." autocomplete="off">
+                    <button class="send-btn" onclick="sendMsg()"><i class="fa fa-paper-plane"></i></button>`;
+                menuBtn.style.display = 'block';
+                menuBtn.innerText = "Block User";
+                
+                // Re-bind enter key
+                document.getElementById('msgInput').addEventListener('keypress', e => { if(e.key === 'Enter') sendMsg(); });
+            }
+        });
     });
 }
 
 function listenMessages() {
     const chatId = currentUserId < partnerId ? `${currentUserId}_${partnerId}` : `${partnerId}_${currentUserId}`;
-    
-    // ✅ 3. Message Limit (Pagination Ready)
     db.collection("chats").doc(chatId).collection("messages")
-      .orderBy("timestamp", "asc")
-      .limitToLast(100) 
+      .orderBy("timestamp", "asc").limitToLast(50)
       .onSnapshot(snap => {
           const chatBox = document.getElementById('chatBox');
+          if (isIBlocked) {
+              chatBox.innerHTML = `<div style="text-align:center; margin-top:50px; color:#999;"><i class="fa fa-ban fa-3x"></i><p>Messages hidden (User Blocked)</p></div>`;
+              return;
+          }
           chatBox.innerHTML = "";
-          
           snap.forEach(doc => {
               const m = doc.data();
               const type = m.senderId === currentUserId ? 'sent' : 'received';
               const time = m.timestamp ? new Date(m.timestamp.seconds * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "...";
+              if(type === 'received' && m.status !== 'seen') db.collection("chats").doc(chatId).collection("messages").doc(doc.id).update({ status: 'seen' });
               
-              if(type === 'received' && m.status !== 'seen') {
-                  db.collection("chats").doc(chatId).collection("messages").doc(doc.id).update({ status: 'seen' });
-              }
-
-              let ticks = '';
-              if(type === 'sent') {
-                  const tickClass = m.status === 'seen' ? 'fa-check-double tick-blue' : 'fa-check';
-                  ticks = `<i class="fa ${tickClass}" style="font-size:12px; margin-left:4px;"></i>`;
-              }
-
-              let content = m.image ? `<img src="${m.image}" style="max-width:100%; border-radius:8px; margin-bottom:5px; display:block;" onclick="window.open(this.src)">` : '';
+              let ticks = type === 'sent' ? `<i class="fa ${m.status === 'seen' ? 'fa-check-double tick-blue' : 'fa-check'}" style="font-size:12px; margin-left:4px;"></i>` : '';
+              let content = m.image ? `<img src="${m.image}" style="max-width:100%; border-radius:8px; display:block;" onclick="window.open(this.src)">` : '';
               content += m.text ? `<div>${escapeHtml(m.text)}</div>` : '';
-
-              chatBox.innerHTML += `<div class="msg ${type}">${content}<div class="msg-footer"><span>${time}</span>${ticks}</div></div>`;
+              chatBox.innerHTML += `<div class="msg ${type}">${content}<div class="msg-footer">${time}${ticks}</div></div>`;
           });
           chatBox.scrollTop = chatBox.scrollHeight;
       });
 }
 
 async function sendMsg(imageUrl = null) {
+    if (isIBlocked) return;
     const input = document.getElementById('msgInput');
-    const text = input.value.trim();
+    const text = input ? input.value.trim() : "";
     if (!text && !imageUrl) return;
 
     const chatId = currentUserId < partnerId ? `${currentUserId}_${partnerId}` : `${partnerId}_${currentUserId}`;
-    const msgData = { 
-        senderId: currentUserId, 
-        timestamp: firebase.firestore.FieldValue.serverTimestamp(), 
-        status: 'sent',
-        text: text || "" 
-    };
-    if(imageUrl) msgData.image = imageUrl;
-
-    input.value = "";
     try {
-        await db.collection("chats").doc(chatId).collection("messages").add(msgData);
-        await db.collection("chats").doc(chatId).set({ 
-            lastMsg: imageUrl ? "📷 Photo" : text, 
-            lastTime: firebase.firestore.FieldValue.serverTimestamp(), 
-            users: [currentUserId, partnerId] 
-        }, { merge: true });
-    } catch(e) { console.error("Send error:", e); }
+        await db.collection("chats").doc(chatId).collection("messages").add({
+            senderId: currentUserId, timestamp: firebase.firestore.FieldValue.serverTimestamp(), status: 'sent', text: text || "", image: imageUrl || null
+        });
+        if(input) input.value = "";
+        await db.collection("chats").doc(chatId).set({ lastMsg: imageUrl ? "📷 Photo" : text, lastTime: firebase.firestore.FieldValue.serverTimestamp(), users: [currentUserId, partnerId] }, { merge: true });
+    } catch(e) { console.error(e); }
 }
-
-// ✅ 4. Robust Cloudinary Upload with Error Handling
-async function uploadPhoto(input) {
-    const file = input.files[0]; 
-    if(!file) return;
-    if(file.size > 5 * 1024 * 1024) { alert("Max 5MB allowed"); return; }
-
-    const camIcon = document.getElementById('camIcon');
-    camIcon.className = "fa fa-spinner spinner";
-    
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', UPLOAD_PRESET);
-
-    try {
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
-        if(!res.ok) throw new Error("Server error");
-        const data = await res.json();
-        if(data.secure_url) await sendMsg(data.secure_url);
-    } catch(e) { 
-        alert("Upload Failed: Check connection"); 
-    } finally { 
-        camIcon.className = "fa fa-camera"; 
-        input.value = ""; 
-    }
-}
-
-// ✅ 5. Dropdown Close on Outside Click
-function toggleMenu(e) {
-    e.stopPropagation();
-    const menu = document.getElementById('menuDropdown');
-    menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
-}
-
-document.addEventListener('click', () => {
-    document.getElementById('menuDropdown').style.display = 'none';
-});
 
 async function blockUser() {
-    if(confirm("Block this user?")) {
+    if(confirm("Block this user? Messages will be hidden.")) {
         await db.collection("users").doc(currentUserId).update({ blockedUsers: firebase.firestore.FieldValue.arrayUnion(partnerId) });
-        history.back();
     }
 }
-function reportUser() { const r = prompt("Reason:"); if(r) alert("Reported."); }
-document.getElementById('msgInput').addEventListener('keypress', e => { if(e.key === 'Enter') sendMsg(); });
+
+async function unblockUser() {
+    if(confirm("Unblock this user?")) {
+        await db.collection("users").doc(currentUserId).update({ blockedUsers: firebase.firestore.FieldValue.arrayRemove(partnerId) });
+    }
+}
+
+async function reportUser() {
+    const reason = prompt("Enter detailed reason (Min 10 chars):");
+    if(!reason || reason.trim().length < 10) return alert("Please provide more detail.");
+    await db.collection("reports").add({ reporter: currentUserId, reported: partnerId, reason: reason, status: "pending", time: firebase.firestore.FieldValue.serverTimestamp() });
+    alert("User reported to Admin.");
+}
+
+async function uploadPhoto(input) {
+    const file = input.files[0]; if(!file) return;
+    document.getElementById('camIcon').className = "fa fa-spinner spinner";
+    const formData = new FormData();
+    formData.append('file', file); formData.append('upload_preset', UPLOAD_PRESET);
+    try {
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
+        const data = await res.json();
+        if(data.secure_url) await sendMsg(data.secure_url);
+    } catch(e) { alert("Upload Failed"); } finally { document.getElementById('camIcon').className = "fa fa-camera"; input.value = ""; }
+}
+
+function loadPartnerInfo() {
+    db.collection("users").doc(partnerId).onSnapshot(doc => {
+        if(doc.exists) {
+            document.getElementById('chatName').innerText = doc.data().name || "User";
+            document.getElementById('userStatus').innerText = doc.data().status || "Offline";
+            document.getElementById('userStatus').style.color = doc.data().status === "Online" ? "#90EE90" : "#ccc";
+        }
+    });
+}
+
+function toggleMenu(e) { e.stopPropagation(); const m = document.getElementById('menuDropdown'); m.style.display = m.style.display === 'block' ? 'none' : 'block'; }
+document.addEventListener('click', () => document.getElementById('menuDropdown').style.display = 'none');
 </script>
 </body>
 </html>
