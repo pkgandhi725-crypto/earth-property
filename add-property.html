@@ -11,15 +11,16 @@
         header { background: var(--primary); color: white; padding: 15px; display: flex; align-items: center; gap: 15px; }
         .container { padding: 20px; max-width: 500px; margin: auto; }
         .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 14px; color: #444; }
         input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
         
-        /* Progress Bar Styles */
+        /* Upload UI */
         .img-upload-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
-        .img-box { aspect-ratio: 1/1; border: 2px dashed #ccc; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #fff; cursor: pointer; }
+        .img-box { aspect-ratio: 1/1; border: 2px dashed #ccc; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #fff; cursor: pointer; }
         .img-box img { width: 100%; height: 100%; object-fit: cover; position: absolute; }
         
-        .progress-container { width: 80%; height: 6px; background: #eee; border-radius: 10px; overflow: hidden; display: none; z-index: 5; }
-        .progress-bar { height: 100%; background: var(--primary); width: 0%; transition: width 0.2s; }
+        .prog-container { width: 80%; height: 8px; background: #eee; border-radius: 10px; overflow: hidden; display: none; z-index: 5; }
+        .prog-bar { height: 100%; background: #2e7d32; width: 0%; transition: width 0.2s; }
         
         .btn-post { background: var(--primary); color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-size: 16px; font-weight: 700; margin-top: 20px; cursor: pointer; }
         .btn-post:disabled { background: #ccc; cursor: not-allowed; }
@@ -33,7 +34,7 @@
 </header>
 
 <div class="container">
-    <div class="form-group"><label>Property Title</label><input type="text" id="title" placeholder="3bhk"></div>
+    <div class="form-group"><label>Title</label><input type="text" id="title" placeholder="3BHK Flat"></div>
     <div class="form-group" style="display: flex; gap: 10px;">
         <div style="flex: 1;"><label>Price (₹)</label><input type="number" id="price"></div>
         <div style="flex: 1;"><label>Type</label><select id="type"><option>Residential</option><option>Commercial</option></select></div>
@@ -46,22 +47,22 @@
         <div class="img-box" onclick="triggerUpload(0)">
             <i class="fa fa-camera" id="icon0"></i>
             <img id="prev0" style="display:none;">
-            <div class="progress-container" id="cont0"><div class="progress-bar" id="bar0"></div></div>
+            <div class="prog-container" id="cont0"><div class="prog-bar" id="bar0"></div></div>
         </div>
         <div class="img-box" onclick="triggerUpload(1)">
             <i class="fa fa-camera" id="icon1"></i>
             <img id="prev1" style="display:none;">
-            <div class="progress-container" id="cont1"><div class="progress-bar" id="bar1"></div></div>
+            <div class="prog-container" id="cont1"><div class="prog-bar" id="bar1"></div></div>
         </div>
         <div class="img-box" onclick="triggerUpload(2)">
             <i class="fa fa-camera" id="icon2"></i>
             <img id="prev2" style="display:none;">
-            <div class="progress-container" id="cont2"><div class="progress-bar" id="bar2"></div></div>
+            <div class="prog-container" id="cont2"><div class="prog-bar" id="bar2"></div></div>
         </div>
     </div>
     <input type="file" id="fileInput" hidden accept="image/*" onchange="handleFile(event)">
 
-    <button class="btn-post" id="postBtn" onclick="submitProperty()" disabled>Post Property</button>
+    <button class="btn-post" id="postBtn" onclick="submitProperty()" disabled>Upload Photos First</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -77,9 +78,9 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// Cloudinary Settings
-const CLOUD_NAME = "dmod7m66u";
-const UPLOAD_PRESET = "earth_property";
+// ✅ FIX: Sahi Cloud Name aur Preset
+const CLOUD_NAME = "dnkhurnbv"; 
+const UPLOAD_PRESET = "earth_property"; 
 
 let uploadedUrls = [null, null, null];
 let uploadingCount = 0;
@@ -96,7 +97,7 @@ function handleFile(e) {
     const icon = document.getElementById(`icon${activeSlot}`);
     const postBtn = document.getElementById('postBtn');
 
-    // UI Reset for this slot
+    // UI Reset
     cont.style.display = 'block';
     icon.style.display = 'none';
     bar.style.width = '0%';
@@ -109,7 +110,7 @@ function handleFile(e) {
     formData.append('upload_preset', UPLOAD_PRESET);
 
     const xhr = new XMLHttpRequest();
-    // ❌ Important: No headers added to keep it truly "Unsigned"
+    // ✅ NO HEADERS -> Direct upload to your cloud
     xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
 
     xhr.upload.onprogress = (event) => {
@@ -132,7 +133,7 @@ function handleFile(e) {
                 postBtn.textContent = "Post Property";
             }
         } else {
-            alert("Error: " + (response.error?.message || "Upload Failed"));
+            alert("Upload Failed: " + (response.error?.message || "Check settings"));
             uploadingCount--;
             icon.style.display = 'block';
         }
@@ -143,23 +144,23 @@ function handleFile(e) {
 
 async function submitProperty() {
     const user = firebase.auth().currentUser;
-    if(!user) return alert("Login required!");
+    if(!user) return alert("Please Login!");
 
-    const title = document.getElementById('title').value;
     const finalImages = uploadedUrls.filter(u => u !== null);
+    if(finalImages.length === 0) return alert("Add at least 1 photo!");
 
     try {
         await db.collection("properties").add({
             ownerId: user.uid,
-            title: title,
+            title: document.getElementById('title').value,
             price: Number(document.getElementById('price').value),
             location: document.getElementById('location').value,
             images: finalImages,
             status: "active",
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        alert("Success!");
-        location.href = "my-ads.html";
+        alert("Property Posted! 🎉");
+        window.location.href = "my-ads.html";
     } catch(e) { alert("Firestore Error: " + e.message); }
 }
 </script>
