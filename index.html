@@ -3,91 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Earth Property - Home</title>
+    <title>Earth Property</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --primary: #2e7d32; --bg: #f0f2f5; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); padding-bottom: 90px; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); padding-bottom: 80px; }
         
-        /* Header Fix */
-        header { background: var(--primary); padding: 15px; color: white; position: sticky; top: 0; z-index: 1000; }
-        .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-        .user-info { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; }
-        .search-box { background: white; border-radius: 12px; display: flex; padding: 12px 15px; align-items: center; gap: 10px; border: 1px solid #ddd; }
-        .search-box input { border: none; width: 100%; outline: none; font-size: 16px; }
+        /* Fixed Header: Logo + Name + Icons */
+        header { background: var(--primary); padding: 12px 15px; color: white; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .header-left { display: flex; align-items: center; gap: 8px; }
+        .logo-text { font-size: 1.1rem; font-weight: 800; white-space: nowrap; }
+        .user-welcome { font-size: 12px; font-weight: 600; background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 15px; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .header-icons { display: flex; gap: 12px; align-items: center; }
+        
+        .search-box { background: white; border-radius: 10px; display: flex; padding: 10px 15px; align-items: center; gap: 10px; border: 1px solid #ddd; }
+        .search-box input { border: none; width: 100%; outline: none; font-size: 14px; }
 
-        /* Multi-Image Gallery Fix */
-        .img-container { position: relative; width: 100%; height: 260px; background: #e0e0e0; overflow-x: auto; display: flex; scroll-snap-type: x mandatory; scrollbar-width: none; }
+        /* Gallery Fix & Full Preview */
+        .img-container { position: relative; width: 100%; height: 230px; background: #eee; overflow-x: auto; display: flex; scroll-snap-type: x mandatory; scrollbar-width: none; }
         .img-container::-webkit-scrollbar { display: none; }
-        .img-container img { min-width: 100%; height: 100%; object-fit: cover; scroll-snap-align: start; }
-        .img-dots { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.5); color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px; z-index: 5; }
+        .img-container img { min-width: 100%; height: 100%; object-fit: cover; scroll-snap-align: start; cursor: pointer; }
+        .img-counter { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 3px 8px; border-radius: 5px; font-size: 11px; z-index: 5; pointer-events: none; }
 
-        /* Property Card */
-        .prop-card { background: white; border-radius: 20px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .prop-info { padding: 18px; }
-        .prop-price { font-size: 24px; font-weight: 800; color: var(--primary); }
-        .prop-title { font-weight: 700; font-size: 18px; margin: 6px 0; color: #333; }
+        /* Restored Action Buttons on Card */
+        .action-btns { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; gap: 8px; z-index: 10; }
+        .circle-btn { background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer; transition: 0.2s; }
+        .fav-btn.active { color: #d32f2f; }
+
+        /* Property Card Layout */
+        .prop-card { background: white; border-radius: 15px; margin: 15px 12px; overflow: hidden; box-shadow: 0 3px 10px rgba(0,0,0,0.08); position: relative; }
+        .prop-info { padding: 15px; }
+        .prop-price { font-size: 20px; font-weight: 800; color: var(--primary); }
+        .prop-title { font-weight: 700; font-size: 16px; margin: 4px 0; color: #333; }
         
-        /* Updated Buttons (Larger Text & Icons) */
-        .btn-group { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 10px; margin-top: 15px; }
-        .btn { padding: 14px 5px; border-radius: 12px; font-weight: 700; font-size: 14px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; }
-        .btn i { font-size: 18px; } /* Bigger Icons */
-        .btn-call { background: #e8f5e9; color: #2e7d32; } 
+        /* Adjusted Contact Buttons - Professional Size */
+        .btn-group { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 8px; margin-top: 12px; }
+        .btn { padding: 10px 2px; border-radius: 8px; font-weight: 700; font-size: 13px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: 0.2s; }
+        .btn i { font-size: 15px; }
+        .btn-call { background: #f1f8e9; color: #2e7d32; border: 1px solid #c8e6c9; } 
         .btn-wa { background: #25D366; color: white; } 
         .btn-chat { background: var(--primary); color: white; }
 
-        /* Drawer & Overlays */
-        .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s; box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
-        .drawer.open { left: 0; }
-        .drawer-item { padding: 15px 20px; display: flex; align-items: center; gap: 15px; color: #333; text-decoration: none; font-weight: 600; border-bottom: 1px solid #f0f0f0; }
-        
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #e0e0e0; z-index: 2000; }
-        .nav-item { display: flex; flex-direction: column; align-items: center; color: #888; text-decoration: none; font-size: 12px; font-weight: 600; flex: 1; }
+        /* Navigation Fixes */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 8px 0; border-top: 1px solid #eee; z-index: 1000; }
+        .nav-item { flex: 1; text-align: center; color: #888; text-decoration: none; font-size: 11px; font-weight: 600; }
+        .nav-item i { margin-bottom: 3px; }
         .nav-item.active { color: var(--primary); }
-        .post-btn-main { background: var(--primary); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .post-btn-circle { background: var(--primary); color: white !important; width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: -28px auto 4px; box-shadow: 0 4px 12px rgba(46,125,50,0.3); border: 4px solid white; }
+        
+        /* Overlay */
+        #fullOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 5000; display: none; align-items: center; justify-content: center; }
+        #fullOverlay img { max-width: 95%; max-height: 85%; border-radius: 5px; }
     </style>
 </head>
 <body>
 
-<div class="drawer" id="sideDrawer">
-    <div style="background:var(--primary); color:white; padding:40px 20px 20px; text-align:center;">
-        <i class="fa fa-user-circle fa-4x"></i>
-        <div id="dName" style="margin-top:10px; font-weight:700;">Earth Guest</div>
-    </div>
-    <a href="profile.html" class="drawer-item"><i class="fa fa-user"></i> My Profile</a>
-    <a href="admin.html" id="adminLink" class="drawer-item" style="display:none; color: #d32f2f;"><i class="fa fa-user-shield"></i> Admin Panel</a>
-    <a href="my-ads.html" class="drawer-item"><i class="fa fa-layer-group"></i> My Ads</a>
-    <a href="verify.html" class="drawer-item"><i class="fa fa-certificate" style="color:#fbc02d;"></i> Get Verified</a>
-    <div class="drawer-item" onclick="auth.signOut().then(()=>location.reload())"><i class="fa fa-sign-out-alt"></i> Logout</div>
-</div>
-
 <header>
     <div class="header-top">
-        <div style="display:flex; align-items:center; gap:12px;">
-            <i class="fa fa-bars" onclick="toggleDrawer()" style="font-size:22px;"></i>
-            <span class="user-info">Hi, <span id="welcomeName">Guest</span></span>
+        <div class="header-left">
+            <i class="fa fa-bars" onclick="alert('Menu Opening...')" style="font-size:18px;"></i>
+            <span class="logo-text">Earth Property</span>
         </div>
-        <div style="display:flex; gap:15px; align-items:center;">
-            <i class="fa fa-bell" onclick="location.href='inbox.html'" style="font-size:20px;"></i>
-            <button id="authBtn" style="padding:6px 12px; border-radius:8px; border:none; font-weight:700; background:white; color:var(--primary);">Login</button>
+        <div class="header-icons">
+            <span id="userNameDisplay" class="user-welcome">Hi, Guest</span>
+            <i id="adminBtn" class="fa fa-user-shield" style="display:none; font-size:18px; color: #ffd700;" onclick="location.href='admin.html'"></i>
+            <i class="fa fa-bell" style="font-size:18px;"></i>
+            <button id="authBtn" style="border:none; background:white; color:var(--primary); padding:5px 12px; border-radius:6px; font-weight:800; font-size:11px; text-transform:uppercase;">Login</button>
         </div>
     </div>
     <div class="search-box">
         <i class="fa fa-search" style="color:#aaa;"></i>
-        <input type="text" id="citySearch" placeholder="Search city or area..." oninput="filterData()">
+        <input type="text" id="citySearch" placeholder="Search city or area..." oninput="filterAds()">
     </div>
 </header>
 
 <div id="propertyList"></div>
 
 <div class="bottom-nav">
-    <a href="index.html" class="nav-item active"><i class="fa fa-house"></i><span>Explore</span></a>
-    <a href="my-ads.html" class="nav-item"><i class="fa fa-layer-group"></i><span>My Ads</span></a>
-    <a href="add-property.html" class="nav-item"><div class="post-btn-main"><i class="fa fa-plus"></i></div><span style="margin-top:40px;">Post</span></a>
-    <a href="favorites.html" class="nav-item"><i class="fa-regular fa-heart"></i><span>Favs</span></a>
-    <a href="profile.html" class="nav-item"><i class="fa fa-user-circle"></i><span>Profile</span></a>
+    <a href="index.html" class="nav-item active"><i class="fa fa-house fa-lg"></i><br>Explore</a>
+    <a href="my-ads.html" class="nav-item"><i class="fa fa-layer-group fa-lg"></i><br>My Ads</a>
+    <a href="add-property.html" class="nav-item"><div class="post-btn-circle"><i class="fa fa-plus"></i></div>Post</a>
+    <a href="favorites.html" class="nav-item"><i class="fa-regular fa-heart fa-lg"></i><br>Favs</a>
+    <a href="profile.html" class="nav-item"><i class="fa fa-user-circle fa-lg"></i><br>Profile</a>
 </div>
+
+<div id="fullOverlay" onclick="this.style.display='none'"><img id="fullImg"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -98,33 +100,40 @@ const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", auth
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
+let allAds = [];
 
-const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
-let allProps = [];
+// Gallery Image Click Fix
+function openFull(url) {
+    document.getElementById('fullImg').src = url;
+    document.getElementById('fullOverlay').style.display = 'flex';
+}
 
-function toggleDrawer() { document.getElementById('sideDrawer').classList.toggle('open'); }
-
-function renderProps(data) {
+function renderAds(data) {
     const list = document.getElementById('propertyList');
     list.innerHTML = data.map(p => {
         const imgs = p.images && p.images.length > 0 ? p.images : ['https://via.placeholder.com/400x300?text=No+Image'];
-        const galleryHtml = imgs.map(url => `<img src="${url}" loading="lazy">`).join('');
-        const badge = p.isVerified ? `<div style="position:absolute; top:10px; left:10px; background:#ffd700; color:black; padding:4px 8px; border-radius:5px; font-size:10px; font-weight:800; z-index:10;"><i class="fa fa-check-circle"></i> VERIFIED</div>` : '';
-
+        const isVerified = p.isVerified ? `<div style="position:absolute; bottom:10px; left:10px; background:#ffd700; color:black; padding:3px 8px; border-radius:5px; font-size:10px; font-weight:800; z-index:5; box-shadow:0 2px 4px rgba(0,0,0,0.2);">VERIFIED</div>` : '';
+        
         return `
         <div class="prop-card">
             <div style="position:relative;">
-                <div class="img-container">${galleryHtml}</div>
-                <div class="img-dots">${imgs.length} Photos</div>
-                ${badge}
+                <div class="action-btns">
+                    <button class="circle-btn" onclick="shareAd('${p.id}')"><i class="fa fa-share-nodes"></i></button>
+                    <button class="circle-btn fav-btn" id="fav-${p.id}" onclick="toggleFav('${p.id}')"><i class="fa-regular fa-heart"></i></button>
+                </div>
+                <div class="img-container">
+                    ${imgs.map(url => `<img src="${url}" onclick="openFull('${url}')">`).join('')}
+                </div>
+                <div class="img-counter">${imgs.length} Photos</div>
+                ${isVerified}
             </div>
             <div class="prop-info">
-                <div class="prop-price">₹${Number(p.price||0).toLocaleString('en-IN')}</div>
+                <div class="prop-price">₹${Number(p.price).toLocaleString('en-IN')}</div>
                 <div class="prop-title">${p.title}</div>
-                <div style="font-size:13px; color:#666;"><i class="fa fa-map-marker-alt"></i> ${p.location}</div>
+                <div style="font-size:12px; color:#666; margin-bottom:5px;"><i class="fa fa-map-marker-alt"></i> ${p.location}</div>
                 <div class="btn-group">
-                    <button class="btn btn-call" onclick="revealContact('${p.id}', this, false)"><i class="fa fa-phone"></i> Call</button>
-                    <button class="btn btn-wa" onclick="revealContact('${p.id}', this, true)"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+                    <button class="btn btn-call" onclick="contact('${p.phone}', false)"><i class="fa fa-phone"></i> Call</button>
+                    <button class="btn btn-wa" onclick="contact('${p.phone}', true)"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
                     <button class="btn btn-chat" onclick="location.href='chat.html?to=${p.ownerId}&p=${p.id}'"><i class="fa-regular fa-comment-dots"></i> Chat</button>
                 </div>
             </div>
@@ -132,38 +141,43 @@ function renderProps(data) {
     }).join('');
 }
 
-async function revealContact(id, btn, isWa) {
-    if(!auth.currentUser) return alert("Please Login!");
-    btn.innerHTML = "<i class='fa fa-spinner fa-spin'></i>";
-    const doc = await db.collection("properties").doc(id).get();
-    const num = doc.data().phone;
-    if(isWa) window.open(`https://wa.me/91${num}`);
-    else window.location.href = `tel:${num}`;
-    btn.innerHTML = isWa ? '<i class="fa-brands fa-whatsapp"></i> WhatsApp' : '<i class="fa fa-phone"></i> Call';
+async function contact(num, wa) {
+    if(!auth.currentUser) { alert("Please Login first!"); location.href='login.html'; return; }
+    wa ? window.open(`https://wa.me/91${num}`) : window.location.href=`tel:${num}`;
 }
 
-function filterData() {
+function filterAds() {
     const val = document.getElementById('citySearch').value.toLowerCase();
-    renderProps(allProps.filter(p => p.location.toLowerCase().includes(val) || p.title.toLowerCase().includes(val)));
+    renderAds(allAds.filter(a => (a.location||'').toLowerCase().includes(val) || (a.title||'').toLowerCase().includes(val)));
+}
+
+function shareAd(id) {
+    const url = window.location.href.split('?')[0] + '?id=' + id;
+    if(navigator.share) navigator.share({title:'Earth Property', url: url});
+    else { navigator.clipboard.writeText(url); alert("Link Copied!"); }
 }
 
 auth.onAuthStateChanged(async user => {
+    const adminBtn = document.getElementById('adminBtn');
+    const welcome = document.getElementById('userNameDisplay');
+    const authBtn = document.getElementById('authBtn');
+
     if(user) {
-        if(user.uid === ADMIN_UID) document.getElementById('adminLink').style.display = 'flex';
-        document.getElementById('authBtn').innerText = "Logout";
-        document.getElementById('authBtn').onclick = () => auth.signOut().then(()=>location.reload());
+        if(user.uid === "WOY9f67DachGVTuhR4tSJ1BHozx1") adminBtn.style.display = 'block';
+        authBtn.innerText = "Logout";
+        authBtn.onclick = () => auth.signOut().then(()=>location.reload());
         
         const uDoc = await db.collection("users").doc(user.uid).get();
         const name = uDoc.exists ? (uDoc.data().name || "User") : (user.displayName || "User");
-        document.getElementById('welcomeName').innerText = name;
-        document.getElementById('dName').innerText = name;
+        welcome.innerText = "Hi, " + name.split(' ')[0];
     } else {
-        document.getElementById('authBtn').onclick = () => location.href='login.html';
+        authBtn.onclick = () => location.href='login.html';
+        welcome.innerText = "Hi, Guest";
     }
-    
+
     db.collection("properties").where("isExpired","==",false).orderBy("createdAt","desc").onSnapshot(s => {
-        allProps = s.docs.map(d => ({id: d.id, ...d.data()}));
-        renderProps(allProps);
+        allAds = s.docs.map(d => ({id:d.id, ...d.data()}));
+        renderAds(allAds);
     });
 });
 </script>
