@@ -6,37 +6,45 @@
     <title>Manage Ads - Earth Property</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary: #2e7d32; --bg: #f5f6f7; --danger: #d32f2f; }
+        :root { --primary: #2e7d32; --bg: #f5f6f7; --danger: #d32f2f; --warning: #ff9800; }
         body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; background: var(--bg); }
         header { background: var(--primary); color: white; padding: 16px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .container { padding: 15px; max-width: 650px; margin: auto; }
+        
         .ad-card { background: white; border-radius: 18px; padding: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); margin-bottom: 20px; border: 1px solid #eee; position: relative; overflow: hidden; }
         .ad-info { display: flex; gap: 15px; }
         .ad-img { width: 110px; height: 110px; border-radius: 14px; object-fit: cover; background: #f0f0f0; border: 1px solid #f0f0f0; }
+        
         .ad-details { flex: 1; }
         .ad-details h4 { margin: 0; font-size: 17px; color: #222; font-weight: 700; line-height: 1.3; }
         .price { font-size: 20px; font-weight: 900; color: var(--primary); margin: 6px 0; }
+        
+        /* Status Badges */
         .status-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 800; padding: 5px 10px; border-radius: 20px; text-transform: uppercase; }
         .active-badge { background: #e8f5e9; color: #2e7d32; }
         .expired-badge { background: #ffebee; color: #d32f2f; }
+        
         .btn-group { display: flex; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #eee; }
         button { flex: 1; cursor: pointer; border: none; font-weight: 700; border-radius: 12px; font-size: 14px; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+        
         .edit-btn { background: #f0f2f5; color: #444; }
-        .renew-btn { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(46,125,50,0.2); }
+        .renew-btn { background: var(--warning); color: white; box-shadow: 0 4px 12px rgba(255,152,0,0.3); }
         .delete-btn { background: #fff0f0; color: var(--danger); flex: 0.4; }
+        
         #loader { text-align: center; margin-top: 60px; color: var(--primary); }
     </style>
 </head>
 <body>
 
 <header>
-    <div onclick="location.href='index.html'" style="cursor:pointer;"><i class="fa fa-chevron-left"></i></div>
+    <div onclick="location.href='index.html'" style="cursor:pointer; padding: 5px;"><i class="fa fa-chevron-left"></i></div>
     <div style="font-weight: 800; font-size: 19px;">Manage My Ads</div>
 </header>
 
 <div class="container">
-    <div id="loader"><i class="fa fa-spinner fa-spin fa-3x"></i><p>Verifying listings...</p></div>
+    <div id="loader"><i class="fa fa-spinner fa-spin fa-3x"></i><p>Checking your listings...</p></div>
     <div id="adList"></div>
+    
     <div id="noAds" style="display:none; text-align:center; padding:50px 20px;">
         <i class="fa fa-folder-open fa-4x" style="color:#ccc;"></i>
         <h3 style="color:#666;">No properties found</h3>
@@ -60,10 +68,12 @@ const auth = firebase.auth();
 
 auth.onAuthStateChanged(user => {
     if (!user) return location.href = 'login.html';
-    
-    // Safety: No complex where filters for status to avoid index errors
+    loadUserAds(user.uid);
+});
+
+function loadUserAds(uid) {
     db.collection("properties")
-      .where("ownerId", "==", user.uid)
+      .where("ownerId", "==", uid)
       .onSnapshot(snapshot => {
           document.getElementById('loader').style.display = 'none';
           const adList = document.getElementById('adList');
@@ -76,34 +86,34 @@ auth.onAuthStateChanged(user => {
 
           document.getElementById('noAds').style.display = 'none';
           
-          // Client-side sorting is safer than Firestore sorting for new fields
-          const docs = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
-          docs.sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-
-          docs.forEach(ad => {
+          snapshot.forEach(doc => {
+              const ad = doc.data();
+              ad.id = doc.id;
               adList.innerHTML += createCard(ad);
           });
       });
-});
+}
 
 function createCard(ad) {
     const now = new Date();
-    let isExpired = false;
+    let isExpired = ad.isExpired || false; // Database flag
     let daysLeft = 0;
     
-    // Safety check for date fields
-    const expiry = ad.expiryDate ? ad.expiryDate.toDate() : (ad.createdAt ? new Date(ad.createdAt.toDate().getTime() + 30*24*60*60*1000) : now);
-    daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
-    if (daysLeft <= 0) isExpired = true;
+    // Check if expiry date has passed manually (for extra safety)
+    if (ad.expiryDate) {
+        const expiry = ad.expiryDate.toDate();
+        daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+        if (daysLeft <= 0) isExpired = true;
+    }
 
-    const img = (ad.images && ad.images.length > 0) ? (typeof ad.images[0] === 'object' ? ad.images[0].url : ad.images[0]) : 'https://via.placeholder.com/150';
+    const img = (ad.images && ad.images.length > 0) ? ad.images[0] : 'https://via.placeholder.com/150';
 
     return `
     <div class="ad-card">
         <div class="ad-info">
             <img src="${img}" class="ad-img">
             <div class="ad-details">
-                <h4>${ad.title || 'Untitled Property'}</h4>
+                <h4>${ad.title || 'Property'}</h4>
                 <div class="price">₹${Number(ad.price || 0).toLocaleString('en-IN')}</div>
                 <div class="status-badge ${isExpired ? 'expired-badge' : 'active-badge'}">
                     <i class="fa fa-circle"></i> ${isExpired ? 'Expired' : 'Active - ' + daysLeft + ' Days Left'}
@@ -122,23 +132,35 @@ function createCard(ad) {
 }
 
 async function renewAd(id, btn) {
-    if(!confirm("Extend ad validity for 30 more days?")) return;
+    if(!confirm("Bhai, kya aap is ad ko 30 din ke liye badhana chahte ho?")) return;
+    
+    const originalText = btn.innerHTML;
     btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+    
     const newExpiry = new Date();
     newExpiry.setDate(newExpiry.getDate() + 30);
     
     try {
         await db.collection("properties").doc(id).update({
             expiryDate: firebase.firestore.Timestamp.fromDate(newExpiry),
-            status: "active"
+            isExpired: false, // Ad wapas active ho gayi
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        alert("Renewed Successfully!");
-    } catch(e) { alert("Error: " + e.message); btn.disabled = false; }
+        alert("Ad Renewed! Ab ye phir se 30 din tak dikhegi. 🎉");
+    } catch(e) { 
+        alert("Error: " + e.message); 
+        btn.disabled = false; 
+        btn.innerHTML = originalText;
+    }
 }
 
 async function deleteAd(id) {
     if(confirm("Delete this listing permanently?")) {
-        await db.collection("properties").doc(id).delete();
+        try {
+            await db.collection("properties").doc(id).delete();
+            alert("Deleted.");
+        } catch(e) { alert("Error: " + e.message); }
     }
 }
 </script>
