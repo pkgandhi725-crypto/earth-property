@@ -3,130 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Earth Property Global</title>
+    <title>Earth Property</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --primary: #2e7d32; --bg: #f0f2f5; }
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); padding-bottom: 90px; }
-        
-        /* Header & Icons */
-        header { background: var(--primary); padding: 12px 15px; color: white; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
-        .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-        .header-left { display: flex; align-items: center; gap: 12px; }
-        .header-right { display: flex; align-items: center; gap: 18px; }
-        .logo-text { font-size: 1.2rem; font-weight: 800; }
-        .admin-badge { background: #ffd700; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 900; cursor: pointer; display: none; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
+        body { background: var(--bg); padding-bottom: 80px; }
 
-        /* Side Drawer */
-        .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 5px 0 15px rgba(0,0,0,0.2); overflow-y: auto; }
-        .drawer.open { left: 0; }
-        .drawer-header { background: var(--primary); color: white; padding: 50px 20px 30px; }
-        .user-info { margin-top: 15px; }
-        .user-info h2 { font-size: 18px; margin-bottom: 4px; }
-        .user-info p { font-size: 12px; opacity: 0.8; }
-        .drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4500; display: none; backdrop-filter: blur(2px); }
-
-        /* Language Section */
-        .lang-section { padding: 20px; border-top: 1px solid #eee; }
-        .lang-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px; }
-        .lang-btn { padding: 12px; border: 1.5px solid #eee; border-radius: 8px; font-size: 13px; font-weight: 700; text-align: center; cursor: pointer; transition: 0.2s; }
-        .lang-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-        .default-lang-badge { font-size: 9px; background: #e8f5e9; color: var(--primary); padding: 2px 5px; border-radius: 3px; margin-left: 5px; }
-
-        /* Property Cards */
-        .prop-card { background: white; border-radius: 15px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
-        .img-container { width: 100%; height: 230px; background: #ddd; }
-        .img-container img { width: 100%; height: 100%; object-fit: cover; }
-        .prop-info { padding: 15px; }
-        .price { font-size: 24px; font-weight: 800; color: var(--primary); }
-
-        .btn-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 15px; }
-        .btn { padding: 12px 5px; border-radius: 10px; font-weight: 700; font-size: 13px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .btn-call { background: #e8f5e9; color: #2e7d32; }
-        .btn-wa { background: #25D366; color: white; }
-        .btn-chat { background: var(--primary); color: white; }
-
-        /* Search Box */
-        .search-box { background: white; border-radius: 12px; display: flex; padding: 10px 15px; align-items: center; gap: 10px; margin-top: 5px; }
+        /* Header */
+        header { background: var(--primary); padding: 12px 15px; color: white; position: sticky; top: 0; z-index: 1000; }
+        .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .header-right { display: flex; align-items: center; gap: 15px; }
+        .search-box { background: white; border-radius: 8px; display: flex; padding: 10px; align-items: center; gap: 10px; }
         .search-box input { border: none; width: 100%; outline: none; font-size: 14px; }
+
+        /* Sidebar Drawer */
+        .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s; box-shadow: 5px 0 15px rgba(0,0,0,0.2); overflow-y: auto; }
+        .drawer.open { left: 0; }
+        .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4500; display: none; }
+
+        /* Language in Sidebar */
+        .lang-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 15px; }
+        .lang-btn { padding: 8px; border: 1px solid #ddd; border-radius: 5px; text-align: center; font-size: 12px; cursor: pointer; font-weight: 600; }
+        .lang-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* Cards */
+        .prop-card { background: white; border-radius: 12px; margin: 15px 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .img-box { width: 100%; height: 200px; background: #ddd; }
+        .img-box img { width: 100%; height: 100%; object-fit: cover; }
+        .info { padding: 15px; }
+        .price { font-size: 20px; font-weight: 800; color: var(--primary); }
+
+        .btn-group { display: flex; gap: 8px; margin-top: 12px; }
+        .btn { flex: 1; padding: 10px; border-radius: 6px; border: none; font-weight: 700; font-size: 13px; cursor: pointer; text-align: center; color: white; text-decoration: none; }
+        .btn-call { background: #e8f5e9; color: #2e7d32; }
+        .btn-wa { background: #25D366; }
+        .btn-chat { background: var(--primary); }
+
+        /* Bottom Nav (Fixed) */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 10px 0; border-top: 1px solid #ddd; z-index: 1000; }
+        .nav-item { flex: 1; text-align: center; color: #666; text-decoration: none; font-size: 11px; }
+        .nav-item.active { color: var(--primary); }
+        .post-circle { background: var(--primary); color: white !important; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: -35px auto 5px; border: 4px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
 
-<div class="drawer-overlay" id="overlay" onclick="toggleDrawer()"></div>
+<div class="overlay" id="overlay" onclick="toggleDrawer()"></div>
 <div class="drawer" id="sideDrawer">
     <div class="drawer-header">
         <i class="fa fa-user-circle fa-4x"></i>
-        <div class="user-info">
-            <h2 id="userName">Earth Guest</h2>
-            <p id="userEmail">Please login to continue</p>
-        </div>
+        <h3 id="userName" style="margin-top:10px;">Pardeep Gandhi</h3>
     </div>
-    
-    <div class="lang-section">
-        <h3 style="font-size:14px; color:#444;">🌍 SELECT GLOBAL LANGUAGE</h3>
-        <div class="lang-grid" id="langGrid"></div>
-    </div>
-
-    <div style="padding: 20px;">
-        <div onclick="location.href='my-ads.html'" style="padding:15px 0; font-weight:700;"><i class="fa fa-layer-group"></i> My Ads</div>
-        <div onclick="location.href='favorites.html'" style="padding:15px 0; font-weight:700;"><i class="fa-regular fa-heart"></i> Favorites</div>
-        <div id="logoutBtn" style="padding:15px 0; font-weight:700; color:#d32f2f; display:none;"><i class="fa fa-sign-out-alt"></i> Logout</div>
+    <div style="padding:15px; font-size:12px; font-weight:bold; color:#888;">SELECT LANGUAGE</div>
+    <div class="lang-grid" id="langGrid"></div>
+    <div style="padding:15px;">
+        <div onclick="location.href='my-ads.html'" style="padding:12px 0; font-weight:600;"><i class="fa fa-layer-group"></i> My Ads</div>
+        <div id="logoutBtn" style="padding:12px 0; font-weight:600; color:red; display:none;"><i class="fa fa-sign-out-alt"></i> Logout</div>
     </div>
 </div>
 
 <header>
     <div class="header-top">
-        <div class="header-left">
-            <i class="fa fa-bars" onclick="toggleDrawer()" style="font-size:22px;"></i>
-            <span class="logo-text">Earth Property</span>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <i class="fa fa-bars" onclick="toggleDrawer()" style="font-size:20px;"></i>
+            <span style="font-size:1.2rem; font-weight:800;">Earth Property</span>
         </div>
         <div class="header-right">
-            <div id="adminBtn" class="admin-badge" onclick="location.href='admin-portal.html'">ADMIN PANEL</div>
-            <i class="fa-regular fa-bell" onclick="alert('No new notifications')"></i>
-            <button id="authBtn" style="background:white; border:none; color:var(--primary); padding:6px 14px; border-radius:8px; font-weight:800; font-size:12px;">LOGIN</button>
+            <i class="fa fa-bell"></i>
+            <i class="fa fa-user-shield" id="adminIcon" style="display:none;" onclick="location.href='admin.html'"></i>
+            <button id="authBtn" style="background:white; border:none; color:var(--primary); padding:5px 10px; border-radius:5px; font-weight:700;">LOGIN</button>
         </div>
     </div>
     <div class="search-box">
         <i class="fa fa-search" style="color:#888;"></i>
-        <input type="text" id="citySearch" placeholder="Search by city or area..." oninput="filterAds()">
+        <input type="text" placeholder="Search Chandigarh, Delhi..." oninput="filterAds(this.value)">
     </div>
 </header>
 
 <div id="propertyList"></div>
+
+<nav class="bottom-nav">
+    <a href="index.html" class="nav-item active"><i class="fa fa-house fa-lg"></i><br>Explore</a>
+    <a href="my-ads.html" class="nav-item"><i class="fa fa-layer-group fa-lg"></i><br>My Ads</a>
+    <a href="add-property.html" class="nav-item"><div class="post-circle"><i class="fa fa-plus"></i></div>Post</a>
+    <a href="favorites.html" class="nav-item"><i class="fa-regular fa-heart fa-lg"></i><br>Favs</a>
+    <a href="profile.html" class="nav-item"><i class="fa fa-user-circle fa-lg"></i><br>Profile</a>
+</nav>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
+// REPLACE WITH YOUR ACTUAL CONFIG
 const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-let allAds = [];
-// 50+ Languages Array (Compact List)
-const languages = [
-    {c:'en', n:'English', def:true}, {c:'hi', n:'हिंदी'}, {c:'pa', n:'ਪੰਜਾਬੀ'}, {c:'ar', n:'العربية'},
-    {c:'es', n:'Español'}, {c:'fr', n:'Français'}, {c:'de', n:'Deutsch'}, {c:'tr', n:'Türkçe'},
-    {c:'ru', n:'Русский'}, {c:'zh', n:'中文'}, {c:'ja', n:'日本語'}, {c:'ko', n:'한국어'},
-    {c:'it', n:'Italiano'}, {c:'pt', n:'Português'}, {c:'bn', n:'বাংলা'}, {c:'te', n:'తెలుగు'},
-    {c:'mr', n:'मराठी'}, {c:'ta', n:'தமிழ்'}, {c:'gu', n:'ગુજરાતી'}, {c:'kn', n:'ಕನ್ನಡ'},
-    {c:'ml', n:'മലയാളം'}, {c:'ur', n:'اردو'}, {c:'vi', n:'Tiếng Việt'}, {c:'th', n:'ไทย'}
-    // Add more up to 50 as needed...
-];
+const langs = [{c:'en',n:'English'}, {c:'hi',n:'हिंदी'}, {c:'pa',n:'ਪੰਜਾਬੀ'}, {c:'ar',n:'العربية'}, {c:'es',n:'Español'}, {c:'fr',n:'Français'}];
 
-// Load Languages into Sidebar
-const lGrid = document.getElementById('langGrid');
-languages.forEach(l => {
-    const btn = document.createElement('div');
-    const isCurrent = (localStorage.getItem('earthLang') || 'en') === l.c;
-    btn.className = `lang-btn ${isCurrent ? 'active' : ''}`;
-    btn.innerHTML = `${l.n} ${l.def ? '<span class="default-lang-badge">Default</span>' : ''}`;
-    btn.onclick = () => { localStorage.setItem('earthLang', l.c); location.reload(); };
-    lGrid.appendChild(btn);
+// Sidebar Language Buttons
+const grid = document.getElementById('langGrid');
+langs.forEach(l => {
+    const b = document.createElement('div');
+    b.className = `lang-btn ${(localStorage.getItem('earthLang')||'en') === l.c ? 'active' : ''}`;
+    b.innerText = l.n;
+    b.onclick = () => { localStorage.setItem('earthLang', l.c); location.reload(); };
+    grid.appendChild(b);
 });
 
 function toggleDrawer() {
@@ -135,84 +121,56 @@ function toggleDrawer() {
     o.style.display = o.style.display === 'block' ? 'none' : 'block';
 }
 
-auth.onAuthStateChanged(async user => {
+auth.onAuthStateChanged(user => {
     if (user) {
+        document.getElementById('userName').innerText = user.displayName || "Earth User";
         document.getElementById('authBtn').innerText = "LOGOUT";
-        document.getElementById('authBtn').onclick = () => auth.signOut().then(() => location.reload());
+        document.getElementById('authBtn').onclick = () => auth.signOut().then(()=>location.reload());
         document.getElementById('logoutBtn').style.display = 'block';
-        document.getElementById('logoutBtn').onclick = () => auth.signOut().then(() => location.reload());
-        
-        // Fetch User Name from Firestore
-        const uDoc = await db.collection("users").doc(user.uid).get();
-        const name = uDoc.exists ? uDoc.data().name : (user.displayName || "Earth User");
-        document.getElementById('userName').innerText = name;
-        document.getElementById('userEmail').innerText = user.email;
-
-        // Admin Access Check
-        if(user.email === "admin@earthproperty.com") {
-            document.getElementById('adminBtn').style.display = 'block';
-        }
+        document.getElementById('logoutBtn').onclick = () => auth.signOut().then(()=>location.reload());
+        if(user.email === "admin@earth.com") document.getElementById('adminIcon').style.display = 'block';
+    } else {
+        document.getElementById('authBtn').onclick = () => location.href='login.html';
     }
     
-    db.collection("properties").where("isExpired","==",false).orderBy("createdAt","desc").onSnapshot(snap => {
-        allAds = snap.docs.map(doc => ({id:doc.id, ...doc.data()}));
-        renderAds(allAds);
+    // Fetch Ads
+    db.collection("properties").onSnapshot(snap => {
+        const ads = snap.docs.map(doc => ({id:doc.id, ...doc.data()}));
+        renderAds(ads);
     });
 });
 
-function renderAds(data) {
-    const list = document.getElementById('propertyList');
-    list.innerHTML = data.length ? '' : '<center style="padding:100px; color:#888;">No ads available.</center>';
-    data.forEach(p => {
-        const card = document.createElement('div');
-        card.className = 'prop-card';
-        card.innerHTML = `
-            <div class="img-container"><img src="${(p.images && p.images[0]) || 'https://via.placeholder.com/400x230'}"></div>
-            <div class="prop-info">
-                <div class="price">₹${Number(p.price || 0).toLocaleString('en-IN')}</div>
-                <div style="font-weight:700; margin:5px 0; color:#333;">${p.title}</div>
-                <div style="font-size:12px; color:#666;"><i class="fa fa-map-marker-alt"></i> ${p.location}</div>
+function renderAds(ads) {
+    const container = document.getElementById('propertyList');
+    container.innerHTML = '';
+    ads.forEach(p => {
+        container.innerHTML += `
+        <div class="prop-card">
+            <div class="img-box"><img src="${p.images ? p.images[0] : ''}"></div>
+            <div class="info">
+                <div class="price">₹${Number(p.price).toLocaleString('en-IN')}</div>
+                <div style="font-weight:700; margin:5px 0;">${p.title}</div>
+                <div style="font-size:12px; color:#666;"><i class="fa fa-location-dot"></i> ${p.location}</div>
                 <div class="btn-group">
-                    <button class="btn btn-call" onclick="contactOwner('${p.id}', 'tel')"><i class="fa fa-phone"></i> Call</button>
-                    <button class="btn btn-wa" onclick="contactOwner('${p.id}', 'wa')"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
-                    <button class="btn btn-chat" onclick="location.href='chat.html?to=${p.ownerId}'"><i class="fa-regular fa-comment-dots"></i> Chat</button>
+                    <button class="btn btn-call" onclick="makeCall('${p.phone}')"><i class="fa fa-phone"></i> Call</button>
+                    <button class="btn btn-wa" onclick="openWA('${p.phone}', '${p.title}')"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+                    <button class="btn btn-chat" onclick="location.href='chat.html?to=${p.ownerId}'">Chat</button>
                 </div>
-            </div>`;
-        list.appendChild(card);
+            </div>
+        </div>`;
     });
 }
 
-// 🛠️ ULTIMATE CONTACT FIX
-async function contactOwner(id, type) {
-    if(!auth.currentUser) return alert("Please Login First");
-    try {
-        const doc = await db.collection("properties").doc(id).get();
-        if(!doc.exists) return alert("Property data not found.");
-        
-        const data = doc.data();
-        // Check multiple possible field names for phone
-        let pNum = data.phone || data.mobile || data.contactNo || data.whatsapp;
-        
-        if(!pNum) {
-            alert("❌ Database Error: This ad does not have a phone number. Please update the ad in Firestore.");
-            return;
-        }
-
-        let cleanNum = pNum.toString().replace(/\D/g,'');
-        if(cleanNum.length === 10) cleanNum = "91" + cleanNum;
-
-        if(type === 'wa') window.open(`https://wa.me/${cleanNum}?text=Interested in ${data.title}`, '_blank');
-        else window.location.href = `tel:+${cleanNum}`;
-    } catch(e) { 
-        console.error(e);
-        alert("System error. Check console."); 
-    }
+function makeCall(num) {
+    if(!num || num === 'undefined') return alert("Phone number missing");
+    window.location.href = `tel:${num}`;
 }
 
-function filterAds() {
-    const val = document.getElementById('citySearch').value.toLowerCase();
-    const filtered = allAds.filter(a => (a.location||'').toLowerCase().includes(val) || (a.title||'').toLowerCase().includes(val));
-    renderAds(filtered);
+function openWA(num, title) {
+    if(!num || num === 'undefined') return alert("WhatsApp number missing");
+    let clean = num.replace(/\D/g,'');
+    if(clean.length === 10) clean = "91" + clean;
+    window.open(`https://wa.me/${clean}?text=Interested in ${title}`, '_blank');
 }
 </script>
 </body>
