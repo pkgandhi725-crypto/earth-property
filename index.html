@@ -221,7 +221,7 @@ async function loadProps() {
       }, err => {
           console.error("Firestore Error:", err);
           // 🔥 FIXED REGEX (Tera wala PERFECT!)
-          const match = err.message.match(/(https://console.firebase.google.com/[^s]+)/);
+          const match = err.message.match(/(https:\/\/console\.firebase\.google\.com\/[^\s]+)/);
           if (match) {
               list.innerHTML = `<div style="text-align:center; padding:40px;"><i class="fa fa-database fa-3x" style="color:#ff9800;"></i><h3 style="margin-top:15px;">Firestore Index Needed</h3><p style="color:#666; font-size:14px; margin:10px 0;">Click to create index for live listings.</p><a href="${match[1]}" target="_blank" class="index-fix-btn">Create Index Now</a></div>`;
           } else {
