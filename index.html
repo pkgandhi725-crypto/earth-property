@@ -66,7 +66,7 @@
             <span class="logo-text">Earth Property</span>
         </div>
         <div class="header-icons">
-            <div id="adminLink" style="display:none;" onclick="location.href='admin.html'" class="icon-btn"><i class="fa fa-user-shield"></i></div>
+            <div id="adminLink" style="display:none;" onclick="location.href='admin-dashboard.html'" class="icon-btn"><i class="fa fa-user-shield"></i></div>
             <div class="icon-btn" onclick="location.href='inbox.html'"><i class="fa fa-bell"></i></div>
             <button id="authBtn" class="auth-btn">Login</button>
         </div>
@@ -116,6 +116,7 @@ async function loadProps() {
     const list = document.getElementById('propertyList');
     list.innerHTML = '<center style="padding:60px;"><i class="fa fa-spinner fa-spin fa-2x" style="color:var(--primary)"></i></center>';
     
+    // Using isExpired filter
     db.collection("properties")
       .where("isExpired", "==", false)
       .orderBy("createdAt", "desc")
@@ -213,39 +214,40 @@ function filterDataDebounced() {
 
 function openChat(owner, id) { if(!auth.currentUser) location.href='login.html'; else location.href=`chat.html?to=${owner}&p=${id}`; }
 
-// ✅ ROBUST: User Name & Admin Logic
+// ✅ IMPROVED: User Name & Admin Link Logic
 auth.onAuthStateChanged(async user => {
     const btn = document.getElementById('authBtn');
-    const dName = document.getElementById('dName');
+    const dNameLabel = document.getElementById('dName');
     
     if(user) {
         btn.innerText = "Logout";
         btn.onclick = () => auth.signOut().then(() => location.reload());
         
-        // Match Admin UID correctly
+        // Admin Shortcut
         if(user.uid === "WOY9f67DachGVTuhR4tSJ1BHozx1") {
             document.getElementById('adminLink').style.display = 'flex';
         }
 
-        const updateName = async () => {
+        // Deep Fetch User Name
+        try {
             const userDoc = await db.collection("users").doc(user.uid).get();
             if(userDoc.exists && userDoc.data().name) {
-                dName.innerText = userDoc.data().name;
+                dNameLabel.innerText = userDoc.data().name;
             } else if(user.displayName) {
-                dName.innerText = user.displayName;
+                dNameLabel.innerText = user.displayName;
             } else {
-                dName.innerText = "Earth User";
+                dNameLabel.innerText = "Earth User";
             }
-        };
-
-        updateName();
-        setTimeout(updateName, 2000); // Retry after 2 seconds for slow sync
-
+        } catch(e) {
+            dNameLabel.innerText = user.displayName || "Earth User";
+        }
+        
+        // Favs Sync
         const uDoc = await db.collection("users").doc(user.uid).get();
         userFavs = uDoc.data()?.favorites || [];
         localStorage.setItem('favs', JSON.stringify(userFavs));
     } else {
-        dName.innerText = "Earth Guest";
+        dNameLabel.innerText = "Earth Guest";
         btn.onclick = () => location.href = 'login.html';
     }
     loadProps();
