@@ -56,29 +56,23 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-const firebaseConfig = { 
-    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
-    authDomain: "earth-properties-c3c56.firebaseapp.com", 
-    projectId: "earth-properties-c3c56"
-};
+const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// ✅ 1. TIME AGO LOGIC
 function getTimeAgo(timestamp) {
     if (!timestamp) return "Just now";
     const now = new Date();
     const postedDate = timestamp.toDate();
     const diffInSeconds = Math.floor((now - postedDate) / 1000);
-
     if (diffInSeconds < 60) return "Just now";
     const mins = Math.floor(diffInSeconds / 60);
-    if (mins < 60) return `${mins} mins ago`;
+    if (mins < 60) return `${mins}m ago`;
     const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours} hours ago`;
+    if (hours < 24) return `${hours}h ago`;
     const days = Math.floor(hours / 24);
-    if (days < 30) return `${days} days ago`;
+    if (days < 30) return `${days}d ago`;
     return postedDate.toLocaleDateString();
 }
 
@@ -88,56 +82,63 @@ auth.onAuthStateChanged(user => {
 });
 
 function loadUserAds(uid) {
-    db.collection("properties")
-      .where("ownerId", "==", uid)
-      .onSnapshot(snapshot => {
-          document.getElementById('loader').style.display = 'none';
-          const adList = document.getElementById('adList');
-          adList.innerHTML = '';
-
-          if (snapshot.empty) {
-              document.getElementById('noAds').style.display = 'block';
-              return;
-          }
-
-          document.getElementById('noAds').style.display = 'none';
-          snapshot.forEach(doc => {
-              const ad = doc.data();
-              ad.id = doc.id;
-              adList.innerHTML += createCard(ad);
-          });
-      });
+    db.collection("properties").where("ownerId", "==", uid).onSnapshot(snapshot => {
+        document.getElementById('loader').style.display = 'none';
+        const adList = document.getElementById('adList');
+        adList.innerHTML = '';
+        if (snapshot.empty) { document.getElementById('noAds').style.display = 'block'; return; }
+        document.getElementById('noAds').style.display = 'none';
+        snapshot.forEach(doc => { 
+            const ad = doc.data(); 
+            ad.id = doc.id; 
+            adList.innerHTML += createCard(ad); 
+        });
+    });
 }
 
+// ✅ RENT VS SELL EXPIRY CALCULATION
 function createCard(ad) {
     const now = new Date();
     let isExpired = ad.isExpired || false;
-    
-    // Check Expiry Logic
-    if (ad.expiryDate) {
-        const expiry = ad.expiryDate.toDate();
-        if (now > expiry) isExpired = true;
+    let daysRemaining = 0;
+
+    // Determine Period: Rent = 30, Sell/Others = 180
+    const expiryPeriod = (ad.purpose === 'Rent' || ad.purpose === 'Lease') ? 30 : 180;
+
+    if (ad.createdAt) {
+        const createdDate = ad.createdAt.toDate();
+        const expiryDate = new Date(createdDate);
+        expiryDate.setDate(expiryDate.getDate() + expiryPeriod);
+        
+        const diffTime = expiryDate - now;
+        daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (daysRemaining <= 0) {
+            isExpired = true;
+            daysRemaining = 0;
+        }
     }
 
     const timeAgoText = getTimeAgo(ad.createdAt);
     const img = (ad.images && ad.images.length > 0) ? ad.images[0] : 'https://via.placeholder.com/150';
 
     return `
-    <div class="ad-card">
+    <div class="ad-card" style="${isExpired ? 'border-left: 5px solid var(--danger);' : ''}">
         <div class="ad-info">
             <img src="${img}" class="ad-img">
             <div class="ad-details">
-                <h4>${ad.title || 'Property'}</h4>
+                <h4>${ad.title || 'Property'} <span style="font-size:10px; background:#eee; padding:2px 5px; border-radius:4px;">${ad.purpose}</span></h4>
                 <div class="price">₹${Number(ad.price || 0).toLocaleString('en-IN')}</div>
                 <div class="status-badge ${isExpired ? 'expired-badge' : 'active-badge'}">
-                    <i class="fa fa-clock"></i> ${isExpired ? 'Expired' : 'Active - Posted ' + timeAgoText}
+                    <i class="fa ${isExpired ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> 
+                    ${isExpired ? 'Expired' : daysRemaining + ' Days Left'}
                 </div>
             </div>
         </div>
         <div class="btn-group">
             <button class="edit-btn" onclick="location.href='add-property.html?edit=${ad.id}'"><i class="fa fa-edit"></i> Edit</button>
             ${isExpired ? 
-                `<button class="renew-btn" onclick="renewAd('${ad.id}', this)"><i class="fa fa-sync-alt"></i> Renew Ad</button>` : 
+                `<button class="renew-btn" onclick="renewAd('${ad.id}', '${ad.purpose}', this)"><i class="fa fa-sync-alt"></i> Renew</button>` : 
                 `<button style="background:#f8f9fa; color:#2e7d32; cursor:default;"><i class="fa fa-rocket"></i> Live</button>`
             }
             <button class="delete-btn" onclick="deleteAd('${ad.id}')"><i class="fa fa-trash-alt"></i></button>
@@ -145,35 +146,30 @@ function createCard(ad) {
     </div>`;
 }
 
-async function renewAd(id, btn) {
-    if(!confirm("Bhai, kya aap is ad ko 30 din ke liye badhana chahte ho?")) return;
+async function renewAd(id, purpose, btn) {
+    const period = (purpose === 'Rent' || purpose === 'Lease') ? "30" : "180";
+    if(!confirm(`Bhai, is ad ko ${period} din ke liye renew karein?`)) return;
     
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>...';
-    
-    const newExpiry = new Date();
-    newExpiry.setDate(newExpiry.getDate() + 30);
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
     
     try {
         await db.collection("properties").doc(id).update({
-            expiryDate: firebase.firestore.Timestamp.fromDate(newExpiry),
             isExpired: false,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(), // Date reset taaki "Just now" dikhaye
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(), // Resetting creation date for fresh start
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         alert("Ad Renewed! 🎉");
     } catch(e) { 
         alert("Error: " + e.message); 
         btn.disabled = false; 
-        btn.innerHTML = '<i class="fa fa-sync-alt"></i> Renew Ad';
+        btn.innerHTML = '<i class="fa fa-sync-alt"></i> Renew';
     }
 }
 
 async function deleteAd(id) {
     if(confirm("Permanently delete?")) {
-        try {
-            await db.collection("properties").doc(id).delete();
-        } catch(e) { alert("Error: " + e.message); }
+        try { await db.collection("properties").doc(id).delete(); } catch(e) { alert("Error"); }
     }
 }
 </script>
