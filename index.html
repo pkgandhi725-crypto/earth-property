@@ -3,281 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Earth Property</title>
+    <title>Earth Property - Global</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --primary: #2e7d32; --bg: #f0f2f5; --text: #333; }
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); padding-bottom: 90px; overflow-x: hidden; color: var(--text); }
         
-        /* Header & Search */
         header { background: var(--primary); padding: 12px 15px; color: white; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
         .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-        .header-left { display: flex; align-items: center; gap: 12px; }
-        .logo-text { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.5px; }
-        .user-welcome { font-size: 11px; font-weight: 500; opacity: 0.9; display: block; }
-        .search-box { background: white; border-radius: 10px; display: flex; padding: 8px 15px; align-items: center; gap: 10px; }
-        .search-box input { border: none; width: 100%; outline: none; font-size: 14px; color: #333; height: 30px; }
-
-        /* Sidebar Drawer */
-        .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
-        .drawer.open { left: 0; }
-        .drawer-header { background: var(--primary); color: white; padding: 50px 20px 30px; }
-        .drawer-item { padding: 15px 20px; display: flex; align-items: center; gap: 15px; color: #444; text-decoration: none; font-weight: 600; border-bottom: 1px solid #eee; cursor: pointer; }
-        .drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4500; display: none; backdrop-filter: blur(2px); }
-
-        /* Property Cards */
-        .prop-card { background: white; border-radius: 15px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: 0.3s; }
-        .img-container { position: relative; width: 100%; height: 230px; background: #ddd; overflow-x: auto; display: flex; scroll-snap-type: x mandatory; scrollbar-width: none; }
-        .img-container::-webkit-scrollbar { display: none; }
-        .img-container img { min-width: 100%; height: 100%; object-fit: cover; scroll-snap-align: start; cursor: pointer; }
-        .img-counter { position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.6); color: white; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; pointer-events: none; }
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        .header-right { display: flex; align-items: center; gap: 15px; }
+        .logo-text { font-size: 1.2rem; font-weight: 800; }
         
-        .float-btns { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; gap: 8px; z-index: 5; }
-        .c-btn { background: white; border: none; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer; }
-        .fav-btn.active { color: #e91e63; }
+        .search-box { background: white; border-radius: 10px; display: flex; padding: 8px 15px; align-items: center; gap: 10px; }
+        .search-box input { border: none; width: 100%; outline: none; font-size: 14px; color: #333; }
 
+        /* Global Language Grid */
+        .lang-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 10px; background: #f9f9f9; border-radius: 8px; }
+        .lang-btn { padding: 5px; border: 1px solid #ddd; border-radius: 4px; background: white; font-size: 10px; cursor: pointer; text-align: center; }
+        .lang-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* Property Card */
+        .prop-card { background: white; border-radius: 15px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .img-container { position: relative; width: 100%; height: 230px; background: #ddd; overflow-x: auto; display: flex; scroll-snap-type: x mandatory; scrollbar-width: none; }
+        .img-container img { min-width: 100%; height: 100%; object-fit: cover; scroll-snap-align: start; }
         .prop-info { padding: 15px; }
         .prop-price { font-size: 22px; font-weight: 800; color: var(--primary); }
-        .prop-title { font-size: 16px; margin: 4px 0; color: #222; font-weight: 600; }
         
-        /* Buttons */
+        /* Action Buttons */
         .btn-group { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 15px; }
-        .btn { padding: 10px 5px; border-radius: 8px; font-weight: 700; font-size: 13px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: 0.2s; }
-        .btn:active { transform: scale(0.95); }
+        .btn { padding: 10px 5px; border-radius: 8px; font-weight: 700; font-size: 13px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
         .btn-call { background: #e8f5e9; color: #2e7d32; }
         .btn-wa { background: #25D366; color: white; }
         .btn-chat { background: var(--primary); color: white; }
 
-        /* Navigation */
+        /* Admin & Notif Icons */
+        .icon-badge { position: relative; font-size: 18px; cursor: pointer; }
+        .badge-dot { position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; background: #ff5252; border-radius: 50%; border: 1px solid white; }
+
+        /* Nav */
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 8px 0; border-top: 1px solid #eee; z-index: 1000; }
         .nav-item { flex: 1; text-align: center; color: #777; text-decoration: none; font-size: 10px; font-weight: 600; }
         .nav-item.active { color: var(--primary); }
-        .post-btn-main { background: var(--primary); color: white !important; width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: -32px auto 4px; border: 4px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-
-        #fullOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; display: none; align-items: center; justify-content: center; }
-        #fullOverlay img { max-width: 95%; max-height: 80vh; object-fit: contain; border-radius: 8px; }
-
-        .lang-btn { padding: 6px 12px; border: 1px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-size: 12px; font-weight: 600; }
-        .lang-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .post-btn { background: var(--primary); color: white !important; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: -30px auto 4px; border: 4px solid white; }
     </style>
 </head>
 <body>
 
-<div class="drawer-overlay" id="dOverlay"></div>
-<div class="drawer" id="sideDrawer">
-    <div class="drawer-header">
-        <i class="fa fa-user-circle fa-4x"></i>
-        <div id="dName" style="margin-top:12px; font-weight:700;">Earth Guest</div>
-    </div>
-    <a href="profile.html" class="drawer-item"><i class="fa fa-user"></i> <span>Profile</span></a>
-    <a href="my-ads.html" class="drawer-item"><i class="fa fa-layer-group"></i> <span>My Ads</span></a>
-    <a href="favorites.html" class="drawer-item"><i class="fa-regular fa-heart"></i> <span>Favorites</span></a>
-    
-    <div style="padding: 20px;">
-        <p style="font-size:11px; font-weight:800; color:#999; margin-bottom:10px;">LANGUAGE / भाषा</p>
-        <div style="display:flex; gap:8px;">
-            <button class="lang-btn" id="lang-en" onclick="changeLanguage('en')">EN</button>
-            <button class="lang-btn" id="lang-hi" onclick="changeLanguage('hi')">HI</button>
-            <button class="lang-btn" id="lang-ar" onclick="changeLanguage('ar')">AR</button>
-        </div>
-    </div>
-    <div class="drawer-item" id="logoutBtn" style="color:#d32f2f; margin-top: auto; border-top: 1px solid #eee;">
-        <i class="fa fa-sign-out-alt"></i> <span>Logout</span>
-    </div>
-</div>
-
 <header>
     <div class="header-top">
         <div class="header-left">
-            <i class="fa fa-bars" id="menuToggle" style="font-size:22px; cursor:pointer;"></i>
-            <div class="brand-info">
-                <span class="logo-text">Earth Property</span>
-                <span id="welcomeUser" class="user-welcome">Welcome, Guest</span>
-            </div>
+            <i class="fa fa-bars" onclick="toggleDrawer()" style="font-size:20px; margin-right:5px;"></i>
+            <span class="logo-text">Earth Property</span>
         </div>
-        <button id="authBtn" style="background:white; border:none; color:var(--primary); padding:6px 14px; border-radius:8px; font-weight:800; font-size:12px;">LOGIN</button>
+        <div class="header-right">
+            <div class="icon-badge" onclick="alert('No new notifications')">
+                <i class="fa fa-bell"></i>
+                <div class="badge-dot"></div>
+            </div>
+            <i class="fa fa-user-shield icon-badge" id="adminBtn" style="display:none;" onclick="location.href='admin.html'"></i>
+            <button id="authBtn" style="background:white; border:none; color:var(--primary); padding:4px 10px; border-radius:5px; font-weight:700; font-size:11px;">LOGIN</button>
+        </div>
     </div>
     <div class="search-box">
-        <i class="fa fa-search" style="color:#888;"></i>
-        <input type="text" id="citySearch" placeholder="Search city or area..." oninput="filterAds()">
+        <i class="fa fa-search"></i>
+        <input type="text" id="citySearch" placeholder="Search Chandigarh, Delhi..." oninput="filterAds()">
     </div>
 </header>
 
 <div id="propertyList"></div>
 
+<div id="sideDrawer" style="position:fixed; left:-280px; width:270px; height:100%; background:white; z-index:5000; transition:0.3s; box-shadow:2px 0 10px rgba(0,0,0,0.1); padding:20px;">
+    <h3 style="margin-bottom:15px; color:var(--primary);">Global Languages</h3>
+    <div class="lang-grid" id="langGrid"></div>
+    <hr style="margin:20px 0; opacity:0.2;">
+    <div onclick="location.href='my-ads.html'" style="padding:10px 0; font-weight:600;"><i class="fa fa-layer-group"></i> My Ads</div>
+    <div id="logoutBtn" style="padding:10px 0; font-weight:600; color:red; display:none;"><i class="fa fa-sign-out-alt"></i> Logout</div>
+</div>
+<div id="overlay" onclick="toggleDrawer()" style="position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:4000; display:none;"></div>
+
 <nav class="bottom-nav">
     <a href="index.html" class="nav-item active"><i class="fa fa-house fa-lg"></i><br>Explore</a>
     <a href="my-ads.html" class="nav-item"><i class="fa fa-layer-group fa-lg"></i><br>My Ads</a>
-    <a href="add-property.html" class="nav-item"><div class="post-btn-main"><i class="fa fa-plus"></i></div>Post</a>
+    <a href="add-property.html" class="nav-item"><div class="post-btn"><i class="fa fa-plus"></i></div>Post</a>
     <a href="favorites.html" class="nav-item"><i class="fa-regular fa-heart fa-lg"></i><br>Favs</a>
     <a href="profile.html" class="nav-item"><i class="fa fa-user-circle fa-lg"></i><br>Profile</a>
 </nav>
-
-<div id="fullOverlay" onclick="this.style.display='none'"><img id="fullImg"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-// ========== CONFIG & INIT ==========
-const firebaseConfig = {
-    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
-    authDomain: "earth-properties-c3c56.firebaseapp.com",
-    projectId: "earth-properties-c3c56"
-};
+const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
 let allAds = [];
-let userFavorites = [];
-let CURRENT_LANG = localStorage.getItem("earthLang") || "en";
+const languages = [
+    {code:'en', n:'English'}, {code:'hi', n:'हिंदी'}, {code:'ar', n:'العربية'}, {code:'es', n:'Español'},
+    {code:'fr', n:'Français'}, {code:'de', n:'Deutsch'}, {code:'ru', n:'Русский'}, {code:'zh', n:'中文'},
+    {code:'ja', n:'日本語'}, {code:'pa', n:'ਪੰਜਾਬੀ'}, {code:'bn', n:'বাংলা'}, {code:'te', n:'తెలుగు'},
+    {code:'mr', n:'मराठी'}, {code:'ta', n:'தமிழ்'}, {code:'tr', n:'Türkçe'}, {code:'pt', n:'Português'}
+];
 
-const langData = {
-    en: { call: "Call", wa: "WhatsApp", chat: "Chat", welcome: "Hi, ", search: "Search city or area..." },
-    hi: { call: "कॉल", wa: "व्हाट्सएप", chat: "चैट", welcome: "नमस्ते, ", search: "शहर या क्षेत्र खोजें..." },
-    ar: { call: "اتصال", wa: "واتساب", chat: "دردشة", welcome: "مرحبا, ", search: "ابحث عن مدينة..." }
-};
+// Load Languages
+const lGrid = document.getElementById('langGrid');
+languages.forEach(l => {
+    const btn = document.createElement('div');
+    btn.className = `lang-btn ${localStorage.getItem('earthLang')===l.code?'active':''}`;
+    btn.innerText = l.n;
+    btn.onclick = () => { localStorage.setItem('earthLang', l.code); location.reload(); };
+    lGrid.appendChild(btn);
+});
 
-// ========== UI LOGIC ==========
-function changeLanguage(l) {
-    localStorage.setItem("earthLang", l);
-    location.reload();
+function toggleDrawer() {
+    const s = document.getElementById('sideDrawer');
+    const o = document.getElementById('overlay');
+    const open = s.style.left === '0px';
+    s.style.left = open ? '-280px' : '0px';
+    o.style.display = open ? 'none' : 'block';
 }
 
-document.getElementById(`lang-${CURRENT_LANG}`).classList.add('active');
-document.getElementById('citySearch').placeholder = langData[CURRENT_LANG].search;
-
-const menuToggle = document.getElementById('menuToggle');
-const sideDrawer = document.getElementById('sideDrawer');
-const dOverlay = document.getElementById('dOverlay');
-
-menuToggle.onclick = () => { sideDrawer.classList.add('open'); dOverlay.style.display = 'block'; };
-dOverlay.onclick = () => { sideDrawer.classList.remove('open'); dOverlay.style.display = 'none'; };
-
-// ========== DATA LOGIC ==========
 auth.onAuthStateChanged(async user => {
     if (user) {
         document.getElementById('authBtn').innerText = "LOGOUT";
-        document.getElementById('authBtn').onclick = () => auth.signOut().then(() => location.reload());
-        document.getElementById('logoutBtn').onclick = () => auth.signOut().then(() => location.reload());
+        document.getElementById('authBtn').onclick = () => auth.signOut().then(()=>location.reload());
+        document.getElementById('logoutBtn').style.display = 'block';
+        document.getElementById('logoutBtn').onclick = () => auth.signOut().then(()=>location.reload());
         
-        const uDoc = await db.collection("users").doc(user.uid).get();
-        if(uDoc.exists) {
-            userFavorites = uDoc.data().favorites || [];
-            const name = uDoc.data().name || "User";
-            document.getElementById('welcomeUser').innerText = langData[CURRENT_LANG].welcome + name;
-            document.getElementById('dName').innerText = name;
-        }
-    } else {
-        document.getElementById('authBtn').onclick = () => window.location.href = 'login.html';
+        // Admin Check (Static check or from Firestore)
+        if(user.email === "admin@earth.com") document.getElementById('adminBtn').style.display = 'block';
     }
-
-    // Load Properties (isExpired filter for 30-day logic)
-    db.collection("properties")
-      .where("isExpired", "==", false)
-      .orderBy("createdAt", "desc")
-      .onSnapshot(snap => {
-          allAds = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
-          renderAds(allAds);
-      });
+    
+    // Fetch Ads with Expiry Filter
+    db.collection("properties").where("isExpired","==",false).orderBy("createdAt","desc").onSnapshot(snap => {
+        allAds = snap.docs.map(doc => ({id:doc.id, ...doc.data()}));
+        renderAds(allAds);
+    });
 });
 
 function renderAds(data) {
     const container = document.getElementById('propertyList');
-    container.innerHTML = data.length ? '' : '<p style="text-align:center; padding:50px; color:#666;">No properties found.</p>';
-    
+    container.innerHTML = data.length ? '' : '<center style="padding:50px;">No properties found</center>';
     data.forEach(p => {
-        const isFav = userFavorites.includes(p.id) ? 'active' : '';
-        const imgs = (p.images && p.images.length) ? p.images : ['https://via.placeholder.com/400x300?text=No+Image'];
-        
         const card = document.createElement('div');
         card.className = 'prop-card';
         card.innerHTML = `
             <div style="position:relative;">
-                <div class="float-btns">
-                    <button class="c-btn fav-btn ${isFav}" onclick="toggleFav('${p.id}', this)"><i class="fa fa-heart"></i></button>
-                    <button class="c-btn" onclick="shareAd('${p.id}', '${p.title}')"><i class="fa fa-share-alt"></i></button>
-                </div>
-                <div class="img-container">
-                    ${imgs.map(url => `<img src="${url}" onclick="openFull('${url}')" loading="lazy">`).join('')}
-                </div>
-                <div class="img-counter">${imgs.length} Photos</div>
+                <div class="img-container">${(p.images||[]).map(img => `<img src="${img}">`).join('')}</div>
             </div>
             <div class="prop-info">
                 <div class="prop-price">₹${Number(p.price).toLocaleString('en-IN')}</div>
-                <div class="prop-title">${p.title}</div>
-                <div style="font-size:12px; color:#666; margin-bottom:12px;"><i class="fa fa-map-marker-alt"></i> ${p.location}</div>
+                <div style="font-weight:700; margin:5px 0;">${p.title}</div>
+                <div style="font-size:12px; color:#666;"><i class="fa fa-map-marker-alt"></i> ${p.location}</div>
                 <div class="btn-group">
-                    <button class="btn btn-call" onclick="handleContact('${p.id}', false)">
-                        <i class="fa fa-phone"></i> ${langData[CURRENT_LANG].call}
-                    </button>
-                    <button class="btn btn-wa" onclick="handleContact('${p.id}', true)">
-                        <i class="fa-brands fa-whatsapp"></i> ${langData[CURRENT_LANG].wa}
-                    </button>
-                    <button class="btn btn-chat" onclick="openChat('${p.ownerId}', '${p.id}')">
-                        <i class="fa-regular fa-comment-dots"></i> ${langData[CURRENT_LANG].chat}
-                    </button>
+                    <button class="btn btn-call" onclick="contactOwner('${p.id}', 'tel')"><i class="fa fa-phone"></i> Call</button>
+                    <button class="btn btn-wa" onclick="contactOwner('${p.id}', 'wa')"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+                    <button class="btn btn-chat" onclick="location.href='chat.html?to=${p.ownerId}'"><i class="fa-regular fa-comment-dots"></i> Chat</button>
                 </div>
-            </div>
-        `;
+            </div>`;
         container.appendChild(card);
     });
 }
 
-// ========== FEATURES ==========
-async function handleContact(id, isWa) {
-    if(!auth.currentUser) return alert("Please Login First");
-    
+// Fixed WhatsApp & Call Logic
+async function contactOwner(id, type) {
+    if(!auth.currentUser) return alert("Please Login");
     try {
         const doc = await db.collection("properties").doc(id).get();
-        if(!doc.exists) return;
+        if(!doc.exists) throw new Error();
+        const p = doc.data().phone.toString().replace(/\D/g,'');
+        const num = p.length === 10 ? "91"+p : p;
         
-        let num = doc.data().phone.toString().replace(/\D/g, '');
-        if(num.length === 10) num = "91" + num; // WhatsApp Fix for India
-
-        if(isWa) {
-            const msg = encodeURIComponent(`Hi, I'm interested in: ${doc.data().title}`);
-            window.open(`https://wa.me/${num}?text=${msg}`, '_blank');
-        } else {
-            window.location.href = `tel:+${num}`;
-        }
-    } catch (e) { alert("Error connecting to owner"); }
-}
-
-async function toggleFav(id, btn) {
-    if(!auth.currentUser) return alert("Login to add favorites");
-    const active = btn.classList.toggle('active');
-    const action = active ? firebase.firestore.FieldValue.arrayUnion(id) : firebase.firestore.FieldValue.arrayRemove(id);
-    await db.collection("users").doc(auth.currentUser.uid).update({ favorites: action });
-}
-
-function openChat(ownerId, propId) {
-    if(!auth.currentUser) return alert("Login to chat");
-    window.location.href = `chat.html?to=${ownerId}&prop=${propId}`; //
+        if(type === 'wa') window.open(`https://wa.me/${num}?text=Interested in ${doc.data().title}`, '_blank');
+        else window.location.href = `tel:+${num}`;
+    } catch(e) {
+        alert("Error: Phone number missing or invalid.");
+    }
 }
 
 function filterAds() {
     const val = document.getElementById('citySearch').value.toLowerCase();
     const filtered = allAds.filter(a => a.location.toLowerCase().includes(val) || a.title.toLowerCase().includes(val));
     renderAds(filtered);
-}
-
-function openFull(url) {
-    document.getElementById('fullImg').src = url;
-    document.getElementById('fullOverlay').style.display = 'flex';
-}
-
-function shareAd(id, title) {
-    const url = `${window.location.origin}${window.location.pathname}?id=${id}`;
-    if (navigator.share) {
-        navigator.share({ title: title, url: url });
-    } else {
-        navigator.clipboard.writeText(url);
-        alert("Link copied to clipboard!");
-    }
 }
 </script>
 </body>
