@@ -21,25 +21,15 @@
         .search-box { background: white; border-radius: 12px; display: flex; padding: 10px 15px; align-items: center; gap: 10px; margin-top: 5px; }
         .search-box input { border: none; width: 100%; outline: none; font-size: 15px; color: #333; }
 
-        /* Drawer & Language Section */
+        /* Drawer Design */
         .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 5px 0 15px rgba(0,0,0,0.2); overflow-y: auto; }
         .drawer.open { left: 0; }
         .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; }
-        
-        /* Language Styling Fix */
-        .lang-container { padding: 15px; border-bottom: 1px solid #eee; background: #fafafa; }
-        .reset-eng-btn { background: #fff; color: var(--primary); border: 2px solid var(--primary); width: 100%; padding: 12px; border-radius: 8px; font-weight: 800; margin-bottom: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 15px; }
-        
-        /* Google Select Font Size Increase */
-        #google_translate_element select { 
-            width: 100% !important; 
-            padding: 12px !important; 
-            font-size: 16px !important; /* Bada font size as requested */
-            border-radius: 8px !important;
-            border: 1px solid #ccc !important;
-            font-weight: 600 !important;
-            color: #333 !important;
-        }
+
+        /* NEW: Language Section UI */
+        .lang-section { padding: 15px; border-bottom: 1px solid #eee; background: #f9f9f9; }
+        .default-lang-btn { background: #fff; color: var(--primary); border: 2px solid var(--primary); width: 100%; padding: 12px; border-radius: 10px; font-weight: 800; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; }
+        #google_translate_element select { width: 100% !important; padding: 12px !important; font-size: 16px !important; border-radius: 8px !important; border: 1px solid #ccc !important; font-weight: 600 !important; color: #333 !important; }
 
         .drawer-item { padding: 16px 20px; display: flex; align-items: center; gap: 15px; color: #333; text-decoration: none; font-weight: 600; border-bottom: 1px solid #f5f5f5; }
         .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 4500; display: none; }
@@ -50,7 +40,7 @@
         .img-container::-webkit-scrollbar { display: none; }
         .img-container img { min-width: 100%; height: 100%; object-fit: cover; scroll-snap-align: start; cursor: pointer; }
         .img-counter { position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.7); color: white; padding: 4px 10px; border-radius: 8px; font-size: 11px; z-index: 5; font-weight: 600; }
-        .verified-badge { position: absolute; bottom: 12px; left: 12px; background: #ffd700; color: #000; padding: 5px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; z-index: 5; }
+        .verified-badge { position: absolute; bottom: 12px; left: 12px; background: #ffd700; color: #000; padding: 5px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; z-index: 5; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .float-btns { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; gap: 10px; z-index: 10; }
         .c-btn { background: rgba(255,255,255,0.95); border: none; border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.15); cursor: pointer; color: #333; }
         .fav-btn.active { color: #d32f2f; }
@@ -70,10 +60,9 @@
         .post-btn-main { background: var(--primary); color: white !important; width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: -35px auto 5px; box-shadow: 0 5px 15px rgba(46,125,50,0.4); }
         #fullOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 6000; display: none; align-items: center; justify-content: center; }
         
-        /* Hide Google Banner */
+        /* Clean Up Google Bars */
         .goog-te-banner-frame.skiptranslate { display: none !important; }
         .goog-te-gadget-icon { display: none !important; }
-        .goog-te-gadget-simple span { display: none !important; }
     </style>
 </head>
 <body>
@@ -85,8 +74,8 @@
         <div id="dName" style="margin-top:12px; font-weight:700; font-size:1.1rem;">Earth Guest</div>
     </div>
 
-    <div class="lang-container">
-        <button class="reset-eng-btn" onclick="resetLanguage()">
+    <div class="lang-section">
+        <button class="default-lang-btn" onclick="resetToEnglish()">
             <i class="fa fa-globe"></i> English (Default)
         </button>
         <div id="google_translate_element"></div>
@@ -140,14 +129,14 @@
 function googleTranslateElementInit() {
   new google.translate.TranslateElement({
     pageLanguage: 'en',
-    // Saari badi languages (Russia, France, Germany, World + India)
+    // Saari Global + Indian Languages
     includedLanguages: 'hi,mr,ta,te,kn,gu,pa,bn,ur,en,ru,fr,de,es,ar,zh-CN,ja,ko,pt,it,tr,vi,th',
     layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
     autoDisplay: false
   }, 'google_translate_element');
 }
 
-function resetLanguage() {
+function resetToEnglish() {
     document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     location.reload();
 }
@@ -174,12 +163,10 @@ function toggleDrawer() {
 function renderAds(data) {
     const list = document.getElementById('propertyList');
     if(data.length === 0) { list.innerHTML = '<center style="padding:50px; color:#666;">No ads found.</center>'; return; }
-    
     list.innerHTML = data.map(p => {
         const imgs = (p.images && p.images.length > 0) ? p.images : ['https://via.placeholder.com/400x300?text=No+Image'];
         const isFav = userFavorites.includes(p.id) ? 'active' : '';
         const badge = p.isVerified ? `<div class="verified-badge"><i class="fa fa-certificate"></i> VERIFIED DEALER</div>` : '';
-        
         return `
         <div class="prop-card">
             <div style="position:relative;">
@@ -219,19 +206,15 @@ async function revealContact(id, btn, isWa) {
 }
 
 function openFull(url) { document.getElementById('fullImg').src = url; document.getElementById('fullOverlay').style.display = 'flex'; }
-
 function filterAds() {
     const val = document.getElementById('citySearch').value.toLowerCase();
-    const filtered = allAds.filter(a => (a.location||'').toLowerCase().includes(val) || (a.title||'').toLowerCase().includes(val));
-    renderAds(filtered);
+    renderAds(allAds.filter(a => (a.location||'').toLowerCase().includes(val) || (a.title||'').toLowerCase().includes(val)));
 }
-
 function shareAd(id) {
     const url = window.location.origin + "/index.html?id=" + id;
     if(navigator.share) navigator.share({title: 'Earth Property', url: url});
     else { navigator.clipboard.writeText(url); alert("Link Copied!"); }
 }
-
 async function toggleFav(id, btn) {
     if(!auth.currentUser) return alert("Login required");
     btn.classList.toggle('active');
@@ -249,7 +232,6 @@ auth.onAuthStateChanged(async user => {
         }
         document.getElementById('authBtn').innerText = "LOGOUT";
         document.getElementById('authBtn').onclick = () => auth.signOut().then(()=>location.reload());
-        
         const uDoc = await db.collection("users").doc(user.uid).get();
         if(uDoc.exists) {
             const name = uDoc.data().name || user.displayName || "User";
@@ -260,7 +242,6 @@ auth.onAuthStateChanged(async user => {
     } else {
         document.getElementById('authBtn').onclick = () => location.href='login.html';
     }
-    
     db.collection("properties").where("isExpired","==",false).orderBy("createdAt", "desc").onSnapshot(s => {
         allAds = s.docs.map(d => ({id: d.id, ...d.data()}));
         renderAds(allAds);
