@@ -181,6 +181,7 @@ async function submitProperty() {
             }
         }
 
+        // 30 din ki expiry calculation
         const expiry = new Date();
         expiry.setDate(expiry.getDate() + 30);
 
@@ -193,6 +194,7 @@ async function submitProperty() {
             propertyType: document.getElementById('type').value,
             images: imageUrls,
             status: "active",
+            isExpired: false, // ✅ Bhai ye fix ho gaya!
             updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
             expiryDate: firebase.firestore.Timestamp.fromDate(expiry)
         };
