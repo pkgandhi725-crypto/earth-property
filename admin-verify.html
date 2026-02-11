@@ -3,84 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Verification Portal</title>
+    <title>Verification Portal - Secure</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: system-ui, sans-serif; background: #f4f7f6; padding: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 20px; }
         .container { max-width: 800px; margin: auto; }
         .card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .img-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
-        .img-grid img { width: 100%; height: 200px; object-fit: cover; border-radius: 10px; border: 1px solid #ddd; }
-        .btn-approve { background: #2e7d32; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
-        .btn-reject { background: #d32f2f; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
-        .badge { background: #fff3e0; color: #ef6c00; padding: 5px 10px; border-radius: 5px; font-size: 12px; font-weight: 700; }
+        .doc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0; }
+        .doc-item img { width: 100%; height: 180px; object-fit: cover; border-radius: 10px; cursor: pointer; border: 1px solid #ddd; }
+        .btn-group { display: flex; gap: 10px; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-approve { background: #2e7d32; color: white; }
+        .btn-approve:disabled { background: #ccc; }
+        .btn-reject { background: #fff1f0; color: #cf1322; border: 1px solid #ffa39e; }
+        .loading-text { font-size: 12px; color: #666; margin-top: 5px; display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2><i class="fa fa-user-shield"></i> Verification Requests</h2>
+    <button onclick="location.href='admin.html'" style="margin-bottom:10px; cursor:pointer; border:none; background:none; color:#2e7d32; font-weight:bold;">
+        <i class="fa fa-arrow-left"></i> Back to Dashboard
+    </button>
     <div id="requestList">Loading requests...</div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+import { getFirestore, collection, doc, setDoc, updateDoc, onSnapshot, query, where, writeBatch, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 
-<script>
 const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
+
+// Helper for display escaping
+function escape(str) { return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+onAuthStateChanged(auth, (user) => {
+    if (!user || user.uid !== ADMIN_UID) window.location.href = "index.html";
+    else loadRequests();
+});
 
 function loadRequests() {
-    db.collection("verification_requests").where("status", "==", "pending").onSnapshot(snap => {
+    onSnapshot(query(collection(db, "verification_requests"), where("status", "==", "pending")), (snap) => {
         const list = document.getElementById('requestList');
-        if(snap.empty) { list.innerHTML = "No pending requests."; return; }
+        list.innerHTML = snap.empty ? '<p>No pending requests.</p>' : '';
         
-        list.innerHTML = snap.docs.map(doc => {
-            const d = doc.data();
-            return `
-            <div class="card">
-                <div style="display:flex; justify-content:space-between;">
-                    <strong>${d.businessName}</strong>
-                    <span class="badge">PENDING</span>
+        snap.forEach(docSnap => {
+            const d = docSnap.data();
+            const uid = docSnap.id;
+            
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <h3>${escape(d.businessName)}</h3>
+                <div class="doc-grid">
+                    <img src="${d.idProofUrl}" class="doc-img" alt="ID Proof">
+                    <img src="${d.paymentUrl}" class="doc-img" alt="Payment Proof">
                 </div>
-                <div class="img-grid">
-                    <div><small>ID Proof</small><br><img src="${d.idProofUrl}" onclick="window.open(this.src)"></div>
-                    <div><small>Payment</small><br><img src="${d.paymentUrl}" onclick="window.open(this.src)"></div>
+                <div class="btn-group">
+                    <button class="btn btn-approve">APPROVE</button>
+                    <button class="btn btn-reject">REJECT</button>
                 </div>
-                <div style="display:flex; gap:10px;">
-                    <button class="btn-approve" onclick="approveDealer('${d.userId}', '${d.businessName}')">Approve</button>
-                    <button class="btn-reject" onclick="rejectDealer('${d.userId}')">Reject</button>
-                </div>
-            </div>`;
-        }).join('');
+                <div class="loading-text" id="load-${uid}">Processing property updates...</div>
+            `;
+
+            // ✅ Security Fix: Event Listeners instead of string-based onclick
+            const approveBtn = card.querySelector('.btn-approve');
+            const rejectBtn = card.querySelector('.btn-reject');
+            
+            approveBtn.addEventListener('click', () => approveDealer(uid, d.businessName, approveBtn, rejectBtn));
+            rejectBtn.addEventListener('click', () => rejectDealer(uid, approveBtn, rejectBtn));
+
+            // Image handling
+            card.querySelectorAll('.doc-img').forEach(img => {
+                img.style.cursor = 'pointer';
+                img.onclick = () => window.open(img.src, '_blank');
+                img.onerror = () => { img.src = 'https://via.placeholder.com/180?text=Error+Loading+Image'; };
+            });
+
+            list.appendChild(card);
+        });
     });
 }
 
-async function approveDealer(uid, bizName) {
-    if(!confirm("Approve this dealer?")) return;
+async function approveDealer(uid, bizName, btn, rBtn) {
+    if (!confirm(`Approve ${bizName}?`)) return;
+    
+    // UI Loading State
+    btn.disabled = true;
+    rBtn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+    document.getElementById(`load-${uid}`).style.display = 'block';
+
     try {
-        // 1. Update Request Status
-        await db.collection("verification_requests").doc(uid).update({ status: "approved" });
-        // 2. Update User Profile
-        await db.collection("users").doc(uid).update({ 
+        // 1. Update User Profile
+        await setDoc(doc(db, "users", uid), { 
             isVerified: true, 
             premiumDealer: true, 
             businessName: bizName 
+        }, { merge: true });
+
+        // 2. Update Request Status
+        await updateDoc(doc(db, "verification_requests", uid), { 
+            status: "approved", 
+            approvedAt: serverTimestamp() 
         });
-        alert("Dealer Approved!");
-    } catch(e) { alert(e.message); }
+
+        // 3. Batch Update all properties of this owner
+        const props = await getDocs(query(collection(db, "properties"), where("ownerId", "==", uid)));
+        let batch = writeBatch(db);
+        let count = 0;
+        const promises = [];
+
+        props.forEach(p => {
+            batch.update(p.ref, { isVerified: true, businessName: bizName });
+            count++;
+            if (count === 500) {
+                promises.push(batch.commit());
+                batch = writeBatch(db);
+                count = 0;
+            }
+        });
+        
+        if (count > 0) promises.push(batch.commit());
+        await Promise.all(promises);
+
+        alert("Dealer Verified & All Ads Updated!");
+    } catch (e) { 
+        alert("Error: " + e.message); 
+        btn.disabled = false;
+        rBtn.disabled = false;
+        btn.innerText = 'APPROVE';
+        document.getElementById(`load-${uid}`).style.display = 'none';
+    }
 }
 
-async function rejectDealer(uid) {
-    const reason = prompt("Enter rejection reason:");
-    if(!reason) return;
-    await db.collection("verification_requests").doc(uid).update({ status: "rejected", reason: reason });
-    alert("Rejected.");
-}
+async function rejectDealer(uid, aBtn, rBtn) {
+    const reason = prompt("Enter Rejection Reason:");
+    if (!reason) return;
+    
+    aBtn.disabled = true;
+    rBtn.disabled = true;
 
-loadRequests();
+    try {
+        await updateDoc(doc(db, "verification_requests", uid), { 
+            status: "rejected", 
+            reason: reason, 
+            rejectedAt: serverTimestamp() 
+        });
+        alert("Request Rejected.");
+    } catch (e) { 
+        alert(e.message); 
+        aBtn.disabled = false;
+        rBtn.disabled = false;
+    }
+}
 </script>
 </body>
 </html>
