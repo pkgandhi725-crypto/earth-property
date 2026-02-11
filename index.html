@@ -265,7 +265,9 @@ async function revealContact(id, btn, wa) {
     } catch(e) {
         console.error("Contact Error:", e);
         alert("Unable to fetch contact details");
-        btn.innerHTML = "Error";
+        btn.innerHTML = wa 
+    ? '<i class="fa-brands fa-whatsapp"></i> Chat' 
+    : '<i class="fa fa-phone"></i> Call';
     }
 }
 
