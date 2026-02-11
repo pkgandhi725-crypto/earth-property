@@ -11,24 +11,29 @@
         header { background: var(--primary); color: white; padding: 16px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .container { padding: 15px; max-width: 650px; margin: auto; }
         
+        /* Stats Summary */
+        .stats-bar { background: white; padding: 15px; border-radius: 18px; margin-bottom: 20px; display: flex; justify-content: space-around; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .stat-item div:first-child { font-size: 20px; font-weight: 800; color: var(--primary); }
+        .stat-item div:last-child { font-size: 11px; color: #666; text-transform: uppercase; }
+
         .ad-card { background: white; border-radius: 18px; padding: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); margin-bottom: 20px; border: 1px solid #eee; position: relative; overflow: hidden; }
         .ad-info { display: flex; gap: 15px; }
-        .ad-img { width: 110px; height: 110px; border-radius: 14px; object-fit: cover; background: #f0f0f0; border: 1px solid #f0f0f0; }
+        .ad-img { width: 100px; height: 100px; border-radius: 14px; object-fit: cover; background: #f0f0f0; }
         
         .ad-details { flex: 1; }
-        .ad-details h4 { margin: 0; font-size: 17px; color: #222; font-weight: 700; line-height: 1.3; }
-        .price { font-size: 20px; font-weight: 900; color: var(--primary); margin: 6px 0; }
+        .ad-details h4 { margin: 0; font-size: 16px; color: #222; font-weight: 700; }
+        .price { font-size: 18px; font-weight: 800; color: var(--primary); margin: 4px 0; }
         
-        .status-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 800; padding: 5px 10px; border-radius: 20px; text-transform: uppercase; }
+        .status-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; }
         .active-badge { background: #e8f5e9; color: #2e7d32; }
         .expired-badge { background: #ffebee; color: #d32f2f; }
         
         .btn-group { display: flex; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #eee; }
-        button { flex: 1; cursor: pointer; border: none; font-weight: 700; border-radius: 12px; font-size: 14px; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+        button { flex: 1; cursor: pointer; border: none; font-weight: 700; border-radius: 12px; font-size: 13px; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; }
         
         .edit-btn { background: #f0f2f5; color: #444; }
-        .renew-btn { background: var(--warning); color: white; box-shadow: 0 4px 12px rgba(255,152,0,0.3); }
-        .delete-btn { background: #fff0f0; color: var(--danger); flex: 0.4; }
+        .renew-btn { background: var(--warning); color: white; }
+        .delete-btn { background: #fff0f0; color: var(--danger); flex: 0.3; }
         
         #loader { text-align: center; margin-top: 60px; color: var(--primary); }
     </style>
@@ -37,18 +42,19 @@
 
 <header>
     <div onclick="location.href='index.html'" style="cursor:pointer; padding: 5px;"><i class="fa fa-chevron-left"></i></div>
-    <div style="font-weight: 800; font-size: 19px;">Manage My Ads</div>
+    <div style="font-weight: 800; font-size: 19px;">My Properties</div>
 </header>
 
 <div class="container">
-    <div id="loader"><i class="fa fa-spinner fa-spin fa-3x"></i><p>Checking your listings...</p></div>
-    <div id="adList"></div>
-    
-    <div id="noAds" style="display:none; text-align:center; padding:50px 20px;">
-        <i class="fa fa-folder-open fa-4x" style="color:#ccc;"></i>
-        <h3 style="color:#666;">No properties found</h3>
-        <button onclick="location.href='add-property.html'" style="background:var(--primary); color:white; margin:auto; margin-top:15px; width:200px;">Post Property</button>
+    <div class="stats-bar">
+        <div class="stat-item"> <div id="totalCount">0</div> <div>Total</div> </div>
+        <div class="stat-item"> <div id="activeCount" style="color:#2e7d32;">0</div> <div>Active</div> </div>
+        <div class="stat-item"> <div id="expiredCount" style="color:#d32f2f;">0</div> <div>Expired</div> </div>
     </div>
+
+    <div id="loader"><i class="fa fa-spinner fa-spin fa-2x"></i></div>
+    <div id="adList"></div>
+    <div id="noAds" style="display:none; text-align:center; padding:40px;">No properties found.</div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -59,96 +65,96 @@
 const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-const auth = firebase.auth();
 
-function getTimeAgo(timestamp) {
-    if (!timestamp) return "Just now";
-    const now = new Date();
-    const postedDate = timestamp.toDate();
-    const diffInSeconds = Math.floor((now - postedDate) / 1000);
-    if (diffInSeconds < 60) return "Just now";
-    const mins = Math.floor(diffInSeconds / 60);
-    if (mins < 60) return `${mins}m ago`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    if (days < 30) return `${days}d ago`;
-    return postedDate.toLocaleDateString();
+// ✅ 1. Utils: XSS Protection & Formatting
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
 }
 
-auth.onAuthStateChanged(user => {
+function formatPrice(price) {
+    const num = Number(price);
+    return isNaN(num) ? '₹0' : `₹${num.toLocaleString('en-IN')}`;
+}
+
+// ✅ 2. Load Ads with Stats
+firebase.auth().onAuthStateChanged(user => {
     if (!user) return location.href = 'login.html';
-    loadUserAds(user.uid);
+    
+    db.collection("properties").where("ownerId", "==", user.uid)
+      .onSnapshot(snapshot => {
+          document.getElementById('loader').style.display = 'none';
+          const adList = document.getElementById('adList');
+          adList.innerHTML = '';
+          
+          let total = 0, active = 0, expiredCount = 0;
+
+          if (snapshot.empty) {
+              document.getElementById('noAds').style.display = 'block';
+          } else {
+              document.getElementById('noAds').style.display = 'none';
+              snapshot.forEach(doc => {
+                  total++;
+                  const ad = { id: doc.id, ...doc.data() };
+                  const cardHtml = createCard(ad);
+                  adList.innerHTML += cardHtml;
+                  
+                  // Temporary logic to count based on the rendered card's state
+                  if (cardHtml.includes('expired-badge')) expiredCount++; else active++;
+              });
+          }
+          document.getElementById('totalCount').innerText = total;
+          document.getElementById('activeCount').innerText = active;
+          document.getElementById('expiredCount').innerText = expiredCount;
+      });
 });
 
-function loadUserAds(uid) {
-    db.collection("properties").where("ownerId", "==", uid).onSnapshot(snapshot => {
-        document.getElementById('loader').style.display = 'none';
-        const adList = document.getElementById('adList');
-        adList.innerHTML = '';
-        if (snapshot.empty) { document.getElementById('noAds').style.display = 'block'; return; }
-        document.getElementById('noAds').style.display = 'none';
-        snapshot.forEach(doc => { 
-            const ad = doc.data(); 
-            ad.id = doc.id; 
-            adList.innerHTML += createCard(ad); 
-        });
-    });
-}
-
-// ✅ RENT VS SELL EXPIRY CALCULATION
+// ✅ 3. Smart Expiry Logic (Rent vs Sell)
 function createCard(ad) {
     const now = new Date();
-    let isExpired = ad.isExpired || false;
-    let daysRemaining = 0;
+    const purpose = ad.purpose || 'Sell';
+    const expiryPeriod = (purpose === 'Rent' || purpose === 'Lease') ? 30 : 180;
 
-    // Determine Period: Rent = 30, Sell/Others = 180
-    const expiryPeriod = (ad.purpose === 'Rent' || ad.purpose === 'Lease') ? 30 : 180;
+    // Use renewedAt if available, else createdAt
+    const baseDate = ad.renewedAt ? ad.renewedAt.toDate() : (ad.createdAt ? ad.createdAt.toDate() : new Date());
+    const expiryDate = new Date(baseDate);
+    expiryDate.setDate(expiryDate.getDate() + expiryPeriod);
+    
+    const diffTime = expiryDate - now;
+    const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const isExpired = daysRemaining <= 0;
 
-    if (ad.createdAt) {
-        const createdDate = ad.createdAt.toDate();
-        const expiryDate = new Date(createdDate);
-        expiryDate.setDate(expiryDate.getDate() + expiryPeriod);
-        
-        const diffTime = expiryDate - now;
-        daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
-        if (daysRemaining <= 0) {
-            isExpired = true;
-            daysRemaining = 0;
-        }
-    }
-
-    const timeAgoText = getTimeAgo(ad.createdAt);
     const img = (ad.images && ad.images.length > 0) ? ad.images[0] : 'https://via.placeholder.com/150';
+    const statusText = isExpired ? 'Expired' : (daysRemaining === 0 ? 'Expiring Today' : `${daysRemaining} Days Left`);
 
     return `
-    <div class="ad-card" style="${isExpired ? 'border-left: 5px solid var(--danger);' : ''}">
+    <div class="ad-card">
         <div class="ad-info">
-            <img src="${img}" class="ad-img">
+            <img src="${img}" class="ad-img" loading="lazy" onerror="this.src='https://via.placeholder.com/150'">
             <div class="ad-details">
-                <h4>${ad.title || 'Property'} <span style="font-size:10px; background:#eee; padding:2px 5px; border-radius:4px;">${ad.purpose}</span></h4>
-                <div class="price">₹${Number(ad.price || 0).toLocaleString('en-IN')}</div>
+                <h4>${escapeHtml(ad.title)}</h4>
+                <div class="price">${formatPrice(ad.price)}</div>
                 <div class="status-badge ${isExpired ? 'expired-badge' : 'active-badge'}">
-                    <i class="fa ${isExpired ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> 
-                    ${isExpired ? 'Expired' : daysRemaining + ' Days Left'}
+                    <i class="fa ${isExpired ? 'fa-exclamation-triangle' : 'fa-clock'}"></i> ${statusText}
                 </div>
             </div>
         </div>
         <div class="btn-group">
-            <button class="edit-btn" onclick="location.href='add-property.html?edit=${ad.id}'"><i class="fa fa-edit"></i> Edit</button>
+            <button class="edit-btn" onclick="location.href='add-property.html?edit=${ad.id}'">Edit</button>
             ${isExpired ? 
-                `<button class="renew-btn" onclick="renewAd('${ad.id}', '${ad.purpose}', this)"><i class="fa fa-sync-alt"></i> Renew</button>` : 
-                `<button style="background:#f8f9fa; color:#2e7d32; cursor:default;"><i class="fa fa-rocket"></i> Live</button>`
+                `<button class="renew-btn" onclick="renewAd('${ad.id}', '${purpose}', this)">Renew</button>` : 
+                `<button style="background:#f8f9fa; color:#2e7d32; cursor:default;">Live</button>`
             }
             <button class="delete-btn" onclick="deleteAd('${ad.id}')"><i class="fa fa-trash-alt"></i></button>
         </div>
     </div>`;
 }
 
+// ✅ 4. Secure Renewal (Preserves original createdAt)
 async function renewAd(id, purpose, btn) {
     const period = (purpose === 'Rent' || purpose === 'Lease') ? "30" : "180";
-    if(!confirm(`Bhai, is ad ko ${period} din ke liye renew karein?`)) return;
+    if(!confirm(`Renew this ad for ${period} days?`)) return;
     
     btn.disabled = true;
     btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
@@ -156,20 +162,23 @@ async function renewAd(id, purpose, btn) {
     try {
         await db.collection("properties").doc(id).update({
             isExpired: false,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(), // Resetting creation date for fresh start
+            renewedAt: firebase.firestore.FieldValue.serverTimestamp(), // New Field!
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        alert("Ad Renewed! 🎉");
-    } catch(e) { 
-        alert("Error: " + e.message); 
-        btn.disabled = false; 
-        btn.innerHTML = '<i class="fa fa-sync-alt"></i> Renew';
+        alert("Ad Renewed Successfully! 🎉");
+    } catch(e) {
+        alert("Error: " + e.message);
+        btn.disabled = false;
+        btn.innerHTML = 'Renew';
     }
 }
 
 async function deleteAd(id) {
     if(confirm("Permanently delete?")) {
-        try { await db.collection("properties").doc(id).delete(); } catch(e) { alert("Error"); }
+        try { 
+            await db.collection("properties").doc(id).delete(); 
+            alert("Deleted!");
+        } catch(e) { alert("Error"); }
     }
 }
 </script>
