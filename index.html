@@ -15,44 +15,55 @@
         .menu-btn { font-size: 20px; cursor: pointer; padding: 5px; } 
         .logo-text { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.5px; } 
         .header-icons { display: flex; gap: 10px; align-items: center; }
+        
+        /* Drawer Styling */
         .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
         .drawer.open { left: 0; }
-        .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; }
-        .drawer-item { padding: 15px 20px; display: flex; align-items: center; gap: 15px; color: #333; text-decoration: none; font-weight: 600; border-bottom: 1px solid #f0f0f0; }
+        .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; text-align: center; }
+        .drawer-item { padding: 15px 20px; display: flex; align-items: center; gap: 15px; color: #333; text-decoration: none; font-weight: 600; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
         .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 4500; display: none; }
+        
         .icon-btn { color: #fff; background: rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .auth-btn { cursor: pointer; font-size: 12px; font-weight: 700; background: #fff; color: var(--primary); padding: 8px 16px; border-radius: 8px; border: none; }
+        
         .search-box { background: white; border-radius: 12px; display: flex; padding: 8px 15px; align-items: center; gap: 10px; margin: 0 10px 10px 10px; border: 1px solid #ddd; }
         .search-box input { border: none; width: 100%; outline: none; padding: 5px 0; font-size: 14px; }
+        
+        /* Property Cards */
         .prop-card { background: white; border-radius: 16px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; border: 1px solid #eee; }
         .img-container { position: relative; width: 100%; height: 230px; background: #e0e0e0; }
         .img-container img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .action-btns { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; gap: 10px; z-index: 10; }
-        .circle-btn { background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15); font-size: 16px; }
         .prop-info { padding: 15px; }
         .prop-price { font-size: 22px; font-weight: 800; color: var(--primary); }
-        .prop-title { font-weight: 700; font-size: 16px; margin: 5px 0; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .prop-title { font-weight: 700; font-size: 16px; margin: 5px 0; color: #333; }
+        
         .btn-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 15px; }
-        .btn { padding: 12px 5px; border-radius: 10px; font-weight: 700; font-size: 12px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; transition: 0.2s; }
+        .btn { padding: 12px 5px; border-radius: 10px; font-weight: 700; font-size: 11px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; }
         .btn-call { background: #e8f5e9; color: #2e7d32; } 
         .btn-wa { background: #25D366; color: white; } 
         .btn-chat { background: var(--primary); color: white; }
+        
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 8px 0; border-top: 1px solid #e0e0e0; z-index: 2000; }
         .nav-item { display: flex; flex-direction: column; align-items: center; color: #888; text-decoration: none; font-size: 11px; font-weight: 600; flex: 1; }
         .nav-item.active { color: var(--primary); }
         .post-nav .post-btn-main { background: var(--primary); color: white; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 6000; display: none; align-items: center; justify-content: center; }
-        .fav-btn.active { color: #d32f2f; }
     </style>
 </head>
 <body>
 
 <div class="drawer-overlay" id="overlayPanel" onclick="toggleDrawer()"></div>
 <div class="drawer" id="sideDrawer">
-    <div class="drawer-header"><i class="fa fa-user-circle fa-3x"></i><div id="dName" style="margin-top:10px; font-weight:700;">Earth User</div></div>
+    <div class="drawer-header">
+        <i class="fa fa-user-circle fa-3x"></i>
+        <div id="dName" style="margin-top:10px; font-weight:700; font-size:1.1rem; min-height: 1.5em;">Loading...</div>
+    </div>
     <a href="profile.html" class="drawer-item"><i class="fa fa-user"></i> My Profile</a>
     <a href="my-ads.html" class="drawer-item"><i class="fa fa-layer-group"></i> My Ads</a>
     <a href="favorites.html" class="drawer-item"><i class="fa-regular fa-heart"></i> My Favorites</a>
+    
+    <div class="drawer-item" onclick="alert('Hindi/English feature coming soon!')"><i class="fa fa-language"></i> Change Language</div>
+    <div class="drawer-item" onclick="shareApp()"><i class="fa fa-share-nodes"></i> Share App</div>
+    
     <a href="support.html" class="drawer-item"><i class="fa fa-headset"></i> Support</a>
     <a href="about.html" class="drawer-item"><i class="fa fa-info-circle"></i> About Us</a>
 </div>
@@ -85,8 +96,6 @@
     <a href="profile.html" class="nav-item"><i class="fa fa-user-circle"></i><span>Profile</span></a>
 </div>
 
-<div id="overlay" onclick="this.style.display='none'"><img id="fullImg" style="max-width:95%; border-radius:8px;"></div>
-
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -97,9 +106,6 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-let allProps = [];
-let userFavs = JSON.parse(localStorage.getItem('favs') || '[]');
-
 function toggleDrawer() {
     const d = document.getElementById('sideDrawer');
     const o = document.getElementById('overlayPanel');
@@ -107,77 +113,61 @@ function toggleDrawer() {
     o.style.display = d.classList.contains('open') ? 'block' : 'none';
 }
 
-function loadProps() {
+function shareApp() {
+    if(navigator.share) navigator.share({ title: 'Earth Property', text: 'Check out this property app!', url: window.location.origin });
+}
+
+async function loadProps() {
+    const list = document.getElementById('propertyList');
     db.collection("properties").orderBy("createdAt", "desc").onSnapshot(snap => {
-        allProps = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderProps(allProps);
+        const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        list.innerHTML = data.map(p => `
+            <div class="prop-card">
+                <div class="img-container"><img src="${p.images?.[0] || 'https://via.placeholder.com/400'}"></div>
+                <div class="prop-info">
+                    <div class="prop-price">₹${p.price}</div>
+                    <div class="prop-title">${p.title}</div>
+                    <div style="font-size:12px; color:#666;"><i class="fa fa-map-marker-alt"></i> ${p.location}</div>
+                    <div class="btn-group">
+                        <button class="btn btn-call" onclick="alert('Call: ${p.phone}')">Call</button>
+                        <button class="btn btn-wa" onclick="window.open('https://wa.me/91${p.phone}')">WA</button>
+                        <button class="btn btn-chat" onclick="location.href='chat.html?to=${p.ownerId}'">Chat</button>
+                    </div>
+                </div>
+            </div>`).join('');
     });
 }
 
-function renderProps(data) {
-    const list = document.getElementById('propertyList');
-    list.innerHTML = data.map(p => `
-        <div class="prop-card">
-            <div class="img-container">
-                <img src="${p.images?.[0] || ''}" onclick="showImg('${p.images?.[0]}')">
-            </div>
-            <div class="prop-info">
-                <div class="prop-price">₹${p.price}</div>
-                <div class="prop-title">${p.title}</div>
-                <div style="font-size:12px; color:#666;">${p.location}</div>
-                <div class="btn-group">
-                    <button class="btn btn-call" onclick="window.location.href='tel:${p.phone}'">Call</button>
-                    <button class="btn btn-wa" onclick="window.open('https://wa.me/91${p.phone}')">WA</button>
-                    <button class="btn btn-chat" onclick="location.href='chat.html?to=${p.ownerId}'">Chat</button>
-                </div>
-            </div>
-        </div>`).join('');
-}
-
-function showImg(src) { document.getElementById('fullImg').src = src; document.getElementById('overlay').style.display = 'flex'; }
-
-// ✅ SAFE UNIVERSAL FIX (Applied from your review)
+// ✅ ROBUST NAME SYNC LOGIC
 auth.onAuthStateChanged(async user => {
-    const btn = document.getElementById('authBtn');
     const dName = document.getElementById('dName');
+    const authBtn = document.getElementById('authBtn');
     
     if(user) {
-        btn.innerText = "Logout";
-        btn.onclick = () => auth.signOut().then(() => location.reload());
+        authBtn.innerText = "Logout";
+        authBtn.onclick = () => auth.signOut().then(() => location.reload());
+        
+        if(user.uid === "WOY9f67DachGVTuhR4tSJ1BHozx1") document.getElementById('adminLink').style.display = 'flex';
 
-        // Admin check (Matching your UID)
-        if(user.uid === "WOY9f67DachGVTuhR4tSJ1BHozx1") {
-            document.getElementById('adminLink').style.display = 'flex';
-        }
+        // Try to get name from multiple sources
+        const fetchName = async () => {
+            try {
+                const userDoc = await db.collection("users").doc(user.uid).get();
+                if(userDoc.exists) {
+                    const ud = userDoc.data();
+                    dName.innerText = ud.name || ud.businessName || ud.fullName || user.displayName || "Earth User";
+                } else {
+                    dName.innerText = user.displayName || "Earth User";
+                }
+            } catch(e) { dName.innerText = user.displayName || "Earth User"; }
+        };
 
-        try {
-            const userDoc = await db.collection("users").doc(user.uid).get();
-
-            if(userDoc.exists) {
-                const data = userDoc.data();
-                // Har case handle karega (name, fullName, businessName etc.)
-                dName.innerText =
-                    data.name ||
-                    data.fullName ||
-                    data.username ||
-                    data.businessName ||
-                    user.displayName ||
-                    "Earth User";
-            } else {
-                dName.innerText = user.displayName || "Earth User";
-            }
-
-            userFavs = userDoc.data()?.favorites || [];
-            localStorage.setItem('favs', JSON.stringify(userFavs));
-
-        } catch(e) {
-            console.error(e);
-            dName.innerText = user.displayName || "Earth User";
-        }
-
+        fetchName(); 
+        setTimeout(fetchName, 2000); // Retry after 2 sec for slow sync
     } else {
         dName.innerText = "Earth Guest";
-        btn.onclick = () => location.href = 'login.html';
+        authBtn.innerText = "Login";
+        authBtn.onclick = () => location.href = 'login.html';
     }
     loadProps();
 });
