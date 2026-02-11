@@ -55,10 +55,10 @@
         .btn-wa { background: #25D366; color: white; } 
         .btn-chat { background: var(--primary); color: white; }
 
-        nav.bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 10px 0; border-top: 1px solid #eee; z-index: 1000; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 10px 0; border-top: 1px solid #eee; z-index: 1000; }
         .nav-item { flex: 1; text-align: center; color: #888; text-decoration: none; font-size: 11px; font-weight: 600; }
         .nav-item.active { color: var(--primary); }
-        .nav-item-post .post-btn-main { background: var(--primary); color: white; width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: -35px auto 5px; box-shadow: 0 5px 15px rgba(46,125,50,0.4); }
+        .post-btn-main { background: var(--primary); color: white !important; width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: -35px auto 5px; box-shadow: 0 5px 15px rgba(46,125,50,0.4); }
         
         #fullOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 6000; display: none; align-items: center; justify-content: center; cursor: pointer; }
         #fullOverlay img { max-width: 95%; max-height: 85%; border-radius: 8px; }
@@ -66,10 +66,6 @@
         .loading-spinner { text-align: center; padding: 100px 20px; color: #666; }
         .loading-spinner i { color: var(--primary); }
         .error-msg { text-align: center; padding: 50px 20px; color: #d32f2f; }
-
-        @media (prefers-reduced-motion: reduce) {
-            * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
-        }
     </style>
 </head>
 <body>
@@ -87,7 +83,7 @@
     <div class="lang-section">
         <div style="font-size:12px; font-weight:700; color:#888;" class="txt-language">LANGUAGE</div>
         <div class="lang-grid">
-            <div class="lang-btn active" data-lang="en">English</div>
+            <div class="lang-btn" data-lang="en">English</div>
             <div class="lang-btn" data-lang="hi">हिंदी</div>
             <div class="lang-btn" data-lang="ar">العربية</div>
         </div>
@@ -115,19 +111,19 @@
     </div>
     <div class="search-box">
         <i class="fa fa-search" style="color:#aaa;"></i>
-        <input type="text" id="citySearch" class="txt-search" placeholder="Search city or area...">
+        <input type="text" id="citySearch" class="txt-search" oninput="filterAds()">
     </div>
 </header>
 
 <div id="propertyList"></div>
 
-<nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+<div class="bottom-nav">
     <a href="index.html" class="nav-item active"><i class="fa fa-house fa-lg"></i><br><span class="txt-explore">Explore</span></a>
     <a href="my-ads.html" class="nav-item"><i class="fa fa-layer-group fa-lg"></i><br><span class="txt-myads">My Ads</span></a>
-    <a href="add-property.html" class="nav-item nav-item-post"><i class="fa fa-plus"></i><br><span class="txt-post">Post</span></a>
+    <a href="add-property.html" class="nav-item"><div class="post-btn-main"><i class="fa fa-plus"></i></div><span class="txt-post">Post</span></a>
     <a href="favorites.html" class="nav-item"><i class="fa-regular fa-heart fa-lg"></i><br><span class="txt-favs">Favs</span></a>
     <a href="profile.html" class="nav-item"><i class="fa fa-user-circle fa-lg"></i><br><span class="txt-profile">Profile</span></a>
-</nav>
+</div>
 
 <div id="fullOverlay"><img id="fullImg"></div>
 
@@ -222,26 +218,6 @@ const TRANSLATIONS = {
 const RTL_LANGS = ["ar"];
 let CURRENT_LANG = localStorage.getItem("earthLang") || "en";
 let CURRENT_DICT = TRANSLATIONS[CURRENT_LANG] || TRANSLATIONS["en"];
-let allAds = [];
-let userFavorites = [];
-let unsubscribeAds;
-
-// ========== UTILITY FUNCTIONS ==========
-const escapeHtml = (str = "") => {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-};
-
-const sanitizeImageUrl = (url) => {
-    try {
-        if (!url) return 'https://via.placeholder.com/400x300?text=No+Image';
-        const parsed = new URL(url);
-        return ['http:', 'https:'].includes(parsed.protocol) ? url : 'https://via.placeholder.com/400x300?text=Invalid';
-    } catch {
-        return 'https://via.placeholder.com/400x300?text=No+Image';
-    }
-};
 
 function t(key) {
     return CURRENT_DICT[key] || TRANSLATIONS["en"][key] || key;
@@ -251,7 +227,7 @@ function applyLanguage(lang) {
     CURRENT_LANG = lang;
     CURRENT_DICT = TRANSLATIONS[lang] || TRANSLATIONS["en"];
     
-    // Update all text elements
+    // Update static text elements
     document.querySelectorAll('.txt-profile').forEach(el => el.textContent = t('profile'));
     document.querySelectorAll('.txt-myads').forEach(el => el.textContent = t('myads'));
     document.querySelectorAll('.txt-favs').forEach(el => el.textContent = t('favs'));
@@ -270,8 +246,16 @@ function applyLanguage(lang) {
     });
 }
 
-// ========== DOM ELEMENTS ==========
-const $ = {
+function setLanguage(lang) {
+    if (!TRANSLATIONS[lang] || lang === CURRENT_LANG) return;
+    applyLanguage(lang);
+    localStorage.setItem("earthLang", lang);
+    renderAds(allAds); // Re-render cards with new translations
+    updateWelcome(document.getElementById('dName').textContent);
+}
+
+// ========== DOM CACHE ==========
+const DOM = {
     propertyList: document.getElementById('propertyList'),
     welcomeUser: document.getElementById('welcomeUser'),
     authBtn: document.getElementById('authBtn'),
@@ -281,21 +265,39 @@ const $ = {
     menuToggle: document.getElementById('menuToggle'),
     logoutBtn: document.getElementById('logoutBtn'),
     fullOverlay: document.getElementById('fullOverlay'),
-    fullImg: document.getElementById('fullImg'),
-    dName: document.getElementById('dName')
+    fullImg: document.getElementById('fullImg')
 };
 
-// ========== UI FUNCTIONS ==========
+let allAds = [];
+let userFavorites = [];
+let unsubscribeAds;
+
+// ========== SECURITY ==========
+const escapeHtml = str => {
+    const div = document.createElement('div');
+    div.textContent = str || "";
+    return div.innerHTML;
+};
+
+const sanitizeImageUrl = url => {
+    try {
+        const parsed = new URL(url);
+        return ['http:', 'https:'].includes(parsed.protocol) ? url : 'https://via.placeholder.com/400x300?text=Invalid';
+    } catch {
+        return 'https://via.placeholder.com/400x300?text=Invalid';
+    }
+};
+
+// ========== UI LOGIC ==========
 function toggleDrawer() {
-    const isOpen = $.sideDrawer.classList.toggle('open');
-    $.dOverlay.style.display = isOpen ? 'block' : 'none';
-    $.menuToggle.setAttribute('aria-expanded', isOpen);
-    document.body.style.overflowY = isOpen ? 'hidden' : '';
+    const isOpen = DOM.sideDrawer.classList.toggle('open');
+    DOM.dOverlay.style.display = isOpen ? 'block' : 'none';
+    DOM.menuToggle.setAttribute('aria-expanded', isOpen);
 }
 
 function updateWelcome(name) {
-    const welcomeTxt = t('welcome').replace('{name}', name || 'Guest');
-    $.welcomeUser.textContent = welcomeTxt;
+    const welcomeTxt = t('welcome');
+    DOM.welcomeUser.textContent = welcomeTxt.replace('{name}', name);
 }
 
 function createPropertyCard(p) {
@@ -311,15 +313,15 @@ function createPropertyCard(p) {
                 <button class="c-btn fav-btn ${isFav}" aria-label="Favorite"><i class="fa fa-heart"></i></button>
             </div>
             <div class="img-container">
-                ${imgs.map((url, i) => `<img src="${escapeHtml(url)}" alt="${escapeHtml(p.title || 'Property')} - Image ${i+1}" loading="lazy" data-idx="${i}">`).join('')}
+                ${imgs.map((url, i) => `<img src="${escapeHtml(url)}" alt="${escapeHtml(p.title)} - Image ${i+1}" loading="lazy" data-idx="${i}">`).join('')}
             </div>
             <div class="img-counter">${imgs.length} Photos</div>
         </div>
         <div class="prop-info">
             <div class="prop-price">₹${Number(p.price||0).toLocaleString('en-IN')}</div>
-            <div class="prop-title">${escapeHtml(p.title || 'Untitled Property')}</div>
+            <div class="prop-title">${escapeHtml(p.title)}</div>
             <div style="font-size:13px; color:#666; margin-bottom:10px;">
-                <i class="fa fa-map-marker-alt"></i> ${escapeHtml(p.location || 'Location not specified')}
+                <i class="fa fa-map-marker-alt"></i> ${escapeHtml(p.location)}
             </div>
             <div class="btn-group">
                 <button class="btn btn-call">
@@ -340,30 +342,30 @@ function createPropertyCard(p) {
     card.querySelector('.btn-call').onclick = (e) => revealContact(p.id, e.currentTarget, false);
     card.querySelector('.btn-wa').onclick = (e) => revealContact(p.id, e.currentTarget, true);
     card.querySelector('.btn-chat').onclick = () => {
-        location.href = `chat.html?to=${encodeURIComponent(p.ownerId || '')}&p=${encodeURIComponent(p.id)}`;
+        location.href = `chat.html?to=${encodeURIComponent(p.ownerId)}&p=${encodeURIComponent(p.id)}`;
     };
     card.querySelectorAll('img').forEach(img => {
-        img.onclick = () => openFullImage(imgs[parseInt(img.dataset.idx)]);
+        img.onclick = () => openFullImage(imgs[img.dataset.idx]);
     });
 
     return card;
 }
 
 function renderAds(data) {
-    $.propertyList.innerHTML = '';
+    DOM.propertyList.innerHTML = '';
     
-    if (!data || data.length === 0) {
-        $.propertyList.innerHTML = `<div style="text-align:center; padding:50px; color:#666;">${t('noAds')}</div>`;
+    if (data.length === 0) {
+        DOM.propertyList.innerHTML = `<div style="text-align:center; padding:50px; color:#666;">${t('noAds')}</div>`;
         return;
     }
     
     const fragment = document.createDocumentFragment();
     data.forEach(p => fragment.appendChild(createPropertyCard(p)));
-    $.propertyList.appendChild(fragment);
+    DOM.propertyList.appendChild(fragment);
 }
 
 function showLoading() {
-    $.propertyList.innerHTML = `
+    DOM.propertyList.innerHTML = `
         <div class="loading-spinner">
             <i class="fa fa-spinner fa-spin fa-3x"></i>
             <p style="margin-top:15px;">${t('loading')}</p>
@@ -371,7 +373,7 @@ function showLoading() {
 }
 
 function showError() {
-    $.propertyList.innerHTML = `
+    DOM.propertyList.innerHTML = `
         <div class="error-msg">
             <i class="fa fa-exclamation-triangle fa-3x"></i>
             <p style="margin-top:15px;">${t('errorLoadingAds')}</p>
@@ -444,18 +446,18 @@ async function toggleFav(id, btn) {
         });
     } catch (e) {
         console.error(e);
-        btn.classList.toggle('active');
+        btn.classList.toggle('active'); // Revert on error
         alert(t('errorUpdatingFavorites'));
     }
 }
 
 function openFullImage(url) {
-    $.fullImg.src = url;
-    $.fullOverlay.style.display = 'flex';
+    DOM.fullImg.src = url;
+    DOM.fullOverlay.style.display = 'flex';
 }
 
 function filterAds() {
-    const val = $.citySearch.value.toLowerCase().trim();
+    const val = DOM.citySearch.value.toLowerCase();
     const filtered = allAds.filter(a => 
         (a.location || '').toLowerCase().includes(val) || 
         (a.title || '').toLowerCase().includes(val)
@@ -464,83 +466,87 @@ function filterAds() {
 }
 
 // ========== EVENT LISTENERS ==========
-$.menuToggle.onclick = toggleDrawer;
-$.dOverlay.onclick = toggleDrawer;
-$.fullOverlay.onclick = () => $.fullOverlay.style.display = 'none';
+DOM.menuToggle.onclick = toggleDrawer;
+DOM.dOverlay.onclick = toggleDrawer;
+DOM.fullOverlay.onclick = () => DOM.fullOverlay.style.display = 'none';
 
-// Close drawer/image on Escape
+// Close drawer on Escape
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-        if ($.sideDrawer.classList.contains('open')) toggleDrawer();
-        if ($.fullOverlay.style.display === 'flex') $.fullOverlay.style.display = 'none';
+        if (DOM.sideDrawer.classList.contains('open')) {
+            toggleDrawer();
+        }
+        if (DOM.fullOverlay.style.display === 'flex') {
+            DOM.fullOverlay.style.display = 'none';
+        }
+    }
+});
+
+// Drawer navigation - event delegation
+DOM.sideDrawer.addEventListener('click', (e) => {
+    const link = e.target.closest('.drawer-item[href]');
+    if (link && DOM.sideDrawer.classList.contains('open')) {
+        setTimeout(toggleDrawer, 100);
     }
 });
 
 // Language buttons
 document.querySelectorAll('.lang-btn').forEach(btn => {
-    btn.onclick = () => {
-        setLanguage(btn.dataset.lang);
-    };
+    btn.onclick = () => setLanguage(btn.dataset.lang);
 });
 
-// Search input
-$.citySearch.oninput = filterAds;
+// Memory cleanup
+window.addEventListener('beforeunload', () => {
+    if (unsubscribeAds) unsubscribeAds();
+});
 
 // ========== AUTH & DATA ==========
-auth.onAuthStateChanged(async (user) => {
+auth.onAuthStateChanged(async user => {
     if (unsubscribeAds) unsubscribeAds();
     
     showLoading();
     
     if (user) {
-        $.authBtn.textContent = t('logout');
-        $.authBtn.onclick = () => auth.signOut().then(() => location.reload());
-        $.logoutBtn.onclick = () => auth.signOut().then(() => location.reload());
+        DOM.authBtn.textContent = t('logout');
+        DOM.authBtn.onclick = () => auth.signOut().then(() => location.reload());
+        DOM.logoutBtn.onclick = () => auth.signOut().then(() => location.reload());
         
         try {
             const uDoc = await db.collection("users").doc(user.uid).get();
             if (uDoc.exists) {
-                const data = uDoc.data();
-                const name = data.name || user.displayName || "User";
-                $.dName.textContent = name;
-                userFavorites = data.favorites || [];
+                const name = uDoc.data().name || user.displayName || "User";
+                document.getElementById('dName').textContent = name;
+                userFavorites = uDoc.data().favorites || [];
                 updateWelcome(name);
             }
         } catch (e) {
             console.error("Error loading user data:", e);
-            updateWelcome("User");
         }
     } else {
         userFavorites = [];
-        $.authBtn.textContent = t('login');
-        $.authBtn.onclick = () => location.href = 'login.html';
+        DOM.authBtn.textContent = t('login');
+        DOM.authBtn.onclick = () => location.href = 'login.html';
         updateWelcome("Guest");
-        $.dName.textContent = "Earth Guest";
     }
     
-    // Load properties
+    // Subscribe to properties
     unsubscribeAds = db.collection("properties")
         .where("isExpired", "==", false)
         .orderBy("createdAt", "desc")
         .onSnapshot(
-            (snapshot) => {
+            snapshot => {
                 allAds = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
                 renderAds(allAds);
             },
-            (error) => {
+            error => {
                 console.error("Firestore error:", error);
                 showError();
             }
         );
 });
 
-// Initialize
+// Initialize language on page load
 applyLanguage(CURRENT_LANG);
-
-// Cleanup
-window.addEventListener('beforeunload', () => {
-    if (unsubscribeAds) unsubscribeAds();
-});
 </script>
 </body>
 </html>
