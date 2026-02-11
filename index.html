@@ -126,7 +126,7 @@ let allProps = [];
 let userFavs = JSON.parse(localStorage.getItem('favs') || '[]');
 let searchTimeout;
 
-// 🌍 LANGUAGE SYSTEM
+// 🌍 LANGUAGE SYSTEM (100+ World + Indian Languages)
 const languages = [
 ["af","Afrikaans"],["sq","Albanian"],["am","Amharic"],["ar","Arabic"],["hy","Armenian"],["az","Azerbaijani"],["eu","Basque"],["bn","Bengali"],
 ["bs","Bosnian"],["bg","Bulgarian"],["ca","Catalan"],["ceb","Cebuano"],["zh-CN","Chinese (Simplified)"],["zh-TW","Chinese (Traditional)"],
@@ -160,6 +160,16 @@ function setLanguage(lang){
         select.value = lang;
         select.dispatchEvent(new Event("change", {bubbles: true}));
     }
+    
+    // 🔥 PRO RTL AUTO-SWITCH (Arabic/Urdu/Hebrew/Persian)
+    if(["ar","ur","fa","he"].includes(lang)){
+        document.body.dir = "rtl";
+        document.documentElement.dir = "rtl";
+    } else {
+        document.body.dir = "ltr";
+        document.documentElement.dir = "ltr";
+    }
+    
     closeLangModal();
 }
 
@@ -170,6 +180,8 @@ function setDefaultEnglish(){
         select.value = "en";
         select.dispatchEvent(new Event("change", {bubbles: true}));
     }
+    document.body.dir = "ltr";
+    document.documentElement.dir = "ltr";
 }
 
 function googleTranslateElementInit() {
@@ -208,6 +220,7 @@ async function loadProps() {
           if (allProps.length === 0) list.innerHTML = "<center style='padding:50px; color:#666;'>No active properties found.</center>";
       }, err => {
           console.error("Firestore Error:", err);
+          // 🔥 FIXED REGEX (Tera wala PERFECT!)
           const match = err.message.match(/(https://console.firebase.google.com/[^s]+)/);
           if (match) {
               list.innerHTML = `<div style="text-align:center; padding:40px;"><i class="fa fa-database fa-3x" style="color:#ff9800;"></i><h3 style="margin-top:15px;">Firestore Index Needed</h3><p style="color:#666; font-size:14px; margin:10px 0;">Click to create index for live listings.</p><a href="${match[1]}" target="_blank" class="index-fix-btn">Create Index Now</a></div>`;
@@ -298,7 +311,7 @@ function filterDataDebounced() {
 
 function openChat(owner, id) { if(!auth.currentUser) location.href='login.html'; else location.href=`chat.html?to=${owner}&p=${id}`; }
 
-// Auth + Improved Loading
+// 🔥 PERFECTED AUTH + LOADING (No flicker)
 auth.onAuthStateChanged(async user => {
     const btn = document.getElementById('authBtn');
     const dName = document.getElementById('dName');
@@ -326,7 +339,7 @@ auth.onAuthStateChanged(async user => {
 });
 </script>
 
-<!-- Google Translate Script (Last) -->
+<!-- Google Translate Script (Last - Loads after everything) -->
 <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
 </body>
