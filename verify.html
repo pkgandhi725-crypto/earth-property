@@ -6,15 +6,16 @@
     <title>Get Verified - Earth Property</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: system-ui, sans-serif; background: #f0f2f5; padding: 20px; }
-        .container { max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f2f5; padding: 20px; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .container { max-width: 500px; width: 100%; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .header { text-align: center; margin-bottom: 25px; }
-        .header i { color: #2e7d32; font-size: 50px; }
+        .header i { color: #2e7d32; font-size: 50px; margin-bottom: 10px; }
         .form-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; color: #444; }
-        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; }
+        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
         .upload-btn { background: #e8f5e9; color: #2e7d32; padding: 15px; border-radius: 10px; text-align: center; border: 2px dashed #2e7d32; cursor: pointer; margin-bottom: 10px; }
-        .btn-submit { background: #2e7d32; color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: 700; font-size: 16px; cursor: pointer; }
+        .btn-submit { background: #2e7d32; color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.3s; }
+        .btn-submit:disabled { background: #ccc; cursor: not-allowed; }
         #successBox { display: none; text-align: center; color: #2e7d32; }
     </style>
 </head>
@@ -25,7 +26,7 @@
         <div class="header">
             <i class="fa fa-shield-halved"></i>
             <h2>Verification Portal</h2>
-            <p>Become a Premium Verified Dealer</p>
+            <p style="color: #666;">Become a Premium Verified Dealer</p>
         </div>
 
         <div class="form-group">
@@ -35,51 +36,53 @@
 
         <label>Upload ID Proof (Aadhar/PAN)</label>
         <div class="upload-btn" onclick="document.getElementById('idInput').click()">
-            <i class="fa fa-id-card"></i> Upload ID
-            <p id="idName" style="font-size:10px; margin:0;"></p>
+            <i class="fa fa-id-card"></i> <span id="idLabel">Upload ID</span>
+            <p id="idName" style="font-size:10px; margin-top:5px; color:#666;"></p>
         </div>
-        <input type="file" id="idInput" hidden accept="image/*" onchange="handleFile(this, 'idName')">
+        <input type="file" id="idInput" hidden accept="image/*">
 
         <label>Upload Payment Screenshot</label>
         <div class="upload-btn" onclick="document.getElementById('payInput').click()">
-            <i class="fa fa-receipt"></i> Upload Payment
-            <p id="payName" style="font-size:10px; margin:0;"></p>
+            <i class="fa fa-receipt"></i> <span id="payLabel">Upload Payment</span>
+            <p id="payName" style="font-size:10px; margin-top:5px; color:#666;"></p>
         </div>
-        <input type="file" id="payInput" hidden accept="image/*" onchange="handleFile(this, 'payName')">
+        <input type="file" id="payInput" hidden accept="image/*">
 
-        <button class="btn-submit" id="submitBtn" onclick="submitRequest()">Submit for Review</button>
+        <button class="btn-submit" id="submitBtn">Submit for Review</button>
     </div>
 
     <div id="successBox">
         <i class="fa fa-circle-check fa-4x"></i>
         <h3>Request Sent!</h3>
         <p>Admin will verify your documents within 24 hours.</p>
-        <button class="btn-submit" onclick="location.href='index.html'">Go Back</button>
+        <button class="btn-submit" onclick="location.href='index.html'">Go Back Home</button>
     </div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
+import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 
-<script>
 const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const auth = firebase.auth();
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
 
 const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dmod7m66u/image/upload";
 const CLOUDINARY_PRESET = "Earth_Property";
 
 let idFile, payFile;
 
-function handleFile(input, labelId) {
-    const file = input.files[0];
-    if(file) {
-        document.getElementById(labelId).innerText = file.name;
-        if(labelId === 'idName') idFile = file; else payFile = file;
-    }
-}
+// Handle File Selection
+document.getElementById('idInput').onchange = (e) => { 
+    idFile = e.target.files[0]; 
+    if(idFile) document.getElementById('idName').innerText = idFile.name;
+};
+document.getElementById('payInput').onchange = (e) => { 
+    payFile = e.target.files[0]; 
+    if(payFile) document.getElementById('payName').innerText = payFile.name;
+};
 
 async function uploadToCloudinary(file) {
     const formData = new FormData();
@@ -90,31 +93,40 @@ async function uploadToCloudinary(file) {
     return data.secure_url;
 }
 
-async function submitRequest() {
+document.getElementById('submitBtn').onclick = async () => {
     const user = auth.currentUser;
-    const bizName = document.getElementById('bizName').value;
-    if(!user || !bizName || !idFile || !payFile) return alert("All fields are mandatory!");
+    const bizName = document.getElementById('bizName').value.trim();
+    
+    if(!user) return alert("Please login first!");
+    if(!bizName || !idFile || !payFile) return alert("All fields and photos are required!");
 
     const btn = document.getElementById('submitBtn');
-    btn.disabled = true; btn.innerText = "Processing...";
+    btn.disabled = true;
+    btn.innerText = "Uploading Documents...";
 
     try {
+        // 1. Cloudinary Uploads
         const idUrl = await uploadToCloudinary(idFile);
         const payUrl = await uploadToCloudinary(payFile);
 
-        await db.collection("verification_requests").doc(user.uid).set({
+        // 2. Save to Firestore (Modular v12 style)
+        await setDoc(doc(db, "verification_requests", user.uid), {
             userId: user.uid,
             businessName: bizName,
             idProofUrl: idUrl,
             paymentUrl: payUrl,
             status: "pending",
-            submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+            submittedAt: serverTimestamp()
         });
 
         document.getElementById('verifyForm').style.display = 'none';
         document.getElementById('successBox').style.display = 'block';
-    } catch(e) { alert(e.message); btn.disabled = false; }
-}
+    } catch(e) { 
+        alert("Error: " + e.message); 
+        btn.disabled = false; 
+        btn.innerText = "Submit for Review";
+    }
+};
 </script>
 </body>
 </html>
