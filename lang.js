@@ -1,199 +1,77 @@
-var LANG = {
-  en: {
-    title: "Earth Property",
-    tagline: "Buy • Sell • Rent — Anywhere",
-    post: "Post Property",
-    search: "Search by city or title",
-    price: "Max price",
+// 🛡️ Edge Case Protection: Static Check
+if (typeof TRANSLATIONS === 'undefined') {
+    console.error('Earth Property: TRANSLATIONS dictionary missing!');
+    window.TRANSLATIONS = { en: {} }; 
+}
 
-    ptitle: "Property Title",
-    plocation: "Location (auto from map)",
-    pick: "Pick on Map",
-    desc: "Description",
-    submit: "Submit",
+const RTL_LANGS = Object.freeze(["ar", "ur", "fa", "he"]);
+let CURRENT_LANG = "en"; 
+let CURRENT_DICT = TRANSLATIONS["en"];
 
-    create: "Create Account",
-    email: "Email",
-    password: "Password",
-    signup: "Sign Up",
-    have: "Already have account?",
-    login: "Login",
-    noacc: "No account?"
-  },
+// 💎 Helper: safe translation lookup with key fallback
+function t(key) {
+    return CURRENT_DICT?.[key] || TRANSLATIONS["en"]?.[key] || `[${key}]`;
+}
 
-  hi: {
-    title: "अर्थ प्रॉपर्टी",
-    tagline: "खरीदें • बेचें • किराया — कहीं भी",
-    post: "प्रॉपर्टी जोड़ें",
-    search: "शहर या नाम खोजें",
-    price: "अधिकतम कीमत",
+// Single Source of Truth for Translation
+function translateElement(el) {
+    if (el.dataset.i18n) {
+        el.textContent = t(el.dataset.i18n);
+    }
+    if (el.dataset.i18nPlaceholder) {
+        el.placeholder = t(el.dataset.i18nPlaceholder);
+    }
+}
 
-    ptitle: "प्रॉपर्टी का नाम",
-    plocation: "लोकेशन (मैप से)",
-    pick: "मैप से चुनें",
-    desc: "विवरण",
-    submit: "सबमिट करें",
+function setLanguage(lang) {
+    // 1. Validation & Fallback logic
+    if (!TRANSLATIONS[lang]) {
+        console.warn(`Translation missing for ${lang}, falling back to 'en'`);
+        lang = "en";
+    }
+    if (lang === CURRENT_LANG && localStorage.getItem("earthLang")) return; 
 
-    create: "खाता बनाएं",
-    email: "ईमेल",
-    password: "पासवर्ड",
-    signup: "साइन अप",
-    have: "पहले से खाता है?",
-    login: "लॉगिन",
-    noacc: "खाता नहीं है?"
-  },
+    // 2. State Sync
+    CURRENT_LANG = lang;
+    CURRENT_DICT = TRANSLATIONS[lang];
+    localStorage.setItem("earthLang", lang);
 
-  mr: {
-    title: "अर्थ प्रॉपर्टी",
-    tagline: "खरेदी • विक्री • भाडे — कुठेही",
-    post: "मालमत्ता जोडा",
-    search: "शहर किंवा नाव शोधा",
-    price: "कमाल किंमत",
+    // 3. Batch DOM Update
+    document.querySelectorAll("[data-i18n], [data-i18n-placeholder]").forEach(translateElement);
 
-    ptitle: "मालमत्तेचे नाव",
-    plocation: "स्थान (नकाशातून)",
-    pick: "नकाशावरून निवडा",
-    desc: "वर्णन",
-    submit: "सबमिट करा",
+    // 4. Global Context
+    document.body.dir = RTL_LANGS.includes(lang) ? "rtl" : "ltr";
+    document.documentElement.lang = lang;
+    
+    updateActiveLangBtn(lang);
+}
 
-    create: "खाते तयार करा",
-    email: "ईमेल",
-    password: "पासवर्ड",
-    signup: "साइन अप",
-    have: "आधीपासून खाते आहे?",
-    login: "लॉगिन",
-    noacc: "खाते नाही?"
-  },
+function updateActiveLangBtn(lang) {
+    document.querySelectorAll(".lang-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.lang === lang);
+    });
+}
 
-  ta: {
-    title: "எர்த் புராப்பர்டி",
-    tagline: "வாங்க • விற்க • வாடகை — எங்கும்",
-    post: "சொத்தை பதிவிடு",
-    search: "நகரம் அல்லது பெயர் தேடு",
-    price: "அதிகபட்ச விலை",
+// 🚀 Performance Optimization: MutationObserver for Dynamic Content
+const observer = new MutationObserver(mutations => {
+    mutations.forEach(mutation => {
+        mutation.addedNodes.forEach(node => {
+            if (node.nodeType === 1) { // Process only Element nodes
+                if (node.hasAttribute('data-i18n') || node.hasAttribute('data-i18n-placeholder')) translateElement(node);
+                node.querySelectorAll("[data-i18n], [data-i18n-placeholder]").forEach(translateElement);
+            }
+        });
+    });
+});
 
-    ptitle: "சொத்து பெயர்",
-    plocation: "இடம் (வரைபடம்)",
-    pick: "வரைபடத்தில் தேர்வு",
-    desc: "விவரம்",
-    submit: "சமர்ப்பிக்க",
+document.addEventListener("DOMContentLoaded", () => {
+    // Single init point to avoid race conditions
+    const savedLang = localStorage.getItem("earthLang");
+    const browserLang = navigator.language.slice(0, 2);
+    const targetLang = savedLang || browserLang;
 
-    create: "கணக்கு உருவாக்கு",
-    email: "மின்னஞ்சல்",
-    password: "கடவுச்சொல்",
-    signup: "பதிவு",
-    have: "ஏற்கனவே கணக்கு உள்ளதா?",
-    login: "உள்நுழை",
-    noacc: "கணக்கு இல்லையா?"
-  },
+    setLanguage(TRANSLATIONS[targetLang] ? targetLang : "en");
 
-  te: {
-    title: "ఎర్త్ ప్రాపర్టీ",
-    tagline: "కొనండి • అమ్మండి • అద్దె — ఎక్కడైనా",
-    post: "ప్రాపర్టీ జోడించండి",
-    search: "నగరం లేదా పేరు వెతకండి",
-    price: "గరిష్ట ధర",
-
-    ptitle: "ప్రాపర్టీ పేరు",
-    plocation: "లొకేషన్ (మ్యాప్)",
-    pick: "మ్యాప్‌లో ఎంచుకోండి",
-    desc: "వివరణ",
-    submit: "సమర్పించండి",
-
-    create: "ఖాతా సృష్టించండి",
-    email: "ఇమెయిల్",
-    password: "పాస్‌వర్డ్",
-    signup: "సైన్ అప్",
-    have: "ఇప్పటికే ఖాతా ఉందా?",
-    login: "లాగిన్",
-    noacc: "ఖాతా లేదా?"
-  },
-
-  bn: {
-    title: "আর্থ প্রপার্টি",
-    tagline: "কিনুন • বিক্রি • ভাড়া — যেকোনো জায়গায়",
-    post: "প্রপার্টি যোগ করুন",
-    search: "শহর বা নাম খুঁজুন",
-    price: "সর্বোচ্চ মূল্য",
-
-    ptitle: "প্রপার্টির নাম",
-    plocation: "অবস্থান (মানচিত্র)",
-    pick: "মানচিত্র থেকে নিন",
-    desc: "বিবরণ",
-    submit: "জমা দিন",
-
-    create: "অ্যাকাউন্ট তৈরি করুন",
-    email: "ইমেল",
-    password: "পাসওয়ার্ড",
-    signup: "সাইন আপ",
-    have: "আগে থেকেই অ্যাকাউন্ট আছে?",
-    login: "লগইন",
-    noacc: "অ্যাকাউন্ট নেই?"
-  },
-
-  es: {
-    title: "Propiedad Tierra",
-    tagline: "Comprar • Vender • Alquilar — En cualquier lugar",
-    post: "Publicar Propiedad",
-    search: "Buscar por ciudad o título",
-    price: "Precio máximo",
-
-    ptitle: "Título de propiedad",
-    plocation: "Ubicación (mapa)",
-    pick: "Elegir en el mapa",
-    desc: "Descripción",
-    submit: "Enviar",
-
-    create: "Crear cuenta",
-    email: "Correo",
-    password: "Contraseña",
-    signup: "Registrarse",
-    have: "¿Ya tienes cuenta?",
-    login: "Iniciar sesión",
-    noacc: "¿No tienes cuenta?"
-  },
-
-  fr: {
-    title: "Propriété Terre",
-    tagline: "Acheter • Vendre • Louer — Partout",
-    post: "Publier une propriété",
-    search: "Rechercher par ville ou titre",
-    price: "Prix max",
-
-    ptitle: "Titre du bien",
-    plocation: "Emplacement (carte)",
-    pick: "Choisir sur la carte",
-    desc: "Description",
-    submit: "Soumettre",
-
-    create: "Créer un compte",
-    email: "Email",
-    password: "Mot de passe",
-    signup: "S'inscrire",
-    have: "Vous avez déjà un compte?",
-    login: "Connexion",
-    noacc: "Pas de compte?"
-  },
-
-  ar: {
-    title: "عقار الأرض",
-    tagline: "شراء • بيع • إيجار — في أي مكان",
-    post: "أضف عقار",
-    search: "ابحث بالمدينة أو الاسم",
-    price: "أقصى سعر",
-
-    ptitle: "عنوان العقار",
-    plocation: "الموقع (الخريطة)",
-    pick: "اختر من الخريطة",
-    desc: "الوصف",
-    submit: "إرسال",
-
-    create: "إنشاء حساب",
-    email: "البريد الإلكتروني",
-    password: "كلمة المرور",
-    signup: "تسجيل",
-    have: "هل لديك حساب؟",
-    login: "تسجيل الدخول",
-    noacc: "ليس لديك حساب؟"
-  }
-};
+    // Start observing after initial load
+    observer.observe(document.body, { childList: true, subtree: true });
+});
