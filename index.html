@@ -17,10 +17,6 @@
         .logo-text { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px; line-height: 1; }
         .user-welcome { font-size: 12px; font-weight: 500; opacity: 0.95; margin-top: 3px; }
         
-        .header-icons { display: flex; align-items: center; gap: 18px; }
-        .header-icons i { cursor: pointer; font-size: 18px; transition: 0.2s; }
-        .header-icons i:active { transform: scale(0.9); }
-
         .search-box { background: white; border-radius: 12px; display: flex; padding: 10px 15px; align-items: center; gap: 10px; margin-top: 5px; }
         .search-box input { border: none; width: 100%; outline: none; font-size: 15px; color: #333; }
 
@@ -28,29 +24,52 @@
         .drawer.open { left: 0; }
         .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; }
         .drawer-item { padding: 16px 20px; display: flex; align-items: center; gap: 15px; color: #333; text-decoration: none; font-weight: 600; border-bottom: 1px solid #f5f5f5; cursor: pointer; }
+        .drawer-item:hover { background: #f5f5f5; }
         .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 4500; display: none; }
 
-        /* Language Grid Updated */
         .lang-section { padding: 15px 20px; border-top: 2px solid #f0f2f5; }
         .lang-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 8px; }
-        .lang-btn { padding: 8px; border-radius: 8px; border: 1px solid #ddd; text-align: center; font-size: 11px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .lang-btn { padding: 8px; border-radius: 8px; border: 1px solid #ddd; text-align: center; font-size: 12px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .lang-btn:hover { background: #f0f2f5; }
         .lang-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
         .prop-card { background: white; border-radius: 18px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; }
         .img-container { position: relative; width: 100%; height: 240px; background: #eee; overflow-x: auto; display: flex; scroll-snap-type: x mandatory; scrollbar-width: none; }
+        .img-container::-webkit-scrollbar { display: none; }
         .img-container img { min-width: 100%; height: 100%; object-fit: cover; scroll-snap-align: start; cursor: pointer; }
+        .img-counter { position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.7); color: white; padding: 4px 10px; border-radius: 8px; font-size: 11px; z-index: 5; font-weight: 600; }
+        
+        .float-btns { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column; gap: 10px; z-index: 10; }
+        .c-btn { background: rgba(255,255,255,0.95); border: none; border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.15); color: #333; cursor: pointer; transition: 0.2s; }
+        .c-btn:active { transform: scale(0.9); }
+        .fav-btn.active { color: #d32f2f; }
+
+        .prop-info { padding: 18px; }
+        .prop-price { font-size: 24px; font-weight: 800; color: var(--primary); }
+        .prop-title { font-weight: 700; font-size: 17px; margin: 5px 0; color: #333; }
         
         .btn-group { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 10px; margin-top: 15px; }
-        .btn { padding: 12px 2px; border-radius: 10px; font-weight: 700; font-size: 14px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn { padding: 12px 2px; border-radius: 10px; font-weight: 700; font-size: 14px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; }
+        .btn:active { transform: scale(0.98); }
         .btn-call { background: #f1f8e9; color: #2e7d32; } 
         .btn-wa { background: #25D366; color: white; } 
         .btn-chat { background: var(--primary); color: white; }
 
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 10px 0; border-top: 1px solid #eee; z-index: 1000; }
+        nav.bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 10px 0; border-top: 1px solid #eee; z-index: 1000; }
         .nav-item { flex: 1; text-align: center; color: #888; text-decoration: none; font-size: 11px; font-weight: 600; }
         .nav-item.active { color: var(--primary); }
-        .post-btn-main { background: var(--primary); color: white !important; width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: -35px auto 5px; box-shadow: 0 5px 15px rgba(46,125,50,0.4); }
-        #fullOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 6000; display: none; align-items: center; justify-content: center; }
+        .nav-item-post .post-btn-main { background: var(--primary); color: white; width: 58px; height: 58px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: -35px auto 5px; box-shadow: 0 5px 15px rgba(46,125,50,0.4); }
+        
+        #fullOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 6000; display: none; align-items: center; justify-content: center; cursor: pointer; }
+        #fullOverlay img { max-width: 95%; max-height: 85%; border-radius: 8px; }
+
+        .loading-spinner { text-align: center; padding: 100px 20px; color: #666; }
+        .loading-spinner i { color: var(--primary); }
+        .error-msg { text-align: center; padding: 50px 20px; color: #d32f2f; }
+
+        @media (prefers-reduced-motion: reduce) {
+            * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+        }
     </style>
 </head>
 <body>
@@ -63,21 +82,18 @@
     </div>
     <a href="profile.html" class="drawer-item"><i class="fa fa-user"></i> <span class="txt-profile">Profile</span></a>
     <a href="my-ads.html" class="drawer-item"><i class="fa fa-layer-group"></i> <span class="txt-myads">My Ads</span></a>
+    <a href="favorites.html" class="drawer-item"><i class="fa-regular fa-heart"></i> <span class="txt-favs">Favorites</span></a>
     
     <div class="lang-section">
         <div style="font-size:12px; font-weight:700; color:#888;" class="txt-language">LANGUAGE</div>
         <div class="lang-grid">
-            <div class="lang-btn" data-lang="en">English</div>
+            <div class="lang-btn active" data-lang="en">English</div>
             <div class="lang-btn" data-lang="hi">हिंदी</div>
             <div class="lang-btn" data-lang="ar">العربية</div>
-            <div class="lang-btn" data-lang="pa">ਪੰਜਾਬੀ</div>
-            <div class="lang-btn" data-lang="mr">मराठी</div>
-            <div class="lang-btn" data-lang="bn">বাংলা</div>
         </div>
-        <button onclick="setLanguage('en')" style="width:100%; margin-top:10px; padding:8px; border-radius:8px; border:none; background:#eee; font-size:11px; font-weight:700;">RESET TO DEFAULT</button>
     </div>
 
-    <div class="drawer-item" id="logoutBtn" style="margin-top:20px; color:#666; display:none;">
+    <div class="drawer-item" id="logoutBtn" style="margin-top:20px; color:#666;">
         <i class="fa fa-sign-out-alt"></i> <span class="txt-logout">Logout</span>
     </div>
 </div>
@@ -85,63 +101,157 @@
 <header>
     <div class="header-top">
         <div class="header-left">
-            <button id="menuToggle" style="background:none; border:none; color:white; cursor:pointer; font-size:22px;">
+            <button id="menuToggle" aria-label="Menu" aria-expanded="false" style="background:none; border:none; color:white; cursor:pointer; font-size:22px;">
                 <i class="fa fa-bars"></i>
             </button>
             <div class="brand-info">
                 <span class="logo-text">Earth Property</span>
-                <span id="welcomeUser" class="user-welcome">Hi, Guest</span>
+                <span id="welcomeUser" class="user-welcome"></span>
             </div>
         </div>
         <div class="header-icons">
-            <i class="fa fa-user-shield" onclick="location.href='admin-verification.html'" title="Admin Portal"></i>
-            <i class="fa-regular fa-bell" onclick="location.href='notifications.html'"></i>
-            <button id="authBtn" style="border:none; background:white; color:var(--primary); padding:6px 14px; border-radius:8px; font-weight:800; font-size:11px;">LOGIN</button>
+            <button id="authBtn" style="border:none; background:white; color:var(--primary); padding:6px 14px; border-radius:8px; font-weight:800; font-size:11px; cursor:pointer;">LOGIN</button>
         </div>
     </div>
     <div class="search-box">
         <i class="fa fa-search" style="color:#aaa;"></i>
-        <input type="text" id="citySearch" class="txt-search" oninput="filterAds()">
+        <input type="text" id="citySearch" class="txt-search" placeholder="Search city or area...">
     </div>
 </header>
 
 <div id="propertyList"></div>
 
-<div class="bottom-nav">
+<nav class="bottom-nav" role="navigation" aria-label="Main navigation">
     <a href="index.html" class="nav-item active"><i class="fa fa-house fa-lg"></i><br><span class="txt-explore">Explore</span></a>
     <a href="my-ads.html" class="nav-item"><i class="fa fa-layer-group fa-lg"></i><br><span class="txt-myads">My Ads</span></a>
-    <a href="add-property.html" class="nav-item"><div class="post-btn-main"><i class="fa fa-plus"></i></div><span class="txt-post">Post</span></a>
+    <a href="add-property.html" class="nav-item nav-item-post"><i class="fa fa-plus"></i><br><span class="txt-post">Post</span></a>
     <a href="favorites.html" class="nav-item"><i class="fa-regular fa-heart fa-lg"></i><br><span class="txt-favs">Favs</span></a>
     <a href="profile.html" class="nav-item"><i class="fa fa-user-circle fa-lg"></i><br><span class="txt-profile">Profile</span></a>
-</div>
+</nav>
 
-<div id="fullOverlay" onclick="this.style.display='none'"><img id="fullImg"></div>
+<div id="fullOverlay"><img id="fullImg"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
+// ========== CONFIGURATION ==========
+const firebaseConfig = {
+    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
+    authDomain: "earth-properties-c3c56.firebaseapp.com",
+    projectId: "earth-properties-c3c56"
+};
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
+// ========== TRANSLATIONS ==========
 const TRANSLATIONS = {
-    en: { welcome: "Hi, {name}", login: "LOGIN", logout: "Logout", profile: "Profile", myads: "My Ads", favs: "Favs", explore: "Explore", post: "Post", language: "LANGUAGE", searchPlaceholder: "Search city...", call: "Call", whatsapp: "WhatsApp", chat: "Chat" },
-    hi: { welcome: "नमस्ते, {name}", login: "लॉगिन", logout: "लॉगआउट", profile: "प्रोफाइल", myads: "मेरे विज्ञापन", favs: "पसंदीदा", explore: "खोजें", post: "पोस्ट", language: "भाषा", searchPlaceholder: "शहर खोजें...", call: "कॉल", whatsapp: "व्हाट्सएप", chat: "चैट" },
-    ar: { welcome: "مرحبا, {name}", login: "دخول", logout: "خروج", profile: "ملف", myads: "إعلاناتي", favs: "المفضلة", explore: "استكشف", post: "نشر", language: "اللغة", searchPlaceholder: "بحث...", call: "اتصال", whatsapp: "واتساب", chat: "دردشة" },
-    pa: { welcome: "ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ, {name}", login: "ਲੌਗਇਨ", logout: "ਲੌਗਆਉਟ", profile: "ਪ੍ਰੋਫਾਈਲ", myads: "ਮੇਰੇ ਵਿਗਿਆਪਨ", favs: "ਪਸੰਦੀਦਾ", explore: "ਖੋਜੋ", post: "ਪੋਸਟ", language: "ਭਾਸ਼ਾ", searchPlaceholder: "ਸ਼ਹਿਰ ਲੱਭੋ...", call: "ਕਾਲ", whatsapp: "ਵਟਸਐਪ", chat: "ਚੈਟ" },
-    mr: { welcome: "नमस्कार, {name}", login: "लॉगिन", logout: "लॉगआउट", profile: "प्रोफाइल", myads: "माझ्या जाहिराती", favs: "आवडी", explore: "शोधा", post: "पोस्ट", language: "भाषा", searchPlaceholder: "शहर शोधा...", call: "कॉल", whatsapp: "व्हॉट्सॲप", chat: "चॅट" },
-    bn: { welcome: "হ্যালো, {name}", login: "লগইন", logout: "লগআউট", profile: "প্রোফাইল", myads: "আমার বিজ্ঞাপন", favs: "প্রিয়", explore: "খুঁজুন", post: "পোস্ট", language: "ভাষা", searchPlaceholder: "শহর খুঁজুন...", call: "কল", whatsapp: "হোয়াটসঅ্যাপ", chat: "চ্যাট" }
+    en: {
+        welcome: "Hi, {name}",
+        login: "LOGIN",
+        logout: "Logout",
+        profile: "Profile",
+        myads: "My Ads",
+        favs: "Favorites",
+        explore: "Explore",
+        post: "Post",
+        language: "LANGUAGE",
+        searchPlaceholder: "Search city or area...",
+        call: "Call",
+        whatsapp: "WhatsApp",
+        chat: "Chat",
+        noAds: "No properties found",
+        loading: "Loading properties...",
+        errorLoadingAds: "Error loading properties. Please refresh.",
+        loginRequired: "Please login to continue",
+        errorLoadingContact: "Unable to load contact. Please try again.",
+        errorUpdatingFavorites: "Unable to update favorites.",
+        linkCopied: "Link copied to clipboard!",
+        copyLink: "Copy this link:"
+    },
+    hi: {
+        welcome: "नमस्ते, {name}",
+        login: "लॉगिन",
+        logout: "लॉगआउट",
+        profile: "प्रोफाइल",
+        myads: "मेरे विज्ञापन",
+        favs: "पसंदीदा",
+        explore: "खोजें",
+        post: "पोस्ट करें",
+        language: "भाषा",
+        searchPlaceholder: "शहर या क्षेत्र खोजें...",
+        call: "कॉल करें",
+        whatsapp: "व्हाट्सएप",
+        chat: "चैट",
+        noAds: "कोई संपत्ति नहीं मिली",
+        loading: "संपत्तियां लोड हो रही हैं...",
+        errorLoadingAds: "संपत्तियां लोड नहीं हो सकीं। कृपया रिफ्रेश करें।",
+        loginRequired: "जारी रखने के लिए कृपया लॉगिन करें",
+        errorLoadingContact: "संपर्क लोड नहीं हो सका। कृपया पुनः प्रयास करें।",
+        errorUpdatingFavorites: "पसंदीदा अपडेट नहीं हो सके।",
+        linkCopied: "लिंक कॉपी हो गया!",
+        copyLink: "यह लिंक कॉपी करें:"
+    },
+    ar: {
+        welcome: "مرحبا، {name}",
+        login: "تسجيل الدخول",
+        logout: "تسجيل خروج",
+        profile: "الملف الشخصي",
+        myads: "إعلاناتي",
+        favs: "المفضلة",
+        explore: "استكشف",
+        post: "نشر",
+        language: "اللغة",
+        searchPlaceholder: "ابحث عن مدينة أو منطقة...",
+        call: "اتصال",
+        whatsapp: "واتساب",
+        chat: "دردشة",
+        noAds: "لم يتم العثور على عقارات",
+        loading: "جارٍ تحميل العقارات...",
+        errorLoadingAds: "خطأ في تحميل العقارات. يرجى التحديث.",
+        loginRequired: "يرجى تسجيل الدخول للمتابعة",
+        errorLoadingContact: "تعذر تحميل جهة الاتصال. حاول مرة اخرى.",
+        errorUpdatingFavorites: "تعذر تحديث المفضلة.",
+        linkCopied: "تم نسخ الرابط!",
+        copyLink: "انسخ هذا الرابط:"
+    }
 };
 
+const RTL_LANGS = ["ar"];
 let CURRENT_LANG = localStorage.getItem("earthLang") || "en";
+let CURRENT_DICT = TRANSLATIONS[CURRENT_LANG] || TRANSLATIONS["en"];
+let allAds = [];
+let userFavorites = [];
+let unsubscribeAds;
 
-function t(key) { return TRANSLATIONS[CURRENT_LANG][key] || TRANSLATIONS["en"][key]; }
+// ========== UTILITY FUNCTIONS ==========
+const escapeHtml = (str = "") => {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+};
+
+const sanitizeImageUrl = (url) => {
+    try {
+        if (!url) return 'https://via.placeholder.com/400x300?text=No+Image';
+        const parsed = new URL(url);
+        return ['http:', 'https:'].includes(parsed.protocol) ? url : 'https://via.placeholder.com/400x300?text=Invalid';
+    } catch {
+        return 'https://via.placeholder.com/400x300?text=No+Image';
+    }
+};
+
+function t(key) {
+    return CURRENT_DICT[key] || TRANSLATIONS["en"][key] || key;
+}
 
 function applyLanguage(lang) {
     CURRENT_LANG = lang;
+    CURRENT_DICT = TRANSLATIONS[lang] || TRANSLATIONS["en"];
+    
+    // Update all text elements
     document.querySelectorAll('.txt-profile').forEach(el => el.textContent = t('profile'));
     document.querySelectorAll('.txt-myads').forEach(el => el.textContent = t('myads'));
     document.querySelectorAll('.txt-favs').forEach(el => el.textContent = t('favs'));
@@ -149,105 +259,287 @@ function applyLanguage(lang) {
     document.querySelectorAll('.txt-post').forEach(el => el.textContent = t('post'));
     document.querySelectorAll('.txt-logout').forEach(el => el.textContent = t('logout'));
     document.querySelectorAll('.txt-language').forEach(el => el.textContent = t('language'));
+    
     document.getElementById('citySearch').placeholder = t('searchPlaceholder');
-    document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.lang === lang));
+    document.body.dir = RTL_LANGS.includes(lang) ? "rtl" : "ltr";
+    document.documentElement.lang = lang;
+    
+    // Update active language button
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === lang);
+    });
 }
 
-function setLanguage(lang) {
-    localStorage.setItem("earthLang", lang);
-    location.reload();
-}
-
-const DOM = {
+// ========== DOM ELEMENTS ==========
+const $ = {
     propertyList: document.getElementById('propertyList'),
     welcomeUser: document.getElementById('welcomeUser'),
     authBtn: document.getElementById('authBtn'),
     sideDrawer: document.getElementById('sideDrawer'),
     dOverlay: document.getElementById('dOverlay'),
-    citySearch: document.getElementById('citySearch')
+    citySearch: document.getElementById('citySearch'),
+    menuToggle: document.getElementById('menuToggle'),
+    logoutBtn: document.getElementById('logoutBtn'),
+    fullOverlay: document.getElementById('fullOverlay'),
+    fullImg: document.getElementById('fullImg'),
+    dName: document.getElementById('dName')
 };
 
+// ========== UI FUNCTIONS ==========
 function toggleDrawer() {
-    const isOpen = DOM.sideDrawer.classList.toggle('open');
-    DOM.dOverlay.style.display = isOpen ? 'block' : 'none';
+    const isOpen = $.sideDrawer.classList.toggle('open');
+    $.dOverlay.style.display = isOpen ? 'block' : 'none';
+    $.menuToggle.setAttribute('aria-expanded', isOpen);
+    document.body.style.overflowY = isOpen ? 'hidden' : '';
 }
 
-// WHATSAPP & CALL PERMANENT FIX
-async function revealContact(id, btn, isWa) {
-    if (!auth.currentUser) { alert(t('loginRequired')); location.href = 'login.html'; return; }
-    const original = btn.innerHTML;
-    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
-    try {
-        const propDoc = await db.collection("properties").doc(id).get();
-        const num = propDoc.data().phone; 
-        const clean = num.toString().replace(/\D/g, "");
-        const finalPhone = clean.startsWith('91') ? clean : '91' + clean;
-
-        if (isWa) window.open(`https://wa.me/${finalPhone}`, "_blank");
-        else window.location.href = `tel:+${finalPhone}`;
-    } catch (e) { alert("Contact not available"); }
-    btn.innerHTML = original;
+function updateWelcome(name) {
+    const welcomeTxt = t('welcome').replace('{name}', name || 'Guest');
+    $.welcomeUser.textContent = welcomeTxt;
 }
 
 function createPropertyCard(p) {
     const card = document.createElement('div');
     card.className = 'prop-card';
-    const imgs = p.images || ['https://via.placeholder.com/400x240'];
+    const isFav = userFavorites.includes(p.id) ? 'active' : '';
+    const imgs = (p.images?.length > 0) ? p.images.map(sanitizeImageUrl) : ['https://via.placeholder.com/400x300?text=No+Image'];
+
     card.innerHTML = `
-        <div class="img-container">
-            ${imgs.map(url => `<img src="${url}" onclick="openFull('${url}')">`).join('')}
+        <div style="position:relative;">
+            <div class="float-btns">
+                <button class="c-btn share-btn" aria-label="Share"><i class="fa fa-share-nodes"></i></button>
+                <button class="c-btn fav-btn ${isFav}" aria-label="Favorite"><i class="fa fa-heart"></i></button>
+            </div>
+            <div class="img-container">
+                ${imgs.map((url, i) => `<img src="${escapeHtml(url)}" alt="${escapeHtml(p.title || 'Property')} - Image ${i+1}" loading="lazy" data-idx="${i}">`).join('')}
+            </div>
+            <div class="img-counter">${imgs.length} Photos</div>
         </div>
         <div class="prop-info">
-            <div class="prop-price">₹${Number(p.price).toLocaleString('en-IN')}</div>
-            <div class="prop-title">${p.title}</div>
-            <div style="font-size:12px; color:#666;"><i class="fa fa-map-marker-alt"></i> ${p.location}</div>
+            <div class="prop-price">₹${Number(p.price||0).toLocaleString('en-IN')}</div>
+            <div class="prop-title">${escapeHtml(p.title || 'Untitled Property')}</div>
+            <div style="font-size:13px; color:#666; margin-bottom:10px;">
+                <i class="fa fa-map-marker-alt"></i> ${escapeHtml(p.location || 'Location not specified')}
+            </div>
             <div class="btn-group">
-                <button class="btn btn-call" onclick="revealContact('${p.id}', this, false)"><i class="fa fa-phone"></i> ${t('call')}</button>
-                <button class="btn btn-wa" onclick="revealContact('${p.id}', this, true)"><i class="fa-brands fa-whatsapp"></i> ${t('whatsapp')}</button>
-                <button class="btn btn-chat" onclick="location.href='chat.html?p=${p.id}'"><i class="fa-regular fa-comment-dots"></i> ${t('chat')}</button>
+                <button class="btn btn-call">
+                    <i class="fa fa-phone"></i> <span>${t('call')}</span>
+                </button>
+                <button class="btn btn-wa">
+                    <i class="fa-brands fa-whatsapp"></i> <span>${t('whatsapp')}</span>
+                </button>
+                <button class="btn btn-chat">
+                    <i class="fa-regular fa-comment-dots"></i> <span>${t('chat')}</span>
+                </button>
             </div>
         </div>`;
+
+    // Event listeners
+    card.querySelector('.share-btn').onclick = () => shareAd(p.id);
+    card.querySelector('.fav-btn').onclick = (e) => toggleFav(p.id, e.currentTarget);
+    card.querySelector('.btn-call').onclick = (e) => revealContact(p.id, e.currentTarget, false);
+    card.querySelector('.btn-wa').onclick = (e) => revealContact(p.id, e.currentTarget, true);
+    card.querySelector('.btn-chat').onclick = () => {
+        location.href = `chat.html?to=${encodeURIComponent(p.ownerId || '')}&p=${encodeURIComponent(p.id)}`;
+    };
+    card.querySelectorAll('img').forEach(img => {
+        img.onclick = () => openFullImage(imgs[parseInt(img.dataset.idx)]);
+    });
+
     return card;
 }
 
-function openFull(url) {
-    document.getElementById('fullImg').src = url;
-    document.getElementById('fullOverlay').style.display = 'flex';
+function renderAds(data) {
+    $.propertyList.innerHTML = '';
+    
+    if (!data || data.length === 0) {
+        $.propertyList.innerHTML = `<div style="text-align:center; padding:50px; color:#666;">${t('noAds')}</div>`;
+        return;
+    }
+    
+    const fragment = document.createDocumentFragment();
+    data.forEach(p => fragment.appendChild(createPropertyCard(p)));
+    $.propertyList.appendChild(fragment);
+}
+
+function showLoading() {
+    $.propertyList.innerHTML = `
+        <div class="loading-spinner">
+            <i class="fa fa-spinner fa-spin fa-3x"></i>
+            <p style="margin-top:15px;">${t('loading')}</p>
+        </div>`;
+}
+
+function showError() {
+    $.propertyList.innerHTML = `
+        <div class="error-msg">
+            <i class="fa fa-exclamation-triangle fa-3x"></i>
+            <p style="margin-top:15px;">${t('errorLoadingAds')}</p>
+        </div>`;
+}
+
+// ========== FEATURES ==========
+async function revealContact(id, btn, isWa) {
+    if (!auth.currentUser) {
+        alert(t('loginRequired'));
+        location.href = 'login.html';
+        return;
+    }
+    
+    const original = btn.innerHTML;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+    btn.disabled = true;
+    
+    try {
+        const doc = await db.collection("properties").doc(id).get();
+        if (!doc.exists) throw new Error("Property not found");
+        
+        const num = doc.data().phone;
+        if (!num) throw new Error("Phone not available");
+        
+        if (isWa) {
+            window.open(`https://wa.me/91${num}`, '_blank');
+        } else {
+            window.location.href = `tel:${num}`;
+        }
+    } catch (e) {
+        console.error(e);
+        alert(t('errorLoadingContact'));
+    } finally {
+        btn.innerHTML = original;
+        btn.disabled = false;
+    }
+}
+
+async function shareAd(id) {
+    const url = `${window.location.origin}/index.html?id=${encodeURIComponent(id)}`;
+    
+    try {
+        if (navigator.share) {
+            await navigator.share({ title: 'Earth Property', url });
+        } else {
+            await navigator.clipboard.writeText(url);
+            alert(t('linkCopied'));
+        }
+    } catch (e) {
+        if (e.name !== 'AbortError') {
+            prompt(t('copyLink'), url);
+        }
+    }
+}
+
+async function toggleFav(id, btn) {
+    if (!auth.currentUser) {
+        alert(t('loginRequired'));
+        return;
+    }
+    
+    const isActive = btn.classList.toggle('active');
+    
+    try {
+        await db.collection("users").doc(auth.currentUser.uid).update({
+            favorites: isActive 
+                ? firebase.firestore.FieldValue.arrayUnion(id)
+                : firebase.firestore.FieldValue.arrayRemove(id)
+        });
+    } catch (e) {
+        console.error(e);
+        btn.classList.toggle('active');
+        alert(t('errorUpdatingFavorites'));
+    }
+}
+
+function openFullImage(url) {
+    $.fullImg.src = url;
+    $.fullOverlay.style.display = 'flex';
 }
 
 function filterAds() {
-    const val = DOM.citySearch.value.toLowerCase();
-    const cards = document.querySelectorAll('.prop-card');
-    cards.forEach(card => {
-        const text = card.innerText.toLowerCase();
-        card.style.display = text.includes(val) ? 'block' : 'none';
-    });
+    const val = $.citySearch.value.toLowerCase().trim();
+    const filtered = allAds.filter(a => 
+        (a.location || '').toLowerCase().includes(val) || 
+        (a.title || '').toLowerCase().includes(val)
+    );
+    renderAds(filtered);
 }
 
-document.getElementById('menuToggle').onclick = toggleDrawer;
-document.getElementById('dOverlay').onclick = toggleDrawer;
-document.querySelectorAll('.lang-btn').forEach(btn => btn.onclick = () => setLanguage(btn.dataset.lang));
+// ========== EVENT LISTENERS ==========
+$.menuToggle.onclick = toggleDrawer;
+$.dOverlay.onclick = toggleDrawer;
+$.fullOverlay.onclick = () => $.fullOverlay.style.display = 'none';
 
-auth.onAuthStateChanged(async user => {
-    applyLanguage(CURRENT_LANG);
+// Close drawer/image on Escape
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        if ($.sideDrawer.classList.contains('open')) toggleDrawer();
+        if ($.fullOverlay.style.display === 'flex') $.fullOverlay.style.display = 'none';
+    }
+});
+
+// Language buttons
+document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.onclick = () => {
+        setLanguage(btn.dataset.lang);
+    };
+});
+
+// Search input
+$.citySearch.oninput = filterAds;
+
+// ========== AUTH & DATA ==========
+auth.onAuthStateChanged(async (user) => {
+    if (unsubscribeAds) unsubscribeAds();
+    
+    showLoading();
+    
     if (user) {
-        DOM.authBtn.textContent = t('logout');
-        DOM.authBtn.onclick = () => auth.signOut().then(() => location.reload());
-        const uDoc = await db.collection("users").doc(user.uid).get();
-        const name = uDoc.exists ? uDoc.data().name : "User";
-        DOM.welcomeUser.textContent = t('welcome').replace('{name}', name);
-        document.getElementById('dName').textContent = name;
-        document.getElementById('logoutBtn').style.display = 'flex';
-        document.getElementById('logoutBtn').onclick = () => auth.signOut().then(() => location.reload());
+        $.authBtn.textContent = t('logout');
+        $.authBtn.onclick = () => auth.signOut().then(() => location.reload());
+        $.logoutBtn.onclick = () => auth.signOut().then(() => location.reload());
+        
+        try {
+            const uDoc = await db.collection("users").doc(user.uid).get();
+            if (uDoc.exists) {
+                const data = uDoc.data();
+                const name = data.name || user.displayName || "User";
+                $.dName.textContent = name;
+                userFavorites = data.favorites || [];
+                updateWelcome(name);
+            }
+        } catch (e) {
+            console.error("Error loading user data:", e);
+            updateWelcome("User");
+        }
     } else {
-        DOM.authBtn.textContent = t('login');
-        DOM.authBtn.onclick = () => location.href = 'login.html';
+        userFavorites = [];
+        $.authBtn.textContent = t('login');
+        $.authBtn.onclick = () => location.href = 'login.html';
+        updateWelcome("Guest");
+        $.dName.textContent = "Earth Guest";
     }
     
-    db.collection("properties").where("isExpired", "==", false).onSnapshot(s => {
-        DOM.propertyList.innerHTML = '';
-        s.docs.forEach(d => DOM.propertyList.appendChild(createPropertyCard({id: d.id, ...d.data()})));
-    });
+    // Load properties
+    unsubscribeAds = db.collection("properties")
+        .where("isExpired", "==", false)
+        .orderBy("createdAt", "desc")
+        .onSnapshot(
+            (snapshot) => {
+                allAds = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderAds(allAds);
+            },
+            (error) => {
+                console.error("Firestore error:", error);
+                showError();
+            }
+        );
+});
+
+// Initialize
+applyLanguage(CURRENT_LANG);
+
+// Cleanup
+window.addEventListener('beforeunload', () => {
+    if (unsubscribeAds) unsubscribeAds();
 });
 </script>
 </body>
