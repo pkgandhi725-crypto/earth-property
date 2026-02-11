@@ -16,9 +16,8 @@
         .header-right { display: flex; align-items: center; gap: 18px; }
         .logo-area { display: flex; align-items: center; gap: 10px; }
         
-        /* Admin Shield Styling */
-        .admin-btn { color: #ffd700; font-size: 20px; cursor: pointer; display: none !important; }
-        .admin-active { display: block !important; }
+        /* 🚨 Admin Button - Default Hidden */
+        #adminIcon { color: #ffd700; font-size: 20px; cursor: pointer; visibility: hidden; }
         
         .bell-icon { position: relative; font-size: 19px; cursor: pointer; }
         .bell-dot { position: absolute; top: -1px; right: -1px; width: 8px; height: 8px; background: #ff5252; border-radius: 50%; border: 1.5px solid var(--primary); }
@@ -33,16 +32,15 @@
         .lang-container { flex-grow: 1; overflow-y: auto; padding: 0 15px 15px; margin-bottom: 10px; }
         .lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .lang-btn { padding: 10px; border: 1px solid #ddd; border-radius: 6px; text-align: center; font-size: 13px; cursor: pointer; font-weight: 600; background: #f9f9f9; }
-        .lang-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .lang-btn.active { background: var(--primary) !important; color: white !important; border-color: var(--primary) !important; }
         .drawer-footer { padding: 15px; border-top: 1px solid #eee; flex-shrink: 0; }
 
-        /* Property Cards */
+        /* Cards */
         .prop-card { background: white; border-radius: 15px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         .img-box { width: 100%; height: 210px; background: #eee; }
         .img-box img { width: 100%; height: 100%; object-fit: cover; }
         .info { padding: 15px; }
         .price { font-size: 22px; font-weight: 800; color: var(--primary); }
-        
         .btn-group { display: flex; gap: 8px; margin-top: 15px; }
         .btn { flex: 1; padding: 12px 5px; border-radius: 10px; border: none; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; }
         .btn-call { background: #e8f5e9; color: #2e7d32; }
@@ -72,12 +70,10 @@
         <h3 id="sideUserName" style="margin-top:12px;">Welcome Guest</h3>
         <p id="userMail" style="font-size:11px; opacity:0.8;"></p>
     </div>
-    
     <div class="lang-section-title">GLOBAL LANGUAGES</div>
     <div class="lang-container">
         <div class="lang-grid" id="langGrid"></div>
     </div>
-
     <div class="drawer-footer">
         <div onclick="location.href='my-ads.html'" style="padding:12px 0; font-weight:700; color:#444;"><i class="fa fa-layer-group" style="width:25px;"></i> My Ads</div>
         <div id="logoutBtn" style="padding:12px 0; font-weight:700; color:#d32f2f; display:none;" onclick="handleLogout()"><i class="fa fa-sign-out-alt" style="width:25px;"></i> Logout</div>
@@ -91,7 +87,7 @@
             <span style="font-size:1.3rem; font-weight:900;">Earth Property</span>
         </div>
         <div class="header-right">
-            <i class="fa fa-user-shield admin-btn" id="adminIcon" onclick="location.href='admin-portal.html'"></i>
+            <i class="fa fa-user-shield" id="adminIcon" onclick="location.href='admin-portal.html'"></i>
             <div class="bell-icon" onclick="alert('No new notifications')">
                 <i class="fa-regular fa-bell"></i>
                 <div class="bell-dot"></div>
@@ -128,7 +124,7 @@ const auth = firebase.auth();
 
 let allAds = [];
 
-// 20+ Global Languages
+// 20+ Languages
 const languages = [
     {c:'en', n:'English (Def)'}, {c:'hi', n:'हिंदी'}, {c:'pa', n:'ਪੰਜਾਬੀ'}, {c:'ar', n:'العربية'},
     {c:'es', n:'Español'}, {c:'fr', n:'Français'}, {c:'de', n:'Deutsch'}, {c:'tr', n:'Türkçe'},
@@ -137,17 +133,18 @@ const languages = [
     {c:'ta', n:'தமிழ்'}, {c:'gu', n:'ગુજરાતી'}, {c:'kn', n:'ಕನ್ನಡ'}, {c:'ml', n:'മലയാളം'}
 ];
 
+// Language Load Logic
+const currentLang = localStorage.getItem('earthLang') || 'en';
 const langGrid = document.getElementById('langGrid');
+
 languages.forEach(l => {
     const btn = document.createElement('div');
-    // FIXED: Language persistence check
-    const savedLang = localStorage.getItem('earthLang') || 'en';
-    btn.className = `lang-btn ${savedLang === l.c ? 'active' : ''}`;
+    btn.className = `lang-btn ${currentLang === l.c ? 'active' : ''}`;
     btn.innerText = l.n;
-    btn.onclick = () => { 
-        localStorage.setItem('earthLang', l.c); 
-        // Force refresh with immediate effect
-        window.location.reload(); 
+    btn.onclick = () => {
+        localStorage.setItem('earthLang', l.c);
+        // Instant reload to apply
+        window.location.replace(window.location.href); 
     };
     langGrid.appendChild(btn);
 });
@@ -159,25 +156,26 @@ function toggleDrawer() {
     overlay.style.display = sideDrawer.classList.contains('open') ? 'block' : 'none';
 }
 
-auth.onAuthStateChanged(async user => {
+auth.onAuthStateChanged(user => {
+    const adminIcon = document.getElementById('adminIcon');
     if (user) {
-        const name = user.displayName || "Earth User";
-        document.getElementById('sideUserName').innerText = name;
-        document.getElementById('headerUserName').innerText = name;
+        document.getElementById('sideUserName').innerText = user.displayName || "Earth User";
+        document.getElementById('headerUserName').innerText = user.displayName || "Earth User";
         document.getElementById('userMail').innerText = user.email;
         document.getElementById('authBtn').innerText = "LOGOUT";
         document.getElementById('authBtn').onclick = handleLogout;
         document.getElementById('logoutBtn').style.display = 'block';
 
-        // FIXED: Admin Shield logic for specific email
+        // 🚨 FIXED ADMIN ICON LOGIC (Direct Style)
         if(user.email === "admin@earth.com") {
-            document.getElementById('adminIcon').classList.add('admin-active');
+            adminIcon.style.visibility = "visible";
+            adminIcon.style.display = "inline-block";
         } else {
-            document.getElementById('adminIcon').classList.remove('admin-active');
+            adminIcon.style.display = "none";
         }
     } else {
         document.getElementById('authBtn').onclick = () => location.href='login.html';
-        document.getElementById('adminIcon').classList.remove('admin-active');
+        adminIcon.style.display = "none";
     }
     
     db.collection("properties").orderBy("createdAt", "desc").onSnapshot(snap => {
@@ -193,7 +191,6 @@ function renderAds(ads) {
     list.innerHTML = ads.length ? '' : '<center style="margin-top:50px; color:#888;">No properties found.</center>';
     ads.forEach(p => {
         const phone = p.phone || p.mobile || '';
-        // Title cleaning for WhatsApp message
         const cleanTitle = (p.title || 'Property').replace(/'/g, "\\'");
         list.innerHTML += `
         <div class="prop-card">
