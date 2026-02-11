@@ -161,7 +161,6 @@ function setLanguage(lang){
         select.dispatchEvent(new Event("change", {bubbles: true}));
     }
     
-    // 🔥 PRO RTL AUTO-SWITCH (Arabic/Urdu/Hebrew/Persian)
     if(["ar","ur","fa","he"].includes(lang)){
         document.body.dir = "rtl";
         document.documentElement.dir = "rtl";
@@ -169,7 +168,8 @@ function setLanguage(lang){
         document.body.dir = "ltr";
         document.documentElement.dir = "ltr";
     }
-    toggleDrawer();   // 👈 check it 
+
+    toggleDrawer();      // ✅ ab check kro bhai
     closeLangModal();
 }
 
