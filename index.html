@@ -16,7 +16,7 @@
         .logo-text { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.5px; } 
         .header-icons { display: flex; gap: 10px; align-items: center; }
         
-        /* Drawer Styling */
+        /* Side Panel / Drawer */
         .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
         .drawer.open { left: 0; }
         .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; text-align: center; }
@@ -26,9 +26,6 @@
         .icon-btn { color: #fff; background: rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .auth-btn { cursor: pointer; font-size: 12px; font-weight: 700; background: #fff; color: var(--primary); padding: 8px 16px; border-radius: 8px; border: none; }
         
-        .search-box { background: white; border-radius: 12px; display: flex; padding: 8px 15px; align-items: center; gap: 10px; margin: 0 10px 10px 10px; border: 1px solid #ddd; }
-        .search-box input { border: none; width: 100%; outline: none; padding: 5px 0; font-size: 14px; }
-        
         /* Property Cards */
         .prop-card { background: white; border-radius: 16px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; border: 1px solid #eee; }
         .img-container { position: relative; width: 100%; height: 230px; background: #e0e0e0; }
@@ -37,8 +34,9 @@
         .prop-price { font-size: 22px; font-weight: 800; color: var(--primary); }
         .prop-title { font-weight: 700; font-size: 16px; margin: 5px 0; color: #333; }
         
+        /* ✅ FIXED: Buttons Layout */
         .btn-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 15px; }
-        .btn { padding: 12px 5px; border-radius: 10px; font-weight: 700; font-size: 11px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .btn { padding: 12px 5px; border-radius: 10px; font-weight: 700; font-size: 11px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; text-decoration: none; }
         .btn-call { background: #e8f5e9; color: #2e7d32; } 
         .btn-wa { background: #25D366; color: white; } 
         .btn-chat { background: var(--primary); color: white; }
@@ -55,13 +53,13 @@
 <div class="drawer" id="sideDrawer">
     <div class="drawer-header">
         <i class="fa fa-user-circle fa-3x"></i>
-        <div id="dName" style="margin-top:10px; font-weight:700; font-size:1.1rem; min-height: 1.5em;">Loading...</div>
+        <div id="dName" style="margin-top:10px; font-weight:700;">Earth User</div>
     </div>
     <a href="profile.html" class="drawer-item"><i class="fa fa-user"></i> My Profile</a>
     <a href="my-ads.html" class="drawer-item"><i class="fa fa-layer-group"></i> My Ads</a>
     <a href="favorites.html" class="drawer-item"><i class="fa-regular fa-heart"></i> My Favorites</a>
     
-    <div class="drawer-item" onclick="alert('Hindi/English feature coming soon!')"><i class="fa fa-language"></i> Change Language</div>
+    <div class="drawer-item" onclick="alert('Language feature coming soon!')"><i class="fa fa-language"></i> Change Language</div>
     <div class="drawer-item" onclick="shareApp()"><i class="fa fa-share-nodes"></i> Share App</div>
     
     <a href="support.html" class="drawer-item"><i class="fa fa-headset"></i> Support</a>
@@ -79,10 +77,6 @@
             <div class="icon-btn" onclick="location.href='inbox.html'"><i class="fa fa-bell"></i></div>
             <button id="authBtn" class="auth-btn">Login</button>
         </div>
-    </div>
-    <div class="search-box">
-        <i class="fa fa-search" style="color:#aaa;"></i>
-        <input type="text" id="citySearch" placeholder="Search city or area..." oninput="filterDataDebounced()">
     </div>
 </header>
 
@@ -114,60 +108,55 @@ function toggleDrawer() {
 }
 
 function shareApp() {
-    if(navigator.share) navigator.share({ title: 'Earth Property', text: 'Check out this property app!', url: window.location.origin });
+    if(navigator.share) navigator.share({ title: 'Earth Property', url: window.location.origin });
 }
 
+// ✅ FIXED: BUTTONS RESTORED TO ORIGINAL ACTION
 async function loadProps() {
-    const list = document.getElementById('propertyList');
     db.collection("properties").orderBy("createdAt", "desc").onSnapshot(snap => {
-        const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        list.innerHTML = data.map(p => `
+        const list = document.getElementById('propertyList');
+        list.innerHTML = snap.docs.map(doc => {
+            const p = doc.data();
+            const id = doc.id;
+            return `
             <div class="prop-card">
-                <div class="img-container"><img src="${p.images?.[0] || 'https://via.placeholder.com/400'}"></div>
+                <div class="img-container"><img src="${p.images?.[0] || ''}"></div>
                 <div class="prop-info">
-                    <div class="prop-price">₹${p.price}</div>
+                    <div class="prop-price">₹${Number(p.price||0).toLocaleString('en-IN')}</div>
                     <div class="prop-title">${p.title}</div>
-                    <div style="font-size:12px; color:#666;"><i class="fa fa-map-marker-alt"></i> ${p.location}</div>
                     <div class="btn-group">
-                        <button class="btn btn-call" onclick="alert('Call: ${p.phone}')">Call</button>
-                        <button class="btn btn-wa" onclick="window.open('https://wa.me/91${p.phone}')">WA</button>
-                        <button class="btn btn-chat" onclick="location.href='chat.html?to=${p.ownerId}'">Chat</button>
+                        <a href="tel:${p.phone}" class="btn btn-call"><i class="fa fa-phone"></i> Call</a>
+                        <a href="https://wa.me/91${p.phone}" class="btn btn-wa"><i class="fa-brands fa-whatsapp"></i> WA</a>
+                        <button class="btn btn-chat" onclick="location.href='chat.html?to=${p.ownerId}&p=${id}'"><i class="fa fa-comment"></i> Chat</button>
                     </div>
                 </div>
-            </div>`).join('');
+            </div>`;
+        }).join('');
     });
 }
 
-// ✅ ROBUST NAME SYNC LOGIC
+// ✅ UNIVERSAL NAME FETCH (Ziddi Mode)
 auth.onAuthStateChanged(async user => {
     const dName = document.getElementById('dName');
     const authBtn = document.getElementById('authBtn');
-    
     if(user) {
         authBtn.innerText = "Logout";
         authBtn.onclick = () => auth.signOut().then(() => location.reload());
-        
         if(user.uid === "WOY9f67DachGVTuhR4tSJ1BHozx1") document.getElementById('adminLink').style.display = 'flex';
-
-        // Try to get name from multiple sources
+        
         const fetchName = async () => {
-            try {
-                const userDoc = await db.collection("users").doc(user.uid).get();
-                if(userDoc.exists) {
-                    const ud = userDoc.data();
-                    dName.innerText = ud.name || ud.businessName || ud.fullName || user.displayName || "Earth User";
-                } else {
-                    dName.innerText = user.displayName || "Earth User";
-                }
-            } catch(e) { dName.innerText = user.displayName || "Earth User"; }
+            const doc = await db.collection("users").doc(user.uid).get();
+            if(doc.exists) {
+                const ud = doc.data();
+                dName.innerText = ud.name || ud.businessName || ud.fullName || user.displayName || "Earth User";
+            }
         };
-
-        fetchName(); 
-        setTimeout(fetchName, 2000); // Retry after 2 sec for slow sync
+        fetchName();
+        setTimeout(fetchName, 3000); // Background retry
     } else {
         dName.innerText = "Earth Guest";
         authBtn.innerText = "Login";
-        authBtn.onclick = () => location.href = 'login.html';
+        authBtn.onclick = () => location.href='login.html';
     }
     loadProps();
 });
