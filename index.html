@@ -10,54 +10,44 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); padding-bottom: 90px; }
 
-        /* Header */
-        header { background: var(--primary); padding: 12px 15px; color: white; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-        .header-right { display: flex; align-items: center; gap: 18px; }
-        .logo-area { display: flex; align-items: center; gap: 10px; }
+        /* Header Fix */
+        header { background: var(--primary); padding: 12px 15px; color: white; position: sticky; top: 0; z-index: 1000; }
+        .header-top { display: flex; align-items: center; justify-content: space-between; }
+        .header-right { display: flex; align-items: center; gap: 15px; }
+
+        /* 🚨 Admin Shield - Manual Control */
+        #adminIcon { color: #ffd700; font-size: 20px; cursor: pointer; display: none; } /* Default Hidden */
         
-        /* 🚨 Admin Button - Default Hidden */
-        #adminIcon { color: #ffd700; font-size: 20px; cursor: pointer; visibility: hidden; }
-        
-        .bell-icon { position: relative; font-size: 19px; cursor: pointer; }
+        .bell-icon { position: relative; font-size: 19px; }
         .bell-dot { position: absolute; top: -1px; right: -1px; width: 8px; height: 8px; background: #ff5252; border-radius: 50%; border: 1.5px solid var(--primary); }
 
-        /* Sidebar Drawer */
-        .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 5px 0 15px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
+        /* Sidebar & Language Fix */
+        .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s; display: flex; flex-direction: column; }
         .drawer.open { left: 0; }
-        .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; flex-shrink: 0; }
-        
-        /* Language Scroll Area */
-        .lang-section-title { padding: 15px 15px 5px; font-size: 11px; font-weight: 800; color: #999; letter-spacing: 1px; }
-        .lang-container { flex-grow: 1; overflow-y: auto; padding: 0 15px 15px; margin-bottom: 10px; }
+        .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; }
+        .lang-container { flex-grow: 1; overflow-y: auto; padding: 15px; }
         .lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .lang-btn { padding: 10px; border: 1px solid #ddd; border-radius: 6px; text-align: center; font-size: 13px; cursor: pointer; font-weight: 600; background: #f9f9f9; }
-        .lang-btn.active { background: var(--primary) !important; color: white !important; border-color: var(--primary) !important; }
-        .drawer-footer { padding: 15px; border-top: 1px solid #eee; flex-shrink: 0; }
+        .lang-btn { padding: 10px; border: 1px solid #ddd; border-radius: 6px; text-align: center; font-size: 13px; font-weight: 600; background: #fff; cursor: pointer; }
+        .lang-btn.active { background: var(--primary) !important; color: white !important; border-color: var(--primary); }
 
-        /* Cards */
-        .prop-card { background: white; border-radius: 15px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        .img-box { width: 100%; height: 210px; background: #eee; }
+        /* Other Styles */
+        .search-box { background: white; border-radius: 10px; display: flex; padding: 10px; align-items: center; gap: 10px; margin-top: 10px; }
+        .search-box input { border: none; width: 100%; outline: none; }
+        .prop-card { background: white; border-radius: 15px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .img-box { width: 100%; height: 200px; background: #eee; }
         .img-box img { width: 100%; height: 100%; object-fit: cover; }
         .info { padding: 15px; }
-        .price { font-size: 22px; font-weight: 800; color: var(--primary); }
-        .btn-group { display: flex; gap: 8px; margin-top: 15px; }
-        .btn { flex: 1; padding: 12px 5px; border-radius: 10px; border: none; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .price { font-size: 20px; font-weight: 800; color: var(--primary); }
+        .btn-group { display: flex; gap: 8px; margin-top: 10px; }
+        .btn { flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: 700; font-size: 12px; color: white; cursor: pointer; }
         .btn-call { background: #e8f5e9; color: #2e7d32; }
-        .btn-wa { background: #25D366; color: white; }
-        .btn-chat { background: var(--primary); color: white; }
+        .btn-wa { background: #25D366; }
+        .btn-chat { background: var(--primary); }
 
-        .search-box { background: white; border-radius: 10px; display: flex; padding: 10px 15px; align-items: center; gap: 10px; margin-top: 5px; }
-        .search-box input { border: none; width: 100%; outline: none; font-size: 14px; }
-
-        /* Bottom Nav */
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 10px 0; border-top: 1px solid #eee; z-index: 1000; height: 70px; }
-        .nav-item { flex: 1; text-align: center; color: #777; text-decoration: none; font-size: 10px; font-weight: 600; }
-        .nav-item i { font-size: 20px; margin-bottom: 4px; }
-        .nav-item.active { color: var(--primary); }
-        .post-btn { background: var(--primary); color: white !important; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: -40px; border: 5px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-size: 24px; }
-        
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4500; display: none; backdrop-filter: blur(2px); }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 10px 0; border-top: 1px solid #eee; z-index: 1000; }
+        .nav-item { flex: 1; text-align: center; color: #777; text-decoration: none; font-size: 10px; }
+        .post-btn { background: var(--primary); color: white !important; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: -35px auto 5px; border: 4px solid white; font-size: 20px; }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4500; display: none; }
     </style>
 </head>
 <body>
@@ -67,49 +57,48 @@
 <div class="drawer" id="sideDrawer">
     <div class="drawer-header">
         <i class="fa fa-user-circle fa-4x"></i>
-        <h3 id="sideUserName" style="margin-top:12px;">Welcome Guest</h3>
+        <h3 id="sideUserName">Welcome Guest</h3>
         <p id="userMail" style="font-size:11px; opacity:0.8;"></p>
     </div>
-    <div class="lang-section-title">GLOBAL LANGUAGES</div>
+    <div style="padding:15px 15px 0; font-size:11px; font-weight:bold; color:#888;">CHOOSE LANGUAGE</div>
     <div class="lang-container">
         <div class="lang-grid" id="langGrid"></div>
     </div>
-    <div class="drawer-footer">
-        <div onclick="location.href='my-ads.html'" style="padding:12px 0; font-weight:700; color:#444;"><i class="fa fa-layer-group" style="width:25px;"></i> My Ads</div>
-        <div id="logoutBtn" style="padding:12px 0; font-weight:700; color:#d32f2f; display:none;" onclick="handleLogout()"><i class="fa fa-sign-out-alt" style="width:25px;"></i> Logout</div>
+    <div style="padding:15px; border-top:1px solid #eee;">
+        <div onclick="location.href='my-ads.html'" style="padding:10px 0; font-weight:700;"><i class="fa fa-layer-group"></i> My Ads</div>
+        <div id="logoutBtn" style="padding:10px 0; font-weight:700; color:red; display:none;" onclick="handleLogout()">Logout</div>
     </div>
 </div>
 
 <header>
     <div class="header-top">
-        <div class="logo-area">
+        <div style="display:flex; align-items:center; gap:10px;">
             <i class="fa fa-bars" onclick="toggleDrawer()" style="font-size:22px;"></i>
-            <span style="font-size:1.3rem; font-weight:900;">Earth Property</span>
+            <span style="font-size:1.2rem; font-weight:900;">Earth Property</span>
         </div>
         <div class="header-right">
             <i class="fa fa-user-shield" id="adminIcon" onclick="location.href='admin-portal.html'"></i>
-            <div class="bell-icon" onclick="alert('No new notifications')">
+            <div class="bell-icon" onclick="alert('No notifications')">
                 <i class="fa-regular fa-bell"></i>
                 <div class="bell-dot"></div>
             </div>
-            <button id="authBtn" style="background:white; border:none; color:var(--primary); padding:6px 15px; border-radius:8px; font-weight:800; font-size:12px;">LOGIN</button>
+            <button id="authBtn" style="background:white; border:none; color:var(--primary); padding:5px 12px; border-radius:5px; font-weight:800;">LOGIN</button>
         </div>
     </div>
-    <div style="margin-bottom:5px; font-size:11px; font-weight:600; opacity:0.9;">Hi, <span id="headerUserName">Guest</span></div>
     <div class="search-box">
         <i class="fa fa-search" style="color:#aaa;"></i>
-        <input type="text" placeholder="Search Chandigarh, Delhi, Plot..." id="searchInput" oninput="filterAds()">
+        <input type="text" placeholder="Search Chandigarh, Delhi..." id="searchInput" oninput="filterAds()">
     </div>
 </header>
 
 <div id="propertyList"></div>
 
 <nav class="bottom-nav">
-    <a href="index.html" class="nav-item active"><i class="fa fa-house"></i><br>Explore</a>
-    <a href="my-ads.html" class="nav-item"><i class="fa fa-layer-group"></i><br>My Ads</a>
+    <a href="index.html" class="nav-item"><i class="fa fa-house fa-lg"></i><br>Explore</a>
+    <a href="my-ads.html" class="nav-item"><i class="fa fa-layer-group fa-lg"></i><br>My Ads</a>
     <a href="add-property.html" class="nav-item"><div class="post-btn"><i class="fa fa-plus"></i></div></a>
-    <a href="favorites.html" class="nav-item"><i class="fa-regular fa-heart"></i><br>Favs</a>
-    <a href="profile.html" class="nav-item"><i class="fa fa-user-circle"></i><br>Profile</a>
+    <a href="favorites.html" class="nav-item"><i class="fa-regular fa-heart fa-lg"></i><br>Favs</a>
+    <a href="profile.html" class="nav-item"><i class="fa fa-user-circle fa-lg"></i><br>Profile</a>
 </nav>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -122,65 +111,55 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-let allAds = [];
-
-// 20+ Languages
+// Languages
 const languages = [
-    {c:'en', n:'English (Def)'}, {c:'hi', n:'हिंदी'}, {c:'pa', n:'ਪੰਜਾਬੀ'}, {c:'ar', n:'العربية'},
+    {c:'en', n:'English'}, {c:'hi', n:'हिंदी'}, {c:'pa', n:'ਪੰਜਾਬੀ'}, {c:'ar', n:'العربية'},
     {c:'es', n:'Español'}, {c:'fr', n:'Français'}, {c:'de', n:'Deutsch'}, {c:'tr', n:'Türkçe'},
-    {c:'ru', n:'Русский'}, {c:'zh', n:'中文'}, {c:'ja', n:'日本語'}, {c:'ko', n:'한국어'},
-    {c:'pt', n:'Português'}, {c:'bn', n:'বাংলা'}, {c:'te', n:'తెలుగు'}, {c:'mr', n:'मराठी'},
-    {c:'ta', n:'தமிழ்'}, {c:'gu', n:'ગુજરાતી'}, {c:'kn', n:'ಕನ್ನಡ'}, {c:'ml', n:'മലയാളം'}
+    {c:'ru', n:'Русский'}, {c:'zh', n:'中文'}, {c:'ja', n:'日本語'}, {c:'ko', n:'한국어'}
 ];
 
-// Language Load Logic
-const currentLang = localStorage.getItem('earthLang') || 'en';
+// Language Click Force Logic
 const langGrid = document.getElementById('langGrid');
+const savedL = localStorage.getItem('earthLang') || 'en';
 
 languages.forEach(l => {
     const btn = document.createElement('div');
-    btn.className = `lang-btn ${currentLang === l.c ? 'active' : ''}`;
+    btn.className = `lang-btn ${savedL === l.c ? 'active' : ''}`;
     btn.innerText = l.n;
-    btn.onclick = () => {
+    btn.onclick = function() {
         localStorage.setItem('earthLang', l.c);
-        // Instant reload to apply
-        window.location.replace(window.location.href); 
+        setTimeout(() => { location.reload(); }, 100);
     };
     langGrid.appendChild(btn);
 });
 
 function toggleDrawer() {
-    const sideDrawer = document.getElementById('sideDrawer');
-    const overlay = document.getElementById('overlay');
-    sideDrawer.classList.toggle('open');
-    overlay.style.display = sideDrawer.classList.contains('open') ? 'block' : 'none';
+    const d = document.getElementById('sideDrawer');
+    const o = document.getElementById('overlay');
+    d.classList.toggle('open');
+    o.style.display = d.classList.contains('open') ? 'block' : 'none';
 }
 
 auth.onAuthStateChanged(user => {
     const adminIcon = document.getElementById('adminIcon');
     if (user) {
         document.getElementById('sideUserName').innerText = user.displayName || "Earth User";
-        document.getElementById('headerUserName').innerText = user.displayName || "Earth User";
         document.getElementById('userMail').innerText = user.email;
         document.getElementById('authBtn').innerText = "LOGOUT";
         document.getElementById('authBtn').onclick = handleLogout;
         document.getElementById('logoutBtn').style.display = 'block';
 
-        // 🚨 FIXED ADMIN ICON LOGIC (Direct Style)
+        // 🚨 FORCE ADMIN DISPLAY
         if(user.email === "admin@earth.com") {
-            adminIcon.style.visibility = "visible";
-            adminIcon.style.display = "inline-block";
-        } else {
-            adminIcon.style.display = "none";
+            adminIcon.style.setProperty('display', 'inline-block', 'important');
         }
     } else {
         document.getElementById('authBtn').onclick = () => location.href='login.html';
-        adminIcon.style.display = "none";
+        adminIcon.style.display = 'none';
     }
     
     db.collection("properties").orderBy("createdAt", "desc").onSnapshot(snap => {
-        allAds = snap.docs.map(doc => ({id:doc.id, ...doc.data()}));
-        renderAds(allAds);
+        renderAds(snap.docs.map(doc => ({id:doc.id, ...doc.data()})));
     });
 });
 
@@ -188,40 +167,32 @@ function handleLogout() { auth.signOut().then(() => location.reload()); }
 
 function renderAds(ads) {
     const list = document.getElementById('propertyList');
-    list.innerHTML = ads.length ? '' : '<center style="margin-top:50px; color:#888;">No properties found.</center>';
+    list.innerHTML = '';
     ads.forEach(p => {
-        const phone = p.phone || p.mobile || '';
-        const cleanTitle = (p.title || 'Property').replace(/'/g, "\\'");
+        const phone = p.phone || '';
         list.innerHTML += `
         <div class="prop-card">
-            <div class="img-box"><img src="${(p.images && p.images[0]) || 'https://via.placeholder.com/400x210'}"></div>
+            <div class="img-box"><img src="${p.images?.[0] || ''}"></div>
             <div class="info">
-                <div class="price">₹${Number(p.price || 0).toLocaleString('en-IN')}</div>
-                <div style="font-weight:700; margin:5px 0; color:#333;">${p.title}</div>
-                <div style="font-size:12px; color:#666;"><i class="fa-solid fa-location-dot"></i> ${p.location}</div>
+                <div class="price">₹${Number(p.price).toLocaleString('en-IN')}</div>
+                <div style="font-weight:700; margin:5px 0;">${p.title}</div>
+                <div style="font-size:12px; color:#666;"><i class="fa fa-location-dot"></i> ${p.location}</div>
                 <div class="btn-group">
-                    <button class="btn btn-call" onclick="contact('${phone}', 'tel')"><i class="fa fa-phone"></i> Call</button>
-                    <button class="btn btn-wa" onclick="contact('${phone}', 'wa', '${cleanTitle}')"><i class="fa-brands fa-whatsapp"></i> WA</button>
-                    <button class="btn btn-chat" onclick="location.href='chat.html?to=${p.ownerId}'"><i class="fa-regular fa-comment"></i> Chat</button>
+                    <button class="btn btn-call" onclick="contact('${phone}', 'tel')">Call</button>
+                    <button class="btn btn-wa" onclick="contact('${phone}', 'wa', '${p.title}')">WhatsApp</button>
+                    <button class="btn btn-chat" onclick="location.href='chat.html?to=${p.ownerId}'">Chat</button>
                 </div>
             </div>
         </div>`;
     });
 }
 
-function contact(num, type, title = '') {
-    if(!num || num === 'undefined' || num.trim() === "") return alert("Error: Contact number not found.");
-    let cleanNum = num.toString().replace(/\D/g,'');
-    if(cleanNum.length === 10) cleanNum = "91" + cleanNum;
-
-    if(type === 'wa') window.open(`https://wa.me/${cleanNum}?text=I'm interested in: ${encodeURIComponent(title)}`, '_blank');
-    else window.location.href = `tel:+${cleanNum}`;
-}
-
-function filterAds() {
-    const val = document.getElementById('searchInput').value.toLowerCase();
-    const filtered = allAds.filter(a => (a.location||'').toLowerCase().includes(val) || (a.title||'').toLowerCase().includes(val));
-    renderAds(filtered);
+function contact(num, type, title='') {
+    if(!num) return alert("No number");
+    let clean = num.toString().replace(/\D/g,'');
+    if(clean.length === 10) clean = "91" + clean;
+    if(type==='wa') window.open(`https://wa.me/${clean}?text=Interest:${title}`);
+    else window.location.href = `tel:+${clean}`;
 }
 </script>
 </body>
