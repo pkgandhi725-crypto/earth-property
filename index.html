@@ -17,18 +17,18 @@
         .logo-area { display: flex; align-items: center; gap: 10px; }
         .admin-btn { color: #ffd700; font-size: 20px; cursor: pointer; display: none; }
         .bell-icon { position: relative; font-size: 18px; cursor: pointer; }
-        .bell-dot { position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; background: #ff5252; border-radius: 50%; border: 1.5px solid var(--primary); display: none; }
+        .bell-dot { position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; background: #ff5252; border-radius: 50%; border: 1.5px solid var(--primary); }
 
-        /* Sidebar */
+        /* Sidebar Scrollable Languages */
         .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 5px 0 15px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
         .drawer.open { left: 0; }
         .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; flex-shrink: 0; }
         .lang-container { flex-grow: 1; overflow-y: auto; padding: 15px; border-bottom: 1px solid #eee; }
         .lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .lang-btn { padding: 10px; border: 1px solid #ddd; border-radius: 6px; text-align: center; font-size: 13px; cursor: pointer; font-weight: 600; background: #f9f9f9; }
+        .lang-btn { padding: 10px; border: 1px solid #ddd; border-radius: 6px; text-align: center; font-size: 13px; cursor: pointer; font-weight: 600; background: #f9f9f9; transition: all 0.2s; }
+        .lang-btn:active { transform: scale(0.95); }
         .lang-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-        .drawer-footer { padding: 15px; flex-shrink: 0; }
-        .sidebar-item { padding: 12px 0; font-weight: 700; color: #444; cursor: pointer; border-bottom: 1px solid #f5f5f5; display: flex; align-items: center; gap: 12px; }
+        .drawer-footer { padding: 15px; flex-shrink: 0; border-top: 1px solid #eee; }
 
         /* Search Bar */
         .search-box { background: white; border-radius: 10px; display: flex; padding: 10px 15px; align-items: center; gap: 10px; }
@@ -38,13 +38,15 @@
         .prop-card { background: white; border-radius: 15px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         .img-box { width: 100%; height: 210px; background: #eee; position: relative; cursor: pointer; }
         .img-box img { width: 100%; height: 100%; object-fit: cover; }
-        .img-counter { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 15px; font-size: 11px; }
+        .img-counter { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 15px; font-size: 11px; font-weight: 700; }
         .card-actions { position: absolute; top: 10px; right: 10px; display: flex; gap: 8px; }
         .icon-btn { background: rgba(255,255,255,0.9); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .icon-btn.fav-active { color: #ff5252 !important; }
-
+        .icon-btn.fav { color: #ff5252; }
+        .icon-btn.share { color: #333; }
         .info { padding: 15px; }
         .price { font-size: 22px; font-weight: 800; color: var(--primary); }
+        .location { font-size: 12px; color: #666; margin: 5px 0; }
+        
         .btn-group { display: flex; gap: 8px; margin-top: 15px; }
         .btn { flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; text-decoration: none; }
         .btn-call { background: #e8f5e9; color: #2e7d32; }
@@ -54,18 +56,25 @@
         /* Bottom Nav */
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 10px 0; border-top: 1px solid #eee; z-index: 1000; height: 65px; }
         .nav-item { flex: 1; text-align: center; color: #777; text-decoration: none; font-size: 10px; font-weight: 600; }
+        .nav-item i { font-size: 20px; margin-bottom: 3px; }
         .nav-item.active { color: var(--primary); }
         .post-btn { background: var(--primary); color: white !important; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: -35px; border: 5px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-size: 24px; }
 
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4500; display: none; backdrop-filter: blur(2px); }
 
         /* Gallery Modal */
-        .gallery-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 6000; display: none; flex-direction: column; }
-        .gallery-modal.active { display: flex; }
+        .gallery-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 6000; display: none; }
+        .gallery-modal.active { display: flex; flex-direction: column; }
         .gallery-header { padding: 15px; color: white; display: flex; justify-content: space-between; align-items: center; }
+        .gallery-close { font-size: 28px; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
         .gallery-content { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; }
         .gallery-img { max-width: 90%; max-height: 80vh; object-fit: contain; }
-        .gallery-nav { position: absolute; background: rgba(255,255,255,0.2); color: white; border: none; font-size: 24px; padding: 15px; cursor: pointer; }
+        .gallery-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.3); color: white; border: none; font-size: 24px; padding: 15px 20px; cursor: pointer; border-radius: 5px; }
+        .gallery-prev { left: 10px; }
+        .gallery-next { right: 10px; }
+        .gallery-dots { padding: 20px; display: flex; justify-content: center; gap: 8px; }
+        .gallery-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; }
+        .gallery-dot.active { background: white; }
     </style>
 </head>
 <body>
@@ -79,30 +88,29 @@
         <p id="userMail" style="font-size:11px; opacity:0.8;"></p>
     </div>
     
-    <div style="padding:15px 15px 5px; font-size:11px; font-weight:800; color:#999;" id="langHeader">GLOBAL LANGUAGES</div>
+    <div style="padding:15px 15px 5px; font-size:11px; font-weight:800; color:#999; letter-spacing:1px;" id="langHeader">GLOBAL LANGUAGES</div>
     <div class="lang-container">
         <div class="lang-grid" id="langGrid"></div>
     </div>
 
     <div class="drawer-footer">
-        <div class="sidebar-item" onclick="location.href='my-ads.html'"><i class="fa fa-layer-group"></i> <span id="myAdsText">My Ads</span></div>
-        <div class="sidebar-item" onclick="location.href='favorites.html'"><i class="fa fa-heart"></i> <span id="favsSideText">Favorites</span></div>
-        <div class="sidebar-item" id="adminSidebarBtn" style="display:none; color: #ffd700;" onclick="location.href='admin-portal.html'"><i class="fa fa-user-shield"></i> <span>Admin Portal</span></div>
-        <div class="sidebar-item" onclick="shareApp()"><i class="fa fa-share-nodes"></i> <span id="shareAppText">Share App</span></div>
-        <div id="logoutBtn" class="sidebar-item" style="display:none; color:#d32f2f;" onclick="handleLogout()"><i class="fa fa-sign-out-alt"></i> <span id="logoutText">Logout</span></div>
+        <div onclick="location.href='my-ads.html'" style="padding:12px 0; font-weight:700; color:#444; cursor: pointer;"><i class="fa fa-layer-group" style="width:25px;"></i> <span id="myAdsText">My Ads</span></div>
+        <div id="logoutBtn" style="padding:12px 0; font-weight:700; color:#d32f2f; display:none; cursor: pointer;" onclick="handleLogout()"><i class="fa fa-sign-out-alt" style="width:25px;"></i> <span id="logoutText">Logout</span></div>
     </div>
 </div>
 
+<!-- Gallery Modal -->
 <div class="gallery-modal" id="galleryModal">
     <div class="gallery-header">
-        <div id="galleryCounter">1 / 1</div>
-        <div style="font-size:30px; cursor:pointer;" onclick="closeGallery()">&times;</div>
+        <div id="galleryCounter" style="font-size: 14px;">1 / 1</div>
+        <div class="gallery-close" onclick="closeGallery()">&times;</div>
     </div>
     <div class="gallery-content">
-        <button class="gallery-nav" style="left:10px;" onclick="changeImage(-1)">&#10094;</button>
+        <button class="gallery-nav gallery-prev" onclick="changeImage(-1)">&#10094;</button>
         <img class="gallery-img" id="galleryImg" src="">
-        <button class="gallery-nav" style="right:10px;" onclick="changeImage(1)">&#10095;</button>
+        <button class="gallery-nav gallery-next" onclick="changeImage(1)">&#10095;</button>
     </div>
+    <div class="gallery-dots" id="galleryDots"></div>
 </div>
 
 <header>
@@ -112,12 +120,12 @@
             <span style="font-size:1.3rem; font-weight:900;">Earth Property</span>
         </div>
         <div class="header-right">
-            <i class="fa fa-user-shield admin-btn" id="adminIcon" onclick="location.href='admin-portal.html'"></i>
-            <div class="bell-icon" onclick="clearNotification()">
+            <i class="fa fa-user-shield admin-btn" id="adminIcon" onclick="location.href='admin-portal.html'" title="Admin Portal"></i>
+            <div class="bell-icon" onclick="alert('No new notifications')">
                 <i class="fa-regular fa-bell"></i>
-                <div class="bell-dot" id="bellDot"></div>
+                <div class="bell-dot"></div>
             </div>
-            <button id="authBtn" onclick="handleAuthAction()" style="background:white; border:none; color:var(--primary); padding:6px 15px; border-radius:8px; font-weight:800; font-size:12px;">LOGIN</button>
+            <button id="authBtn" style="background:white; border:none; color:var(--primary); padding:6px 15px; border-radius:8px; font-weight:800; font-size:12px; cursor: pointer;">LOGIN</button>
         </div>
     </div>
     <div style="margin-bottom:5px; font-size:11px; font-weight:600; opacity:0.9;"><span id="hiText">Hi</span>, <span id="headerUserName">Guest</span></div>
@@ -151,152 +159,321 @@ let allAds = [];
 let currentGallery = [];
 let currentImageIndex = 0;
 
-// Translations
+// 20+ Global Languages
+const languages = [
+    {c:'en', n:'English (Def)'}, {c:'hi', n:'हिंदी'}, {c:'pa', n:'ਪੰਜਾਬੀ'}, {c:'ar', n:'العربية'},
+    {c:'es', n:'Español'}, {c:'fr', n:'Français'}, {c:'de', n:'Deutsch'}, {c:'tr', n:'Türkçe'},
+    {c:'ru', n:'Русский'}, {c:'zh', n:'中文'}, {c:'ja', n:'日本語'}, {c:'ko', n:'한국어'},
+    {c:'pt', n:'Português'}, {c:'bn', n:'বাংলা'}, {c:'te', n:'తెలుగు'}, {c:'mr', n:'मराठी'},
+    {c:'ta', n:'தமிழ்'}, {c:'gu', n:'ગુજરાતી'}, {c:'kn', n:'ಕನ್ನಡ'}, {c:'ml', n:'മലയാളം'}
+];
+
+// 🌍 FULL TRANSLATIONS FOR ALL 20+ LANGUAGES
 const translations = {
-    en: { explore:"Explore", myAds:"My Ads", favs:"Favs", profile:"Profile", call:"Call", chat:"Chat", login:"LOGIN", logout:"LOGOUT", search:"Search Chandigarh, Delhi, Plot...", hi:"Hi", langHeader:"GLOBAL LANGUAGES", welcome:"Welcome Guest", share:"Share App", favsSide:"Favorites" },
-    hi: { explore:"खोजें", myAds:"मेरे विज्ञापन", favs:"पसंदीदा", profile:"प्रोफ़ाइल", call:"कॉल", chat:"चैट", login:"लॉगिन", logout:"लॉगआउट", search:"चंडीगढ़, दिल्ली, प्लॉट खोजें...", hi:"नमस्ते", langHeader:"वैश्विक भाषाएं", welcome:"स्वागत है अतिथि", share:"ऐप शेयर करें", favsSide:"पसंदीदा" }
-    // ... baki languages add kar lena pichle code se
+    en: { explore:"Explore", myAds:"My Ads", favs:"Favs", profile:"Profile", call:"Call", chat:"Chat", login:"LOGIN", logout:"LOGOUT", search:"Search Chandigarh, Delhi, Plot...", hi:"Hi", langHeader:"GLOBAL LANGUAGES", welcome:"Welcome Guest" },
+    hi: { explore:"खोजें", myAds:"मेरे विज्ञापन", favs:"पसंदीदा", profile:"प्रोफ़ाइल", call:"कॉल", chat:"चैट", login:"लॉगिन", logout:"लॉगआउट", search:"चंडीगढ़, दिल्ली, प्लॉट खोजें...", hi:"नमस्ते", langHeader:"वैश्विक भाषाएं", welcome:"स्वागत है अतिथि" },
+    pa: { explore:"ਖੋਜੋ", myAds:"ਮੇਰੇ ਵਿਗਿਆਪਨ", favs:"ਪਸੰਦੀਦਾ", profile:"ਪ੍ਰੋਫਾਈਲ", call:"ਕਾਲ", chat:"ਚੈਟ", login:"ਲੌਗਇਨ", logout:"ਲੌਗਆਉਟ", search:"ਚੰਡੀਗੜ੍ਹ, ਦਿੱਲੀ ਖੋਜੋ...", hi:"ਸਤ ਸ੍ਰੀ ਅਕਾਲ", langHeader:"ਗਲੋਬਲ ਭਾਸ਼ਾਵਾਂ", welcome:"ਜੀ ਆਇਆਂ ਨੂੰ" },
+    ar: { explore:"استكشف", myAds:"إعلاناتي", favs:"المفضلة", profile:"الملف الشخصي", call:"اتصال", chat:"دردشة", login:"تسجيل الدخول", logout:"تسجيل خروج", search:"ابحث عن تشانديغار، دلهي...", hi:"مرحبا", langHeader:"اللغات العالمية", welcome:"مرحبا بك" },
+    es: { explore:"Explorar", myAds:"Mis Anuncios", favs:"Favoritos", profile:"Perfil", call:"Llamar", chat:"Chat", login:"ENTRAR", logout:"SALIR", search:"Buscar Chandigarh, Delhi...", hi:"Hola", langHeader:"IDIOMAS GLOBALES", welcome:"Bienvenido Invitado" },
+    fr: { explore:"Explorer", myAds:"Mes Annonces", favs:"Favoris", profile:"Profil", call:"Appeler", chat:"Chat", login:"CONNEXION", logout:"DÉCONNEXION", search:"Rechercher Chandigarh, Delhi...", hi:"Bonjour", langHeader:"LANGUES MONDIALES", welcome:"Bienvenue Invité" },
+    de: { explore:"Erkunden", myAds:"Meine Anzeigen", favs:"Favoriten", profile:"Profil", call:"Anrufen", chat:"Chat", login:"ANMELDEN", logout:"ABMELDEN", search:"Chandigarh, Delhi suchen...", hi:"Hallo", langHeader:"GLOBALE SPRACHEN", welcome:"Willkommen Gast" },
+    tr: { explore:"Keşfet", myAds:"İlanlarım", favs:"Favoriler", profile:"Profil", call:"Ara", chat:"Sohbet", login:"GİRİŞ", logout:"ÇIKIŞ", search:"Chandigarh, Delhi ara...", hi:"Merhaba", langHeader:"KÜRESEL DİLLER", welcome:"Hoş Geldin Misafir" },
+    ru: { explore:"Обзор", myAds:"Мои объявления", favs:"Избранное", profile:"Профиль", call:"Звонок", chat:"Чат", login:"ВОЙТИ", logout:"ВЫЙТИ", search:"Поиск Чандигарх, Дели...", hi:"Привет", langHeader:"МИРОВЫЕ ЯЗЫКИ", welcome:"Добро пожаловать" },
+    zh: { explore:"探索", myAds:"我的广告", favs:"收藏", profile:"个人资料", call:"电话", chat:"聊天", login:"登录", logout:"登出", search:"搜索昌迪加尔，德里...", hi:"你好", langHeader:"全球语言", welcome:"欢迎访客" },
+    ja: { explore:"探索", myAds:"マイ広告", favs:"お気に入り", profile:"プロフィール", call:"電話", chat:"チャット", login:"ログイン", logout:"ログアウト", search:"チャンディーガル、デリーを検索...", hi:"こんにちは", langHeader:"グローバル言語", welcome:"ようこそゲスト" },
+    ko: { explore:"탐색", myAds:"내 광고", favs:"즐겨찾기", profile:"프로필", call:"전화", chat:"채팅", login:"로그인", logout:"로그아웃", search:"찬디가르, 델리 검색...", hi:"안녕하세요", langHeader:"글로벌 언어", welcome:"환영합니다 게스트" },
+    pt: { explore:"Explorar", myAds:"Meus Anúncios", favs:"Favoritos", profile:"Perfil", call:"Ligar", chat:"Chat", login:"ENTRAR", logout:"SAIR", search:"Pesquisar Chandigarh, Delhi...", hi:"Olá", langHeader:"IDIOMAS GLOBAIS", welcome:"Bem-vindo Convidado" },
+    bn: { explore:"অন্বেষণ", myAds:"আমার বিজ্ঞাপন", favs:"প্রিয়", profile:"প্রোফাইল", call:"কল", chat:"চ্যাট", login:"লগইন", logout:"লগআউট", search:"চন্ডীগড়, দিল্লি অনুসন্ধান...", hi:"হ্যালো", langHeader:"বৈশ্বিক ভাষা", welcome:"স্বাগতম অতিথি" },
+    te: { explore:"అన్వేషించు", myAds:"నా ప్రకటనలు", favs:"ఇష్టాలు", profile:"ప్రొఫైల్", call:"కాల్", chat:"చాట్", login:"లాగిన్", logout:"లాగౌట్", search:"చండీగఢ్, ఢిల్లీ వెతకండి...", hi:"హలో", langHeader:"ప్రపంచ భాషలు", welcome:"స్వాగతం అతిథి" },
+    mr: { explore:"शोधा", myAds:"माझ्या जाहिराती", favs:"आवडते", profile:"प्रोफाइल", call:"कॉल", chat:"चॅट", login:"लॉगिन", logout:"लॉगआउट", search:"चंदीगड, दिल्ली शोधा...", hi:"नमस्कार", langHeader:"जागतिक भाषा", welcome:"स्वागत आहे अतिथी" },
+    ta: { explore:"ஆராயுங்கள்", myAds:"என் விளம்பரங்கள்", favs:"பிடித்தவை", profile:"சுயவிவரம்", call:"அழைப்பு", chat:"அரட்டை", login:"உள்நுழைய", logout:"வெளியேறு", search:"சண்டிகர், டெல்லி தேடுங்கள்...", hi:"வணக்கம்", langHeader:"உலகளாவிய மொழிகள்", welcome:"வரவேற்பு விருந்தினர்" },
+    gu: { explore:"અન્વેષણ", myAds:"મારી જાહેરાતો", favs:"મનપસંદ", profile:"પ્રોફાઇલ", call:"કૉલ", chat:"ચેટ", login:"લૉગિન", logout:"લૉગઆઉટ", search:"ચંડીગઢ, દિલ્હી શોધો...", hi:"નમસ્તે", langHeader:"વૈશ્વિક ભાષાઓ", welcome:"સ્વાગત છે મહેમાન" },
+    kn: { explore:"ಅನ್ವೇಷಿಸಿ", myAds:"ನನ್ನ ಜಾಹೀರಾತುಗಳು", favs:"ಮೆಚ್ಚಿನವುಗಳು", profile:"ಪ್ರೊಫೈಲ್", call:"ಕರೆ", chat:"ಚಾಟ್", login:"ಲಾಗಿನ್", logout:"ಲಾಗ್ಔಟ್", search:"ಚಂಡೀಗಢ, ಡೆಲ್ಲಿ ಹುಡುಕಿ...", hi:"ನಮಸ್ಕಾರ", langHeader:"ಜಾಗತಿಕ ಭಾಷೆಗಳು", welcome:"ಸ್ವಾಗತ ಅತಿಥಿ" },
+    ml: { explore:"പര്യവേക്ഷണം", myAds:"എന്റെ പരസ്യങ്ങൾ", favs:"പ്രിയപ്പെട്ടവ", profile:"പ്രൊഫൈൽ", call:"കോൾ", chat:"ചാറ്റ്", login:"ലോഗിൻ", logout:"ലോഗ്ഔട്ട്", search:"ചണ്ഡിഗഡ്, ഡൽഹി തിരയുക...", hi:"ഹലോ", langHeader:"ആഗോള ഭാഷകൾ", welcome:"സ്വാഗതം അതിഥി" }
 };
 
+// Apply Language Function
 function applyLanguage() {
     const lang = localStorage.getItem('earthLang') || 'en';
     const t = translations[lang] || translations['en'];
+
+    // Bottom Nav
     document.getElementById('navExplore').innerText = t.explore;
     document.getElementById('navMyAds').innerText = t.myAds;
     document.getElementById('navFavs').innerText = t.favs;
     document.getElementById('navProfile').innerText = t.profile;
+
+    // Sidebar
     document.getElementById('myAdsText').innerText = t.myAds;
-    document.getElementById('favsSideText').innerText = t.favsSide || "Favorites";
-    document.getElementById('shareAppText').innerText = t.share || "Share App";
     document.getElementById('logoutText').innerText = t.logout;
     document.getElementById('langHeader').innerText = t.langHeader;
+
+    // Header
     document.getElementById('hiText').innerText = t.hi;
     document.getElementById('searchInput').placeholder = t.search;
+
+    // Auth Button
     const user = auth.currentUser;
     document.getElementById('authBtn').innerText = user ? t.logout : t.login;
+
+    console.log("Language applied:", lang);
 }
 
-// Admin Logic Fix
+// Load Languages into Grid
+function loadLanguages() {
+    const langGrid = document.getElementById('langGrid');
+    langGrid.innerHTML = '';
+    const currentLang = localStorage.getItem('earthLang') || 'en';
+    
+    languages.forEach(l => {
+        const btn = document.createElement('div');
+        btn.className = `lang-btn ${currentLang === l.c ? 'active' : ''}`;
+        btn.innerText = l.n;
+        btn.setAttribute('data-lang', l.c);
+        btn.addEventListener('click', function() {
+            switchLanguage(this.getAttribute('data-lang'));
+        });
+        langGrid.appendChild(btn);
+    });
+}
+
+function switchLanguage(langCode) {
+    console.log("Switching to language:", langCode);
+    localStorage.setItem('earthLang', langCode);
+    applyLanguage();
+    loadLanguages();
+    toggleDrawer(); // Close drawer after selection
+}
+
+function toggleDrawer() {
+    const drawer = document.getElementById('sideDrawer');
+    const overlay = document.getElementById('overlay');
+    const isOpen = drawer.classList.contains('open');
+    
+    if (isOpen) {
+        drawer.classList.remove('open');
+        overlay.style.display = 'none';
+    } else {
+        drawer.classList.add('open');
+        overlay.style.display = 'block';
+    }
+}
+
+// Gallery Functions
+function openGallery(images, startIndex = 0) {
+    currentGallery = images;
+    currentImageIndex = startIndex;
+    document.getElementById('galleryModal').classList.add('active');
+    updateGalleryImage();
+}
+
+function closeGallery() {
+    document.getElementById('galleryModal').classList.remove('active');
+}
+
+function changeImage(direction) {
+    currentImageIndex += direction;
+    if (currentImageIndex < 0) currentImageIndex = currentGallery.length - 1;
+    if (currentImageIndex >= currentGallery.length) currentImageIndex = 0;
+    updateGalleryImage();
+}
+
+function updateGalleryImage() {
+    document.getElementById('galleryImg').src = currentGallery[currentImageIndex];
+    document.getElementById('galleryCounter').innerText = `${currentImageIndex + 1} / ${currentGallery.length}`;
+    
+    // Update dots
+    const dotsContainer = document.getElementById('galleryDots');
+    dotsContainer.innerHTML = '';
+    currentGallery.forEach((_, i) => {
+        const dot = document.createElement('div');
+        dot.className = `gallery-dot ${i === currentImageIndex ? 'active' : ''}`;
+        dot.onclick = () => { currentImageIndex = i; updateGalleryImage(); };
+        dotsContainer.appendChild(dot);
+    });
+}
+
+// Auth State Observer
 auth.onAuthStateChanged(async user => {
     if (user) {
-        const userName = user.displayName || user.phoneNumber || "Earth User";
+        const userName = user.displayName || user.email?.split('@')[0] || "Earth User";
         document.getElementById('sideUserName').innerText = userName;
         document.getElementById('headerUserName').innerText = userName;
-        document.getElementById('userMail').innerText = user.email || user.phoneNumber || '';
-        document.getElementById('logoutBtn').style.display = 'flex';
+        document.getElementById('userMail').innerText = user.email || '';
+        
+        const t = translations[localStorage.getItem('earthLang') || 'en'] || translations['en'];
+        document.getElementById('authBtn').innerText = t.logout;
+        document.getElementById('authBtn').onclick = handleLogout;
+        document.getElementById('logoutBtn').style.display = 'block';
 
-        // Check Admin
+        // Show Admin Shield for admin@earth.com
+        console.log("User email:", user.email);
         if (user.email === "admin@earth.com") {
-            document.getElementById('adminIcon').style.display = 'inline-block';
-            document.getElementById('adminSidebarBtn').style.display = 'flex';
+            const adminIcon = document.getElementById('adminIcon');
+            adminIcon.style.display = 'inline-block';
+            console.log("Admin icon should be visible now");
+        } else {
+            document.getElementById('adminIcon').style.display = 'none';
         }
     } else {
-        document.getElementById('sideUserName').innerText = "Welcome Guest";
-        document.getElementById('adminIcon').style.display = 'none';
-        document.getElementById('adminSidebarBtn').style.display = 'none';
+        const t = translations[localStorage.getItem('earthLang') || 'en'] || translations['en'];
+        document.getElementById('sideUserName').innerText = t.welcome;
+        document.getElementById('headerUserName').innerText = "Guest";
+        document.getElementById('userMail').innerText = "";
+        document.getElementById('authBtn').innerText = t.login;
+        document.getElementById('authBtn').onclick = () => location.href='login.html';
         document.getElementById('logoutBtn').style.display = 'none';
+        document.getElementById('adminIcon').style.display = 'none';
     }
+    
+    // Load Properties
     loadProperties();
-    checkNotifications(); // Check red dot
 });
 
-// Notification Logic
-function checkNotifications() {
-    // Dummy logic: agar localStorage me 'hasNew' true hai to dot dikhao
-    const hasNew = localStorage.getItem('newNotif') === 'true';
-    document.getElementById('bellDot').style.display = hasNew ? 'block' : 'none';
-}
-
-function clearNotification() {
-    localStorage.setItem('newNotif', 'false');
-    document.getElementById('bellDot').style.display = 'none';
-    alert('No new notifications');
-}
-
-function handleAuthAction() {
-    if(auth.currentUser) handleLogout();
-    else location.href='login.html';
-}
-
 function handleLogout() {
-    if(confirm('Logout?')) auth.signOut().then(() => location.reload());
+    if (confirm('Are you sure you want to logout?')) {
+        auth.signOut().then(() => {
+            location.reload();
+        });
+    }
 }
 
-// Properties Load
 function loadProperties() {
     db.collection("properties").orderBy("createdAt", "desc").onSnapshot(snap => {
         allAds = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
         renderAds(allAds);
+    }, err => {
+        console.error("Error loading properties:", err);
+        document.getElementById('propertyList').innerHTML = '<center style="margin-top:50px; color:#d32f2f;">Error loading properties. Please refresh.</center>';
     });
 }
 
 function renderAds(ads) {
     const list = document.getElementById('propertyList');
+    const lang = localStorage.getItem('earthLang') || 'en';
+    const t = translations[lang] || translations['en'];
+    
+    if (ads.length === 0) {
+        list.innerHTML = '<center style="margin-top:50px; color:#888;">No properties found.</center>';
+        return;
+    }
+    
     list.innerHTML = '';
-    const favs = JSON.parse(localStorage.getItem('earthFavorites') || '[]');
-    const t = translations[localStorage.getItem('earthLang') || 'en'] || translations['en'];
-
+    
     ads.forEach(p => {
-        const isFav = favs.includes(p.id);
-        const images = p.images || ['https://via.placeholder.com/400x210'];
+        const images = p.images && Array.isArray(p.images) && p.images.length > 0 
+            ? p.images 
+            : ['https://via.placeholder.com/400x210?text=No+Image'];
+        
         const card = document.createElement('div');
         card.className = 'prop-card';
         card.innerHTML = `
             <div class="img-box" onclick='openGallery(${JSON.stringify(images)}, 0)'>
-                <img src="${images[0]}">
+                <img src="${images[0]}" alt="${p.title || 'Property'}">
                 <div class="card-actions">
-                    <button class="icon-btn" onclick="event.stopPropagation(); shareProperty('${p.id}')"><i class="fa fa-share-alt"></i></button>
-                    <button class="icon-btn ${isFav ? 'fav-active' : ''}" onclick="event.stopPropagation(); toggleFavorite('${p.id}')"><i class="fa${isFav ? '-solid' : '-regular'} fa-heart"></i></button>
+                    <button class="icon-btn share" onclick="event.stopPropagation(); shareProperty('${p.id}', '${encodeURIComponent(p.title || '')}')"><i class="fa fa-share-alt"></i></button>
+                    <button class="icon-btn fav" onclick="event.stopPropagation(); toggleFavorite('${p.id}')"><i class="fa${isFavorite(p.id) ? ' fa-solid' : '-regular'} fa-heart"></i></button>
                 </div>
+                ${images.length > 1 ? `<div class="img-counter">${images.length} <i class="fa fa-images"></i></div>` : ''}
             </div>
             <div class="info">
-                <div class="price">₹${Number(p.price).toLocaleString('en-IN')}</div>
-                <div style="font-weight:700;">${p.title}</div>
+                <div class="price">₹${Number(p.price || 0).toLocaleString('en-IN')}</div>
+                <div style="font-weight:700; margin:5px 0; color:#333;">${p.title || 'Untitled Property'}</div>
+                <div class="location"><i class="fa-solid fa-location-dot"></i> ${p.location || 'Location not specified'}</div>
                 <div class="btn-group">
-                    <button class="btn btn-call" onclick="window.location.href='tel:${p.phone}'"><i class="fa fa-phone"></i> ${t.call}</button>
+                    <button class="btn btn-call" onclick="contact('${p.phone}', 'tel')"><i class="fa fa-phone"></i> ${t.call}</button>
+                    <button class="btn btn-wa" onclick="contact('${p.phone}', 'wa', '${encodeURIComponent(p.title || 'Property')}')"><i class="fa-brands fa-whatsapp"></i> WA</button>
                     <button class="btn btn-chat" onclick="location.href='chat.html?to=${p.ownerId}'"><i class="fa-regular fa-comment"></i> ${t.chat}</button>
                 </div>
-            </div>`;
+            </div>
+        `;
         list.appendChild(card);
     });
 }
 
-function toggleFavorite(id) {
-    let favs = JSON.parse(localStorage.getItem('earthFavorites') || '[]');
-    if(favs.includes(id)) favs = favs.filter(i => i !== id);
-    else favs.push(id);
+function contact(num, type, title) {
+    if (!num || num === 'undefined' || num === 'null' || num.trim() === '') {
+        alert("Error: Owner has not provided a contact number.");
+        return;
+    }
+    
+    let cleanNum = num.toString().replace(/\D/g, '');
+    
+    if (cleanNum.length === 10) {
+        cleanNum = "91" + cleanNum;
+    }
+
+    if (type === 'wa') {
+        const message = encodeURIComponent(`Hi, I'm interested in: ${decodeURIComponent(title)}`);
+        window.open(`https://wa.me/${cleanNum}?text=${message}`, '_blank');
+    } else {
+        window.location.href = `tel:+${cleanNum}`;
+    }
+}
+
+function filterAds() {
+    const val = document.getElementById('searchInput').value.toLowerCase().trim();
+    
+    if (val === '') {
+        renderAds(allAds);
+        return;
+    }
+    
+    const filtered = allAds.filter(a => 
+        (a.location || '').toLowerCase().includes(val) || 
+        (a.title || '').toLowerCase().includes(val) ||
+        (a.description || '').toLowerCase().includes(val)
+    );
+    
+    renderAds(filtered);
+}
+
+// Favorites Management
+function getFavorites() {
+    const favs = localStorage.getItem('earthFavorites');
+    return favs ? JSON.parse(favs) : [];
+}
+
+function isFavorite(propId) {
+    return getFavorites().includes(propId);
+}
+
+function toggleFavorite(propId) {
+    let favs = getFavorites();
+    if (favs.includes(propId)) {
+        favs = favs.filter(id => id !== propId);
+        alert('Removed from favorites');
+    } else {
+        favs.push(propId);
+        alert('Added to favorites ❤️');
+    }
     localStorage.setItem('earthFavorites', JSON.stringify(favs));
     renderAds(allAds);
 }
 
-// Drawer & Gallery
-function toggleDrawer() {
-    const d = document.getElementById('sideDrawer');
-    d.classList.toggle('open');
-    document.getElementById('overlay').style.display = d.classList.contains('open') ? 'block' : 'none';
+// Share Property
+function shareProperty(propId, title) {
+    const url = window.location.origin + '/property-detail.html?id=' + propId;
+    const text = decodeURIComponent(title) + ' - Earth Property Global';
+    
+    if (navigator.share) {
+        navigator.share({
+            title: text,
+            url: url
+        }).catch(err => console.log('Share cancelled'));
+    } else {
+        const tempInput = document.createElement('input');
+        tempInput.value = url;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+        alert('Link copied to clipboard!');
+    }
 }
 
-function openGallery(imgs, idx) {
-    currentGallery = imgs; currentImageIndex = idx;
-    document.getElementById('galleryModal').classList.add('active');
-    updateGallery();
-}
-
-function closeGallery() { document.getElementById('galleryModal').classList.remove('active'); }
-
-function updateGallery() {
-    document.getElementById('galleryImg').src = currentGallery[currentImageIndex];
-    document.getElementById('galleryCounter').innerText = `${currentImageIndex + 1} / ${currentGallery.length}`;
-}
-
-function changeImage(dir) {
-    currentImageIndex = (currentImageIndex + dir + currentGallery.length) % currentGallery.length;
-    updateGallery();
-}
-
-function shareApp() { if(navigator.share) navigator.share({title:'Earth Property', url:window.location.href}); }
-
-// Initialize
+// Initialize on page load
+loadLanguages();
 applyLanguage();
 </script>
 </body>
