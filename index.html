@@ -25,9 +25,10 @@
         .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; flex-shrink: 0; }
         .lang-container { flex-grow: 1; overflow-y: auto; padding: 15px; border-bottom: 1px solid #eee; }
         .lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .lang-btn { padding: 10px; border: 1px solid #ddd; border-radius: 6px; text-align: center; font-size: 13px; cursor: pointer; font-weight: 600; background: #f9f9f9; }
+        .lang-btn { padding: 10px; border: 1px solid #ddd; border-radius: 6px; text-align: center; font-size: 13px; cursor: pointer; font-weight: 600; background: #f9f9f9; transition: all 0.2s; }
+        .lang-btn:active { transform: scale(0.95); }
         .lang-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-        .drawer-footer { padding: 15px; flex-shrink: 0; }
+        .drawer-footer { padding: 15px; flex-shrink: 0; border-top: 1px solid #eee; }
 
         /* Search Bar */
         .search-box { background: white; border-radius: 10px; display: flex; padding: 10px 15px; align-items: center; gap: 10px; }
@@ -35,8 +36,9 @@
 
         /* Property Card */
         .prop-card { background: white; border-radius: 15px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        .img-box { width: 100%; height: 210px; background: #eee; position: relative; }
+        .img-box { width: 100%; height: 210px; background: #eee; position: relative; cursor: pointer; }
         .img-box img { width: 100%; height: 100%; object-fit: cover; }
+        .img-counter { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 15px; font-size: 11px; font-weight: 700; }
         .info { padding: 15px; }
         .price { font-size: 22px; font-weight: 800; color: var(--primary); }
         .location { font-size: 12px; color: #666; margin: 5px 0; }
@@ -55,6 +57,20 @@
         .post-btn { background: var(--primary); color: white !important; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: -35px; border: 5px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-size: 24px; }
 
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4500; display: none; backdrop-filter: blur(2px); }
+
+        /* Gallery Modal */
+        .gallery-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 6000; display: none; }
+        .gallery-modal.active { display: flex; flex-direction: column; }
+        .gallery-header { padding: 15px; color: white; display: flex; justify-content: space-between; align-items: center; }
+        .gallery-close { font-size: 28px; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+        .gallery-content { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; }
+        .gallery-img { max-width: 90%; max-height: 80vh; object-fit: contain; }
+        .gallery-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.3); color: white; border: none; font-size: 24px; padding: 15px 20px; cursor: pointer; border-radius: 5px; }
+        .gallery-prev { left: 10px; }
+        .gallery-next { right: 10px; }
+        .gallery-dots { padding: 20px; display: flex; justify-content: center; gap: 8px; }
+        .gallery-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; }
+        .gallery-dot.active { background: white; }
     </style>
 </head>
 <body>
@@ -74,24 +90,38 @@
     </div>
 
     <div class="drawer-footer">
-        <div onclick="location.href='my-ads.html'" style="padding:12px 0; font-weight:700; color:#444;"><i class="fa fa-layer-group" style="width:25px;"></i> My Ads</div>
-        <div id="logoutBtn" style="padding:12px 0; font-weight:700; color:#d32f2f; display:none;" onclick="handleLogout()"><i class="fa fa-sign-out-alt" style="width:25px;"></i> Logout</div>
+        <div onclick="location.href='my-ads.html'" style="padding:12px 0; font-weight:700; color:#444; cursor: pointer;"><i class="fa fa-layer-group" style="width:25px;"></i> My Ads</div>
+        <div id="logoutBtn" style="padding:12px 0; font-weight:700; color:#d32f2f; display:none; cursor: pointer;" onclick="handleLogout()"><i class="fa fa-sign-out-alt" style="width:25px;"></i> Logout</div>
     </div>
+</div>
+
+<!-- Gallery Modal -->
+<div class="gallery-modal" id="galleryModal">
+    <div class="gallery-header">
+        <div id="galleryCounter" style="font-size: 14px;">1 / 1</div>
+        <div class="gallery-close" onclick="closeGallery()">&times;</div>
+    </div>
+    <div class="gallery-content">
+        <button class="gallery-nav gallery-prev" onclick="changeImage(-1)">&#10094;</button>
+        <img class="gallery-img" id="galleryImg" src="">
+        <button class="gallery-nav gallery-next" onclick="changeImage(1)">&#10095;</button>
+    </div>
+    <div class="gallery-dots" id="galleryDots"></div>
 </div>
 
 <header>
     <div class="header-top">
         <div class="logo-area">
-            <i class="fa fa-bars" onclick="toggleDrawer()" style="font-size:22px;"></i>
+            <i class="fa fa-bars" onclick="toggleDrawer()" style="font-size:22px; cursor: pointer;"></i>
             <span style="font-size:1.3rem; font-weight:900;">Earth Property</span>
         </div>
         <div class="header-right">
-            <i class="fa fa-user-shield admin-btn" id="adminIcon" onclick="location.href='admin-portal.html'"></i>
+            <i class="fa fa-user-shield admin-btn" id="adminIcon" onclick="location.href='admin-portal.html'" title="Admin Portal"></i>
             <div class="bell-icon" onclick="alert('No new notifications')">
                 <i class="fa-regular fa-bell"></i>
                 <div class="bell-dot"></div>
             </div>
-            <button id="authBtn" style="background:white; border:none; color:var(--primary); padding:6px 15px; border-radius:8px; font-weight:800; font-size:12px;">LOGIN</button>
+            <button id="authBtn" style="background:white; border:none; color:var(--primary); padding:6px 15px; border-radius:8px; font-weight:800; font-size:12px; cursor: pointer;">LOGIN</button>
         </div>
     </div>
     <div style="margin-bottom:5px; font-size:11px; font-weight:600; opacity:0.9;">Hi, <span id="headerUserName">Guest</span></div>
@@ -122,6 +152,8 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 
 let allAds = [];
+let currentGallery = [];
+let currentImageIndex = 0;
 
 // 20+ Global Languages
 const languages = [
@@ -132,92 +164,198 @@ const languages = [
     {c:'ta', n:'தமிழ்'}, {c:'gu', n:'ગુજરાતી'}, {c:'kn', n:'ಕನ್ನಡ'}, {c:'ml', n:'മലയാളം'}
 ];
 
-// Load Languages
-const langGrid = document.getElementById('langGrid');
-languages.forEach(l => {
-    const btn = document.createElement('div');
-    const isCurrent = (localStorage.getItem('earthLang') || 'en') === l.c;
-    btn.className = `lang-btn ${isCurrent ? 'active' : ''}`;
-    btn.innerText = l.n;
-    btn.onclick = () => { localStorage.setItem('earthLang', l.c); location.reload(); };
-    langGrid.appendChild(btn);
-});
-
-function toggleDrawer() {
-    document.getElementById('sideDrawer').classList.toggle('open');
-    const o = document.getElementById('overlay');
-    o.style.display = o.style.display === 'block' ? 'none' : 'block';
+// Load Languages into Grid
+function loadLanguages() {
+    const langGrid = document.getElementById('langGrid');
+    langGrid.innerHTML = '';
+    const currentLang = localStorage.getItem('earthLang') || 'en';
+    
+    languages.forEach(l => {
+        const btn = document.createElement('div');
+        btn.className = `lang-btn ${currentLang === l.c ? 'active' : ''}`;
+        btn.innerText = l.n;
+        btn.onclick = () => switchLanguage(l.c);
+        langGrid.appendChild(btn);
+    });
 }
 
+function switchLanguage(langCode) {
+    localStorage.setItem('earthLang', langCode);
+    location.reload();
+}
+
+function toggleDrawer() {
+    const drawer = document.getElementById('sideDrawer');
+    const overlay = document.getElementById('overlay');
+    const isOpen = drawer.classList.contains('open');
+    
+    if (isOpen) {
+        drawer.classList.remove('open');
+        overlay.style.display = 'none';
+    } else {
+        drawer.classList.add('open');
+        overlay.style.display = 'block';
+    }
+}
+
+// Gallery Functions
+function openGallery(images, startIndex = 0) {
+    currentGallery = images;
+    currentImageIndex = startIndex;
+    document.getElementById('galleryModal').classList.add('active');
+    updateGalleryImage();
+}
+
+function closeGallery() {
+    document.getElementById('galleryModal').classList.remove('active');
+}
+
+function changeImage(direction) {
+    currentImageIndex += direction;
+    if (currentImageIndex < 0) currentImageIndex = currentGallery.length - 1;
+    if (currentImageIndex >= currentGallery.length) currentImageIndex = 0;
+    updateGalleryImage();
+}
+
+function updateGalleryImage() {
+    document.getElementById('galleryImg').src = currentGallery[currentImageIndex];
+    document.getElementById('galleryCounter').innerText = `${currentImageIndex + 1} / ${currentGallery.length}`;
+    
+    // Update dots
+    const dotsContainer = document.getElementById('galleryDots');
+    dotsContainer.innerHTML = '';
+    currentGallery.forEach((_, i) => {
+        const dot = document.createElement('div');
+        dot.className = `gallery-dot ${i === currentImageIndex ? 'active' : ''}`;
+        dot.onclick = () => { currentImageIndex = i; updateGalleryImage(); };
+        dotsContainer.appendChild(dot);
+    });
+}
+
+// Auth State Observer
 auth.onAuthStateChanged(async user => {
     if (user) {
-        // Fix Name disappearing
-        const name = user.displayName || "Earth User";
-        document.getElementById('sideUserName').innerText = name;
-        document.getElementById('headerUserName').innerText = name;
-        document.getElementById('userMail').innerText = user.email;
+        const userName = user.displayName || user.email?.split('@')[0] || "Earth User";
+        document.getElementById('sideUserName').innerText = userName;
+        document.getElementById('headerUserName').innerText = userName;
+        document.getElementById('userMail').innerText = user.email || '';
         
         document.getElementById('authBtn').innerText = "LOGOUT";
         document.getElementById('authBtn').onclick = handleLogout;
         document.getElementById('logoutBtn').style.display = 'block';
 
-        // Admin Shield Check
-        if(user.email === "admin@earth.com") {
+        // Show Admin Shield for admin@earth.com
+        if (user.email === "admin@earth.com") {
             document.getElementById('adminIcon').style.display = 'block';
         }
     } else {
+        document.getElementById('sideUserName').innerText = "Welcome Guest";
+        document.getElementById('headerUserName').innerText = "Guest";
+        document.getElementById('userMail').innerText = "";
+        document.getElementById('authBtn').innerText = "LOGIN";
         document.getElementById('authBtn').onclick = () => location.href='login.html';
+        document.getElementById('logoutBtn').style.display = 'none';
+        document.getElementById('adminIcon').style.display = 'none';
     }
     
-    // Initial Load
-    db.collection("properties").orderBy("createdAt", "desc").onSnapshot(snap => {
-        allAds = snap.docs.map(doc => ({id:doc.id, ...doc.data()}));
-        renderAds(allAds);
-    });
+    // Load Properties
+    loadProperties();
 });
 
 function handleLogout() {
-    auth.signOut().then(() => location.reload());
+    if (confirm('Are you sure you want to logout?')) {
+        auth.signOut().then(() => {
+            location.reload();
+        });
+    }
+}
+
+function loadProperties() {
+    db.collection("properties").orderBy("createdAt", "desc").onSnapshot(snap => {
+        allAds = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+        renderAds(allAds);
+    }, err => {
+        console.error("Error loading properties:", err);
+        document.getElementById('propertyList').innerHTML = '<center style="margin-top:50px; color:#d32f2f;">Error loading properties. Please refresh.</center>';
+    });
 }
 
 function renderAds(ads) {
     const list = document.getElementById('propertyList');
-    list.innerHTML = ads.length ? '' : '<center style="margin-top:50px; color:#888;">No properties found.</center>';
+    
+    if (ads.length === 0) {
+        list.innerHTML = '<center style="margin-top:50px; color:#888;">No properties found.</center>';
+        return;
+    }
+    
+    list.innerHTML = '';
+    
     ads.forEach(p => {
-        list.innerHTML += `
-        <div class="prop-card">
-            <div class="img-box"><img src="${(p.images && p.images[0]) || 'https://via.placeholder.com/400x210'}"></div>
+        const images = p.images && Array.isArray(p.images) && p.images.length > 0 
+            ? p.images 
+            : ['https://via.placeholder.com/400x210?text=No+Image'];
+        
+        const card = document.createElement('div');
+        card.className = 'prop-card';
+        card.innerHTML = `
+            <div class="img-box" onclick='openGallery(${JSON.stringify(images)}, 0)'>
+                <img src="${images[0]}" alt="${p.title || 'Property'}">
+                ${images.length > 1 ? `<div class="img-counter">${images.length} <i class="fa fa-images"></i></div>` : ''}
+            </div>
             <div class="info">
                 <div class="price">₹${Number(p.price || 0).toLocaleString('en-IN')}</div>
-                <div style="font-weight:700; margin:5px 0; color:#333;">${p.title}</div>
-                <div class="location"><i class="fa-solid fa-location-dot"></i> ${p.location}</div>
+                <div style="font-weight:700; margin:5px 0; color:#333;">${p.title || 'Untitled Property'}</div>
+                <div class="location"><i class="fa-solid fa-location-dot"></i> ${p.location || 'Location not specified'}</div>
                 <div class="btn-group">
                     <button class="btn btn-call" onclick="contact('${p.phone}', 'tel')"><i class="fa fa-phone"></i> Call</button>
-                    <button class="btn btn-wa" onclick="contact('${p.phone}', 'wa', '${p.title}')"><i class="fa-brands fa-whatsapp"></i> WA</button>
+                    <button class="btn btn-wa" onclick="contact('${p.phone}', 'wa', '${encodeURIComponent(p.title || 'Property')}')"><i class="fa-brands fa-whatsapp"></i> WA</button>
                     <button class="btn btn-chat" onclick="location.href='chat.html?to=${p.ownerId}'"><i class="fa-regular fa-comment"></i> Chat</button>
                 </div>
             </div>
-        </div>`;
+        `;
+        list.appendChild(card);
     });
 }
 
 function contact(num, type, title) {
-    if(!num || num === 'undefined' || num === 'null') return alert("Error: Owner has not provided a contact number.");
-    let cleanNum = num.toString().replace(/\D/g,'');
-    if(cleanNum.length === 10) cleanNum = "91" + cleanNum;
+    if (!num || num === 'undefined' || num === 'null' || num.trim() === '') {
+        alert("Error: Owner has not provided a contact number.");
+        return;
+    }
+    
+    let cleanNum = num.toString().replace(/\D/g, '');
+    
+    if (cleanNum.length === 10) {
+        cleanNum = "91" + cleanNum;
+    }
 
-    if(type === 'wa') window.open(`https://wa.me/${cleanNum}?text=Interested in ${title}`, '_blank');
-    else window.location.href = `tel:+${cleanNum}`;
+    if (type === 'wa') {
+        const message = encodeURIComponent(`Hi, I'm interested in: ${decodeURIComponent(title)}`);
+        window.open(`https://wa.me/${cleanNum}?text=${message}`, '_blank');
+    } else {
+        window.location.href = `tel:+${cleanNum}`;
+    }
 }
 
 function filterAds() {
-    const val = document.getElementById('searchInput').value.toLowerCase();
+    const val = document.getElementById('searchInput').value.toLowerCase().trim();
+    
+    if (val === '') {
+        renderAds(allAds);
+        return;
+    }
+    
     const filtered = allAds.filter(a => 
-        (a.location||'').toLowerCase().includes(val) || 
-        (a.title||'').toLowerCase().includes(val)
+        (a.location || '').toLowerCase().includes(val) || 
+        (a.title || '').toLowerCase().includes(val) ||
+        (a.description || '').toLowerCase().includes(val)
     );
+    
     renderAds(filtered);
 }
+
+// Initialize languages on page load
+loadLanguages();
 </script>
 </body>
 </html>
