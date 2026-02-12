@@ -77,7 +77,7 @@
         /* Property Card */
         .prop-card { background: white; border-radius: 15px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         
-        /* Gallery - COMPLETELY REWRITTEN */
+        /* Gallery */
         .img-box { 
             width: 100%; 
             height: 230px; 
@@ -115,7 +115,6 @@
             display: block;
         }
         
-        /* Placeholder for no image */
         .no-image-placeholder {
             width: 100%;
             height: 100%;
@@ -163,7 +162,6 @@
             background: rgba(0,0,0,0.85); 
         }
         
-        /* Gallery Dots */
         .gallery-dots { 
             position: absolute; 
             bottom: 12px; 
@@ -318,7 +316,13 @@ let allAds = [];
 let currentSlides = {};
 let currentUserEmail = null;
 
-// Languages Array
+// ✅ ADMIN EMAILS - Yaha apna email add kar do
+const ADMIN_EMAILS = [
+    'pkgandhi725@gmail.com',  // Tumhara email
+    'admin@earth.com',         // Future ke liye
+];
+
+// Languages
 const languages = [
     {c:'en', n:'English'}, {c:'hi', n:'हिंदी'}, {c:'pa', n:'ਪੰਜਾਬੀ'}, {c:'ar', n:'العربية'},
     {c:'es', n:'Español'}, {c:'fr', n:'Français'}, {c:'de', n:'Deutsch'}, {c:'tr', n:'Türkçe'},
@@ -327,7 +331,7 @@ const languages = [
     {c:'ta', n:'தமிழ்'}, {c:'gu', n:'ગુજરાતી'}, {c:'kn', n:'ಕನ್ನಡ'}, {c:'ml', n:'മലയാളം'}
 ];
 
-// ✅ FIX 1: Language Loading & Switching - COMPLETELY REWRITTEN
+// Language Loading
 function initLanguages() {
     const langGrid = document.getElementById('langGrid');
     const savedLang = localStorage.getItem('earthLang') || 'en';
@@ -340,24 +344,19 @@ function initLanguages() {
         btn.textContent = lang.n;
         btn.dataset.code = lang.c;
         
-        // Check if this is the active language
         if(lang.c === savedLang) {
             btn.classList.add('active');
         }
         
-        // Click handler
         btn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
             
-            // Save to localStorage
             localStorage.setItem('earthLang', lang.c);
             
-            // Visual feedback
             langGrid.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             
-            // Show feedback
             const feedback = document.createElement('div');
             feedback.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:var(--primary); color:white; padding:20px 30px; border-radius:10px; z-index:9999; font-weight:700; box-shadow:0 5px 20px rgba(0,0,0,0.3);';
             feedback.textContent = `Language: ${lang.n}`;
@@ -373,7 +372,6 @@ function initLanguages() {
     });
 }
 
-// Initialize languages on load
 document.addEventListener('DOMContentLoaded', initLanguages);
 
 function toggleDrawer() {
@@ -384,32 +382,36 @@ function toggleDrawer() {
     overlay.style.display = drawer.classList.contains('open') ? 'block' : 'none';
 }
 
-// ✅ FIX 2: Admin Access - FIXED Email Check
+// ✅ ADMIN CHECK - Ab tumhara email bhi work karega
+function isAdmin(email) {
+    if(!email) return false;
+    const cleanEmail = email.toLowerCase().trim();
+    return ADMIN_EMAILS.some(adminEmail => adminEmail.toLowerCase() === cleanEmail);
+}
+
 function goToAdmin() {
-    console.log('Admin button clicked');
-    console.log('Current user email:', currentUserEmail);
+    console.log('Admin clicked. User:', currentUserEmail);
     
     if(!currentUserEmail) {
-        alert('⚠️ Please login first to access admin portal');
+        alert('⚠️ Please login first');
         setTimeout(() => location.href = 'login.html', 500);
         return;
     }
     
-    // Case-insensitive email check
-    if(currentUserEmail.toLowerCase().trim() === 'admin@earth.com') {
-        console.log('Admin access granted!');
+    if(isAdmin(currentUserEmail)) {
+        console.log('✅ Admin access granted!');
         location.href = 'admin-portal.html';
     } else {
-        alert(`⚠️ Admin Access Only\n\nYour email: ${currentUserEmail}\nRequired: admin@earth.com`);
+        alert(`⚠️ Admin Access Only\n\nYour email: ${currentUserEmail}\n\nTo get admin access, add your email to ADMIN_EMAILS array in code.`);
     }
 }
 
-// Auth State Listener
+// Auth State
 auth.onAuthStateChanged(user => {
-    console.log('Auth state changed:', user ? user.email : 'No user');
+    console.log('Auth state:', user ? user.email : 'No user');
     
     if (user) {
-        currentUserEmail = user.email; // Store globally
+        currentUserEmail = user.email;
         const displayName = user.displayName || user.email.split('@')[0] || "Earth User";
         
         document.getElementById('sideUserName').textContent = displayName;
@@ -420,13 +422,12 @@ auth.onAuthStateChanged(user => {
         document.getElementById('authBtn').onclick = handleLogout;
         document.getElementById('logoutBtn').style.display = 'block';
         
-        console.log('Is admin?', user.email.toLowerCase() === 'admin@earth.com');
+        console.log('Is admin?', isAdmin(user.email));
     } else {
         currentUserEmail = null;
         document.getElementById('authBtn').onclick = () => location.href='login.html';
     }
     
-    // Load properties
     loadProperties();
 });
 
@@ -452,13 +453,13 @@ function loadProperties() {
             console.log(`Loaded ${allAds.length} properties`);
             renderAds(allAds);
         }, error => {
-            console.error('Error loading properties:', error);
+            console.error('Error:', error);
             document.getElementById('propertyList').innerHTML = 
                 '<div style="text-align:center; margin-top:50px; color:#e53935;"><i class="fa fa-exclamation-triangle" style="font-size:50px;"></i><br><br>Error loading properties</div>';
         });
 }
 
-// ✅ FIX 3: Gallery Rendering - COMPLETELY REWRITTEN
+// Render Ads
 function renderAds(ads) {
     const list = document.getElementById('propertyList');
     
@@ -470,7 +471,6 @@ function renderAds(ads) {
     list.innerHTML = '';
     
     ads.forEach(property => {
-        // Process images
         let validImages = [];
         
         if(property.images && Array.isArray(property.images)) {
@@ -485,20 +485,14 @@ function renderAds(ads) {
         const hasImages = validImages.length > 0;
         const imageCount = validImages.length;
         
-        console.log(`Property ${property.id}: ${imageCount} valid images`);
-        
-        // Initialize slide counter
         currentSlides[property.id] = 0;
         
-        // Create card
         const card = document.createElement('div');
         card.className = 'prop-card';
         
-        // Build gallery HTML
         let galleryHTML = '<div class="img-box"><div class="gallery-container">';
         
         if(hasImages) {
-            // Render image gallery
             galleryHTML += `<div class="gallery-slider" id="slider-${property.id}">`;
             
             validImages.forEach((imgUrl, index) => {
@@ -514,7 +508,6 @@ function renderAds(ads) {
             
             galleryHTML += '</div>';
             
-            // Add navigation if multiple images
             if(imageCount > 1) {
                 galleryHTML += `
                     <div class="gallery-nav">
@@ -534,7 +527,6 @@ function renderAds(ads) {
                 `;
             }
         } else {
-            // No images - show placeholder
             galleryHTML += `
                 <div class="no-image-placeholder">
                     <i class="fa fa-image"></i>
@@ -545,7 +537,6 @@ function renderAds(ads) {
         
         galleryHTML += '</div></div>';
         
-        // Build full card
         card.innerHTML = `
             ${galleryHTML}
             
@@ -574,7 +565,7 @@ function renderAds(ads) {
     });
 }
 
-// Gallery Navigation
+// Gallery Functions
 function changeSlide(propId, direction) {
     const property = allAds.find(p => p.id === propId);
     if(!property || !property.images) return;
@@ -602,7 +593,6 @@ function updateGallery(propId, imageCount) {
     const currentIndex = currentSlides[propId];
     slider.style.transform = `translateX(-${currentIndex * 100}%)`;
     
-    // Update dots
     const dotsContainer = document.getElementById(`dots-${propId}`);
     if(dotsContainer) {
         const dots = dotsContainer.querySelectorAll('.gallery-dot');
@@ -612,7 +602,7 @@ function updateGallery(propId, imageCount) {
     }
 }
 
-// Contact Owner
+// Contact
 function contactOwner(phone, type, title = '') {
     if(!phone || phone === 'undefined' || phone === 'null') {
         alert("⚠️ Contact number not available");
@@ -630,7 +620,7 @@ function contactOwner(phone, type, title = '') {
     }
 }
 
-// Search Filter
+// Search
 function filterAds() {
     const query = document.getElementById('searchInput').value.toLowerCase().trim();
     
