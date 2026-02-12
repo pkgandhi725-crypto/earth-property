@@ -16,13 +16,13 @@
         .header-right { display: flex; align-items: center; gap: 15px; }
         .logo-area { display: flex; align-items: center; gap: 10px; }
         
-        /* Admin Icon - Bell ke side - VISIBLE BY DEFAULT for testing */
+        /* Admin Icon */
         .admin-btn { 
             color: #ffd700; 
             font-size: 20px; 
             cursor: pointer; 
             transition: 0.2s; 
-            display: inline-block !important; /* Force visible */
+            display: inline-block;
         }
         .admin-btn:active { transform: scale(0.9); }
         
@@ -45,23 +45,24 @@
         
         .lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .lang-btn { 
-            padding: 10px; 
+            padding: 10px 8px; 
             border: 2px solid #ddd; 
             border-radius: 8px; 
             text-align: center; 
-            font-size: 12px; 
+            font-size: 11px; 
             cursor: pointer; 
             font-weight: 600; 
             background: white;
-            transition: all 0.2s;
+            transition: all 0.25s ease;
+            color: #333;
         }
-        .lang-btn:active { transform: scale(0.96); }
+        .lang-btn:hover { border-color: var(--primary); }
         .lang-btn.active { 
-            background: var(--primary) !important; 
-            color: white !important; 
-            border-color: var(--primary) !important; 
-            box-shadow: 0 3px 10px rgba(46,125,50,0.4);
-            font-weight: 700;
+            background: var(--primary); 
+            color: white; 
+            border-color: var(--primary); 
+            box-shadow: 0 4px 12px rgba(46,125,50,0.5);
+            transform: scale(1.05);
         }
         
         .drawer-footer { padding: 15px; flex-shrink: 0; }
@@ -76,33 +77,35 @@
         /* Property Card */
         .prop-card { background: white; border-radius: 15px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         
-        /* FIXED Gallery */
+        /* Gallery - COMPLETELY REWRITTEN */
         .img-box { 
             width: 100%; 
-            height: 220px; 
-            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); 
+            height: 230px; 
+            background: #f5f5f5;
             position: relative; 
             overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        }
+        
+        .gallery-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
         }
         
         .gallery-slider { 
             display: flex; 
-            transition: transform 0.3s ease; 
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
             height: 100%; 
             width: 100%;
         }
         
         .gallery-slide { 
             min-width: 100%; 
+            width: 100%;
             height: 100%; 
             flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f5f5f5;
+            position: relative;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
         }
         
         .gallery-slide img { 
@@ -111,6 +114,19 @@
             object-fit: cover; 
             display: block;
         }
+        
+        /* Placeholder for no image */
+        .no-image-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
+            color: #999;
+        }
+        .no-image-placeholder i { font-size: 50px; margin-bottom: 10px; opacity: 0.5; }
         
         /* Gallery Controls */
         .gallery-nav { 
@@ -126,41 +142,40 @@
         }
         
         .gallery-nav button { 
-            width: 35px; 
-            height: 35px; 
+            width: 38px; 
+            height: 38px; 
             border-radius: 50%; 
-            background: rgba(0,0,0,0.6); 
+            background: rgba(0,0,0,0.65); 
             color: white; 
-            border: none; 
+            border: 2px solid rgba(255,255,255,0.3);
             font-size: 14px; 
             cursor: pointer; 
             pointer-events: all; 
-            transition: 0.2s; 
-            backdrop-filter: blur(5px);
+            transition: all 0.2s; 
+            backdrop-filter: blur(8px);
             display: flex;
             align-items: center;
             justify-content: center;
         }
         
         .gallery-nav button:active { 
-            transform: scale(0.9); 
-            background: rgba(0,0,0,0.8); 
-        }
-        
-        .gallery-nav button:disabled { 
-            opacity: 0.3; 
-            cursor: not-allowed;
+            transform: scale(0.88); 
+            background: rgba(0,0,0,0.85); 
         }
         
         /* Gallery Dots */
         .gallery-dots { 
             position: absolute; 
-            bottom: 10px; 
+            bottom: 12px; 
             left: 50%; 
             transform: translateX(-50%); 
             display: flex; 
-            gap: 6px; 
+            gap: 7px; 
             z-index: 10;
+            background: rgba(0,0,0,0.3);
+            padding: 6px 10px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
         }
         
         .gallery-dot { 
@@ -169,15 +184,15 @@
             border-radius: 50%; 
             background: rgba(255,255,255,0.6); 
             cursor: pointer; 
-            transition: 0.3s; 
-            border: 1px solid rgba(0,0,0,0.2); 
+            transition: all 0.3s ease; 
+            border: 1px solid rgba(255,255,255,0.3); 
         }
         
         .gallery-dot.active { 
             background: white; 
-            width: 24px; 
-            border-radius: 10px; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            width: 26px; 
+            border-radius: 12px; 
+            box-shadow: 0 2px 8px rgba(255,255,255,0.4);
         }
 
         .info { padding: 15px; }
@@ -216,8 +231,8 @@
 
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4500; display: none; backdrop-filter: blur(2px); }
         
-        .loading { text-align: center; padding: 40px; color: #888; }
-        .loading i { font-size: 40px; animation: spin 1s linear infinite; }
+        .loading { text-align: center; padding: 50px 20px; color: #888; }
+        .loading i { font-size: 40px; animation: spin 1s linear infinite; color: var(--primary); }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
@@ -256,10 +271,10 @@
             <span style="font-size:1.3rem; font-weight:900;">Earth Property</span>
         </div>
         <div class="header-right">
-            <!-- Admin Button - ALWAYS VISIBLE NOW -->
+            <!-- Admin Button -->
             <i class="fa fa-user-shield admin-btn" id="adminIcon" onclick="goToAdmin()" title="Admin Portal"></i>
             
-            <div class="bell-icon" onclick="showNotifications()">
+            <div class="bell-icon" onclick="alert('🔔 No new notifications')">
                 <i class="fa-regular fa-bell"></i>
                 <div class="bell-dot"></div>
             </div>
@@ -274,7 +289,7 @@
 </header>
 
 <div id="propertyList">
-    <div class="loading"><i class="fa fa-spinner"></i><br>Loading properties...</div>
+    <div class="loading"><i class="fa fa-spinner"></i><br><br>Loading properties...</div>
 </div>
 
 <nav class="bottom-nav">
@@ -301,8 +316,9 @@ const auth = firebase.auth();
 
 let allAds = [];
 let currentSlides = {};
+let currentUserEmail = null;
 
-// 20+ Languages
+// Languages Array
 const languages = [
     {c:'en', n:'English'}, {c:'hi', n:'हिंदी'}, {c:'pa', n:'ਪੰਜਾਬੀ'}, {c:'ar', n:'العربية'},
     {c:'es', n:'Español'}, {c:'fr', n:'Français'}, {c:'de', n:'Deutsch'}, {c:'tr', n:'Türkçe'},
@@ -311,194 +327,243 @@ const languages = [
     {c:'ta', n:'தமிழ்'}, {c:'gu', n:'ગુજરાતી'}, {c:'kn', n:'ಕನ್ನಡ'}, {c:'ml', n:'മലയാളം'}
 ];
 
-// ✅ FIX 1: Language Change with Better Active State
-function loadLanguages() {
+// ✅ FIX 1: Language Loading & Switching - COMPLETELY REWRITTEN
+function initLanguages() {
     const langGrid = document.getElementById('langGrid');
     const savedLang = localStorage.getItem('earthLang') || 'en';
     
-    console.log('Current Language:', savedLang); // Debug
+    langGrid.innerHTML = '';
     
-    langGrid.innerHTML = ''; // Clear first
-    
-    languages.forEach(l => {
+    languages.forEach(lang => {
         const btn = document.createElement('div');
         btn.className = 'lang-btn';
-        btn.innerText = l.n;
-        btn.dataset.lang = l.c;
+        btn.textContent = lang.n;
+        btn.dataset.code = lang.c;
         
-        // Set active class
-        if(savedLang === l.c) {
+        // Check if this is the active language
+        if(lang.c === savedLang) {
             btn.classList.add('active');
-            console.log('Active language set:', l.n);
         }
         
-        btn.onclick = function() {
-            console.log('Language clicked:', l.c);
-            localStorage.setItem('earthLang', l.c);
+        // Click handler
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
             
-            // Visual feedback before reload
-            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+            // Save to localStorage
+            localStorage.setItem('earthLang', lang.c);
+            
+            // Visual feedback
+            langGrid.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             
+            // Show feedback
+            const feedback = document.createElement('div');
+            feedback.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:var(--primary); color:white; padding:20px 30px; border-radius:10px; z-index:9999; font-weight:700; box-shadow:0 5px 20px rgba(0,0,0,0.3);';
+            feedback.textContent = `Language: ${lang.n}`;
+            document.body.appendChild(feedback);
+            
             setTimeout(() => {
-                location.reload();
-            }, 300);
-        };
+                feedback.remove();
+                window.location.reload();
+            }, 800);
+        });
         
         langGrid.appendChild(btn);
     });
 }
 
-// Load languages on page load
-loadLanguages();
+// Initialize languages on load
+document.addEventListener('DOMContentLoaded', initLanguages);
 
 function toggleDrawer() {
-    document.getElementById('sideDrawer').classList.toggle('open');
+    const drawer = document.getElementById('sideDrawer');
     const overlay = document.getElementById('overlay');
-    overlay.style.display = overlay.style.display === 'block' ? 'none' : 'block';
+    
+    drawer.classList.toggle('open');
+    overlay.style.display = drawer.classList.contains('open') ? 'block' : 'none';
 }
 
-// ✅ FIX 2: Admin Button Always Visible (for testing)
+// ✅ FIX 2: Admin Access - FIXED Email Check
 function goToAdmin() {
-    const user = auth.currentUser;
-    if(!user) {
-        alert('Please login first to access admin portal');
-        location.href = 'login.html';
+    console.log('Admin button clicked');
+    console.log('Current user email:', currentUserEmail);
+    
+    if(!currentUserEmail) {
+        alert('⚠️ Please login first to access admin portal');
+        setTimeout(() => location.href = 'login.html', 500);
         return;
     }
     
-    // Check if admin
-    if(user.email === 'admin@earth.com') {
+    // Case-insensitive email check
+    if(currentUserEmail.toLowerCase().trim() === 'admin@earth.com') {
+        console.log('Admin access granted!');
         location.href = 'admin-portal.html';
     } else {
-        alert('⚠️ Admin access only!\nYour email: ' + user.email);
+        alert(`⚠️ Admin Access Only\n\nYour email: ${currentUserEmail}\nRequired: admin@earth.com`);
     }
 }
 
-function showNotifications() {
-    alert('🔔 No new notifications');
-}
-
-// Auth State
-auth.onAuthStateChanged(async user => {
+// Auth State Listener
+auth.onAuthStateChanged(user => {
+    console.log('Auth state changed:', user ? user.email : 'No user');
+    
     if (user) {
+        currentUserEmail = user.email; // Store globally
         const displayName = user.displayName || user.email.split('@')[0] || "Earth User";
         
-        document.getElementById('sideUserName').innerText = displayName;
-        document.getElementById('headerUserName').innerText = displayName;
-        document.getElementById('userMail').innerText = user.email;
+        document.getElementById('sideUserName').textContent = displayName;
+        document.getElementById('headerUserName').textContent = displayName;
+        document.getElementById('userMail').textContent = user.email;
         
-        document.getElementById('authBtn').innerText = "LOGOUT";
+        document.getElementById('authBtn').textContent = "LOGOUT";
         document.getElementById('authBtn').onclick = handleLogout;
         document.getElementById('logoutBtn').style.display = 'block';
         
-        console.log('User logged in:', user.email);
-        console.log('Is Admin?', user.email === 'admin@earth.com');
+        console.log('Is admin?', user.email.toLowerCase() === 'admin@earth.com');
     } else {
+        currentUserEmail = null;
         document.getElementById('authBtn').onclick = () => location.href='login.html';
     }
     
-    // Load Properties
+    // Load properties
     loadProperties();
 });
 
 function handleLogout() {
     if(confirm('Are you sure you want to logout?')) {
-        auth.signOut().then(() => location.reload());
+        auth.signOut().then(() => {
+            currentUserEmail = null;
+            location.reload();
+        });
     }
 }
 
 // Load Properties
 function loadProperties() {
-    db.collection("properties").orderBy("createdAt", "desc").onSnapshot(snap => {
-        allAds = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
-        console.log('Properties loaded:', allAds.length);
-        renderAds(allAds);
-    }, error => {
-        console.error('Error loading properties:', error);
-        document.getElementById('propertyList').innerHTML = '<div style="text-align:center; margin-top:50px; color:#e53935;"><i class="fa fa-exclamation-triangle" style="font-size:50px;"></i><br><br>Error loading properties</div>';
-    });
+    db.collection("properties")
+        .orderBy("createdAt", "desc")
+        .onSnapshot(snapshot => {
+            allAds = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            
+            console.log(`Loaded ${allAds.length} properties`);
+            renderAds(allAds);
+        }, error => {
+            console.error('Error loading properties:', error);
+            document.getElementById('propertyList').innerHTML = 
+                '<div style="text-align:center; margin-top:50px; color:#e53935;"><i class="fa fa-exclamation-triangle" style="font-size:50px;"></i><br><br>Error loading properties</div>';
+        });
 }
 
-// ✅ FIX 3: Gallery with Proper Image Preview
+// ✅ FIX 3: Gallery Rendering - COMPLETELY REWRITTEN
 function renderAds(ads) {
     const list = document.getElementById('propertyList');
     
-    if(!ads.length) {
-        list.innerHTML = '<div style="text-align:center; margin-top:50px; color:#888;"><i class="fa fa-home" style="font-size:50px;"></i><br><br>No properties found.</div>';
+    if(!ads || ads.length === 0) {
+        list.innerHTML = '<div style="text-align:center; padding:50px 20px; color:#888;"><i class="fa fa-home" style="font-size:50px; opacity:0.3;"></i><br><br>No properties found</div>';
         return;
     }
     
     list.innerHTML = '';
     
-    ads.forEach(p => {
-        // Get images array, fallback to placeholder
-        let images = [];
-        if(p.images && Array.isArray(p.images) && p.images.length > 0) {
-            images = p.images.filter(img => img && img.trim() !== '');
+    ads.forEach(property => {
+        // Process images
+        let validImages = [];
+        
+        if(property.images && Array.isArray(property.images)) {
+            validImages = property.images.filter(img => 
+                img && 
+                typeof img === 'string' && 
+                img.trim() !== '' && 
+                (img.startsWith('http') || img.startsWith('data:'))
+            );
         }
         
-        // If no valid images, use placeholder
-        if(images.length === 0) {
-            images = ['https://via.placeholder.com/400x220/2e7d32/ffffff?text=No+Image+Available'];
-        }
+        const hasImages = validImages.length > 0;
+        const imageCount = validImages.length;
         
-        console.log(`Property ${p.id} has ${images.length} images`);
+        console.log(`Property ${property.id}: ${imageCount} valid images`);
         
-        currentSlides[p.id] = 0; // Initialize
+        // Initialize slide counter
+        currentSlides[property.id] = 0;
         
+        // Create card
         const card = document.createElement('div');
         card.className = 'prop-card';
         
         // Build gallery HTML
-        let galleryHTML = `
-            <div class="img-box">
-                <div class="gallery-slider" id="slider-${p.id}">
-                    ${images.map((img, idx) => `
-                        <div class="gallery-slide">
-                            <img src="${img}" 
-                                 alt="Property Image ${idx + 1}"
-                                 onerror="this.onerror=null; this.src='https://via.placeholder.com/400x220/e53935/ffffff?text=Image+Load+Error';">
-                        </div>
-                    `).join('')}
-                </div>
-        `;
+        let galleryHTML = '<div class="img-box"><div class="gallery-container">';
         
-        // Add controls only if multiple images
-        if(images.length > 1) {
+        if(hasImages) {
+            // Render image gallery
+            galleryHTML += `<div class="gallery-slider" id="slider-${property.id}">`;
+            
+            validImages.forEach((imgUrl, index) => {
+                galleryHTML += `
+                    <div class="gallery-slide">
+                        <img src="${imgUrl}" 
+                             alt="Property ${index + 1}"
+                             loading="lazy"
+                             onerror="this.parentElement.innerHTML='<div class=\\'no-image-placeholder\\'><i class=\\'fa fa-image\\'></i><div>Image unavailable</div></div>';">
+                    </div>
+                `;
+            });
+            
+            galleryHTML += '</div>';
+            
+            // Add navigation if multiple images
+            if(imageCount > 1) {
+                galleryHTML += `
+                    <div class="gallery-nav">
+                        <button onclick="changeSlide('${property.id}', -1)">
+                            <i class="fa fa-chevron-left"></i>
+                        </button>
+                        <button onclick="changeSlide('${property.id}', 1)">
+                            <i class="fa fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="gallery-dots" id="dots-${property.id}">
+                        ${validImages.map((_, i) => 
+                            `<div class="gallery-dot ${i === 0 ? 'active' : ''}" onclick="goToSlide('${property.id}', ${i})"></div>`
+                        ).join('')}
+                    </div>
+                `;
+            }
+        } else {
+            // No images - show placeholder
             galleryHTML += `
-                <div class="gallery-nav">
-                    <button onclick="changeSlide('${p.id}', -1)" id="prev-${p.id}">
-                        <i class="fa fa-chevron-left"></i>
-                    </button>
-                    <button onclick="changeSlide('${p.id}', 1)" id="next-${p.id}">
-                        <i class="fa fa-chevron-right"></i>
-                    </button>
-                </div>
-                
-                <div class="gallery-dots" id="dots-${p.id}">
-                    ${images.map((_, i) => `<div class="gallery-dot ${i === 0 ? 'active' : ''}" onclick="goToSlide('${p.id}', ${i})"></div>`).join('')}
+                <div class="no-image-placeholder">
+                    <i class="fa fa-image"></i>
+                    <div>No image available</div>
                 </div>
             `;
         }
         
-        galleryHTML += `</div>`;
+        galleryHTML += '</div></div>';
         
+        // Build full card
         card.innerHTML = `
             ${galleryHTML}
             
             <div class="info">
-                <div class="price">₹${Number(p.price || 0).toLocaleString('en-IN')}</div>
-                <div class="prop-title">${p.title || 'Property'}</div>
-                <div class="location"><i class="fa-solid fa-location-dot"></i> ${p.location || 'Location not specified'}</div>
+                <div class="price">₹${(property.price || 0).toLocaleString('en-IN')}</div>
+                <div class="prop-title">${property.title || 'Property'}</div>
+                <div class="location">
+                    <i class="fa-solid fa-location-dot"></i> 
+                    ${property.location || 'Location not specified'}
+                </div>
                 <div class="btn-group">
-                    <button class="btn btn-call" onclick="contact('${p.phone}', 'tel')">
+                    <button class="btn btn-call" onclick="contactOwner('${property.phone}', 'call')">
                         <i class="fa fa-phone"></i> Call
                     </button>
-                    <button class="btn btn-wa" onclick="contact('${p.phone}', 'wa', '${encodeURIComponent(p.title || 'Property')}')">
+                    <button class="btn btn-wa" onclick="contactOwner('${property.phone}', 'whatsapp', '${(property.title || '').replace(/'/g, "\\'")}')">
                         <i class="fa-brands fa-whatsapp"></i> WA
                     </button>
-                    <button class="btn btn-chat" onclick="location.href='chat.html?to=${p.ownerId}'">
+                    <button class="btn btn-chat" onclick="location.href='chat.html?to=${property.ownerId}'">
                         <i class="fa-regular fa-comment"></i> Chat
                     </button>
                 </div>
@@ -509,77 +574,77 @@ function renderAds(ads) {
     });
 }
 
-// Gallery Functions
+// Gallery Navigation
 function changeSlide(propId, direction) {
     const property = allAds.find(p => p.id === propId);
-    if(!property) return;
+    if(!property || !property.images) return;
     
-    const images = property.images && property.images.length ? property.images : [1];
-    const maxSlides = images.length;
+    const imageCount = property.images.filter(img => img && img.trim()).length;
+    if(imageCount <= 1) return;
     
-    currentSlides[propId] = (currentSlides[propId] + direction + maxSlides) % maxSlides;
-    updateSlider(propId, maxSlides);
+    currentSlides[propId] = (currentSlides[propId] + direction + imageCount) % imageCount;
+    updateGallery(propId, imageCount);
 }
 
 function goToSlide(propId, index) {
     const property = allAds.find(p => p.id === propId);
-    if(!property) return;
+    if(!property || !property.images) return;
     
-    const images = property.images && property.images.length ? property.images : [1];
     currentSlides[propId] = index;
-    updateSlider(propId, images.length);
+    const imageCount = property.images.filter(img => img && img.trim()).length;
+    updateGallery(propId, imageCount);
 }
 
-function updateSlider(propId, maxSlides) {
+function updateGallery(propId, imageCount) {
     const slider = document.getElementById(`slider-${propId}`);
     if(!slider) return;
     
-    const slideIndex = currentSlides[propId];
-    slider.style.transform = `translateX(-${slideIndex * 100}%)`;
+    const currentIndex = currentSlides[propId];
+    slider.style.transform = `translateX(-${currentIndex * 100}%)`;
     
     // Update dots
     const dotsContainer = document.getElementById(`dots-${propId}`);
     if(dotsContainer) {
         const dots = dotsContainer.querySelectorAll('.gallery-dot');
         dots.forEach((dot, i) => {
-            dot.classList.toggle('active', i === slideIndex);
+            dot.classList.toggle('active', i === currentIndex);
         });
     }
-    
-    // Update button states
-    const prevBtn = document.getElementById(`prev-${propId}`);
-    const nextBtn = document.getElementById(`next-${propId}`);
-    
-    if(prevBtn) prevBtn.disabled = slideIndex === 0;
-    if(nextBtn) nextBtn.disabled = slideIndex === maxSlides - 1;
 }
 
-// Contact
-function contact(num, type, title) {
-    if(!num || num === 'undefined' || num === 'null') {
-        alert("⚠️ Owner has not provided contact number");
+// Contact Owner
+function contactOwner(phone, type, title = '') {
+    if(!phone || phone === 'undefined' || phone === 'null') {
+        alert("⚠️ Contact number not available");
         return;
     }
     
-    let cleanNum = num.toString().replace(/\D/g,'');
+    let cleanNum = phone.toString().replace(/\D/g, '');
     if(cleanNum.length === 10) cleanNum = "91" + cleanNum;
-
-    if(type === 'wa') {
-        const text = encodeURIComponent('Hi, I am interested in: ' + decodeURIComponent(title));
-        window.open(`https://wa.me/${cleanNum}?text=${text}`, '_blank');
+    
+    if(type === 'whatsapp') {
+        const message = encodeURIComponent(`Hi, I'm interested in: ${title}`);
+        window.open(`https://wa.me/${cleanNum}?text=${message}`, '_blank');
     } else {
         window.location.href = `tel:+${cleanNum}`;
     }
 }
 
-// Search
+// Search Filter
 function filterAds() {
-    const query = document.getElementById('searchInput').value.toLowerCase();
-    const filtered = allAds.filter(a => 
-        (a.location || '').toLowerCase().includes(query) || 
-        (a.title || '').toLowerCase().includes(query) ||
-        (a.description || '').toLowerCase().includes(query)
+    const query = document.getElementById('searchInput').value.toLowerCase().trim();
+    
+    if(!query) {
+        renderAds(allAds);
+        return;
+    }
+    
+    const filtered = allAds.filter(ad => 
+        (ad.title || '').toLowerCase().includes(query) ||
+        (ad.location || '').toLowerCase().includes(query) ||
+        (ad.description || '').toLowerCase().includes(query)
     );
+    
     renderAds(filtered);
 }
 </script>
