@@ -30,10 +30,9 @@
         .img-box { width: 100%; height: 220px; background: #ddd; overflow: hidden; position: relative; cursor: pointer; }
         .img-box img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* New Fav & Share Icons on Card */
-        .card-actions { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 10px; }
+        .card-actions { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 10px; z-index: 10; }
         .action-btn { background: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer; color: #555; }
-        .action-btn.fav.active { color: #e91e63; }
+        .action-btn i { font-size: 16px; }
 
         .info { padding: 15px; }
         .btn-group { display: flex; gap: 8px; margin-top: 12px; }
@@ -60,7 +59,7 @@
         <div style="display:flex; align-items:center; gap:15px;">
             <i class="fa fa-user-circle fa-3x"></i>
             <div>
-                <h3 id="sideUserName">Guest User</h3>
+                <h3 id="sideUserName">Loading...</h3>
                 <p id="txtPremium" style="font-size:11px; opacity:0.8;">Premium Member</p>
             </div>
         </div>
@@ -76,7 +75,7 @@
         <div class="lang-grid" id="langGrid"></div>
     </div>
     <div style="padding:15px;">
-        <button id="logoutBtn" style="width:100%; padding:10px; color:red; background:none; border:1px solid red; border-radius:8px; display:none;" onclick="handleLogout()"></button>
+        <button id="logoutBtn" style="width:100%; padding:10px; color:red; background:none; border:1px solid red; border-radius:8px; display:none; font-weight:bold; cursor:pointer;" onclick="handleLogout()">LOGOUT</button>
     </div>
 </div>
 
@@ -89,7 +88,7 @@
         <div class="header-right">
             <i class="fa fa-user-shield" id="adminIcon" onclick="location.href='admin.html'"></i>
             <div class="bell-box" onclick="alert('No notifications')"><i class="fa-regular fa-bell" style="font-size:20px;"></i></div>
-            <button id="authBtn" style="background:white; color:var(--primary); border:none; padding:6px 14px; border-radius:8px; font-weight:800; font-size:12px;"></button>
+            <button id="authBtn" onclick="handleAuthAction()" style="background:white; color:var(--primary); border:none; padding:6px 14px; border-radius:8px; font-weight:800; font-size:12px; cursor:pointer;">LOGIN</button>
         </div>
     </div>
 </header>
@@ -119,7 +118,6 @@ const translations = {
     en: { explore: "Explore", myAds: "My Ads", favs: "Favs", profile: "My Profile", shareApp: "Share App", login: "LOGIN", logout: "LOGOUT", call: "Call", chat: "Chat", selectLang: "SELECT LANGUAGE", favorites: "Favorites" },
     hi: { explore: "खोजें", myAds: "विज्ञापन", favs: "पसंदीदा", profile: "मेरी प्रोफाइल", shareApp: "ऐप शेयर करें", login: "लॉगिन", logout: "लॉगआउट", call: "कॉल", chat: "चैट", selectLang: "भाषा चुनें", favorites: "पसंदीदा" },
     pa: { explore: "ਖੋਜੋ", myAds: "ਵਿਗਿਆਪਨ", favs: "ਪਸੰਦੀਦਾ", profile: "ਮੇਰੀ ਪ੍ਰੋਫਾਈਲ", shareApp: "ਐਪ ਸਾਂਝਾ ਕਰੋ", login: "ਲੌਗਇਨ", logout: "ਲੌਗਆਉਟ", call: "ਕਾਲ", chat: "ਚੈਟ", selectLang: "ਭਾਸ਼ਾ ਚੁਣੋ", favorites: "ਪਸੰਦੀਦਾ" }
-    // Add other languages here similarly...
 };
 
 const languages = [
@@ -130,11 +128,10 @@ const languages = [
     {c:'mr', n:'मराठी'}, {c:'ta', n:'தமிழ்'}, {c:'gu', n:'ગુજરાતી'}, {c:'kn', n:'ಕನ್ನಡ'}
 ];
 
-const langGrid = document.getElementById('langGrid');
-
 function applyLanguage() {
     const lang = localStorage.getItem('earthLang') || 'en';
     const t = translations[lang] || translations['en'];
+    const user = auth.currentUser;
 
     document.getElementById('txtNavExplore').innerText = t.explore;
     document.getElementById('txtNavAds').innerText = t.myAds;
@@ -146,14 +143,17 @@ function applyLanguage() {
     document.getElementById('txtProfileSide').innerText = t.profile;
     document.getElementById('txtShareApp').innerText = t.shareApp;
     
-    const user = auth.currentUser;
     document.getElementById('authBtn').innerText = user ? t.logout : t.login;
     if(user) {
         document.getElementById('logoutBtn').innerText = t.logout;
         document.getElementById('logoutBtn').style.display = 'block';
+    } else {
+        document.getElementById('logoutBtn').style.display = 'none';
     }
 }
 
+// Draw Lang Grid
+const langGrid = document.getElementById('langGrid');
 languages.forEach(l => {
     const btn = document.createElement('div');
     const savedL = localStorage.getItem('earthLang') || 'en';
@@ -172,34 +172,51 @@ function toggleDrawer() {
     document.getElementById('overlay').style.display = d.classList.contains('open') ? 'block' : 'none';
 }
 
+function handleAuthAction() {
+    if(auth.currentUser) { handleLogout(); } 
+    else { location.href='login.html'; }
+}
+
+function handleLogout() { 
+    auth.signOut().then(() => {
+        localStorage.removeItem('user');
+        location.reload();
+    }); 
+}
+
 function shareApp() {
     if (navigator.share) {
         navigator.share({ title: 'Earth Property', url: window.location.href });
-    } else { alert("Link copied to clipboard!"); }
+    } else { alert("Link copied!"); }
 }
 
 function shareProperty(id, title) {
+    const url = `${window.location.origin}/property-details.html?id=${id}`;
     if (navigator.share) {
-        navigator.share({ title: title, url: window.location.origin + '/property-details.html?id=' + id });
-    }
+        navigator.share({ title: title, url: url });
+    } else { alert("Property link copied!"); }
+}
+
+async function toggleFav(id) {
+    if(!auth.currentUser) return location.href='login.html';
+    alert("Added to Favorites!");
 }
 
 auth.onAuthStateChanged(user => {
     applyLanguage(); 
     if (user) {
-        // User Name Fix
         document.getElementById('sideUserName').innerText = user.displayName || "Earth User";
         if(user.uid === ADMIN_UID) document.getElementById('adminIcon').style.setProperty('display', 'inline-block', 'important');
     } else {
-        document.getElementById('authBtn').onclick = () => location.href='login.html';
         document.getElementById('sideUserName').innerText = "Guest User";
     }
     
+    // Load Properties
     db.collection("properties").orderBy("createdAt", "desc").onSnapshot(snap => {
         const list = document.getElementById('propertyList');
         list.innerHTML = '';
-        const curL = localStorage.getItem('earthLang') || 'en';
-        const t = translations[curL] || translations['en'];
+        const lang = localStorage.getItem('earthLang') || 'en';
+        const t = translations[lang] || translations['en'];
         
         snap.forEach(doc => {
             const p = doc.data();
@@ -208,7 +225,7 @@ auth.onAuthStateChanged(user => {
             list.innerHTML += `
             <div class="prop-card">
                 <div class="card-actions">
-                    <div class="action-btn fav" onclick="toggleFav('${id}')"><i class="fa fa-heart"></i></div>
+                    <div class="action-btn" onclick="toggleFav('${id}')"><i class="fa-regular fa-heart"></i></div>
                     <div class="action-btn" onclick="shareProperty('${id}', '${p.title}')"><i class="fa fa-share-nodes"></i></div>
                 </div>
                 <div class="img-box" onclick="location.href='property-details.html?id=${id}'">
@@ -227,15 +244,6 @@ auth.onAuthStateChanged(user => {
         });
     });
 });
-
-async function toggleFav(id) {
-    const user = auth.currentUser;
-    if(!user) return location.href='login.html';
-    // Minimal logic for UI feedback, backend needs 'favorites' collection
-    alert("Added to favorites!");
-}
-
-function handleLogout() { auth.signOut().then(() => location.reload()); }
 </script>
 </body>
 </html>
