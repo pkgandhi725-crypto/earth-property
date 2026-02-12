@@ -1,5 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Inbox - Earth Property</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #2e7d32; --bg: #f0f2f5; }
+        body { font-family: sans-serif; margin: 0; background: var(--bg); padding-bottom: 20px; }
+        
+        header { 
+            background: var(--primary); color: white; padding: 15px; 
+            display: flex; align-items: center; gap: 15px; 
+            position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .tabs {
+            display: flex; background: white; border-bottom: 1px solid #ddd;
+            position: sticky; top: 55px; z-index: 99;
+        }
+        .tab { 
+            flex: 1; text-align: center; padding: 15px; font-weight: 700; 
+            color: #777; cursor: pointer; font-size: 14px; transition: 0.3s;
+        }
+        .tab.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
+
+        .chat-list { padding: 10px; }
+        
+        .chat-card { 
+            background: white; padding: 12px; border-radius: 12px; 
+            display: flex; align-items: center; gap: 12px; margin-bottom: 10px; 
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06); cursor: pointer;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .user-avatar { 
+            width: 50px; height: 50px; border-radius: 50%; 
+            background: #2e7d32; display: flex; align-items: center; 
+            justify-content: center; font-size: 20px; color: white; font-weight: bold;
+        }
+
+        .chat-details { flex: 1; overflow: hidden; }
+        .chat-header { display: flex; justify-content: space-between; align-items: center; }
+        .user-name { font-weight: 700; color: #333; font-size: 15px; }
+        .chat-time { font-size: 11px; color: #999; }
+        
+        .last-msg { 
+            font-size: 13px; color: #666; margin-top: 4px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        .unread-badge { 
+            background: #ff5252; color: white; min-width: 22px; height: 22px; 
+            border-radius: 50%; display: flex; align-items: center; 
+            justify-content: center; font-size: 11px; font-weight: bold; padding: 2px;
+        }
+
+        .empty-state { text-align: center; padding: 60px 20px; color: #999; font-size: 14px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<header>
+    <i class="fa fa-arrow-left" onclick="location.href='index.html'" style="cursor: pointer; font-size: 20px;"></i>
+    <h3 style="margin:0;">Inbox</h3>
+</header>
+
+<div class="tabs">
+    <div class="tab active" id="tabNew" onclick="switchTab('new')">New Messages</div>
+    <div class="tab" id="tabHistory" onclick="switchTab('history')">Chat History</div>
+</div>
+
+<div id="newSection" class="chat-list">
+    <div class="empty-state">Loading messages...</div>
+</div>
+<div id="historySection" class="chat-list hidden">
+    <div class="empty-state">Loading history...</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
 <script>
-// Firebase config same rahegi
 const firebaseConfig = { 
     apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
     authDomain: "earth-properties-c3c56.firebaseapp.com", 
@@ -28,42 +113,39 @@ function switchTab(type) {
 }
 
 async function loadChats() {
-    // 1. orderBy hataya hai taaki Index error na aaye aur data turant dikhe
+    // Listener for all chats involving the current user
     db.collection("chats")
     .where("users", "array-contains", myUid)
     .onSnapshot(async snapshot => {
         const newSec = document.getElementById('newSection');
         const histSec = document.getElementById('historySection');
         
-        newSec.innerHTML = '<div class="empty-state">Loading messages...</div>';
-        histSec.innerHTML = '<div class="empty-state">Loading history...</div>';
-
         if (snapshot.empty) {
             newSec.innerHTML = '<div class="empty-state">No new messages</div>';
             histSec.innerHTML = '<div class="empty-state">No chat history found</div>';
             return;
         }
 
-        let newHTML = '';
-        let histHTML = '';
+        let newCards = [];
+        let histCards = [];
 
-        // Sabhi documents ko process karein
+        // Map through docs and fetch user details
         const promises = snapshot.docs.map(async (doc) => {
             const data = doc.data();
             const otherUid = data.users.find(id => id !== myUid);
             const unreadCount = data[`unreadCount_${myUid}`] || 0;
             
-            // Name Fetching
+            // Get Samne wale ka Name from 'users' collection
             const userSnap = await db.collection("users").doc(otherUid).get();
             const userData = userSnap.data() || {};
-            const userName = userData.name || "User";
+            const userName = userData.name || "Earth User";
             const userInitial = userName.charAt(0).toUpperCase();
 
-            // Time handling safely
-            let time = "";
+            // Handle Time
+            let timeStr = "";
             if (data.lastTime) {
                 const date = data.lastTime.toDate ? data.lastTime.toDate() : new Date(data.lastTime.seconds * 1000);
-                time = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                timeStr = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             }
 
             const chatHTML = `
@@ -72,7 +154,7 @@ async function loadChats() {
                     <div class="chat-details">
                         <div class="chat-header">
                             <span class="user-name">${userName}</span>
-                            <span class="chat-time">${time}</span>
+                            <span class="chat-time">${timeStr}</span>
                         </div>
                         <p class="last-msg">${data.lastMsg || "Tap to view chat"}</p>
                     </div>
@@ -80,20 +162,29 @@ async function loadChats() {
                 </div>
             `;
 
-            histHTML += chatHTML;
+            // Adding to history always
+            histCards.push({html: chatHTML, time: data.lastTime || 0});
+            
+            // Adding to New only if unread
             if (unreadCount > 0) {
-                newHTML += chatHTML;
+                newCards.push({html: chatHTML, time: data.lastTime || 0});
             }
         });
 
-        // Sabhi names fetch hone ka wait karein
         await Promise.all(promises);
 
-        newSec.innerHTML = newHTML || '<div class="empty-state">No new messages</div>';
-        histSec.innerHTML = histHTML || '<div class="empty-state">No history found</div>';
+        // Sort by time manually since we removed Firestore orderBy for safety
+        histCards.sort((a, b) => (b.time.seconds || 0) - (a.time.seconds || 0));
+        newCards.sort((a, b) => (b.time.seconds || 0) - (a.time.seconds || 0));
+
+        histSec.innerHTML = histCards.map(c => c.html).join('') || '<div class="empty-state">No chat history found</div>';
+        newSec.innerHTML = newCards.map(c => c.html).join('') || '<div class="empty-state">No new messages</div>';
+
     }, error => {
         console.error("Firestore Error:", error);
-        document.getElementById('newSection').innerHTML = '<div class="empty-state">Error loading data.</div>';
+        document.getElementById('newSection').innerHTML = '<div class="empty-state" style="color:red;">Error loading chats. Please check permissions.</div>';
     });
 }
 </script>
+</body>
+</html>
