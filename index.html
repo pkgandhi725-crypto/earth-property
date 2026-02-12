@@ -30,8 +30,8 @@
         .img-box img { width: 100%; height: 100%; object-fit: cover; }
         
         .card-actions { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 10px; z-index: 10; }
-        .action-btn { background: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer; color: #555; }
-        .action-btn.active { color: #e91e63 !important; }
+        .action-btn { background: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer; color: #555; border: none; }
+        .fav-active i { color: #e91e63 !important; }
 
         .info { padding: 15px; }
         .btn-group { display: flex; gap: 8px; margin-top: 12px; }
@@ -114,9 +114,9 @@ const auth = firebase.auth();
 const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
 
 const translations = {
-    en: { explore: "Explore", myAds: "My Ads", favs: "Favs", profile: "My Profile", shareApp: "Share App", login: "LOGIN", logout: "LOGOUT", call: "Call", chat: "Chat", selectLang: "SELECT LANGUAGE", favorites: "Favorites" },
-    hi: { explore: "खोजें", myAds: "विज्ञापन", favs: "पसंदीदा", profile: "मेरी प्रोफाइल", shareApp: "ऐप शेयर करें", login: "लॉगिन", logout: "लॉगआउट", call: "कॉल", chat: "चैट", selectLang: "भाषा चुनें", favorites: "पसंदीदा" },
-    pa: { explore: "ਖੋਜੋ", myAds: "ਵਿਗਿਆਪਨ", favs: "ਪਸੰਦੀਦਾ", profile: "ਮੇਰੀ ਪ੍ਰੋਫਾਈਲ", shareApp: "ਐਪ ਸਾਂਝਾ ਕਰੋ", login: "ਲੌਗਇਨ", logout: "ਲੌਗਆਉਟ", call: "ਕਾਲ", chat: "ਚੈਟ", selectLang: "ਭਾਸ਼ਾ ਚੁਣੋ", favorites: "ਪਸੰਦੀਦਾ" }
+    en: { explore: "Explore", myAds: "My Ads", favs: "Favs", profile: "Profile", shareApp: "Share App", login: "LOGIN", logout: "LOGOUT", call: "Call", chat: "Chat", selectLang: "SELECT LANGUAGE", favorites: "Favorites" },
+    hi: { explore: "खोजें", myAds: "विज्ञापन", favs: "पसंदीदा", profile: "प्रोफ़ाइल", shareApp: "ऐप शेयर करें", login: "लॉगिन", logout: "लॉगआउट", call: "कॉल", chat: "चैट", selectLang: "भाषा चुनें", favorites: "पसंदीदा" },
+    pa: { explore: "ਖੋਜੋ", myAds: "ਵਿਗਿਆਪਨ", favs: "ਪਸੰਦੀਦਾ", profile: "ਪ੍ਰੋਫਾਈਲ", shareApp: "ਐਪ ਸਾਂਝਾ ਕਰੋ", login: "ਲੌਗਇਨ", logout: "ਲੌਗਆਉਟ", call: "ਕਾਲ", chat: "ਚੈਟ", selectLang: "ਭਾਸ਼ਾ ਚੁਣੋ", favorites: "ਪਸੰਦੀਦਾ" }
 };
 
 const languages = [
@@ -124,7 +124,7 @@ const languages = [
     {c:'es', n:'Español'}, {c:'fr', n:'Français'}, {c:'de', n:'Deutsch'}, {c:'tr', n:'Türkçe'},
     {c:'ru', n:'Русский'}, {c:'zh', n:'中文'}, {c:'ja', n:'日本語'}, {c:'ko', n:'한국어'},
     {c:'it', n:'Italiano'}, {c:'pt', n:'Português'}, {c:'bn', n:'বাংলা'}, {c:'te', n:'తెలుగు'},
-    {c:'mr', n:'मराठी'}, {c:'ta', n:'தமிழ்'}, {c:'gu', n:'ગુજરાતી'}, {c:'kn', n:'ಕನ್ನಡ'}
+    {c:'mr', n:'मराठी'}, {c:'ta', n:'தமிழ்'}, {c:'gu', n:'ગુજરાતી'}, {c:'kn', n:'ਕನ್ನಡ'}
 ];
 
 function applyLanguage() {
@@ -132,11 +132,10 @@ function applyLanguage() {
     const t = translations[lang] || translations['en'];
     const user = auth.currentUser;
 
-    document.querySelectorAll('#txtNavExplore').forEach(el => el.innerText = t.explore);
-    document.querySelectorAll('#txtNavAds').forEach(el => el.innerText = t.myAds);
-    document.querySelectorAll('#txtNavFavs').forEach(el => el.innerText = t.favs);
-    document.querySelectorAll('#txtNavProfile').forEach(el => el.innerText = t.profile);
-    
+    document.getElementById('txtNavExplore').innerText = t.explore;
+    document.getElementById('txtNavAds').innerText = t.myAds;
+    document.getElementById('txtNavFavs').innerText = t.favs;
+    document.getElementById('txtNavProfile').innerText = t.profile;
     document.getElementById('txtSelectLang').innerText = t.selectLang;
     document.getElementById('txtMyAdsSide').innerText = t.myAds;
     document.getElementById('txtFavSide').innerText = t.favorites;
@@ -152,6 +151,7 @@ function applyLanguage() {
     }
 }
 
+// Generate Language Grid
 const langGrid = document.getElementById('langGrid');
 languages.forEach(l => {
     const btn = document.createElement('div');
@@ -160,7 +160,6 @@ languages.forEach(l => {
     btn.innerText = l.n;
     btn.onclick = () => { 
         localStorage.setItem('earthLang', l.c); 
-        applyLanguage();
         location.reload(); 
     };
     langGrid.appendChild(btn);
@@ -199,12 +198,14 @@ function shareProperty(id, title) {
 
 function toggleFav(btn) {
     if(!auth.currentUser) { window.location.href='login.html'; return; }
-    btn.classList.toggle('active');
+    btn.classList.toggle('fav-active');
     const icon = btn.querySelector('i');
-    if(btn.classList.contains('active')) {
-        icon.classList.replace('fa-regular', 'fa-solid');
+    if(btn.classList.contains('fav-active')) {
+        icon.classList.replace('fa-regular', 'fa-heart');
+        icon.classList.add('fa-solid');
     } else {
-        icon.classList.replace('fa-solid', 'fa-regular');
+        icon.classList.replace('fa-solid', 'fa-heart');
+        icon.classList.add('fa-regular');
     }
 }
 
@@ -218,11 +219,12 @@ auth.onAuthStateChanged(user => {
         document.getElementById('adminIcon').style.display = 'none';
     }
     
+    // Load Data
     db.collection("properties").orderBy("createdAt", "desc").onSnapshot(snap => {
         const list = document.getElementById('propertyList');
         list.innerHTML = '';
-        const curLang = localStorage.getItem('earthLang') || 'en';
-        const t = translations[curLang] || translations['en'];
+        const lang = localStorage.getItem('earthLang') || 'en';
+        const t = translations[lang] || translations['en'];
         
         snap.forEach(doc => {
             const p = doc.data();
@@ -231,11 +233,11 @@ auth.onAuthStateChanged(user => {
             list.innerHTML += `
             <div class="prop-card">
                 <div class="card-actions">
-                    <div class="action-btn" onclick="toggleFav(this)"><i class="fa-regular fa-heart"></i></div>
-                    <div class="action-btn" onclick="shareProperty('${id}', '${p.title}')"><i class="fa fa-share-nodes"></i></div>
+                    <button class="action-btn" onclick="toggleFav(this)"><i class="fa-regular fa-heart"></i></button>
+                    <button class="action-btn" onclick="shareProperty('${id}', '${p.title}')"><i class="fa fa-share-nodes"></i></button>
                 </div>
                 <div class="img-box" onclick="window.location.href='property-details.html?id=${id}'">
-                    <img src="${firstImg}">
+                    <img src="${firstImg}" onerror="this.src='https://via.placeholder.com/400x220'">
                 </div>
                 <div class="info">
                     <div style="color:var(--primary); font-size:22px; font-weight:800;">₹${Number(p.price || 0).toLocaleString('en-IN')}</div>
