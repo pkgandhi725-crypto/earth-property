@@ -1,84 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Inbox - Earth Property</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        :root { --primary: #2e7d32; --bg: #f0f2f5; }
-        body { font-family: sans-serif; margin: 0; background: var(--bg); padding-bottom: 20px; }
-        
-        header { 
-            background: var(--primary); color: white; padding: 15px; 
-            display: flex; align-items: center; gap: 15px; 
-            position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .tabs {
-            display: flex; background: white; border-bottom: 1px solid #ddd;
-            position: sticky; top: 55px; z-index: 99;
-        }
-        .tab { 
-            flex: 1; text-align: center; padding: 12px; font-weight: 700; 
-            color: #777; cursor: pointer; font-size: 14px;
-        }
-        .tab.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
-
-        .chat-list { padding: 10px; }
-        
-        .chat-card { 
-            background: white; padding: 12px; border-radius: 10px; 
-            display: flex; align-items: center; gap: 12px; margin-bottom: 8px; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1); cursor: pointer;
-        }
-        
-        .user-avatar { 
-            width: 50px; height: 50px; border-radius: 50%; 
-            background: #e1e1e1; display: flex; align-items: center; 
-            justify-content: center; font-size: 20px; color: #666; font-weight: bold;
-        }
-
-        .chat-details { flex: 1; overflow: hidden; }
-        .chat-header { display: flex; justify-content: space-between; align-items: center; }
-        .user-name { font-weight: 700; color: #333; font-size: 15px; }
-        .chat-time { font-size: 11px; color: #999; }
-        
-        .last-msg { 
-            font-size: 13px; color: #666; margin-top: 3px;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-
-        .unread-badge { 
-            background: #ff5252; color: white; min-width: 20px; height: 20px; 
-            border-radius: 10px; display: flex; align-items: center; 
-            justify-content: center; font-size: 11px; font-weight: bold; padding: 0 5px;
-        }
-
-        .empty-state { text-align: center; padding: 50px 20px; color: #888; }
-        .hidden { display: none; }
-    </style>
-</head>
-<body>
-
-<header>
-    <i class="fa fa-arrow-left" onclick="location.href='index.html'" style="cursor: pointer; font-size: 20px;"></i>
-    <h3 style="margin:0;">Inbox</h3>
-</header>
-
-<div class="tabs">
-    <div class="tab active" id="tabNew" onclick="switchTab('new')">New Messages</div>
-    <div class="tab" id="tabHistory" onclick="switchTab('history')">Chat History</div>
-</div>
-
-<div id="newSection" class="chat-list"></div>
-<div id="historySection" class="chat-list hidden"></div>
-
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
 <script>
+// Firebase config same rahegi
 const firebaseConfig = { 
     apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
     authDomain: "earth-properties-c3c56.firebaseapp.com", 
@@ -107,16 +28,15 @@ function switchTab(type) {
 }
 
 async function loadChats() {
-    // Real-time listener for all chats
+    // 1. orderBy hataya hai taaki Index error na aaye aur data turant dikhe
     db.collection("chats")
     .where("users", "array-contains", myUid)
-    .orderBy("lastTime", "desc")
     .onSnapshot(async snapshot => {
         const newSec = document.getElementById('newSection');
         const histSec = document.getElementById('historySection');
         
-        newSec.innerHTML = '';
-        histSec.innerHTML = '';
+        newSec.innerHTML = '<div class="empty-state">Loading messages...</div>';
+        histSec.innerHTML = '<div class="empty-state">Loading history...</div>';
 
         if (snapshot.empty) {
             newSec.innerHTML = '<div class="empty-state">No new messages</div>';
@@ -124,18 +44,27 @@ async function loadChats() {
             return;
         }
 
-        for (const doc of snapshot.docs) {
+        let newHTML = '';
+        let histHTML = '';
+
+        // Sabhi documents ko process karein
+        const promises = snapshot.docs.map(async (doc) => {
             const data = doc.data();
             const otherUid = data.users.find(id => id !== myUid);
             const unreadCount = data[`unreadCount_${myUid}`] || 0;
             
-            // Fetch Other User's Name from 'users' collection
+            // Name Fetching
             const userSnap = await db.collection("users").doc(otherUid).get();
             const userData = userSnap.data() || {};
             const userName = userData.name || "User";
             const userInitial = userName.charAt(0).toUpperCase();
 
-            const time = data.lastTime ? new Date(data.lastTime.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "";
+            // Time handling safely
+            let time = "";
+            if (data.lastTime) {
+                const date = data.lastTime.toDate ? data.lastTime.toDate() : new Date(data.lastTime.seconds * 1000);
+                time = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            }
 
             const chatHTML = `
                 <div class="chat-card" onclick="location.href='chat.html?to=${otherUid}'">
@@ -145,23 +74,26 @@ async function loadChats() {
                             <span class="user-name">${userName}</span>
                             <span class="chat-time">${time}</span>
                         </div>
-                        <p class="last-msg">${data.lastMsg || "No messages yet"}</p>
+                        <p class="last-msg">${data.lastMsg || "Tap to view chat"}</p>
                     </div>
                     ${unreadCount > 0 ? `<div class="unread-badge">${unreadCount}</div>` : ''}
                 </div>
             `;
 
-            // Sort into New or History
+            histHTML += chatHTML;
             if (unreadCount > 0) {
-                newSec.innerHTML += chatHTML;
+                newHTML += chatHTML;
             }
-            // History me sab dikhega
-            histSec.innerHTML += chatHTML;
-        }
+        });
 
-        if(newSec.innerHTML === "") newSec.innerHTML = '<div class="empty-state">No new messages</div>';
+        // Sabhi names fetch hone ka wait karein
+        await Promise.all(promises);
+
+        newSec.innerHTML = newHTML || '<div class="empty-state">No new messages</div>';
+        histSec.innerHTML = histHTML || '<div class="empty-state">No history found</div>';
+    }, error => {
+        console.error("Firestore Error:", error);
+        document.getElementById('newSection').innerHTML = '<div class="empty-state">Error loading data.</div>';
     });
 }
 </script>
-</body>
-</html>
