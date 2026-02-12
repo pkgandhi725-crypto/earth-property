@@ -8,55 +8,19 @@
     <style>
         :root { --primary: #2e7d32; --bg: #f0f2f5; }
         body { font-family: sans-serif; margin: 0; background: var(--bg); padding-bottom: 20px; }
-        
-        header { 
-            background: var(--primary); color: white; padding: 15px; 
-            display: flex; align-items: center; gap: 15px; 
-            position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .tabs {
-            display: flex; background: white; border-bottom: 1px solid #ddd;
-            position: sticky; top: 55px; z-index: 99;
-        }
-        .tab { 
-            flex: 1; text-align: center; padding: 15px; font-weight: 700; 
-            color: #777; cursor: pointer; font-size: 14px; transition: 0.3s;
-        }
+        header { background: var(--primary); color: white; padding: 15px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .tabs { display: flex; background: white; border-bottom: 1px solid #ddd; position: sticky; top: 55px; z-index: 99; }
+        .tab { flex: 1; text-align: center; padding: 15px; font-weight: 700; color: #777; cursor: pointer; font-size: 14px; transition: 0.3s; }
         .tab.active { color: var(--primary); border-bottom: 3px solid var(--primary); }
-
         .chat-list { padding: 10px; }
-        
-        .chat-card { 
-            background: white; padding: 12px; border-radius: 12px; 
-            display: flex; align-items: center; gap: 12px; margin-bottom: 10px; 
-            box-shadow: 0 2px 6px rgba(0,0,0,0.06); cursor: pointer;
-            animation: fadeIn 0.3s ease;
-        }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .user-avatar { 
-            width: 50px; height: 50px; border-radius: 50%; 
-            background: #2e7d32; display: flex; align-items: center; 
-            justify-content: center; font-size: 20px; color: white; font-weight: bold;
-        }
-
+        .chat-card { background: white; padding: 12px; border-radius: 12px; display: flex; align-items: center; gap: 12px; margin-bottom: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); cursor: pointer; }
+        .user-avatar { width: 50px; height: 50px; border-radius: 50%; background: #2e7d32; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; font-weight: bold; }
         .chat-details { flex: 1; overflow: hidden; }
         .chat-header { display: flex; justify-content: space-between; align-items: center; }
         .user-name { font-weight: 700; color: #333; font-size: 15px; }
         .chat-time { font-size: 11px; color: #999; }
-        
-        .last-msg { 
-            font-size: 13px; color: #666; margin-top: 4px;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-
-        .unread-badge { 
-            background: #ff5252; color: white; min-width: 22px; height: 22px; 
-            border-radius: 50%; display: flex; align-items: center; 
-            justify-content: center; font-size: 11px; font-weight: bold; padding: 2px;
-        }
-
+        .last-msg { font-size: 13px; color: #666; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .unread-badge { background: #ff5252; color: white; min-width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; padding: 2px; }
         .empty-state { text-align: center; padding: 60px 20px; color: #999; font-size: 14px; }
         .hidden { display: none; }
     </style>
@@ -73,23 +37,15 @@
     <div class="tab" id="tabHistory" onclick="switchTab('history')">Chat History</div>
 </div>
 
-<div id="newSection" class="chat-list">
-    <div class="empty-state">Loading messages...</div>
-</div>
-<div id="historySection" class="chat-list hidden">
-    <div class="empty-state">Loading history...</div>
-</div>
+<div id="newSection" class="chat-list"><div class="empty-state">Loading...</div></div>
+<div id="historySection" class="chat-list hidden"><div class="empty-state">Loading...</div></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
 <script>
-const firebaseConfig = { 
-    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
-    authDomain: "earth-properties-c3c56.firebaseapp.com", 
-    projectId: "earth-properties-c3c56" 
-};
+const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
@@ -97,12 +53,8 @@ const auth = firebase.auth();
 let myUid = "";
 
 auth.onAuthStateChanged(user => {
-    if (user) {
-        myUid = user.uid;
-        loadChats();
-    } else {
-        location.href = 'login.html';
-    }
+    if (user) { myUid = user.uid; loadChats(); } 
+    else { location.href = 'login.html'; }
 });
 
 function switchTab(type) {
@@ -113,76 +65,58 @@ function switchTab(type) {
 }
 
 async function loadChats() {
-    // Listener for all chats involving the current user
-    db.collection("chats")
-    .where("users", "array-contains", myUid)
-    .onSnapshot(async snapshot => {
+    // Guaranteed users check
+    db.collection("chats").where("users", "array-contains", myUid)
+    .onSnapshot(async snap => {
         const newSec = document.getElementById('newSection');
         const histSec = document.getElementById('historySection');
         
-        if (snapshot.empty) {
+        if (snap.empty) {
             newSec.innerHTML = '<div class="empty-state">No new messages</div>';
-            histSec.innerHTML = '<div class="empty-state">No chat history found</div>';
+            histSec.innerHTML = '<div class="empty-state">No history found</div>';
             return;
         }
 
-        let newCards = [];
-        let histCards = [];
+        let allCards = [];
 
-        // Map through docs and fetch user details
-        const promises = snapshot.docs.map(async (doc) => {
+        const promises = snap.docs.map(async doc => {
             const data = doc.data();
             const otherUid = data.users.find(id => id !== myUid);
-            const unreadCount = data[`unreadCount_${myUid}`] || 0;
-            
-            // Get Samne wale ka Name from 'users' collection
+            if(!otherUid) return;
+
+            const unread = data[`unreadCount_${myUid}`] || 0;
             const userSnap = await db.collection("users").doc(otherUid).get();
-            const userData = userSnap.data() || {};
-            const userName = userData.name || "Earth User";
-            const userInitial = userName.charAt(0).toUpperCase();
-
-            // Handle Time
-            let timeStr = "";
-            if (data.lastTime) {
-                const date = data.lastTime.toDate ? data.lastTime.toDate() : new Date(data.lastTime.seconds * 1000);
-                timeStr = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            }
-
-            const chatHTML = `
-                <div class="chat-card" onclick="location.href='chat.html?to=${otherUid}'">
-                    <div class="user-avatar">${userInitial}</div>
-                    <div class="chat-details">
-                        <div class="chat-header">
-                            <span class="user-name">${userName}</span>
-                            <span class="chat-time">${timeStr}</span>
-                        </div>
-                        <p class="last-msg">${data.lastMsg || "Tap to view chat"}</p>
-                    </div>
-                    ${unreadCount > 0 ? `<div class="unread-badge">${unreadCount}</div>` : ''}
-                </div>
-            `;
-
-            // Adding to history always
-            histCards.push({html: chatHTML, time: data.lastTime || 0});
+            const userName = userSnap.data()?.name || "Earth User";
             
-            // Adding to New only if unread
-            if (unreadCount > 0) {
-                newCards.push({html: chatHTML, time: data.lastTime || 0});
+            let time = "";
+            if (data.lastTime) {
+                const date = data.lastTime.toDate();
+                time = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             }
+
+            const html = `
+                <div class="chat-card" onclick="location.href='chat.html?to=${otherUid}'">
+                    <div class="user-avatar">${userName[0].toUpperCase()}</div>
+                    <div class="chat-details">
+                        <div class="chat-header"><span class="user-name">${userName}</span><span class="chat-time">${time}</span></div>
+                        <p class="last-msg">${data.lastMsg || "Tap to chat"}</p>
+                    </div>
+                    ${unread > 0 ? `<div class="unread-badge">${unread}</div>` : ''}
+                </div>`;
+            
+            allCards.push({ html, unread, timeVal: data.lastTime?.seconds || 0 });
         });
 
         await Promise.all(promises);
+        
+        // Sorting by Time
+        allCards.sort((a, b) => b.timeVal - a.timeVal);
 
-        // Sort by time manually since we removed Firestore orderBy for safety
-        histCards.sort((a, b) => (b.time.seconds || 0) - (a.time.seconds || 0));
-        newCards.sort((a, b) => (b.time.seconds || 0) - (a.time.seconds || 0));
+        const newHTML = allCards.filter(c => c.unread > 0).map(c => c.html).join('');
+        const histHTML = allCards.map(c => c.html).join('');
 
-        histSec.innerHTML = histCards.map(c => c.html).join('') || '<div class="empty-state">No chat history found</div>';
-        newSec.innerHTML = newCards.map(c => c.html).join('') || '<div class="empty-state">No new messages</div>';
-
-    }, error => {
-        console.error("Firestore Error:", error);
-        document.getElementById('newSection').innerHTML = '<div class="empty-state" style="color:red;">Error loading chats. Please check permissions.</div>';
+        newSec.innerHTML = newHTML || '<div class="empty-state">No new messages</div>';
+        histSec.innerHTML = histHTML || '<div class="empty-state">No history found</div>';
     });
 }
 </script>
