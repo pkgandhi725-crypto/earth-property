@@ -18,7 +18,7 @@
         .admin-btn { color: #ffd700; font-size: 20px; cursor: pointer; display: none; }
         .bell-icon { position: relative; font-size: 18px; cursor: pointer; }
         
-        /* ✅ Red dot ko hide rakho jab tak msg na aaye */
+        /* Bell Dot */
         .bell-dot { 
             position: absolute; 
             top: -2px; 
@@ -28,10 +28,10 @@
             background: #ff5252; 
             border-radius: 50%; 
             border: 1.5px solid var(--primary);
-            display: none; /* Hide by default */
+            display: none;
         }
 
-        /* Sidebar Scrollable Languages */
+        /* Sidebar */
         .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 5px 0 15px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
         .drawer.open { left: 0; }
         .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; flex-shrink: 0; }
@@ -42,7 +42,6 @@
         .lang-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
         .drawer-footer { padding: 0; flex-shrink: 0; border-top: 1px solid #eee; }
 
-        /* ✅ Sidebar buttons ke liye clean style */
         .drawer-item {
             padding: 15px 20px;
             font-weight: 700;
@@ -118,7 +117,6 @@
         <div class="lang-grid" id="langGrid"></div>
     </div>
 
-    <!-- ✅ Updated Sidebar Footer with All Buttons -->
     <div class="drawer-footer">
         <div class="drawer-item" onclick="location.href='my-ads.html'">
             <i class="fa fa-layer-group" style="color:var(--primary);"></i> <span id="myAdsText">My Ads</span>
@@ -126,6 +124,14 @@
 
         <div class="drawer-item" onclick="location.href='favorites.html'">
             <i class="fa fa-heart" style="color:#ff5252;"></i> <span id="favsText">Favorites</span>
+        </div>
+
+        <div class="drawer-item" onclick="alert('Help & Support coming soon!')">
+            <i class="fa fa-question-circle" style="color:#2196F3;"></i> <span>Help & Support</span>
+        </div>
+
+        <div class="drawer-item" onclick="alert('About Us: Earth Property Global - Your trusted real estate partner.')">
+            <i class="fa fa-info-circle" style="color:#FF9800;"></i> <span>About Us</span>
         </div>
 
         <div id="adminSideBtn" class="drawer-item" onclick="location.href='admin-portal.html'" style="display:none; color:#ffd700;">
@@ -160,7 +166,7 @@
         </div>
         <div class="header-right">
             <i class="fa fa-user-shield admin-btn" id="adminIcon" onclick="location.href='admin-portal.html'" title="Admin Portal"></i>
-            <div class="bell-icon" onclick="openNotifications()">
+            <div class="bell-icon" onclick="location.href='notifications.html'">
                 <i class="fa-regular fa-bell"></i>
                 <div class="bell-dot" id="bellDot"></div>
             </div>
@@ -198,7 +204,6 @@ let allAds = [];
 let currentGallery = [];
 let currentImageIndex = 0;
 
-// 20+ Global Languages
 const languages = [
     {c:'en', n:'English (Def)'}, {c:'hi', n:'हिंदी'}, {c:'pa', n:'ਪੰਜਾਬੀ'}, {c:'ar', n:'العربية'},
     {c:'es', n:'Español'}, {c:'fr', n:'Français'}, {c:'de', n:'Deutsch'}, {c:'tr', n:'Türkçe'},
@@ -207,7 +212,6 @@ const languages = [
     {c:'ta', n:'தமிழ்'}, {c:'gu', n:'ગુજરાતી'}, {c:'kn', n:'ಕನ್ನಡ'}, {c:'ml', n:'മലയാളം'}
 ];
 
-// 🌍 FULL TRANSLATIONS FOR ALL 20+ LANGUAGES
 const translations = {
     en: { explore:"Explore", myAds:"My Ads", favs:"Favs", favorites:"Favorites", profile:"Profile", call:"Call", chat:"Chat", login:"LOGIN", logout:"LOGOUT", search:"Search Chandigarh, Delhi, Plot...", hi:"Hi", langHeader:"GLOBAL LANGUAGES", welcome:"Welcome Guest" },
     hi: { explore:"खोजें", myAds:"मेरे विज्ञापन", favs:"पसंदीदा", favorites:"पसंदीदा", profile:"प्रोफ़ाइल", call:"कॉल", chat:"चैट", login:"लॉगिन", logout:"लॉगआउट", search:"चंडीगढ़, दिल्ली, प्लॉट खोजें...", hi:"नमस्ते", langHeader:"वैश्विक भाषाएं", welcome:"स्वागत है अतिथि" },
@@ -231,58 +235,38 @@ const translations = {
     ml: { explore:"പര്യവേക്ഷണം", myAds:"എന്റെ പരസ്യങ്ങൾ", favs:"പ്രിയപ്പെട്ടവ", favorites:"പ്രിയപ്പെട്ടവ", profile:"പ്രൊഫൈൽ", call:"കോൾ", chat:"ചാറ്റ്", login:"ലോഗിൻ", logout:"ലോഗ്ഔട്ട്", search:"ചണ്ഡിഗഡ്, ഡൽഹി തിരയുക...", hi:"ഹലോ", langHeader:"ആഗോള ഭാഷകൾ", welcome:"സ്വാഗതം അതിഥി" }
 };
 
-// Apply Language Function
 function applyLanguage() {
     const lang = localStorage.getItem('earthLang') || 'en';
     const t = translations[lang] || translations['en'];
-
-    // Bottom Nav
     document.getElementById('navExplore').innerText = t.explore;
     document.getElementById('navMyAds').innerText = t.myAds;
     document.getElementById('navFavs').innerText = t.favs;
     document.getElementById('navProfile').innerText = t.profile;
-
-    // Sidebar
     document.getElementById('myAdsText').innerText = t.myAds;
     document.getElementById('logoutText').innerText = t.logout;
     document.getElementById('langHeader').innerText = t.langHeader;
-    
-    // ✅ Favorites text
-    if (document.getElementById('favsText')) {
-        document.getElementById('favsText').innerText = t.favorites;
-    }
-
-    // Header
+    if (document.getElementById('favsText')) document.getElementById('favsText').innerText = t.favorites;
     document.getElementById('hiText').innerText = t.hi;
     document.getElementById('searchInput').placeholder = t.search;
-
-    // Auth Button
     const user = auth.currentUser;
     document.getElementById('authBtn').innerText = user ? t.logout : t.login;
-
-    console.log("Language applied:", lang);
 }
 
-// Load Languages into Grid
 function loadLanguages() {
     const langGrid = document.getElementById('langGrid');
     langGrid.innerHTML = '';
     const currentLang = localStorage.getItem('earthLang') || 'en';
-    
     languages.forEach(l => {
         const btn = document.createElement('div');
         btn.className = `lang-btn ${currentLang === l.c ? 'active' : ''}`;
         btn.innerText = l.n;
         btn.setAttribute('data-lang', l.c);
-        btn.addEventListener('click', function() {
-            switchLanguage(this.getAttribute('data-lang'));
-        });
+        btn.addEventListener('click', function() { switchLanguage(this.getAttribute('data-lang')); });
         langGrid.appendChild(btn);
     });
 }
 
 function switchLanguage(langCode) {
-    console.log("Switching to language:", langCode);
     localStorage.setItem('earthLang', langCode);
     applyLanguage();
     loadLanguages();
@@ -293,7 +277,6 @@ function toggleDrawer() {
     const drawer = document.getElementById('sideDrawer');
     const overlay = document.getElementById('overlay');
     const isOpen = drawer.classList.contains('open');
-    
     if (isOpen) {
         drawer.classList.remove('open');
         overlay.style.display = 'none';
@@ -303,35 +286,19 @@ function toggleDrawer() {
     }
 }
 
-// ✅ Notification Functions
-function openNotifications() {
-    // TODO: Open notifications panel
-    alert('No new notifications');
-}
-
-// ✅ Listen for unread chat messages (Red Dot)
 function listenForNotifications(uid) {
-    db.collection("chats")
-      .where("users", "array-contains", uid)
-      .onSnapshot(snapshot => {
-          let hasUnread = false;
-          
-          snapshot.forEach(doc => {
-              const data = doc.data();
-              const unreadCount = data[`unreadCount_${uid}`] || 0;
-              if (unreadCount > 0) {
-                  hasUnread = true;
-              }
-          });
-          
-          const bellDot = document.getElementById('bellDot');
-          if (bellDot) {
-              bellDot.style.display = hasUnread ? 'block' : 'none';
-          }
-      });
+    db.collection("chats").where("users", "array-contains", uid).onSnapshot(snapshot => {
+        let hasUnread = false;
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const unreadCount = data[`unreadCount_${uid}`] || 0;
+            if (unreadCount > 0) hasUnread = true;
+        });
+        const bellDot = document.getElementById('bellDot');
+        if (bellDot) bellDot.style.display = hasUnread ? 'block' : 'none';
+    });
 }
 
-// Gallery Functions
 function openGallery(images, startIndex = 0) {
     currentGallery = images;
     currentImageIndex = startIndex;
@@ -353,7 +320,6 @@ function changeImage(direction) {
 function updateGalleryImage() {
     document.getElementById('galleryImg').src = currentGallery[currentImageIndex];
     document.getElementById('galleryCounter').innerText = `${currentImageIndex + 1} / ${currentGallery.length}`;
-    
     const dotsContainer = document.getElementById('galleryDots');
     dotsContainer.innerHTML = '';
     currentGallery.forEach((_, i) => {
@@ -364,37 +330,27 @@ function updateGalleryImage() {
     });
 }
 
-// ✅ Auth State Observer - UPDATED
 auth.onAuthStateChanged(async user => {
     const adminSideBtn = document.getElementById('adminSideBtn');
     const adminIcon = document.getElementById('adminIcon');
     const logoutBtn = document.getElementById('logoutBtn');
-
     if (user) {
         const userName = user.displayName || user.email?.split('@')[0] || "Earth User";
         document.getElementById('sideUserName').innerText = userName;
         document.getElementById('headerUserName').innerText = userName;
         document.getElementById('userMail').innerText = user.email || '';
-        
         const t = translations[localStorage.getItem('earthLang') || 'en'] || translations['en'];
         document.getElementById('authBtn').innerText = t.logout;
         document.getElementById('authBtn').onclick = handleLogout;
         logoutBtn.style.display = 'flex';
-
-        // ✅ Admin check (Both header & sidebar)
-        console.log("User email:", user.email);
         if (user.email === "admin@earth.com") {
             if(adminIcon) adminIcon.style.display = 'inline-block';
             if(adminSideBtn) adminSideBtn.style.display = 'flex';
-            console.log("Admin buttons visible");
         } else {
             if(adminIcon) adminIcon.style.display = 'none';
             if(adminSideBtn) adminSideBtn.style.display = 'none';
         }
-        
-        // ✅ Start notification listener
         listenForNotifications(user.uid);
-        
     } else {
         const t = translations[localStorage.getItem('earthLang') || 'en'] || translations['en'];
         document.getElementById('sideUserName').innerText = t.welcome;
@@ -402,20 +358,16 @@ auth.onAuthStateChanged(async user => {
         document.getElementById('userMail').innerText = "";
         document.getElementById('authBtn').innerText = t.login;
         document.getElementById('authBtn').onclick = () => location.href='login.html';
-        
         if(logoutBtn) logoutBtn.style.display = 'none';
         if(adminIcon) adminIcon.style.display = 'none';
         if(adminSideBtn) adminSideBtn.style.display = 'none';
     }
-    
     loadProperties();
 });
 
 function handleLogout() {
     if (confirm('Are you sure you want to logout?')) {
-        auth.signOut().then(() => {
-            location.reload();
-        });
+        auth.signOut().then(() => location.reload());
     }
 }
 
@@ -424,7 +376,6 @@ function loadProperties() {
         allAds = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
         renderAds(allAds);
     }, err => {
-        console.error("Error loading properties:", err);
         document.getElementById('propertyList').innerHTML = '<center style="margin-top:50px; color:#d32f2f;">Error loading properties. Please refresh.</center>';
     });
 }
@@ -433,19 +384,13 @@ function renderAds(ads) {
     const list = document.getElementById('propertyList');
     const lang = localStorage.getItem('earthLang') || 'en';
     const t = translations[lang] || translations['en'];
-    
     if (ads.length === 0) {
         list.innerHTML = '<center style="margin-top:50px; color:#888;">No properties found.</center>';
         return;
     }
-    
     list.innerHTML = '';
-    
     ads.forEach(p => {
-        const images = p.images && Array.isArray(p.images) && p.images.length > 0 
-            ? p.images 
-            : ['https://via.placeholder.com/400x210?text=No+Image'];
-        
+        const images = p.images && Array.isArray(p.images) && p.images.length > 0 ? p.images : ['https://via.placeholder.com/400x210?text=No+Image'];
         const card = document.createElement('div');
         card.className = 'prop-card';
         card.innerHTML = `
@@ -477,13 +422,8 @@ function contact(num, type, title) {
         alert("Error: Owner has not provided a contact number.");
         return;
     }
-    
     let cleanNum = num.toString().replace(/\D/g, '');
-    
-    if (cleanNum.length === 10) {
-        cleanNum = "91" + cleanNum;
-    }
-
+    if (cleanNum.length === 10) cleanNum = "91" + cleanNum;
     if (type === 'wa') {
         const message = encodeURIComponent(`Hi, I'm interested in: ${decodeURIComponent(title)}`);
         window.open(`https://wa.me/${cleanNum}?text=${message}`, '_blank');
@@ -494,22 +434,18 @@ function contact(num, type, title) {
 
 function filterAds() {
     const val = document.getElementById('searchInput').value.toLowerCase().trim();
-    
     if (val === '') {
         renderAds(allAds);
         return;
     }
-    
     const filtered = allAds.filter(a => 
         (a.location || '').toLowerCase().includes(val) || 
         (a.title || '').toLowerCase().includes(val) ||
         (a.description || '').toLowerCase().includes(val)
     );
-    
     renderAds(filtered);
 }
 
-// ✅ Favorites Management - FIXED
 function getFavorites() {
     const favs = localStorage.getItem('earthFavorites');
     return favs ? JSON.parse(favs) : [];
@@ -529,19 +465,14 @@ function toggleFavorite(propId) {
         alert('Added to favorites ❤️');
     }
     localStorage.setItem('earthFavorites', JSON.stringify(favs));
-    renderAds(allAds); // UI update
+    renderAds(allAds);
 }
 
-// Share Property
 function shareProperty(propId, title) {
     const url = window.location.origin + '/property-detail.html?id=' + propId;
     const text = decodeURIComponent(title) + ' - Earth Property Global';
-    
     if (navigator.share) {
-        navigator.share({
-            title: text,
-            url: url
-        }).catch(err => console.log('Share cancelled'));
+        navigator.share({ title: text, url: url }).catch(err => console.log('Share cancelled'));
     } else {
         const tempInput = document.createElement('input');
         tempInput.value = url;
@@ -553,7 +484,6 @@ function shareProperty(propId, title) {
     }
 }
 
-// Initialize on page load
 loadLanguages();
 applyLanguage();
 </script>
