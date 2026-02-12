@@ -17,7 +17,19 @@
         .logo-area { display: flex; align-items: center; gap: 10px; }
         .admin-btn { color: #ffd700; font-size: 20px; cursor: pointer; display: none; }
         .bell-icon { position: relative; font-size: 18px; cursor: pointer; }
-        .bell-dot { position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; background: #ff5252; border-radius: 50%; border: 1.5px solid var(--primary); }
+        
+        /* ✅ Red dot ko hide rakho jab tak msg na aaye */
+        .bell-dot { 
+            position: absolute; 
+            top: -2px; 
+            right: -2px; 
+            width: 8px; 
+            height: 8px; 
+            background: #ff5252; 
+            border-radius: 50%; 
+            border: 1.5px solid var(--primary);
+            display: none; /* Hide by default */
+        }
 
         /* Sidebar Scrollable Languages */
         .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 5px 0 15px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
@@ -28,7 +40,20 @@
         .lang-btn { padding: 10px; border: 1px solid #ddd; border-radius: 6px; text-align: center; font-size: 13px; cursor: pointer; font-weight: 600; background: #f9f9f9; transition: all 0.2s; }
         .lang-btn:active { transform: scale(0.95); }
         .lang-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-        .drawer-footer { padding: 15px; flex-shrink: 0; border-top: 1px solid #eee; }
+        .drawer-footer { padding: 0; flex-shrink: 0; border-top: 1px solid #eee; }
+
+        /* ✅ Sidebar buttons ke liye clean style */
+        .drawer-item {
+            padding: 15px 20px;
+            font-weight: 700;
+            color: #444;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .drawer-item i { width: 20px; font-size: 18px; }
 
         /* Search Bar */
         .search-box { background: white; border-radius: 10px; display: flex; padding: 10px 15px; align-items: center; gap: 10px; }
@@ -93,9 +118,23 @@
         <div class="lang-grid" id="langGrid"></div>
     </div>
 
+    <!-- ✅ Updated Sidebar Footer with All Buttons -->
     <div class="drawer-footer">
-        <div onclick="location.href='my-ads.html'" style="padding:12px 0; font-weight:700; color:#444; cursor: pointer;"><i class="fa fa-layer-group" style="width:25px;"></i> <span id="myAdsText">My Ads</span></div>
-        <div id="logoutBtn" style="padding:12px 0; font-weight:700; color:#d32f2f; display:none; cursor: pointer;" onclick="handleLogout()"><i class="fa fa-sign-out-alt" style="width:25px;"></i> <span id="logoutText">Logout</span></div>
+        <div class="drawer-item" onclick="location.href='my-ads.html'">
+            <i class="fa fa-layer-group" style="color:var(--primary);"></i> <span id="myAdsText">My Ads</span>
+        </div>
+
+        <div class="drawer-item" onclick="location.href='favorites.html'">
+            <i class="fa fa-heart" style="color:#ff5252;"></i> <span id="favsText">Favorites</span>
+        </div>
+
+        <div id="adminSideBtn" class="drawer-item" onclick="location.href='admin-portal.html'" style="display:none; color:#ffd700;">
+            <i class="fa fa-user-shield"></i> <span>Admin Portal</span>
+        </div>
+
+        <div id="logoutBtn" class="drawer-item" style="display:none; color:#d32f2f;" onclick="handleLogout()">
+            <i class="fa fa-sign-out-alt"></i> <span id="logoutText">Logout</span>
+        </div>
     </div>
 </div>
 
@@ -121,9 +160,9 @@
         </div>
         <div class="header-right">
             <i class="fa fa-user-shield admin-btn" id="adminIcon" onclick="location.href='admin-portal.html'" title="Admin Portal"></i>
-            <div class="bell-icon" onclick="alert('No new notifications')">
+            <div class="bell-icon" onclick="openNotifications()">
                 <i class="fa-regular fa-bell"></i>
-                <div class="bell-dot"></div>
+                <div class="bell-dot" id="bellDot"></div>
             </div>
             <button id="authBtn" style="background:white; border:none; color:var(--primary); padding:6px 15px; border-radius:8px; font-weight:800; font-size:12px; cursor: pointer;">LOGIN</button>
         </div>
@@ -170,26 +209,26 @@ const languages = [
 
 // 🌍 FULL TRANSLATIONS FOR ALL 20+ LANGUAGES
 const translations = {
-    en: { explore:"Explore", myAds:"My Ads", favs:"Favs", profile:"Profile", call:"Call", chat:"Chat", login:"LOGIN", logout:"LOGOUT", search:"Search Chandigarh, Delhi, Plot...", hi:"Hi", langHeader:"GLOBAL LANGUAGES", welcome:"Welcome Guest" },
-    hi: { explore:"खोजें", myAds:"मेरे विज्ञापन", favs:"पसंदीदा", profile:"प्रोफ़ाइल", call:"कॉल", chat:"चैट", login:"लॉगिन", logout:"लॉगआउट", search:"चंडीगढ़, दिल्ली, प्लॉट खोजें...", hi:"नमस्ते", langHeader:"वैश्विक भाषाएं", welcome:"स्वागत है अतिथि" },
-    pa: { explore:"ਖੋਜੋ", myAds:"ਮੇਰੇ ਵਿਗਿਆਪਨ", favs:"ਪਸੰਦੀਦਾ", profile:"ਪ੍ਰੋਫਾਈਲ", call:"ਕਾਲ", chat:"ਚੈਟ", login:"ਲੌਗਇਨ", logout:"ਲੌਗਆਉਟ", search:"ਚੰਡੀਗੜ੍ਹ, ਦਿੱਲੀ ਖੋਜੋ...", hi:"ਸਤ ਸ੍ਰੀ ਅਕਾਲ", langHeader:"ਗਲੋਬਲ ਭਾਸ਼ਾਵਾਂ", welcome:"ਜੀ ਆਇਆਂ ਨੂੰ" },
-    ar: { explore:"استكشف", myAds:"إعلاناتي", favs:"المفضلة", profile:"الملف الشخصي", call:"اتصال", chat:"دردشة", login:"تسجيل الدخول", logout:"تسجيل خروج", search:"ابحث عن تشانديغار، دلهي...", hi:"مرحبا", langHeader:"اللغات العالمية", welcome:"مرحبا بك" },
-    es: { explore:"Explorar", myAds:"Mis Anuncios", favs:"Favoritos", profile:"Perfil", call:"Llamar", chat:"Chat", login:"ENTRAR", logout:"SALIR", search:"Buscar Chandigarh, Delhi...", hi:"Hola", langHeader:"IDIOMAS GLOBALES", welcome:"Bienvenido Invitado" },
-    fr: { explore:"Explorer", myAds:"Mes Annonces", favs:"Favoris", profile:"Profil", call:"Appeler", chat:"Chat", login:"CONNEXION", logout:"DÉCONNEXION", search:"Rechercher Chandigarh, Delhi...", hi:"Bonjour", langHeader:"LANGUES MONDIALES", welcome:"Bienvenue Invité" },
-    de: { explore:"Erkunden", myAds:"Meine Anzeigen", favs:"Favoriten", profile:"Profil", call:"Anrufen", chat:"Chat", login:"ANMELDEN", logout:"ABMELDEN", search:"Chandigarh, Delhi suchen...", hi:"Hallo", langHeader:"GLOBALE SPRACHEN", welcome:"Willkommen Gast" },
-    tr: { explore:"Keşfet", myAds:"İlanlarım", favs:"Favoriler", profile:"Profil", call:"Ara", chat:"Sohbet", login:"GİRİŞ", logout:"ÇIKIŞ", search:"Chandigarh, Delhi ara...", hi:"Merhaba", langHeader:"KÜRESEL DİLLER", welcome:"Hoş Geldin Misafir" },
-    ru: { explore:"Обзор", myAds:"Мои объявления", favs:"Избранное", profile:"Профиль", call:"Звонок", chat:"Чат", login:"ВОЙТИ", logout:"ВЫЙТИ", search:"Поиск Чандигарх, Дели...", hi:"Привет", langHeader:"МИРОВЫЕ ЯЗЫКИ", welcome:"Добро пожаловать" },
-    zh: { explore:"探索", myAds:"我的广告", favs:"收藏", profile:"个人资料", call:"电话", chat:"聊天", login:"登录", logout:"登出", search:"搜索昌迪加尔，德里...", hi:"你好", langHeader:"全球语言", welcome:"欢迎访客" },
-    ja: { explore:"探索", myAds:"マイ広告", favs:"お気に入り", profile:"プロフィール", call:"電話", chat:"チャット", login:"ログイン", logout:"ログアウト", search:"チャンディーガル、デリーを検索...", hi:"こんにちは", langHeader:"グローバル言語", welcome:"ようこそゲスト" },
-    ko: { explore:"탐색", myAds:"내 광고", favs:"즐겨찾기", profile:"프로필", call:"전화", chat:"채팅", login:"로그인", logout:"로그아웃", search:"찬디가르, 델리 검색...", hi:"안녕하세요", langHeader:"글로벌 언어", welcome:"환영합니다 게스트" },
-    pt: { explore:"Explorar", myAds:"Meus Anúncios", favs:"Favoritos", profile:"Perfil", call:"Ligar", chat:"Chat", login:"ENTRAR", logout:"SAIR", search:"Pesquisar Chandigarh, Delhi...", hi:"Olá", langHeader:"IDIOMAS GLOBAIS", welcome:"Bem-vindo Convidado" },
-    bn: { explore:"অন্বেষণ", myAds:"আমার বিজ্ঞাপন", favs:"প্রিয়", profile:"প্রোফাইল", call:"কল", chat:"চ্যাট", login:"লগইন", logout:"লগআউট", search:"চন্ডীগড়, দিল্লি অনুসন্ধান...", hi:"হ্যালো", langHeader:"বৈশ্বিক ভাষা", welcome:"স্বাগতম অতিথি" },
-    te: { explore:"అన్వేషించు", myAds:"నా ప్రకటనలు", favs:"ఇష్టాలు", profile:"ప్రొఫైల్", call:"కాల్", chat:"చాట్", login:"లాగిన్", logout:"లాగౌట్", search:"చండీగఢ్, ఢిల్లీ వెతకండి...", hi:"హలో", langHeader:"ప్రపంచ భాషలు", welcome:"స్వాగతం అతిథి" },
-    mr: { explore:"शोधा", myAds:"माझ्या जाहिराती", favs:"आवडते", profile:"प्रोफाइल", call:"कॉल", chat:"चॅट", login:"लॉगिन", logout:"लॉगआउट", search:"चंदीगड, दिल्ली शोधा...", hi:"नमस्कार", langHeader:"जागतिक भाषा", welcome:"स्वागत आहे अतिथी" },
-    ta: { explore:"ஆராயுங்கள்", myAds:"என் விளம்பரங்கள்", favs:"பிடித்தவை", profile:"சுயவிவரம்", call:"அழைப்பு", chat:"அரட்டை", login:"உள்நுழைய", logout:"வெளியேறு", search:"சண்டிகர், டெல்லி தேடுங்கள்...", hi:"வணக்கம்", langHeader:"உலகளாவிய மொழிகள்", welcome:"வரவேற்பு விருந்தினர்" },
-    gu: { explore:"અન્વેષણ", myAds:"મારી જાહેરાતો", favs:"મનપસંદ", profile:"પ્રોફાઇલ", call:"કૉલ", chat:"ચેટ", login:"લૉગિન", logout:"લૉગઆઉટ", search:"ચંડીગઢ, દિલ્હી શોધો...", hi:"નમસ્તે", langHeader:"વૈશ્વિક ભાષાઓ", welcome:"સ્વાગત છે મહેમાન" },
-    kn: { explore:"ಅನ್ವೇಷಿಸಿ", myAds:"ನನ್ನ ಜಾಹೀರಾತುಗಳು", favs:"ಮೆಚ್ಚಿನವುಗಳು", profile:"ಪ್ರೊಫೈಲ್", call:"ಕರೆ", chat:"ಚಾಟ್", login:"ಲಾಗಿನ್", logout:"ಲಾಗ್ಔಟ್", search:"ಚಂಡೀಗಢ, ಡೆಲ್ಲಿ ಹುಡುಕಿ...", hi:"ನಮಸ್ಕಾರ", langHeader:"ಜಾಗತಿಕ ಭಾಷೆಗಳು", welcome:"ಸ್ವಾಗತ ಅತಿಥಿ" },
-    ml: { explore:"പര്യവേക്ഷണം", myAds:"എന്റെ പരസ്യങ്ങൾ", favs:"പ്രിയപ്പെട്ടവ", profile:"പ്രൊഫൈൽ", call:"കോൾ", chat:"ചാറ്റ്", login:"ലോഗിൻ", logout:"ലോഗ്ഔട്ട്", search:"ചണ്ഡിഗഡ്, ഡൽഹി തിരയുക...", hi:"ഹലോ", langHeader:"ആഗോള ഭാഷകൾ", welcome:"സ്വാഗതം അതിഥി" }
+    en: { explore:"Explore", myAds:"My Ads", favs:"Favs", favorites:"Favorites", profile:"Profile", call:"Call", chat:"Chat", login:"LOGIN", logout:"LOGOUT", search:"Search Chandigarh, Delhi, Plot...", hi:"Hi", langHeader:"GLOBAL LANGUAGES", welcome:"Welcome Guest" },
+    hi: { explore:"खोजें", myAds:"मेरे विज्ञापन", favs:"पसंदीदा", favorites:"पसंदीदा", profile:"प्रोफ़ाइल", call:"कॉल", chat:"चैट", login:"लॉगिन", logout:"लॉगआउट", search:"चंडीगढ़, दिल्ली, प्लॉट खोजें...", hi:"नमस्ते", langHeader:"वैश्विक भाषाएं", welcome:"स्वागत है अतिथि" },
+    pa: { explore:"ਖੋਜੋ", myAds:"ਮੇਰੇ ਵਿਗਿਆਪਨ", favs:"ਪਸੰਦੀਦਾ", favorites:"ਪਸੰਦੀਦਾ", profile:"ਪ੍ਰੋਫਾਈਲ", call:"ਕਾਲ", chat:"ਚੈਟ", login:"ਲੌਗਇਨ", logout:"ਲੌਗਆਉਟ", search:"ਚੰਡੀਗੜ੍ਹ, ਦਿੱਲੀ ਖੋਜੋ...", hi:"ਸਤ ਸ੍ਰੀ ਅਕਾਲ", langHeader:"ਗਲੋਬਲ ਭਾਸ਼ਾਵਾਂ", welcome:"ਜੀ ਆਇਆਂ ਨੂੰ" },
+    ar: { explore:"استكشف", myAds:"إعلاناتي", favs:"المفضلة", favorites:"المفضلة", profile:"الملف الشخصي", call:"اتصال", chat:"دردشة", login:"تسجيل الدخول", logout:"تسجيل خروج", search:"ابحث عن تشانديغار، دلهي...", hi:"مرحبا", langHeader:"اللغات العالمية", welcome:"مرحبا بك" },
+    es: { explore:"Explorar", myAds:"Mis Anuncios", favs:"Favoritos", favorites:"Favoritos", profile:"Perfil", call:"Llamar", chat:"Chat", login:"ENTRAR", logout:"SALIR", search:"Buscar Chandigarh, Delhi...", hi:"Hola", langHeader:"IDIOMAS GLOBALES", welcome:"Bienvenido Invitado" },
+    fr: { explore:"Explorer", myAds:"Mes Annonces", favs:"Favoris", favorites:"Favoris", profile:"Profil", call:"Appeler", chat:"Chat", login:"CONNEXION", logout:"DÉCONNEXION", search:"Rechercher Chandigarh, Delhi...", hi:"Bonjour", langHeader:"LANGUES MONDIALES", welcome:"Bienvenue Invité" },
+    de: { explore:"Erkunden", myAds:"Meine Anzeigen", favs:"Favoriten", favorites:"Favoriten", profile:"Profil", call:"Anrufen", chat:"Chat", login:"ANMELDEN", logout:"ABMELDEN", search:"Chandigarh, Delhi suchen...", hi:"Hallo", langHeader:"GLOBALE SPRACHEN", welcome:"Willkommen Gast" },
+    tr: { explore:"Keşfet", myAds:"İlanlarım", favs:"Favoriler", favorites:"Favoriler", profile:"Profil", call:"Ara", chat:"Sohbet", login:"GİRİŞ", logout:"ÇIKIŞ", search:"Chandigarh, Delhi ara...", hi:"Merhaba", langHeader:"KÜRESEL DİLLER", welcome:"Hoş Geldin Misafir" },
+    ru: { explore:"Обзор", myAds:"Мои объявления", favs:"Избранное", favorites:"Избранное", profile:"Профиль", call:"Звонок", chat:"Чат", login:"ВОЙТИ", logout:"ВЫЙТИ", search:"Поиск Чандигарх, Дели...", hi:"Привет", langHeader:"МИРОВЫЕ ЯЗЫКИ", welcome:"Добро пожаловать" },
+    zh: { explore:"探索", myAds:"我的广告", favs:"收藏", favorites:"收藏", profile:"个人资料", call:"电话", chat:"聊天", login:"登录", logout:"登出", search:"搜索昌迪加尔，德里...", hi:"你好", langHeader:"全球语言", welcome:"欢迎访客" },
+    ja: { explore:"探索", myAds:"マイ広告", favs:"お気に入り", favorites:"お気に入り", profile:"プロフィール", call:"電話", chat:"チャット", login:"ログイン", logout:"ログアウト", search:"チャンディーガル、デリーを検索...", hi:"こんにちは", langHeader:"グローバル言語", welcome:"ようこそゲスト" },
+    ko: { explore:"탐색", myAds:"내 광고", favs:"즐겨찾기", favorites:"즐겨찾기", profile:"프로필", call:"전화", chat:"채팅", login:"로그인", logout:"로그아웃", search:"찬디가르, 델리 검색...", hi:"안녕하세요", langHeader:"글로벌 언어", welcome:"환영합니다 게스트" },
+    pt: { explore:"Explorar", myAds:"Meus Anúncios", favs:"Favoritos", favorites:"Favoritos", profile:"Perfil", call:"Ligar", chat:"Chat", login:"ENTRAR", logout:"SAIR", search:"Pesquisar Chandigarh, Delhi...", hi:"Olá", langHeader:"IDIOMAS GLOBAIS", welcome:"Bem-vindo Convidado" },
+    bn: { explore:"অন্বেষণ", myAds:"আমার বিজ্ঞাপন", favs:"প্রিয়", favorites:"প্রিয়", profile:"প্রোফাইল", call:"কল", chat:"চ্যাট", login:"লগইন", logout:"লগআউট", search:"চন্ডীগড়, দিল্লি অনুসন্ধান...", hi:"হ্যালো", langHeader:"বৈশ্বিক ভাষা", welcome:"স্বাগতম অতিথি" },
+    te: { explore:"అన్వేషించు", myAds:"నా ప్రకటనలు", favs:"ఇష్టాలు", favorites:"ఇష్టాలు", profile:"ప్రొఫైల్", call:"కాల్", chat:"చాట్", login:"లాగిన్", logout:"లాగౌట్", search:"చండీగఢ్, ఢిల్లీ వెతకండి...", hi:"హలో", langHeader:"ప్రపంచ భాషలు", welcome:"స్వాగతం అతిథి" },
+    mr: { explore:"शोधा", myAds:"माझ्या जाहिराती", favs:"आवडते", favorites:"आवडते", profile:"प्रोफाइल", call:"कॉल", chat:"चॅट", login:"लॉगिन", logout:"लॉगआउट", search:"चंदीगड, दिल्ली शोधा...", hi:"नमस्कार", langHeader:"जागतिक भाषा", welcome:"स्वागत आहे अतिथी" },
+    ta: { explore:"ஆராயுங்கள்", myAds:"என் விளம்பரங்கள்", favs:"பிடித்தவை", favorites:"பிடித்தவை", profile:"சுயவிவரம்", call:"அழைப்பு", chat:"அரட்டை", login:"உள்நுழைய", logout:"வெளியேறு", search:"சண்டிகர், டெல்லி தேடுங்கள்...", hi:"வணக்கம்", langHeader:"உலகளாவிய மொழிகள்", welcome:"வரவேற்பு விருந்தினர்" },
+    gu: { explore:"અન્વેષણ", myAds:"મારી જાહેરાતો", favs:"મનપસંદ", favorites:"મનપસંદ", profile:"પ્રોફાઇલ", call:"કૉલ", chat:"ચેટ", login:"લૉગિન", logout:"લૉગઆઉટ", search:"ચંડીગઢ, દિલ્હી શોધો...", hi:"નમસ્તે", langHeader:"વૈશ્વિક ભાષાઓ", welcome:"સ્વાગત છે મહેમાન" },
+    kn: { explore:"ಅನ್ವೇಷಿಸಿ", myAds:"ನನ್ನ ಜಾಹೀರಾತುಗಳು", favs:"ಮೆಚ್ಚಿನವುಗಳು", favorites:"ಮೆಚ್ಚಿನವುಗಳು", profile:"ಪ್ರೊಫೈಲ್", call:"ಕರೆ", chat:"ಚಾಟ್", login:"ಲಾಗಿನ್", logout:"ಲಾಗ್ಔಟ್", search:"ಚಂಡೀಗಢ, ಡೆಲ್ಲಿ ಹುಡುಕಿ...", hi:"ನಮಸ್ಕಾರ", langHeader:"ಜಾಗತಿಕ ಭಾಷೆಗಳು", welcome:"ಸ್ವಾಗತ ಅತಿಥಿ" },
+    ml: { explore:"പര്യവേക്ഷണം", myAds:"എന്റെ പരസ്യങ്ങൾ", favs:"പ്രിയപ്പെട്ടവ", favorites:"പ്രിയപ്പെട്ടവ", profile:"പ്രൊഫൈൽ", call:"കോൾ", chat:"ചാറ്റ്", login:"ലോഗിൻ", logout:"ലോഗ്ഔട്ട്", search:"ചണ്ഡിഗഡ്, ഡൽഹി തിരയുക...", hi:"ഹലോ", langHeader:"ആഗോള ഭാഷകൾ", welcome:"സ്വാഗതം അതിഥി" }
 };
 
 // Apply Language Function
@@ -207,6 +246,11 @@ function applyLanguage() {
     document.getElementById('myAdsText').innerText = t.myAds;
     document.getElementById('logoutText').innerText = t.logout;
     document.getElementById('langHeader').innerText = t.langHeader;
+    
+    // ✅ Favorites text
+    if (document.getElementById('favsText')) {
+        document.getElementById('favsText').innerText = t.favorites;
+    }
 
     // Header
     document.getElementById('hiText').innerText = t.hi;
@@ -242,7 +286,7 @@ function switchLanguage(langCode) {
     localStorage.setItem('earthLang', langCode);
     applyLanguage();
     loadLanguages();
-    toggleDrawer(); // Close drawer after selection
+    toggleDrawer();
 }
 
 function toggleDrawer() {
@@ -257,6 +301,34 @@ function toggleDrawer() {
         drawer.classList.add('open');
         overlay.style.display = 'block';
     }
+}
+
+// ✅ Notification Functions
+function openNotifications() {
+    // TODO: Open notifications panel
+    alert('No new notifications');
+}
+
+// ✅ Listen for unread chat messages (Red Dot)
+function listenForNotifications(uid) {
+    db.collection("chats")
+      .where("users", "array-contains", uid)
+      .onSnapshot(snapshot => {
+          let hasUnread = false;
+          
+          snapshot.forEach(doc => {
+              const data = doc.data();
+              const unreadCount = data[`unreadCount_${uid}`] || 0;
+              if (unreadCount > 0) {
+                  hasUnread = true;
+              }
+          });
+          
+          const bellDot = document.getElementById('bellDot');
+          if (bellDot) {
+              bellDot.style.display = hasUnread ? 'block' : 'none';
+          }
+      });
 }
 
 // Gallery Functions
@@ -282,7 +354,6 @@ function updateGalleryImage() {
     document.getElementById('galleryImg').src = currentGallery[currentImageIndex];
     document.getElementById('galleryCounter').innerText = `${currentImageIndex + 1} / ${currentGallery.length}`;
     
-    // Update dots
     const dotsContainer = document.getElementById('galleryDots');
     dotsContainer.innerHTML = '';
     currentGallery.forEach((_, i) => {
@@ -293,8 +364,12 @@ function updateGalleryImage() {
     });
 }
 
-// Auth State Observer
+// ✅ Auth State Observer - UPDATED
 auth.onAuthStateChanged(async user => {
+    const adminSideBtn = document.getElementById('adminSideBtn');
+    const adminIcon = document.getElementById('adminIcon');
+    const logoutBtn = document.getElementById('logoutBtn');
+
     if (user) {
         const userName = user.displayName || user.email?.split('@')[0] || "Earth User";
         document.getElementById('sideUserName').innerText = userName;
@@ -304,17 +379,22 @@ auth.onAuthStateChanged(async user => {
         const t = translations[localStorage.getItem('earthLang') || 'en'] || translations['en'];
         document.getElementById('authBtn').innerText = t.logout;
         document.getElementById('authBtn').onclick = handleLogout;
-        document.getElementById('logoutBtn').style.display = 'block';
+        logoutBtn.style.display = 'flex';
 
-        // Show Admin Shield for admin@earth.com
+        // ✅ Admin check (Both header & sidebar)
         console.log("User email:", user.email);
         if (user.email === "admin@earth.com") {
-            const adminIcon = document.getElementById('adminIcon');
-            adminIcon.style.display = 'inline-block';
-            console.log("Admin icon should be visible now");
+            if(adminIcon) adminIcon.style.display = 'inline-block';
+            if(adminSideBtn) adminSideBtn.style.display = 'flex';
+            console.log("Admin buttons visible");
         } else {
-            document.getElementById('adminIcon').style.display = 'none';
+            if(adminIcon) adminIcon.style.display = 'none';
+            if(adminSideBtn) adminSideBtn.style.display = 'none';
         }
+        
+        // ✅ Start notification listener
+        listenForNotifications(user.uid);
+        
     } else {
         const t = translations[localStorage.getItem('earthLang') || 'en'] || translations['en'];
         document.getElementById('sideUserName').innerText = t.welcome;
@@ -322,11 +402,12 @@ auth.onAuthStateChanged(async user => {
         document.getElementById('userMail').innerText = "";
         document.getElementById('authBtn').innerText = t.login;
         document.getElementById('authBtn').onclick = () => location.href='login.html';
-        document.getElementById('logoutBtn').style.display = 'none';
-        document.getElementById('adminIcon').style.display = 'none';
+        
+        if(logoutBtn) logoutBtn.style.display = 'none';
+        if(adminIcon) adminIcon.style.display = 'none';
+        if(adminSideBtn) adminSideBtn.style.display = 'none';
     }
     
-    // Load Properties
     loadProperties();
 });
 
@@ -428,7 +509,7 @@ function filterAds() {
     renderAds(filtered);
 }
 
-// Favorites Management
+// ✅ Favorites Management - FIXED
 function getFavorites() {
     const favs = localStorage.getItem('earthFavorites');
     return favs ? JSON.parse(favs) : [];
@@ -448,7 +529,7 @@ function toggleFavorite(propId) {
         alert('Added to favorites ❤️');
     }
     localStorage.setItem('earthFavorites', JSON.stringify(favs));
-    renderAds(allAds);
+    renderAds(allAds); // UI update
 }
 
 // Share Property
