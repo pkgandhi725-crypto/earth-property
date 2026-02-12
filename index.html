@@ -9,45 +9,35 @@
         :root { --primary: #2e7d32; --bg: #f0f2f5; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); padding-bottom: 80px; }
-
         header { background: var(--primary); padding: 10px 15px; color: white; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
         .header-top { display: flex; align-items: center; justify-content: space-between; height: 45px; }
         #adminIcon { color: #ffd700; font-size: 20px; cursor: pointer; display: none; }
-
         .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s; display: flex; flex-direction: column; }
         .drawer.open { left: 0; }
         .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; }
         .menu-item { padding: 12px 20px; display: flex; align-items: center; gap: 15px; color: #333; text-decoration: none; font-weight: 600; font-size: 14px; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
         .menu-item i { width: 20px; color: var(--primary); }
-
         .lang-section { flex-grow: 1; overflow-y: auto; padding: 15px; background: #fdfdfd; }
         .lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
         .lang-btn { padding: 10px 5px; border: 1px solid #eee; border-radius: 8px; text-align: center; font-size: 12px; font-weight: 600; cursor: pointer; background: white; }
         .lang-btn.active { background: var(--primary) !important; color: white !important; }
-
         .prop-card { background: white; border-radius: 15px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; }
         .img-box { width: 100%; height: 220px; background: #ddd; overflow: hidden; position: relative; cursor: pointer; }
         .img-box img { width: 100%; height: 100%; object-fit: cover; }
-        
         .card-actions { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 10px; z-index: 10; }
         .action-btn { background: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer; color: #555; border: none; }
-        
-        /* Fav Color Fix */
-        .action-btn.fav-active i { color: #e91e63 !important; }
-
+        .fav-active i { color: #e91e63 !important; }
         .info { padding: 15px; }
         .btn-group { display: flex; gap: 8px; margin-top: 12px; }
         .btn { flex: 1; padding: 10px 5px; border-radius: 8px; border: none; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; }
         .btn-call { background: #e8f5e9; color: #2e7d32; }
         .btn-wa { background: #25D366; color: white; }
         .btn-chat { background: var(--primary); color: white; }
-
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 8px 0; border-top: 1px solid #eee; z-index: 1000; height: 65px; justify-content: space-around; }
         .nav-item { text-align: center; color: #888; text-decoration: none; font-size: 11px; font-weight: 600; }
         .nav-item i { font-size: 20px; margin-bottom: 4px; }
         .nav-item.active { color: var(--primary); }
         .post-circle { background: var(--primary); color: white !important; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: -35px; border: 5px solid white; font-size: 22px; }
-
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 4500; display: none; }
     </style>
 </head>
@@ -115,13 +105,13 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
 
+// 1. Fixing Language - Limited to supported ones for now
 const translations = {
     en: { explore: "Explore", myAds: "My Ads", favs: "Favs", profile: "Profile", shareApp: "Share App", login: "LOGIN", logout: "LOGOUT", call: "Call", chat: "Chat", selectLang: "SELECT LANGUAGE", favorites: "Favorites" },
     hi: { explore: "खोजें", myAds: "विज्ञापन", favs: "पसंदीदा", profile: "प्रोफ़ाइल", shareApp: "ऐप शेयर करें", login: "लॉगिन", logout: "लॉगआउट", call: "कॉल", chat: "चैट", selectLang: "भाषा चुनें", favorites: "पसंदीदा" },
     pa: { explore: "ਖੋਜੋ", myAds: "ਵਿਗਿਆਪਨ", favs: "ਪਸੰਦੀਦਾ", profile: "ਪ੍ਰੋਫਾਈਲ", shareApp: "ਐਪ ਸਾਂਝਾ ਕਰੋ", login: "ਲੌਗਇਨ", logout: "ਲੌਗਆਉਟ", call: "ਕਾਲ", chat: "ਚੈਟ", selectLang: "ਭਾਸ਼ਾ ਚੁਣੋ", favorites: "ਪਸੰਦੀਦਾ" }
 };
 
-// 1. Fixed Language Application
 function applyLanguage() {
     const lang = localStorage.getItem('earthLang') || 'en';
     const t = translations[lang] || translations['en'];
@@ -137,68 +127,12 @@ function applyLanguage() {
     document.getElementById('txtShareApp').innerText = t.shareApp;
 
     const user = auth.currentUser;
-    document.getElementById('authBtn').innerText = user ? t.logout : t.login;
-    if(user) {
-        document.getElementById('logoutBtn').innerText = t.logout;
-        document.getElementById('logoutBtn').style.display = 'block';
-    } else {
-        document.getElementById('logoutBtn').style.display = 'none';
-    }
+    if(document.getElementById('authBtn')) document.getElementById('authBtn').innerText = user ? t.logout : t.login;
 }
 
-// 2. Auth Actions
-function handleAuthAction() {
-    if(auth.currentUser) { handleLogout(); } 
-    else { window.location.href='login.html'; }
-}
-
-function handleLogout() { 
-    auth.signOut().then(() => {
-        localStorage.removeItem('user');
-        window.location.reload();
-    }); 
-}
-
-// 3. UI Interactions
-function toggleDrawer() {
-    const d = document.getElementById('sideDrawer');
-    d.classList.toggle('open');
-    document.getElementById('overlay').style.display = d.classList.contains('open') ? 'block' : 'none';
-}
-
-function toggleFav(btn) {
-    if(!auth.currentUser) { window.location.href='login.html'; return; }
-    btn.classList.toggle('fav-active');
-    const icon = btn.querySelector('i');
-    if(btn.classList.contains('fav-active')) {
-        icon.className = 'fa-solid fa-heart';
-    } else {
-        icon.className = 'fa-regular fa-heart';
-    }
-}
-
-function shareProperty(id, title) {
-    const url = window.location.origin + '/property-details.html?id=' + id;
-    if (navigator.share) {
-        navigator.share({ title: title, url: url });
-    } else { alert("Link copied to clipboard!"); }
-}
-
-function shareApp() {
-    if (navigator.share) {
-        navigator.share({ title: 'Earth Property', url: window.location.href });
-    }
-}
-
-// 4. Lang Grid Generation
+// 2. Generating Lang Grid with Instant Update (No reload logic)
 const langGrid = document.getElementById('langGrid');
-const languages = [
-    {c:'en', n:'English'}, {c:'hi', n:'हिंदी'}, {c:'pa', n:'ਪੰਜਾਬੀ'}, {c:'ar', n:'العربية'},
-    {c:'es', n:'Español'}, {c:'fr', n:'Français'}, {c:'de', n:'Deutsch'}, {c:'tr', n:'Türkçe'},
-    {c:'ru', n:'Русский'}, {c:'zh', n:'中文'}, {c:'ja', n:'日本語'}, {c:'ko', n:'한국어'},
-    {c:'it', n:'Italiano'}, {c:'pt', n:'Português'}, {c:'bn', n:'বাংলা'}, {c:'te', n:'తెలుగు'},
-    {c:'mr', n:'मराठी'}, {c:'ta', n:'தமிழ்'}, {c:'gu', n:'ગુજરાતી'}, {c:'kn', n:'ਕನ್ನಡ'}
-];
+const languages = [{c:'en', n:'English'}, {c:'hi', n:'हिंदी'}, {c:'pa', n:'ਪੰਜਾਬੀ'}];
 languages.forEach(l => {
     const btn = document.createElement('div');
     const savedL = localStorage.getItem('earthLang') || 'en';
@@ -206,24 +140,51 @@ languages.forEach(l => {
     btn.innerText = l.n;
     btn.onclick = () => { 
         localStorage.setItem('earthLang', l.c); 
-        location.reload(); 
+        applyLanguage();
+        // Update grid active state
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
     };
     langGrid.appendChild(btn);
 });
 
-// 5. Auth & Data Sync
+function toggleDrawer() {
+    const d = document.getElementById('sideDrawer');
+    d.classList.toggle('open');
+    document.getElementById('overlay').style.display = d.classList.contains('open') ? 'block' : 'none';
+}
+
+function handleAuthAction() {
+    if(auth.currentUser) { auth.signOut().then(() => location.reload()); } 
+    else { window.location.href='login.html'; }
+}
+
+function toggleFav(btn) {
+    if(!auth.currentUser) { window.location.href='login.html'; return; }
+    btn.classList.toggle('fav-active');
+    const icon = btn.querySelector('i');
+    icon.className = btn.classList.contains('fav-active') ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
+}
+
+// 3. User Name from Firestore Fix
 auth.onAuthStateChanged(user => {
     applyLanguage(); 
     if (user) {
-        // User Name Fix
-        document.getElementById('sideUserName').innerText = user.displayName || "Earth User";
+        // Fetch real name from Firestore instead of displayName
+        db.collection("users").doc(user.uid).get().then(doc => {
+            document.getElementById('sideUserName').innerText = (doc.exists && doc.data().name) ? doc.data().name : "Earth User";
+        }).catch(() => {
+            document.getElementById('sideUserName').innerText = "Earth User";
+        });
+        
         if(user.uid === ADMIN_UID) document.getElementById('adminIcon').style.display = 'inline-block';
+        document.getElementById('logoutBtn').style.display = 'block';
     } else {
         document.getElementById('sideUserName').innerText = "Guest User";
         document.getElementById('adminIcon').style.display = 'none';
     }
     
-    // Load Properties
+    // 4. Proper Property Link (Case Sensitive Fix)
     db.collection("properties").orderBy("createdAt", "desc").onSnapshot(snap => {
         const list = document.getElementById('propertyList');
         list.innerHTML = '';
@@ -233,15 +194,14 @@ auth.onAuthStateChanged(user => {
         snap.forEach(doc => {
             const p = doc.data();
             const id = doc.id;
-            const firstImg = p.images?.[0] || 'https://via.placeholder.com/400x220';
             list.innerHTML += `
             <div class="prop-card">
                 <div class="card-actions">
                     <button class="action-btn" onclick="toggleFav(this)"><i class="fa-regular fa-heart"></i></button>
                     <button class="action-btn" onclick="shareProperty('${id}', '${p.title}')"><i class="fa fa-share-nodes"></i></button>
                 </div>
-                <div class="img-box" onclick="window.location.href='property-details.html?id=${id}'">
-                    <img src="${firstImg}" onerror="this.src='https://via.placeholder.com/400x220'">
+                <div class="img-box" onclick="window.location.href='./property-details.html?id=${id}'">
+                    <img src="${p.images?.[0] || 'https://via.placeholder.com/400x220'}">
                 </div>
                 <div class="info">
                     <div style="color:var(--primary); font-size:22px; font-weight:800;">₹${Number(p.price || 0).toLocaleString('en-IN')}</div>
