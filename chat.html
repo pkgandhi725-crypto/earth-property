@@ -48,8 +48,7 @@
 
 <div id="chatBox"></div>
 
-<div class="input-area" id="inputArea">
-    </div>
+<div class="input-area" id="inputArea"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -77,13 +76,59 @@ function escapeHtml(text) {
 auth.onAuthStateChanged(user => {
     if (!user || !partnerId) { location.href = 'index.html'; return; }
     currentUserId = user.uid;
-    db.collection("users").doc(currentUserId).update({ status: "Online" });
     
-    // Listen to real-time status of both users (Blocking Logic)
+    // ✅ SET USER ONLINE
+    db.collection("users").doc(currentUserId).update({ 
+        status: "Online",
+        lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    
+    // ✅ MARK MESSAGES AS READ AS SOON AS CHAT OPENS
+    setTimeout(() => markMessagesAsRead(), 1000);
+    
     checkBlockStatus();
     loadPartnerInfo();
     listenMessages();
 });
+
+// ✅ SET USER OFFLINE WHEN LEAVING PAGE
+window.addEventListener('beforeunload', () => {
+    if(auth.currentUser) {
+        db.collection("users").doc(auth.currentUser.uid).update({ 
+            status: "Offline",
+            lastSeen: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    }
+});
+
+// ✅ MARK ALL MESSAGES AS READ
+function markMessagesAsRead() {
+    const chatId = currentUserId < partnerId ? `${currentUserId}_${partnerId}` : `${partnerId}_${currentUserId}`;
+    
+    db.collection("chats").doc(chatId).collection("messages")
+        .where("receiverId", "==", currentUserId)
+        .where("status", "==", "unread")
+        .get()
+        .then(snapshot => {
+            if (snapshot.empty) return;
+            
+            let batch = db.batch();
+            snapshot.forEach(doc => {
+                batch.update(db.collection("chats").doc(chatId).collection("messages").doc(doc.id), { 
+                    status: "read" 
+                });
+            });
+            return batch.commit();
+        })
+        .then(() => {
+            // Reset unread count
+            db.collection("chats").doc(chatId).update({
+                [`unreadCount_${currentUserId}`]: 0
+            });
+            console.log("All messages marked as read");
+        })
+        .catch(err => console.error("Error marking read:", err));
+}
 
 // ✅ REAL-TIME BLOCK STATUS LISTEN
 function checkBlockStatus() {
@@ -118,27 +163,55 @@ function checkBlockStatus() {
 
 function listenMessages() {
     const chatId = currentUserId < partnerId ? `${currentUserId}_${partnerId}` : `${partnerId}_${currentUserId}`;
+    
     db.collection("chats").doc(chatId).collection("messages")
       .orderBy("timestamp", "asc").limitToLast(50)
       .onSnapshot(snap => {
           const chatBox = document.getElementById('chatBox');
+          
           if (isIBlocked) {
               chatBox.innerHTML = `<div style="text-align:center; margin-top:50px; color:#999;"><i class="fa fa-ban fa-3x"></i><p>Messages hidden (User Blocked)</p></div>`;
               return;
           }
+          
           chatBox.innerHTML = "";
+          let hasNewMessages = false;
+          
           snap.forEach(doc => {
               const m = doc.data();
               const type = m.senderId === currentUserId ? 'sent' : 'received';
               const time = m.timestamp ? new Date(m.timestamp.seconds * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "...";
-              if(type === 'received' && m.status !== 'seen') db.collection("chats").doc(chatId).collection("messages").doc(doc.id).update({ status: 'seen' });
               
-              let ticks = type === 'sent' ? `<i class="fa ${m.status === 'seen' ? 'fa-check-double tick-blue' : 'fa-check'}" style="font-size:12px; margin-left:4px;"></i>` : '';
+              // ✅ AUTO MARK AS READ (Received messages only)
+              if(type === 'received' && m.status === 'unread') {
+                  db.collection("chats").doc(chatId).collection("messages").doc(doc.id).update({ status: 'read' });
+                  hasNewMessages = true;
+              }
+              
+              // Tick marks for sent messages
+              let ticks = '';
+              if (type === 'sent') {
+                  if (m.status === 'read') {
+                      ticks = `<i class="fa fa-check-double tick-blue" style="font-size:12px; margin-left:4px;"></i>`;
+                  } else {
+                      ticks = `<i class="fa fa-check" style="font-size:12px; margin-left:4px; color:#999;"></i>`;
+                  }
+              }
+              
               let content = m.image ? `<img src="${m.image}" style="max-width:100%; border-radius:8px; display:block;" onclick="window.open(this.src)">` : '';
               content += m.text ? `<div>${escapeHtml(m.text)}</div>` : '';
+              
               chatBox.innerHTML += `<div class="msg ${type}">${content}<div class="msg-footer">${time}${ticks}</div></div>`;
           });
+          
           chatBox.scrollTop = chatBox.scrollHeight;
+          
+          // ✅ RESET UNREAD COUNT IF NEW MESSAGES ARRIVED
+          if (hasNewMessages) {
+              db.collection("chats").doc(chatId).update({
+                  [`unreadCount_${currentUserId}`]: 0
+              });
+          }
       });
 }
 
@@ -151,10 +224,23 @@ async function sendMsg(imageUrl = null) {
     const chatId = currentUserId < partnerId ? `${currentUserId}_${partnerId}` : `${partnerId}_${currentUserId}`;
     try {
         await db.collection("chats").doc(chatId).collection("messages").add({
-            senderId: currentUserId, timestamp: firebase.firestore.FieldValue.serverTimestamp(), status: 'sent', text: text || "", image: imageUrl || null
+            senderId: currentUserId, 
+            receiverId: partnerId,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(), 
+            status: 'unread',
+            text: text || "", 
+            image: imageUrl || null
         });
         if(input) input.value = "";
-        await db.collection("chats").doc(chatId).set({ lastMsg: imageUrl ? "📷 Photo" : text, lastTime: firebase.firestore.FieldValue.serverTimestamp(), users: [currentUserId, partnerId] }, { merge: true });
+        
+        // Update last message in chat list
+        await db.collection("chats").doc(chatId).set({ 
+            lastMsg: imageUrl ? "📷 Photo" : text, 
+            lastTime: firebase.firestore.FieldValue.serverTimestamp(), 
+            users: [currentUserId, partnerId],
+            [`unreadCount_${partnerId}`]: firebase.firestore.FieldValue.increment(1)
+        }, { merge: true });
+        
     } catch(e) { console.error(e); }
 }
 
@@ -193,8 +279,9 @@ function loadPartnerInfo() {
     db.collection("users").doc(partnerId).onSnapshot(doc => {
         if(doc.exists) {
             document.getElementById('chatName').innerText = doc.data().name || "User";
-            document.getElementById('userStatus').innerText = doc.data().status || "Offline";
-            document.getElementById('userStatus').style.color = doc.data().status === "Online" ? "#90EE90" : "#ccc";
+            const status = doc.data().status || "Offline";
+            document.getElementById('userStatus').innerText = status;
+            document.getElementById('userStatus').style.color = status === "Online" ? "#90EE90" : "#ccc";
         }
     });
 }
