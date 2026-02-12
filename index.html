@@ -52,11 +52,15 @@
 
 <div class="drawer" id="sideDrawer">
     <div class="drawer-header">
-        <i class="fa fa-user-circle fa-3x"></i>
-        <h3 id="sideUserName" style="margin-top:10px;">Guest User</h3>
-        <p id="txtPremium" style="font-size:11px; opacity:0.8;">Premium Member</p>
+        <div style="display:flex; align-items:center; gap:15px;">
+            <i class="fa fa-user-circle fa-3x"></i>
+            <div>
+                <h3 id="sideUserName">Guest User</h3>
+                <p id="txtPremium" style="font-size:11px; opacity:0.8;">Premium Member</p>
+            </div>
+        </div>
     </div>
-    <div id="sideMenu">
+    <div class="drawer-menu">
         <a href="my-ads.html" class="menu-item"><i class="fa fa-layer-group"></i> <span id="txtMyAdsSide">My Ads</span></a>
         <a href="favorites.html" class="menu-item"><i class="fa fa-heart"></i> <span id="txtFavSide">Favorites</span></a>
         <a href="profile.html" class="menu-item"><i class="fa fa-user-gear"></i> <span id="txtSettingsSide">Settings</span></a>
@@ -105,13 +109,28 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
 
-// 🌍 Full 20 Language Dictionary (Based on translations.js)
+// 🌍 Sabhi 20 Languages ka Complete Data
 const translations = {
     en: { explore: "Explore", myAds: "My Ads", favs: "Favs", profile: "Profile", login: "LOGIN", logout: "LOGOUT", call: "Call", chat: "Chat", selectLang: "SELECT LANGUAGE", settings: "Settings", premium: "Premium Member", favorites: "Favorites" },
     hi: { explore: "खोजें", myAds: "विज्ञापन", favs: "पसंदीदा", profile: "प्रोफ़ाइल", login: "लॉगिन", logout: "लॉगआउट", call: "कॉल", chat: "चैट", selectLang: "भाषा चुनें", settings: "सेटिंग्स", premium: "प्रीमियम सदस्य", favorites: "पसंदीदा" },
-    pa: { explore: "ਖੋਜੋ", myAds: "ਮੇਰੇ ਵਿਗਿਆਪਨ", favs: "ਪਸੰਦੀਦਾ", profile: "ਪ੍ਰੋਫਾਈਲ", login: "ਲੌਗਇਨ", logout: "ਲੌਗਆਉਟ", call: "ਕਾਲ", chat: "ਚੈਟ", selectLang: "ਭਾਸ਼ਾ ਚੁਣੋ", settings: "ਸੈਟਿੰਗਾਂ", premium: "ਪ੍ਰੀਮੀਅਮ ਮੈਂਬਰ", favorites: "ਪਸੰਦੀਦਾ" },
+    pa: { explore: "ਖੋਜੋ", myAds: "ਵਿਗਿਆਪਨ", favs: "ਪਸੰਦੀਦਾ", profile: "ਪ੍ਰੋਫਾਈਲ", login: "ਲੌਗਇਨ", logout: "ਲੌਗਆਉਟ", call: "ਕਾਲ", chat: "ਚੈਟ", selectLang: "ਭਾਸ਼ਾ ਚੁਣੋ", settings: "ਸੈਟਿੰਗਾਂ", premium: "ಪ್ರಿಮಿಯಂ ಸದಸ್ಯ", favorites: "ਪਸੰਦੀਦਾ" },
     ar: { explore: "استكشاف", myAds: "إعلاناتي", favs: "المفضلة", profile: "الملف الشخصي", login: "تسجيل الدخول", logout: "تسجيل الخروج", call: "اتصال", chat: "دردشة", selectLang: "اختر اللغة", settings: "الإعدادات", premium: "عضو مميز", favorites: "المفضلة" },
-    // ... logic remains same for all 20, keeping en/hi/pa/ar as primary examples based on your provided files
+    es: { explore: "Explorar", myAds: "Mis Anuncios", favs: "Favs", profile: "Perfil", login: "ACCESO", logout: "SALIR", call: "Llamar", chat: "Chat", selectLang: "IDIOMA", settings: "Ajustes", premium: "Miembro Premium", favorites: "Favoritos" },
+    fr: { explore: "Explorer", myAds: "Annonces", favs: "Favs", profile: "Profil", login: "CONNEXION", logout: "DECONNEXION", call: "Appeler", chat: "Chat", selectLang: "LANGUE", settings: "Paramètres", premium: "Membre Premium", favorites: "Favoris" },
+    de: { explore: "Entdecken", myAds: "Anzeigen", favs: "Favs", profile: "Profil", login: "LOGIN", logout: "LOGOUT", call: "Anrufen", chat: "Chat", selectLang: "SPRACHE", settings: "Einstellungen", premium: "Premium-Mitglied", favorites: "Favoriten" },
+    tr: { explore: "Keşfet", myAds: "İlanlarım", favs: "Favori", profile: "Profil", login: "GİRİŞ", logout: "ÇIKIŞ", call: "Ara", chat: "Sohbet", selectLang: "DİL", settings: "Ayarlar", premium: "Premium Üye", favorites: "Favoriler" },
+    ru: { explore: "Поиск", myAds: "Объявы", favs: "Избр.", profile: "Профиль", login: "ВХОД", logout: "ВЫХОД", call: "Звонок", chat: "Чат", selectLang: "ЯЗЫК", settings: "Настройки", premium: "Премиум", favorites: "Избранное" },
+    zh: { explore: "探索", myAds: "广告", favs: "收藏", profile: "个人资料", login: "登录", logout: "登出", call: "呼叫", chat: "聊天", selectLang: "语言", settings: "设置", premium: "高级会员", favorites: "收藏夹" },
+    ja: { explore: "探索", myAds: "広告", favs: "お気に入り", profile: "プロフィール", login: "ログイン", logout: "ログアウト", call: "電話", chat: "チャット", selectLang: "言語", settings: "設定", premium: "プレミアム", favorites: "お気に入り" },
+    ko: { explore: "탐색", myAds: "광고", favs: "즐겨찾기", profile: "프로필", login: "로그인", logout: "로그아웃", call: "전화", chat: "채팅", selectLang: "언어", settings: "설정", premium: "프리미엄", favorites: "즐겨찾기" },
+    it: { explore: "Esplora", myAds: "Annunci", favs: "Pref.", profile: "Profilo", login: "ACCEDI", logout: "ESCI", call: "Chiama", chat: "Chat", selectLang: "LINGUA", settings: "Impostazioni", premium: "Membro Premium", favorites: "Preferiti" },
+    pt: { explore: "Explorar", myAds: "Anúncios", favs: "Favs", profile: "Perfil", login: "ENTRAR", logout: "SAIR", call: "Ligar", chat: "Chat", selectLang: "IDIOMA", settings: "Ajustes", premium: "Membro Premium", favorites: "Favoritos" },
+    bn: { explore: "অন্বেষণ", myAds: "বিজ্ঞাপন", favs: "পছন্দ", profile: "প্রোফাইল", login: "লগইন", logout: "লগআউট", call: "কল", chat: "চ্যাট", selectLang: "ভাষা", settings: "সেটিংস", premium: "প্রিমিয়াম", favorites: "পছন্দসই" },
+    te: { explore: "అన్వేషించండి", myAds: "ప్రకటనలు", favs: "ఇష్టమైనవి", profile: "ప్రొఫైల్", login: "లాగిన్", logout: "లాగ్అవుట్", call: "కాల్", chat: "చాట్", selectLang: "భాష", settings: "సెట్టింగులు", premium: "ప్రీమియం", favorites: "ఇష్టమైనవి" },
+    mr: { explore: "शोध", myAds: "जाहिराती", favs: "आवडते", profile: "प्रोफाइल", login: "लॉगिन", logout: "लॉगआउट", call: "कॉल", chat: "चॅट", selectLang: "भाषा", settings: "सेटिंग्ज", premium: "प्रीमियम", favorites: "आवडते" },
+    ta: { explore: "ஆராயுங்கள்", myAds: "விளம்பரங்கள்", favs: "விருப்பம்", profile: "சுயவிவரம்", login: "உள்நுழை", logout: "வெளியேறு", call: "அழைப்பு", chat: "அரட்டை", selectLang: "மொழி", settings: "அமைப்புகள்", premium: "பிரீமியம்", favorites: "விருப்பமானவை" },
+    gu: { explore: "શોધો", myAds: "જાહેરાતો", favs: "મનપસંદ", profile: "પ્રોફાઇલ", login: "લોગિન", logout: "લોગઆઉટ", call: "કોલ", chat: "ચેટ", selectLang: "ભાષા", settings: "સેટિંગ્સ", premium: "પ્રીમીયમ", favorites: "મનપસંદ" },
+    kn: { explore: "ಅನ್ವೇಷಿಸಿ", myAds: "ಜಾಹೀರಾತುಗಳು", favs: "ಮೆಚ್ಚಿನವು", profile: "ಪ್ರೊಫೈಲ್", login: "ಲಾಗಿನ್", logout: "ಲಾಗ್ಔಟ್", call: "ಕರೆ", chat: "ಚಾಟ್", selectLang: "ಭಾಷೆ", settings: "ಸೆಟ್ಟಿಂಗ್ಗಳು", premium: "ಪ್ರೀಮಿಯಂ", favorites: "ಮೆಚ್ಚಿನವುಗಳು" }
 };
 
 const languages = [
@@ -123,23 +142,25 @@ const languages = [
 ];
 
 const langGrid = document.getElementById('langGrid');
-const savedL = localStorage.getItem('earthLang') || 'en';
 
 function applyLanguage() {
     const lang = localStorage.getItem('earthLang') || 'en';
     const t = translations[lang] || translations['en'];
 
-    // Apply to UI
+    // Update Bottom Nav
     document.getElementById('txtNavExplore').innerText = t.explore;
     document.getElementById('txtNavAds').innerText = t.myAds;
     document.getElementById('txtNavFavs').innerText = t.favs;
     document.getElementById('txtNavProfile').innerText = t.profile;
+    
+    // Update Side Drawer
     document.getElementById('txtSelectLang').innerText = t.selectLang;
     document.getElementById('txtMyAdsSide').innerText = t.myAds;
     document.getElementById('txtFavSide').innerText = t.favorites;
     document.getElementById('txtSettingsSide').innerText = t.settings;
     document.getElementById('txtPremium').innerText = t.premium;
     
+    // Auth Button Translation
     const user = auth.currentUser;
     document.getElementById('authBtn').innerText = user ? t.logout : t.login;
     if(user) {
@@ -148,13 +169,15 @@ function applyLanguage() {
     }
 }
 
+// Draw Grid
 languages.forEach(l => {
     const btn = document.createElement('div');
+    const savedL = localStorage.getItem('earthLang') || 'en';
     btn.className = `lang-btn ${savedL === l.c ? 'active' : ''}`;
     btn.innerText = l.n;
     btn.onclick = () => { 
         localStorage.setItem('earthLang', l.c); 
-        applyLanguage(); // Smooth change
+        applyLanguage(); 
         location.reload(); 
     };
     langGrid.appendChild(btn);
@@ -167,7 +190,7 @@ function toggleDrawer() {
 }
 
 auth.onAuthStateChanged(user => {
-    applyLanguage(); // Initial Load Translation
+    applyLanguage(); 
     if (user) {
         document.getElementById('sideUserName').innerText = user.displayName || "Earth User";
         if(user.uid === ADMIN_UID) document.getElementById('adminIcon').style.setProperty('display', 'inline-block', 'important');
@@ -175,10 +198,13 @@ auth.onAuthStateChanged(user => {
         document.getElementById('authBtn').onclick = () => location.href='login.html';
     }
     
+    // Properties Load with Translation
     db.collection("properties").orderBy("createdAt", "desc").onSnapshot(snap => {
         const list = document.getElementById('propertyList');
         list.innerHTML = '';
-        const t = translations[localStorage.getItem('earthLang') || 'en'] || translations['en'];
+        const curL = localStorage.getItem('earthLang') || 'en';
+        const t = translations[curL] || translations['en'];
+        
         snap.forEach(doc => {
             const p = doc.data();
             const firstImg = p.images?.[0] || 'https://via.placeholder.com/400x220';
