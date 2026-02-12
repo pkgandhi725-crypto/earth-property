@@ -3,48 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Earth Property Final</title>
+    <title>Earth Property Global</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --primary: #2e7d32; --bg: #f0f2f5; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); padding-bottom: 90px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); padding-bottom: 80px; }
 
-        /* Header */
-        header { background: var(--primary); padding: 12px 15px; color: white; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .header-top { display: flex; align-items: center; justify-content: space-between; }
-        
-        /* 🚨 Admin Shield - Manual Control */
+        /* Header Fix */
+        header { background: var(--primary); padding: 10px 15px; color: white; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+        .header-top { display: flex; align-items: center; justify-content: space-between; height: 45px; }
+        .header-right { display: flex; align-items: center; gap: 15px; }
+
+        /* 🔔 Notification Bell & Admin Shield */
         #adminIcon { color: #ffd700; font-size: 20px; cursor: pointer; display: none !important; }
+        .bell-box { position: relative; font-size: 20px; cursor: pointer; }
+        .bell-dot { position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; background: #ff5252; border-radius: 50%; border: 1.5px solid var(--primary); }
 
-        /* Sidebar & Language */
-        .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s; display: flex; flex-direction: column; }
+        /* Sidebar & Global Languages */
+        .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s; display: flex; flex-direction: column; box-shadow: 5px 0 15px rgba(0,0,0,0.2); }
         .drawer.open { left: 0; }
         .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; }
-        .lang-container { flex-grow: 1; overflow-y: auto; padding: 15px; }
-        .lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .lang-btn { padding: 10px; border: 1px solid #ddd; border-radius: 6px; text-align: center; font-size: 13px; font-weight: 600; cursor: pointer; background: #f9f9f9; }
-        .lang-btn.active { background: var(--primary) !important; color: white !important; }
+        
+        .lang-section { flex-grow: 1; overflow-y: auto; padding: 15px; background: #fdfdfd; }
+        .lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .lang-btn { padding: 12px 5px; border: 1px solid #eee; border-radius: 8px; text-align: center; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; background: white; color: #333; }
+        .lang-btn.active { background: var(--primary) !important; color: white !important; border-color: var(--primary); transform: scale(0.95); }
 
-        /* Property Cards */
-        .prop-card { background: white; border-radius: 15px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .img-box { width: 100%; height: 210px; background: #eee; }
+        /* Search & Cards */
+        .search-container { padding: 10px 15px; }
+        .search-box { background: white; border-radius: 12px; display: flex; padding: 12px; align-items: center; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .search-box input { border: none; width: 100%; outline: none; font-size: 14px; }
+        
+        .prop-card { background: white; border-radius: 15px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .img-box { width: 100%; height: 220px; background: #f0f0f0; position: relative; }
         .img-box img { width: 100%; height: 100%; object-fit: cover; }
         .info { padding: 15px; }
         .price { font-size: 22px; font-weight: 800; color: var(--primary); }
         
-        .btn-group { display: flex; gap: 8px; margin-top: 15px; }
-        .btn { flex: 1; padding: 12px 5px; border-radius: 10px; border: none; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; }
+        /* Buttons Fix */
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        .btn { flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; }
+        .btn:active { transform: scale(0.98); }
         .btn-call { background: #e8f5e9; color: #2e7d32; }
         .btn-wa { background: #25D366; color: white; }
         .btn-chat { background: var(--primary); color: white; }
 
         /* Bottom Nav */
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 10px 0; border-top: 1px solid #eee; z-index: 1000; height: 70px; }
-        .nav-item { flex: 1; text-align: center; color: #777; text-decoration: none; font-size: 10px; }
-        .post-btn { background: var(--primary); color: white !important; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: -40px; border: 5px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-size: 24px; }
-        
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4500; display: none; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 8px 0; border-top: 1px solid #eee; z-index: 1000; height: 65px; justify-content: space-around; }
+        .nav-item { text-align: center; color: #888; text-decoration: none; font-size: 11px; font-weight: 600; }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .nav-item.active { color: var(--primary); }
+        .post-circle { background: var(--primary); color: white !important; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: -35px; border: 5px solid white; box-shadow: 0 4px 12px rgba(46,125,50,0.3); font-size: 22px; }
+
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 4500; display: none; backdrop-filter: blur(2px); }
     </style>
 </head>
 <body>
@@ -53,37 +65,57 @@
 
 <div class="drawer" id="sideDrawer">
     <div class="drawer-header">
-        <i class="fa fa-user-circle fa-4x"></i>
-        <h3 id="sideUserName" style="margin-top:10px;">Welcome Guest</h3>
+        <div style="display:flex; align-items:center; gap:15px;">
+            <i class="fa fa-user-circle fa-3x"></i>
+            <div>
+                <h3 id="sideUserName">Guest User</h3>
+                <p style="font-size:11px; opacity:0.8;">Premium Member</p>
+            </div>
+        </div>
     </div>
-    <div style="padding:15px 15px 5px; font-size:11px; font-weight:800; color:#999;">CHOOSE LANGUAGE</div>
-    <div class="lang-container">
+    <div class="lang-section">
+        <p style="font-size:12px; font-weight:800; color:#666; margin-bottom:10px;"><i class="fa fa-globe"></i> GLOBAL LANGUAGES</p>
         <div class="lang-grid" id="langGrid"></div>
     </div>
     <div style="padding:15px; border-top:1px solid #eee;">
-        <div id="logoutBtn" style="padding:10px 0; font-weight:700; color:red; display:none;" onclick="handleLogout()">Logout</div>
+        <div id="logoutBtn" style="padding:12px; font-weight:700; color:#d32f2f; display:none; text-align:center; border:1px solid #ffebee; border-radius:8px;" onclick="handleLogout()">
+            <i class="fa fa-sign-out-alt"></i> Logout
+        </div>
     </div>
 </div>
 
 <header>
     <div class="header-top">
-        <div style="display:flex; align-items:center; gap:10px;">
+        <div style="display:flex; align-items:center; gap:12px;">
             <i class="fa fa-bars" onclick="toggleDrawer()" style="font-size:22px;"></i>
-            <span style="font-size:1.3rem; font-weight:900;">Earth Property</span>
+            <span style="font-size:1.3rem; font-weight:900; letter-spacing:-0.5px;">Earth Property</span>
         </div>
-        <div style="display:flex; align-items:center; gap:15px;">
-            <i class="fa fa-user-shield" id="adminIcon" onclick="location.href='admin-portal.html'"></i>
-            <button id="authBtn" style="background:white; border:none; color:var(--primary); padding:6px 15px; border-radius:8px; font-weight:800; font-size:12px;">LOGIN</button>
+        <div class="header-right">
+            <i class="fa fa-user-shield" id="adminIcon" onclick="goToAdmin()"></i>
+            <div class="bell-box" onclick="alert('No new alerts')">
+                <i class="fa-regular fa-bell"></i>
+                <div class="bell-dot"></div>
+            </div>
+            <button id="authBtn" style="background:white; border:none; color:var(--primary); padding:6px 14px; border-radius:8px; font-weight:800; font-size:12px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">LOGIN</button>
         </div>
     </div>
 </header>
 
+<div class="search-container">
+    <div class="search-box">
+        <i class="fa fa-search" style="color:#aaa;"></i>
+        <input type="text" placeholder="Search Chandigarh, Delhi, Plot..." id="searchInput">
+    </div>
+</div>
+
 <div id="propertyList"></div>
 
 <nav class="bottom-nav">
-    <a href="index.html" class="nav-item active"><i class="fa fa-house fa-lg"></i><br>Explore</a>
-    <a href="add-property.html" class="nav-item"><div class="post-btn"><i class="fa fa-plus"></i></div></a>
-    <a href="profile.html" class="nav-item"><i class="fa fa-user-circle fa-lg"></i><br>Profile</a>
+    <a href="index.html" class="nav-item active"><i class="fa fa-compass"></i><br>Explore</a>
+    <a href="my-ads.html" class="nav-item"><i class="fa fa-layer-group"></i><br>My Ads</a>
+    <a href="add-property.html" class="nav-item"><div class="post-circle"><i class="fa fa-plus"></i></div></a>
+    <a href="favorites.html" class="nav-item"><i class="fa-regular fa-heart"></i><br>Favs</a>
+    <a href="profile.html" class="nav-item"><i class="fa fa-user-circle"></i><br>Profile</a>
 </nav>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -96,40 +128,52 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// 🚨 YOUR UID FIXED HERE
 const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
 
-// Languages Logic
-const languages = [{c:'en', n:'English'}, {c:'hi', n:'हिंदी'}, {c:'pa', n:'ਪੰਜਾਬੀ'}, {c:'ar', n:'العربية'}];
+// --- 20+ GLOBAL LANGUAGES ---
+const languages = [
+    {c:'en', n:'English'}, {c:'hi', n:'हिंदी'}, {c:'pa', n:'ਪੰਜਾਬੀ'}, {c:'ar', n:'العربية'},
+    {c:'es', n:'Español'}, {c:'fr', n:'Français'}, {c:'de', n:'Deutsch'}, {c:'tr', n:'Türkçe'},
+    {c:'ru', n:'Русский'}, {c:'zh', n:'中文'}, {c:'ja', n:'日本語'}, {c:'ko', n:'한국어'},
+    {c:'it', n:'Italiano'}, {c:'pt', n:'Português'}, {c:'bn', n:'বাংলা'}, {c:'te', n:'తెలుగు'},
+    {c:'mr', n:'मराठी'}, {c:'ta', n:'தமிழ்'}, {c:'gu', n:'ગુજરાતી'}, {c:'kn', n:'ಕನ್ನಡ'},
+    {c:'ml', n:'മലയാളം'}, {c:'ur', n:'اردو'}
+];
+
 const langGrid = document.getElementById('langGrid');
-const currentL = localStorage.getItem('earthLang') || 'en';
+const savedL = localStorage.getItem('earthLang') || 'en';
 
 languages.forEach(l => {
     const btn = document.createElement('div');
-    btn.className = `lang-btn ${currentL === l.c ? 'active' : ''}`;
+    btn.className = `lang-btn ${savedL === l.c ? 'active' : ''}`;
     btn.innerText = l.n;
     btn.onclick = () => {
         localStorage.setItem('earthLang', l.c);
-        window.location.reload();
+        location.reload(); 
     };
     langGrid.appendChild(btn);
 });
 
 function toggleDrawer() {
     const d = document.getElementById('sideDrawer');
+    const o = document.getElementById('overlay');
     d.classList.toggle('open');
-    document.getElementById('overlay').style.display = d.classList.contains('open') ? 'block' : 'none';
+    o.style.display = d.classList.contains('open') ? 'block' : 'none';
+}
+
+function goToAdmin() {
+    // 404 Check: Make sure file exists as admin-portal.html or admin.html
+    window.location.href = 'admin-portal.html'; 
 }
 
 auth.onAuthStateChanged(user => {
     const adminIcon = document.getElementById('adminIcon');
     if (user) {
-        document.getElementById('sideUserName').innerText = user.displayName || "User";
+        document.getElementById('sideUserName').innerText = user.displayName || "Earth User";
         document.getElementById('authBtn').innerText = "LOGOUT";
         document.getElementById('authBtn').onclick = handleLogout;
         document.getElementById('logoutBtn').style.display = 'block';
 
-        // 🚨 UID MATCH CHECK
         if(user.uid === ADMIN_UID) {
             adminIcon.style.setProperty('display', 'inline-block', 'important');
         }
@@ -138,7 +182,8 @@ auth.onAuthStateChanged(user => {
         adminIcon.style.display = 'none';
     }
     
-    db.collection("properties").orderBy("createdAt", "desc").onSnapshot(snap => {
+    // Auto-fetch Ads
+    db.collection("properties").orderBy("createdAt", "desc").limit(20).onSnapshot(snap => {
         renderAds(snap.docs.map(doc => ({id:doc.id, ...doc.data()})));
     });
 });
@@ -152,10 +197,11 @@ function renderAds(ads) {
         const phone = p.phone || '';
         list.innerHTML += `
         <div class="prop-card">
-            <div class="img-box"><img src="${p.images?.[0] || ''}"></div>
+            <div class="img-box"><img src="${p.images?.[0] || 'https://via.placeholder.com/400x220?text=No+Image'}"></div>
             <div class="info">
                 <div class="price">₹${Number(p.price).toLocaleString('en-IN')}</div>
-                <div style="font-weight:700; margin:5px 0;">${p.title}</div>
+                <div style="font-weight:700; margin:5px 0; color:#333; font-size:15px;">${p.title}</div>
+                <div style="font-size:12px; color:#777;"><i class="fa fa-location-dot"></i> ${p.location || 'Location N/A'}</div>
                 <div class="btn-group">
                     <button class="btn btn-call" onclick="contact('${phone}', 'tel')"><i class="fa fa-phone"></i> Call</button>
                     <button class="btn btn-wa" onclick="contact('${phone}', 'wa', '${p.title}')"><i class="fa-brands fa-whatsapp"></i> WA</button>
@@ -167,10 +213,10 @@ function renderAds(ads) {
 }
 
 function contact(num, type, title='') {
-    if(!num) return alert("Contact number not found");
+    if(!num || num === 'undefined') return alert("Error: Owner has not provided a contact number.");
     let clean = num.toString().replace(/\D/g,'');
     if(clean.length === 10) clean = "91" + clean;
-    if(type === 'wa') window.open(`https://wa.me/${clean}?text=Interest:${encodeURIComponent(title)}`);
+    if(type==='wa') window.open(`https://wa.me/${clean}?text=Interest in: ${encodeURIComponent(title)}`);
     else window.location.href = `tel:+${clean}`;
 }
 </script>
