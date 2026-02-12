@@ -88,14 +88,14 @@
         <p id="userMail" style="font-size:11px; opacity:0.8;"></p>
     </div>
     
-    <div style="padding:15px 15px 5px; font-size:11px; font-weight:800; color:#999; letter-spacing:1px;">GLOBAL LANGUAGES</div>
+    <div style="padding:15px 15px 5px; font-size:11px; font-weight:800; color:#999; letter-spacing:1px;" id="langHeader">GLOBAL LANGUAGES</div>
     <div class="lang-container">
         <div class="lang-grid" id="langGrid"></div>
     </div>
 
     <div class="drawer-footer">
-        <div onclick="location.href='my-ads.html'" style="padding:12px 0; font-weight:700; color:#444; cursor: pointer;"><i class="fa fa-layer-group" style="width:25px;"></i> My Ads</div>
-        <div id="logoutBtn" style="padding:12px 0; font-weight:700; color:#d32f2f; display:none; cursor: pointer;" onclick="handleLogout()"><i class="fa fa-sign-out-alt" style="width:25px;"></i> Logout</div>
+        <div onclick="location.href='my-ads.html'" style="padding:12px 0; font-weight:700; color:#444; cursor: pointer;"><i class="fa fa-layer-group" style="width:25px;"></i> <span id="myAdsText">My Ads</span></div>
+        <div id="logoutBtn" style="padding:12px 0; font-weight:700; color:#d32f2f; display:none; cursor: pointer;" onclick="handleLogout()"><i class="fa fa-sign-out-alt" style="width:25px;"></i> <span id="logoutText">Logout</span></div>
     </div>
 </div>
 
@@ -128,7 +128,7 @@
             <button id="authBtn" style="background:white; border:none; color:var(--primary); padding:6px 15px; border-radius:8px; font-weight:800; font-size:12px; cursor: pointer;">LOGIN</button>
         </div>
     </div>
-    <div style="margin-bottom:5px; font-size:11px; font-weight:600; opacity:0.9;">Hi, <span id="headerUserName">Guest</span></div>
+    <div style="margin-bottom:5px; font-size:11px; font-weight:600; opacity:0.9;"><span id="hiText">Hi</span>, <span id="headerUserName">Guest</span></div>
     <div class="search-box">
         <i class="fa fa-search" style="color:#aaa;"></i>
         <input type="text" placeholder="Search Chandigarh, Delhi, Plot..." id="searchInput" oninput="filterAds()">
@@ -138,11 +138,11 @@
 <div id="propertyList"></div>
 
 <nav class="bottom-nav">
-    <a href="index.html" class="nav-item active"><i class="fa fa-house"></i><br>Explore</a>
-    <a href="my-ads.html" class="nav-item"><i class="fa fa-layer-group"></i><br>My Ads</a>
+    <a href="index.html" class="nav-item active"><i class="fa fa-house"></i><br><span id="navExplore">Explore</span></a>
+    <a href="my-ads.html" class="nav-item"><i class="fa fa-layer-group"></i><br><span id="navMyAds">My Ads</span></a>
     <a href="add-property.html" class="nav-item"><div class="post-btn"><i class="fa fa-plus"></i></div></a>
-    <a href="favorites.html" class="nav-item"><i class="fa-regular fa-heart"></i><br>Favs</a>
-    <a href="profile.html" class="nav-item"><i class="fa fa-user-circle"></i><br>Profile</a>
+    <a href="favorites.html" class="nav-item"><i class="fa-regular fa-heart"></i><br><span id="navFavs">Favs</span></a>
+    <a href="profile.html" class="nav-item"><i class="fa fa-user-circle"></i><br><span id="navProfile">Profile</span></a>
 </nav>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -168,6 +168,57 @@ const languages = [
     {c:'ta', n:'தமிழ்'}, {c:'gu', n:'ગુજરાતી'}, {c:'kn', n:'ಕನ್ನಡ'}, {c:'ml', n:'മലയാളം'}
 ];
 
+// 🌍 FULL TRANSLATIONS FOR ALL 20+ LANGUAGES
+const translations = {
+    en: { explore:"Explore", myAds:"My Ads", favs:"Favs", profile:"Profile", call:"Call", chat:"Chat", login:"LOGIN", logout:"LOGOUT", search:"Search Chandigarh, Delhi, Plot...", hi:"Hi", langHeader:"GLOBAL LANGUAGES", welcome:"Welcome Guest" },
+    hi: { explore:"खोजें", myAds:"मेरे विज्ञापन", favs:"पसंदीदा", profile:"प्रोफ़ाइल", call:"कॉल", chat:"चैट", login:"लॉगिन", logout:"लॉगआउट", search:"चंडीगढ़, दिल्ली, प्लॉट खोजें...", hi:"नमस्ते", langHeader:"वैश्विक भाषाएं", welcome:"स्वागत है अतिथि" },
+    pa: { explore:"ਖੋਜੋ", myAds:"ਮੇਰੇ ਵਿਗਿਆਪਨ", favs:"ਪਸੰਦੀਦਾ", profile:"ਪ੍ਰੋਫਾਈਲ", call:"ਕਾਲ", chat:"ਚੈਟ", login:"ਲੌਗਇਨ", logout:"ਲੌਗਆਉਟ", search:"ਚੰਡੀਗੜ੍ਹ, ਦਿੱਲੀ ਖੋਜੋ...", hi:"ਸਤ ਸ੍ਰੀ ਅਕਾਲ", langHeader:"ਗਲੋਬਲ ਭਾਸ਼ਾਵਾਂ", welcome:"ਜੀ ਆਇਆਂ ਨੂੰ" },
+    ar: { explore:"استكشف", myAds:"إعلاناتي", favs:"المفضلة", profile:"الملف الشخصي", call:"اتصال", chat:"دردشة", login:"تسجيل الدخول", logout:"تسجيل خروج", search:"ابحث عن تشانديغار، دلهي...", hi:"مرحبا", langHeader:"اللغات العالمية", welcome:"مرحبا بك" },
+    es: { explore:"Explorar", myAds:"Mis Anuncios", favs:"Favoritos", profile:"Perfil", call:"Llamar", chat:"Chat", login:"ENTRAR", logout:"SALIR", search:"Buscar Chandigarh, Delhi...", hi:"Hola", langHeader:"IDIOMAS GLOBALES", welcome:"Bienvenido Invitado" },
+    fr: { explore:"Explorer", myAds:"Mes Annonces", favs:"Favoris", profile:"Profil", call:"Appeler", chat:"Chat", login:"CONNEXION", logout:"DÉCONNEXION", search:"Rechercher Chandigarh, Delhi...", hi:"Bonjour", langHeader:"LANGUES MONDIALES", welcome:"Bienvenue Invité" },
+    de: { explore:"Erkunden", myAds:"Meine Anzeigen", favs:"Favoriten", profile:"Profil", call:"Anrufen", chat:"Chat", login:"ANMELDEN", logout:"ABMELDEN", search:"Chandigarh, Delhi suchen...", hi:"Hallo", langHeader:"GLOBALE SPRACHEN", welcome:"Willkommen Gast" },
+    tr: { explore:"Keşfet", myAds:"İlanlarım", favs:"Favoriler", profile:"Profil", call:"Ara", chat:"Sohbet", login:"GİRİŞ", logout:"ÇIKIŞ", search:"Chandigarh, Delhi ara...", hi:"Merhaba", langHeader:"KÜRESEL DİLLER", welcome:"Hoş Geldin Misafir" },
+    ru: { explore:"Обзор", myAds:"Мои объявления", favs:"Избранное", profile:"Профиль", call:"Звонок", chat:"Чат", login:"ВОЙТИ", logout:"ВЫЙТИ", search:"Поиск Чандигарх, Дели...", hi:"Привет", langHeader:"МИРОВЫЕ ЯЗЫКИ", welcome:"Добро пожаловать" },
+    zh: { explore:"探索", myAds:"我的广告", favs:"收藏", profile:"个人资料", call:"电话", chat:"聊天", login:"登录", logout:"登出", search:"搜索昌迪加尔，德里...", hi:"你好", langHeader:"全球语言", welcome:"欢迎访客" },
+    ja: { explore:"探索", myAds:"マイ広告", favs:"お気に入り", profile:"プロフィール", call:"電話", chat:"チャット", login:"ログイン", logout:"ログアウト", search:"チャンディーガル、デリーを検索...", hi:"こんにちは", langHeader:"グローバル言語", welcome:"ようこそゲスト" },
+    ko: { explore:"탐색", myAds:"내 광고", favs:"즐겨찾기", profile:"프로필", call:"전화", chat:"채팅", login:"로그인", logout:"로그아웃", search:"찬디가르, 델리 검색...", hi:"안녕하세요", langHeader:"글로벌 언어", welcome:"환영합니다 게스트" },
+    pt: { explore:"Explorar", myAds:"Meus Anúncios", favs:"Favoritos", profile:"Perfil", call:"Ligar", chat:"Chat", login:"ENTRAR", logout:"SAIR", search:"Pesquisar Chandigarh, Delhi...", hi:"Olá", langHeader:"IDIOMAS GLOBAIS", welcome:"Bem-vindo Convidado" },
+    bn: { explore:"অন্বেষণ", myAds:"আমার বিজ্ঞাপন", favs:"প্রিয়", profile:"প্রোফাইল", call:"কল", chat:"চ্যাট", login:"লগইন", logout:"লগআউট", search:"চন্ডীগড়, দিল্লি অনুসন্ধান...", hi:"হ্যালো", langHeader:"বৈশ্বিক ভাষা", welcome:"স্বাগতম অতিথি" },
+    te: { explore:"అన్వేషించు", myAds:"నా ప్రకటనలు", favs:"ఇష్టాలు", profile:"ప్రొఫైల్", call:"కాల్", chat:"చాట్", login:"లాగిన్", logout:"లాగౌట్", search:"చండీగఢ్, ఢిల్లీ వెతకండి...", hi:"హలో", langHeader:"ప్రపంచ భాషలు", welcome:"స్వాగతం అతిథి" },
+    mr: { explore:"शोधा", myAds:"माझ्या जाहिराती", favs:"आवडते", profile:"प्रोफाइल", call:"कॉल", chat:"चॅट", login:"लॉगिन", logout:"लॉगआउट", search:"चंदीगड, दिल्ली शोधा...", hi:"नमस्कार", langHeader:"जागतिक भाषा", welcome:"स्वागत आहे अतिथी" },
+    ta: { explore:"ஆராயுங்கள்", myAds:"என் விளம்பரங்கள்", favs:"பிடித்தவை", profile:"சுயவிவரம்", call:"அழைப்பு", chat:"அரட்டை", login:"உள்நுழைய", logout:"வெளியேறு", search:"சண்டிகர், டெல்லி தேடுங்கள்...", hi:"வணக்கம்", langHeader:"உலகளாவிய மொழிகள்", welcome:"வரவேற்பு விருந்தினர்" },
+    gu: { explore:"અન્વેષણ", myAds:"મારી જાહેરાતો", favs:"મનપસંદ", profile:"પ્રોફાઇલ", call:"કૉલ", chat:"ચેટ", login:"લૉગિન", logout:"લૉગઆઉટ", search:"ચંડીગઢ, દિલ્હી શોધો...", hi:"નમસ્તે", langHeader:"વૈશ્વિક ભાષાઓ", welcome:"સ્વાગત છે મહેમાન" },
+    kn: { explore:"ಅನ್ವೇಷಿಸಿ", myAds:"ನನ್ನ ಜಾಹೀರಾತುಗಳು", favs:"ಮೆಚ್ಚಿನವುಗಳು", profile:"ಪ್ರೊಫೈಲ್", call:"ಕರೆ", chat:"ಚಾಟ್", login:"ಲಾಗಿನ್", logout:"ಲಾಗ್ಔಟ್", search:"ಚಂಡೀಗಢ, ಡೆಲ್ಲಿ ಹುಡುಕಿ...", hi:"ನಮಸ್ಕಾರ", langHeader:"ಜಾಗತಿಕ ಭಾಷೆಗಳು", welcome:"ಸ್ವಾಗತ ಅತಿಥಿ" },
+    ml: { explore:"പര്യവേക്ഷണം", myAds:"എന്റെ പരസ്യങ്ങൾ", favs:"പ്രിയപ്പെട്ടവ", profile:"പ്രൊഫൈൽ", call:"കോൾ", chat:"ചാറ്റ്", login:"ലോഗിൻ", logout:"ലോഗ്ഔട്ട്", search:"ചണ്ഡിഗഡ്, ഡൽഹി തിരയുക...", hi:"ഹലോ", langHeader:"ആഗോള ഭാഷകൾ", welcome:"സ്വാഗതം അതിഥി" }
+};
+
+// Apply Language Function
+function applyLanguage() {
+    const lang = localStorage.getItem('earthLang') || 'en';
+    const t = translations[lang] || translations['en'];
+
+    // Bottom Nav
+    document.getElementById('navExplore').innerText = t.explore;
+    document.getElementById('navMyAds').innerText = t.myAds;
+    document.getElementById('navFavs').innerText = t.favs;
+    document.getElementById('navProfile').innerText = t.profile;
+
+    // Sidebar
+    document.getElementById('myAdsText').innerText = t.myAds;
+    document.getElementById('logoutText').innerText = t.logout;
+    document.getElementById('langHeader').innerText = t.langHeader;
+
+    // Header
+    document.getElementById('hiText').innerText = t.hi;
+    document.getElementById('searchInput').placeholder = t.search;
+
+    // Auth Button
+    const user = auth.currentUser;
+    document.getElementById('authBtn').innerText = user ? t.logout : t.login;
+
+    console.log("Language applied:", lang);
+}
+
 // Load Languages into Grid
 function loadLanguages() {
     const langGrid = document.getElementById('langGrid');
@@ -189,10 +240,9 @@ function loadLanguages() {
 function switchLanguage(langCode) {
     console.log("Switching to language:", langCode);
     localStorage.setItem('earthLang', langCode);
-    alert('Language changed to ' + langCode + '. Page will reload.');
-    setTimeout(() => {
-        window.location.reload();
-    }, 500);
+    applyLanguage();
+    loadLanguages();
+    toggleDrawer(); // Close drawer after selection
 }
 
 function toggleDrawer() {
@@ -251,7 +301,8 @@ auth.onAuthStateChanged(async user => {
         document.getElementById('headerUserName').innerText = userName;
         document.getElementById('userMail').innerText = user.email || '';
         
-        document.getElementById('authBtn').innerText = "LOGOUT";
+        const t = translations[localStorage.getItem('earthLang') || 'en'] || translations['en'];
+        document.getElementById('authBtn').innerText = t.logout;
         document.getElementById('authBtn').onclick = handleLogout;
         document.getElementById('logoutBtn').style.display = 'block';
 
@@ -265,10 +316,11 @@ auth.onAuthStateChanged(async user => {
             document.getElementById('adminIcon').style.display = 'none';
         }
     } else {
-        document.getElementById('sideUserName').innerText = "Welcome Guest";
+        const t = translations[localStorage.getItem('earthLang') || 'en'] || translations['en'];
+        document.getElementById('sideUserName').innerText = t.welcome;
         document.getElementById('headerUserName').innerText = "Guest";
         document.getElementById('userMail').innerText = "";
-        document.getElementById('authBtn').innerText = "LOGIN";
+        document.getElementById('authBtn').innerText = t.login;
         document.getElementById('authBtn').onclick = () => location.href='login.html';
         document.getElementById('logoutBtn').style.display = 'none';
         document.getElementById('adminIcon').style.display = 'none';
@@ -298,6 +350,8 @@ function loadProperties() {
 
 function renderAds(ads) {
     const list = document.getElementById('propertyList');
+    const lang = localStorage.getItem('earthLang') || 'en';
+    const t = translations[lang] || translations['en'];
     
     if (ads.length === 0) {
         list.innerHTML = '<center style="margin-top:50px; color:#888;">No properties found.</center>';
@@ -327,9 +381,9 @@ function renderAds(ads) {
                 <div style="font-weight:700; margin:5px 0; color:#333;">${p.title || 'Untitled Property'}</div>
                 <div class="location"><i class="fa-solid fa-location-dot"></i> ${p.location || 'Location not specified'}</div>
                 <div class="btn-group">
-                    <button class="btn btn-call" onclick="contact('${p.phone}', 'tel')"><i class="fa fa-phone"></i> Call</button>
+                    <button class="btn btn-call" onclick="contact('${p.phone}', 'tel')"><i class="fa fa-phone"></i> ${t.call}</button>
                     <button class="btn btn-wa" onclick="contact('${p.phone}', 'wa', '${encodeURIComponent(p.title || 'Property')}')"><i class="fa-brands fa-whatsapp"></i> WA</button>
-                    <button class="btn btn-chat" onclick="location.href='chat.html?to=${p.ownerId}'"><i class="fa-regular fa-comment"></i> Chat</button>
+                    <button class="btn btn-chat" onclick="location.href='chat.html?to=${p.ownerId}'"><i class="fa-regular fa-comment"></i> ${t.chat}</button>
                 </div>
             </div>
         `;
@@ -394,7 +448,7 @@ function toggleFavorite(propId) {
         alert('Added to favorites ❤️');
     }
     localStorage.setItem('earthFavorites', JSON.stringify(favs));
-    renderAds(allAds); // Re-render to update heart icons
+    renderAds(allAds);
 }
 
 // Share Property
@@ -408,7 +462,6 @@ function shareProperty(propId, title) {
             url: url
         }).catch(err => console.log('Share cancelled'));
     } else {
-        // Fallback - copy to clipboard
         const tempInput = document.createElement('input');
         tempInput.value = url;
         document.body.appendChild(tempInput);
@@ -419,8 +472,9 @@ function shareProperty(propId, title) {
     }
 }
 
-// Initialize languages on page load
+// Initialize on page load
 loadLanguages();
+applyLanguage();
 </script>
 </body>
 </html>
