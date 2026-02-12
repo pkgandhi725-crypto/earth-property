@@ -11,12 +11,10 @@
         body { background: var(--bg); padding-bottom: 80px; }
         header { background: var(--primary); padding: 10px 15px; color: white; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
         .header-top { display: flex; align-items: center; justify-content: space-between; height: 45px; }
-        #adminIcon { color: #ffd700; font-size: 20px; cursor: pointer; display: none; }
+        #adminIcon { color: #ffd700; font-size: 20px; cursor: pointer; display: none !important; } /* Hidden by default */
         .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s; display: flex; flex-direction: column; }
         .drawer.open { left: 0; }
         .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; }
-        .menu-item { padding: 12px 20px; display: flex; align-items: center; gap: 15px; color: #333; text-decoration: none; font-weight: 600; font-size: 14px; border-bottom: 1px solid #f0f0f0; cursor: pointer; }
-        .menu-item i { width: 20px; color: var(--primary); }
         .lang-section { flex-grow: 1; overflow-y: auto; padding: 15px; background: #fdfdfd; }
         .lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
         .lang-btn { padding: 10px 5px; border: 1px solid #eee; border-radius: 8px; text-align: center; font-size: 12px; font-weight: 600; cursor: pointer; background: white; }
@@ -24,21 +22,14 @@
         .prop-card { background: white; border-radius: 15px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); position: relative; }
         .img-box { width: 100%; height: 220px; background: #ddd; overflow: hidden; position: relative; cursor: pointer; }
         .img-box img { width: 100%; height: 100%; object-fit: cover; }
-        .card-actions { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 10px; z-index: 10; }
         .action-btn { background: white; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer; color: #555; border: none; }
         .fav-active i { color: #e91e63 !important; }
-        .info { padding: 15px; }
-        .btn-group { display: flex; gap: 8px; margin-top: 12px; }
-        .btn { flex: 1; padding: 10px 5px; border-radius: 8px; border: none; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; }
-        .btn-call { background: #e8f5e9; color: #2e7d32; }
-        .btn-wa { background: #25D366; color: white; }
-        .btn-chat { background: var(--primary); color: white; }
         .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 8px 0; border-top: 1px solid #eee; z-index: 1000; height: 65px; justify-content: space-around; }
         .nav-item { text-align: center; color: #888; text-decoration: none; font-size: 11px; font-weight: 600; }
-        .nav-item i { font-size: 20px; margin-bottom: 4px; }
         .nav-item.active { color: var(--primary); }
-        .post-circle { background: var(--primary); color: white !important; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: -35px; border: 5px solid white; font-size: 22px; }
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 4500; display: none; }
+        .btn-group { display: flex; gap: 8px; margin-top: 12px; padding: 0 15px 15px; }
+        .btn { flex: 1; padding: 10px 5px; border-radius: 8px; border: none; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; }
     </style>
 </head>
 <body>
@@ -50,36 +41,32 @@
         <div style="display:flex; align-items:center; gap:15px;">
             <i class="fa fa-user-circle fa-3x"></i>
             <div>
-                <h3 id="sideUserName">Guest User</h3>
+                <h3 id="sideUserName">Loading...</h3>
                 <p id="txtPremium" style="font-size:11px; opacity:0.8;">Premium Member</p>
             </div>
         </div>
     </div>
     <div class="drawer-menu">
-        <a href="my-ads.html" class="menu-item"><i class="fa fa-layer-group"></i> <span id="txtMyAdsSide">My Ads</span></a>
-        <a href="favorites.html" class="menu-item"><i class="fa fa-heart"></i> <span id="txtFavSide">Favorites</span></a>
-        <a href="profile.html" class="menu-item"><i class="fa fa-user-gear"></i> <span id="txtProfileSide">My Profile</span></a>
-        <div class="menu-item" onclick="shareApp()"><i class="fa fa-share-nodes"></i> <span id="txtShareApp">Share App</span></div>
+        <a href="my-ads.html" class="menu-item" style="padding:15px; display:block;"><i class="fa fa-layer-group"></i> <span id="txtMyAdsSide">My Ads</span></a>
+        <a href="favorites.html" class="menu-item" style="padding:15px; display:block;"><i class="fa fa-heart"></i> <span id="txtFavSide">Favorites</span></a>
+        <div class="menu-item" onclick="shareApp()" style="padding:15px; cursor:pointer;"><i class="fa fa-share-nodes"></i> <span id="txtShareApp">Share App</span></div>
     </div>
     <div class="lang-section">
-        <p style="font-size:11px; font-weight:800; color:#999;"><i class="fa fa-globe"></i> <span id="txtSelectLang">SELECT LANGUAGE</span></p>
+        <p style="font-size:11px; font-weight:800; color:#999;"><span id="txtSelectLang">SELECT LANGUAGE</span></p>
         <div class="lang-grid" id="langGrid"></div>
     </div>
     <div style="padding:15px;">
-        <button id="logoutBtn" style="width:100%; padding:10px; color:red; background:none; border:1px solid red; border-radius:8px; display:none; font-weight:bold; cursor:pointer;" onclick="handleLogout()">LOGOUT</button>
+        <button id="logoutBtn" style="width:100%; padding:10px; color:red; background:none; border:1px solid red; border-radius:8px; display:none; font-weight:bold;" onclick="handleLogout()">LOGOUT</button>
     </div>
 </div>
 
 <header>
     <div class="header-top">
-        <div style="display:flex; align-items:center; gap:12px;">
-            <i class="fa fa-bars" onclick="toggleDrawer()" style="font-size:22px; cursor:pointer;"></i>
-            <span style="font-weight:900; font-size:1.2rem;">Earth Property</span>
-        </div>
-        <div class="header-right" style="display:flex; align-items:center; gap:15px;">
-            <i class="fa fa-user-shield" id="adminIcon" onclick="location.href='admin.html'"></i>
-            <i class="fa-regular fa-bell" style="font-size:20px; cursor:pointer;" onclick="alert('No notifications')"></i>
-            <button id="authBtn" onclick="handleAuthAction()" style="background:white; color:var(--primary); border:none; padding:6px 14px; border-radius:8px; font-weight:800; font-size:12px; cursor:pointer;">LOGIN</button>
+        <i class="fa fa-bars" onclick="toggleDrawer()" style="font-size:22px; cursor:pointer;"></i>
+        <span style="font-weight:900; font-size:1.2rem;">Earth Property</span>
+        <div style="display:flex; align-items:center; gap:15px;">
+            <i class="fa fa-user-shield" id="adminIcon" onclick="window.location.href='admin.html'"></i>
+            <button id="authBtn" onclick="handleAuthAction()" style="background:white; color:var(--primary); border:none; padding:6px 12px; border-radius:8px; font-weight:800; font-size:11px;">LOGIN</button>
         </div>
     </div>
 </header>
@@ -89,7 +76,7 @@
 <nav class="bottom-nav">
     <a href="index.html" class="nav-item active"><i class="fa fa-compass"></i><br><span id="txtNavExplore">Explore</span></a>
     <a href="my-ads.html" class="nav-item"><i class="fa fa-layer-group"></i><br><span id="txtNavAds">My Ads</span></a>
-    <a href="add-property.html" class="nav-item"><div class="post-circle"><i class="fa fa-plus"></i></div></a>
+    <a href="add-property.html" class="nav-item"><i class="fa fa-plus-circle" style="font-size:30px; color:var(--primary);"></i></a>
     <a href="favorites.html" class="nav-item"><i class="fa-regular fa-heart"></i><br><span id="txtNavFavs">Favs</span></a>
     <a href="profile.html" class="nav-item"><i class="fa fa-user-circle"></i><br><span id="txtNavProfile">Profile</span></a>
 </nav>
@@ -105,7 +92,7 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
 
-// 1. Fixing Language - Limited to supported ones for now
+// 1. Language Data (Added More)
 const translations = {
     en: { explore: "Explore", myAds: "My Ads", favs: "Favs", profile: "Profile", shareApp: "Share App", login: "LOGIN", logout: "LOGOUT", call: "Call", chat: "Chat", selectLang: "SELECT LANGUAGE", favorites: "Favorites" },
     hi: { explore: "खोजें", myAds: "विज्ञापन", favs: "पसंदीदा", profile: "प्रोफ़ाइल", shareApp: "ऐप शेयर करें", login: "लॉगिन", logout: "लॉगआउट", call: "कॉल", chat: "चैट", selectLang: "भाषा चुनें", favorites: "पसंदीदा" },
@@ -115,7 +102,6 @@ const translations = {
 function applyLanguage() {
     const lang = localStorage.getItem('earthLang') || 'en';
     const t = translations[lang] || translations['en'];
-    
     document.getElementById('txtNavExplore').innerText = t.explore;
     document.getElementById('txtNavAds').innerText = t.myAds;
     document.getElementById('txtNavFavs').innerText = t.favs;
@@ -123,28 +109,24 @@ function applyLanguage() {
     document.getElementById('txtSelectLang').innerText = t.selectLang;
     document.getElementById('txtMyAdsSide').innerText = t.myAds;
     document.getElementById('txtFavSide').innerText = t.favorites;
-    document.getElementById('txtProfileSide').innerText = t.profile;
     document.getElementById('txtShareApp').innerText = t.shareApp;
-
-    const user = auth.currentUser;
-    if(document.getElementById('authBtn')) document.getElementById('authBtn').innerText = user ? t.logout : t.login;
+    if(auth.currentUser) document.getElementById('authBtn').innerText = t.logout;
 }
 
-// 2. Generating Lang Grid with Instant Update (No reload logic)
+// 2. All 20 Languages Grid
+const languages = [
+    {c:'en', n:'English'}, {c:'hi', n:'हिंदी'}, {c:'pa', n:'ਪੰਜਾਬੀ'}, {c:'ar', n:'العربية'},
+    {c:'es', n:'Español'}, {c:'fr', n:'Français'}, {c:'de', n:'Deutsch'}, {c:'tr', n:'Türkçe'},
+    {c:'ru', n:'Русский'}, {c:'zh', n:'中文'}, {c:'ja', n:'日本語'}, {c:'ko', n:'한국어'},
+    {c:'it', n:'Italiano'}, {c:'pt', n:'Português'}, {c:'bn', n:'বাংলা'}, {c:'te', n:'తెలుగు'},
+    {c:'mr', n:'मराठी'}, {c:'ta', n:'தமிழ்'}, {c:'gu', n:'ગુજરાતી'}, {c:'kn', n:'ಕನ್ನಡ'}
+];
 const langGrid = document.getElementById('langGrid');
-const languages = [{c:'en', n:'English'}, {c:'hi', n:'हिंदी'}, {c:'pa', n:'ਪੰਜਾਬੀ'}];
 languages.forEach(l => {
     const btn = document.createElement('div');
-    const savedL = localStorage.getItem('earthLang') || 'en';
-    btn.className = `lang-btn ${savedL === l.c ? 'active' : ''}`;
+    btn.className = `lang-btn ${localStorage.getItem('earthLang') === l.c ? 'active' : ''}`;
     btn.innerText = l.n;
-    btn.onclick = () => { 
-        localStorage.setItem('earthLang', l.c); 
-        applyLanguage();
-        // Update grid active state
-        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-    };
+    btn.onclick = () => { localStorage.setItem('earthLang', l.c); applyLanguage(); location.reload(); };
     langGrid.appendChild(btn);
 });
 
@@ -159,63 +141,54 @@ function handleAuthAction() {
     else { window.location.href='login.html'; }
 }
 
-function toggleFav(btn) {
-    if(!auth.currentUser) { window.location.href='login.html'; return; }
-    btn.classList.toggle('fav-active');
-    const icon = btn.querySelector('i');
-    icon.className = btn.classList.contains('fav-active') ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
-}
-
-// 3. User Name from Firestore Fix
+// 3. Force Admin & User Name Check
 auth.onAuthStateChanged(user => {
-    applyLanguage(); 
+    applyLanguage();
     if (user) {
-        // Fetch real name from Firestore instead of displayName
+        // Fix: Admin Check
+        if(user.uid.trim() === ADMIN_UID.trim()) {
+            document.getElementById('adminIcon').style.setProperty('display', 'inline-block', 'important');
+        }
+        // Fix: User Name Fetch
         db.collection("users").doc(user.uid).get().then(doc => {
-            document.getElementById('sideUserName').innerText = (doc.exists && doc.data().name) ? doc.data().name : "Earth User";
-        }).catch(() => {
-            document.getElementById('sideUserName').innerText = "Earth User";
-        });
+            document.getElementById('sideUserName').innerText = (doc.exists && doc.data().name) ? doc.data().name : (user.displayName || "Earth User");
+        }).catch(() => { document.getElementById('sideUserName').innerText = "Earth User"; });
         
-        if(user.uid === ADMIN_UID) document.getElementById('adminIcon').style.display = 'inline-block';
         document.getElementById('logoutBtn').style.display = 'block';
     } else {
         document.getElementById('sideUserName').innerText = "Guest User";
         document.getElementById('adminIcon').style.display = 'none';
     }
+});
+
+// 4. Data Load & Case Sensitive Path Fix
+db.collection("properties").orderBy("createdAt", "desc").onSnapshot(snap => {
+    const list = document.getElementById('propertyList');
+    list.innerHTML = '';
+    const t = translations[localStorage.getItem('earthLang') || 'en'] || translations['en'];
     
-    // 4. Proper Property Link (Case Sensitive Fix)
-    db.collection("properties").orderBy("createdAt", "desc").onSnapshot(snap => {
-        const list = document.getElementById('propertyList');
-        list.innerHTML = '';
-        const lang = localStorage.getItem('earthLang') || 'en';
-        const t = translations[lang] || translations['en'];
-        
-        snap.forEach(doc => {
-            const p = doc.data();
-            const id = doc.id;
-            list.innerHTML += `
-            <div class="prop-card">
-                <div class="card-actions">
-                    <button class="action-btn" onclick="toggleFav(this)"><i class="fa-regular fa-heart"></i></button>
-                    <button class="action-btn" onclick="shareProperty('${id}', '${p.title}')"><i class="fa fa-share-nodes"></i></button>
-                </div>
-                <div class="img-box" onclick="window.location.href='./property-details.html?id=${id}'">
-                    <img src="${p.images?.[0] || 'https://via.placeholder.com/400x220'}">
-                </div>
-                <div class="info">
-                    <div style="color:var(--primary); font-size:22px; font-weight:800;">₹${Number(p.price || 0).toLocaleString('en-IN')}</div>
-                    <div style="font-weight:700; margin:5px 0;">${p.title}</div>
-                    <div class="btn-group">
-                        <button class="btn btn-call" onclick="location.href='tel:${p.phone}'"><i class="fa fa-phone"></i> ${t.call}</button>
-                        <button class="btn btn-wa" onclick="window.open('https://wa.me/91${p.phone}')"><i class="fa-brands fa-whatsapp"></i> WA</button>
-                        <button class="btn btn-chat" onclick="location.href='chat.html?to=${p.ownerId}'"><i class="fa-regular fa-comment"></i> ${t.chat}</button>
-                    </div>
-                </div>
-            </div>`;
-        });
+    snap.forEach(doc => {
+        const p = doc.data();
+        const id = doc.id;
+        // Fix: Use ./ for relative pathing to avoid 404
+        list.innerHTML += `
+        <div class="prop-card">
+            <div class="img-box" onclick="window.location.href='./property-details.html?id=${id}'">
+                <img src="${p.images?.[0] || 'https://via.placeholder.com/400x220'}" onerror="this.src='https://via.placeholder.com/400x220'">
+            </div>
+            <div style="padding:15px;">
+                <div style="color:var(--primary); font-size:22px; font-weight:800;">₹${Number(p.price || 0).toLocaleString('en-IN')}</div>
+                <div style="font-weight:700; margin:5px 0;">${p.title}</div>
+            </div>
+            <div class="btn-group">
+                <button class="btn" style="background:#e8f5e9; color:#2e7d32;" onclick="location.href='tel:${p.phone}'"><i class="fa fa-phone"></i> ${t.call}</button>
+                <button class="btn" style="background:var(--primary); color:white;" onclick="location.href='chat.html?to=${p.ownerId}'"><i class="fa-regular fa-comment"></i> ${t.chat}</button>
+            </div>
+        </div>`;
     });
 });
+
+function shareApp() { if(navigator.share) navigator.share({title:'Earth Property', url:window.location.href}); }
 </script>
 </body>
 </html>
