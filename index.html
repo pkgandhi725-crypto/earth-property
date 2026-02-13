@@ -18,7 +18,7 @@
         .admin-btn { color: #ffd700; font-size: 20px; cursor: pointer; display: none; }
         .bell-icon { position: relative; font-size: 18px; cursor: pointer; }
         
-        /* Bell Badge - Changed from dot to number */
+        /* Bell Badge - Number instead of dot */
         .bell-badge { 
             position: absolute; 
             top: -8px; 
@@ -40,7 +40,31 @@
         /* Sidebar */
         .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 5px 0 15px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
         .drawer.open { left: 0; }
-        .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; flex-shrink: 0; }
+        .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; flex-shrink: 0; position: relative; }
+        
+        /* Profile Photo Circle - FIXED */
+        .profile-photo-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            overflow: hidden;
+            border: 3px solid rgba(255,255,255,0.3);
+        }
+        .profile-photo-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .profile-photo-circle i {
+            font-size: 40px;
+            color: rgba(255,255,255,0.8);
+        }
+        
         .lang-container { flex-grow: 1; overflow-y: auto; padding: 15px; border-bottom: 1px solid #eee; }
         .lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .lang-btn { padding: 10px; border: 1px solid #ddd; border-radius: 6px; text-align: center; font-size: 13px; cursor: pointer; font-weight: 600; background: #f9f9f9; transition: all 0.2s; }
@@ -83,7 +107,7 @@
         .btn-wa { background: #25D366; color: white; }
         .btn-chat { background: var(--primary); color: white; }
 
-        /* Bottom Nav - Updated for centered add button */
+        /* Bottom Nav - Centered add button like photo */
         .bottom-nav { 
             position: fixed; 
             bottom: 0; 
@@ -112,7 +136,7 @@
         .nav-item i { font-size: 20px; margin-bottom: 3px; }
         .nav-item.active { color: var(--primary); }
         
-        /* Centered Post Button */
+        /* Centered Post Button - NO WHITE BORDER */
         .post-btn-wrapper {
             flex: 1;
             display: flex;
@@ -123,18 +147,19 @@
         .post-btn { 
             background: var(--primary); 
             color: white !important; 
-            width: 55px; 
-            height: 55px; 
+            width: 60px; 
+            height: 60px; 
             border-radius: 50%; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
-            border: 5px solid white; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
-            font-size: 24px;
+            border: none;
+            box-shadow: 0 4px 15px rgba(46, 125, 50, 0.4); 
+            font-size: 28px;
             position: absolute;
-            bottom: 10px;
+            bottom: 5px;
             text-decoration: none;
+            cursor: pointer;
         }
 
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4500; display: none; backdrop-filter: blur(2px); }
@@ -160,8 +185,10 @@
 
 <div class="drawer" id="sideDrawer">
     <div class="drawer-header">
-        <i class="fa fa-user-circle fa-4x"></i>
-        <h3 id="sideUserName" style="margin-top:12px;">Welcome Guest</h3>
+        <div class="profile-photo-circle" id="profilePhotoCircle">
+            <i class="fa fa-user-circle"></i>
+        </div>
+        <h3 id="sideUserName" style="margin-top:0;">Welcome Guest</h3>
         <p id="userMail" style="font-size:11px; opacity:0.8;"></p>
     </div>
     
@@ -277,7 +304,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// Admin UID - Updated as requested
+// Admin UID
 const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
 
 let allAds = [];
@@ -293,7 +320,6 @@ if (navigator.geolocation) {
                 lat: position.coords.latitude,
                 lng: position.coords.longitude
             };
-            // Reload ads with location-based sorting
             if (allAds.length > 0) {
                 renderAds(sortByProximity(allAds));
             }
@@ -304,19 +330,19 @@ if (navigator.geolocation) {
     );
 }
 
-// Calculate distance between two coordinates (Haversine formula)
+// Calculate distance between two coordinates
 function calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371; // Earth's radius in km
+    const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
               Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
               Math.sin(dLon/2) * Math.sin(dLon/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c; // Distance in km
+    return R * c;
 }
 
-// Sort ads by proximity to user's location
+// Sort ads by proximity
 function sortByProximity(ads) {
     if (!userLocation) return ads;
     
@@ -371,19 +397,15 @@ function updateGalleryDots() {
     });
 }
 
-// Handle back button for gallery - FIXED
+// Handle back button for gallery
 document.addEventListener('DOMContentLoaded', function() {
-    // Handle hardware back button for gallery
     window.addEventListener('popstate', function(event) {
         const galleryModal = document.getElementById('galleryModal');
         if (galleryModal.classList.contains('active')) {
             closeGallery();
-            // Prevent default back navigation
             window.history.pushState(null, null, window.location.href);
         }
     });
-    
-    // Push initial state to enable back button handling
     window.history.pushState(null, null, window.location.href);
 });
 
@@ -409,7 +431,13 @@ const translations = {
     ko: { welcome: "환영합니다 손님", login: "로그인", logout: "로그아웃", call: "전화", chat: "채팅" },
     tr: { welcome: "Hoş Geldiniz Misafir", login: "Giriş", logout: "Çıkış", call: "Ara", chat: "Sohbet" },
     nl: { welcome: "Welkom Gast", login: "Inloggen", logout: "Uitloggen", call: "Bellen", chat: "Chat" },
-    pl: { welcome: "Witaj Gość", login: "Zaloguj", logout: "Wyloguj", call: "Zadzwoń", chat: "Czat" }
+    pl: { welcome: "Witaj Gość", login: "Zaloguj", logout: "Wyloguj", call: "Zadzwoń", chat: "Czat" },
+    id: { welcome: "Selamat Datang Tamu", login: "Masuk", logout: "Keluar", call: "Panggil", chat: "Obrolan" },
+    th: { welcome: "ยินดีต้อนรับแขก", login: "เข้าสู่ระบบ", logout: "ออกจากระบบ", call: "โทร", chat: "แชท" },
+    vi: { welcome: "Chào mừng khách", login: "Đăng nhập", logout: "Đăng xuất", call: "Gọi", chat: "Trò chuyện" },
+    sw: { welcome: "Karibu Mgeni", login: "Ingia", logout: "Toka", call: "Piga simu", chat: "Gumzo" },
+    bn: { welcome: "স্বাগত অতিথি", login: "লগইন", logout: "লগআউট", call: "কল", chat: "চ্যাট" },
+    ur: { welcome: "خوش آمدید مہمان", login: "لاگ ان", logout: "لاگ آؤٹ", call: "کال", chat: "چیٹ" }
 };
 
 const languages = [
@@ -427,7 +455,13 @@ const languages = [
     { code: 'ko', name: '한국어' },
     { code: 'tr', name: 'Türkçe' },
     { code: 'nl', name: 'Nederlands' },
-    { code: 'pl', name: 'Polski' }
+    { code: 'pl', name: 'Polski' },
+    { code: 'id', name: 'Indonesian' },
+    { code: 'th', name: 'ไทย' },
+    { code: 'vi', name: 'Tiếng Việt' },
+    { code: 'sw', name: 'Swahili' },
+    { code: 'bn', name: 'বাংলা' },
+    { code: 'ur', name: 'اردو' }
 ];
 
 function loadLanguages() {
@@ -461,7 +495,17 @@ function applyLanguage() {
     renderAds(allAds);
 }
 
-// Listen for notifications and update badge
+// Update profile photo
+function updateProfilePhoto(photoURL) {
+    const photoCircle = document.getElementById('profilePhotoCircle');
+    if (photoURL) {
+        photoCircle.innerHTML = `<img src="${photoURL}" alt="Profile">`;
+    } else {
+        photoCircle.innerHTML = '<i class="fa fa-user-circle"></i>';
+    }
+}
+
+// Listen for notifications
 function listenForNotifications(uid) {
     db.collection("notifications")
         .where("recipientId", "==", uid)
@@ -488,12 +532,13 @@ auth.onAuthStateChanged(user => {
         document.getElementById('sideUserName').innerText = userName;
         document.getElementById('headerUserName').innerText = userName;
         document.getElementById('userMail').innerText = user.email || '';
+        updateProfilePhoto(user.photoURL);
+        
         const t = translations[localStorage.getItem('earthLang') || 'en'] || translations['en'];
         document.getElementById('authBtn').innerText = t.logout;
         document.getElementById('authBtn').onclick = handleLogout;
         logoutBtn.style.display = 'flex';
         
-        // Check if user is admin by UID
         if (user.uid === ADMIN_UID) {
             if(adminIcon) adminIcon.style.display = 'inline-block';
             if(adminSideBtn) adminSideBtn.style.display = 'flex';
@@ -507,6 +552,7 @@ auth.onAuthStateChanged(user => {
         document.getElementById('sideUserName').innerText = t.welcome;
         document.getElementById('headerUserName').innerText = "Guest";
         document.getElementById('userMail').innerText = "";
+        updateProfilePhoto(null);
         document.getElementById('authBtn').innerText = t.login;
         document.getElementById('authBtn').onclick = () => location.href='login.html';
         if(logoutBtn) logoutBtn.style.display = 'none';
@@ -525,7 +571,6 @@ function handleLogout() {
 function loadProperties() {
     db.collection("properties").orderBy("createdAt", "desc").onSnapshot(snap => {
         allAds = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
-        // Sort by proximity if location is available
         const sortedAds = userLocation ? sortByProximity(allAds) : allAds;
         renderAds(sortedAds);
     }, err => {
