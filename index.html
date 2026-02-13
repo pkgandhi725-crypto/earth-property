@@ -568,13 +568,23 @@ function handleLogout() {
     }
 }
 
-function loadProperties() {
+async function loadProperties() {
+    const user = auth.currentUser;
+    window.userFavIds = []; 
+    
+    if (user) {
+        try {
+            const favSnap = await db.collection("favorites").where("userId", "==", user.uid).get();
+            window.userFavIds = favSnap.docs.map(doc => doc.data().propertyId);
+        } catch (e) { console.log("Fav fetch error:", e); }
+    }
+
     db.collection("properties").orderBy("createdAt", "desc").onSnapshot(snap => {
         allAds = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
         const sortedAds = userLocation ? sortByProximity(allAds) : allAds;
         renderAds(sortedAds);
     }, err => {
-        document.getElementById('propertyList').innerHTML = '<center style="margin-top:50px; color:#d32f2f;">Error loading properties. Please refresh.</center>';
+        document.getElementById('propertyList').innerHTML = '<center style="margin-top:50px; color:#d32f2f;">Error loading properties.</center>';
     });
 }
 
