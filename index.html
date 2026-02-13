@@ -673,22 +673,28 @@ async function toggleFavorite(propId) {
         return;
     }
 
-    // Professional Way: Har user ka apna document favorites collection mein
     const favRef = db.collection("favorites").doc(`${user.uid}_${propId}`);
     const doc = await favRef.get();
 
     if (doc.exists) {
+        // Database se hatao
         await favRef.delete();
+        // Screen par turant update ke liye array se bhi hatao
+        window.userFavIds = (window.userFavIds || []).filter(id => id !== propId);
         alert('Removed from favorites');
     } else {
+        // Database mein add karo
         await favRef.set({
             userId: user.uid,
             propertyId: propId,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
+        // Screen par turant update ke liye array mein add karo
+        if(!window.userFavIds) window.userFavIds = [];
+        window.userFavIds.push(propId);
         alert('Added to favorites ❤️');
     }
-    // Isse UI update ho jayegi
+    // UI ko refresh karo
     renderAds(allAds);
 }
 
