@@ -11,9 +11,27 @@
         header { background: var(--primary); padding: 15px; color: white; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; }
         header a { color: white; text-decoration: none; font-size: 18px; }
         
-        .prop-card { background: white; border-radius: 16px; margin: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
-        .img-container { width: 100%; aspect-ratio: 4/3; background: #eee; }
+        .prop-card { background: white; border-radius: 16px; margin: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06); cursor: pointer; transition: transform 0.2s; }
+        .prop-card:active { transform: scale(0.98); }
+        .img-container { width: 100%; aspect-ratio: 4/3; background: #eee; position: relative; }
         .img-container img { width: 100%; height: 100%; object-fit: cover; }
+        .remove-btn { 
+            position: absolute; 
+            top: 10px; 
+            right: 10px; 
+            background: rgba(255,255,255,0.9); 
+            border: none; 
+            border-radius: 50%; 
+            width: 35px; 
+            height: 35px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+        .remove-btn i { color: #ff5252; font-size: 16px; }
         .prop-info { padding: 15px; }
         .prop-price { font-size: 20px; font-weight: 800; color: var(--primary); margin: 0; }
         .empty-state { text-align: center; padding: 100px 20px; color: #888; }
@@ -36,50 +54,123 @@
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
 
 <script>
-const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
+const firebaseConfig = { 
+    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
+    authDomain: "earth-properties-c3c56.firebaseapp.com", 
+    projectId: "earth-properties-c3c56" 
+};
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
+// Remove from favorites
+async function removeFromFavorites(propId) {
+    if (!confirm('Remove this property from favorites?')) return;
+    
+    const user = auth.currentUser;
+    if (!user) return;
+    
+    try {
+        const favQuery = await db.collection("favorites")
+            .where("userId", "==", user.uid)
+            .where("propertyId", "==", propId)
+            .get();
+        
+        if (!favQuery.empty) {
+            await favQuery.docs[0].ref.delete();
+            loadFavorites(user.uid);
+        }
+    } catch (error) {
+        console.error('Error removing favorite:', error);
+        alert('Error removing from favorites. Please try again.');
+    }
+}
+
 auth.onAuthStateChanged(user => {
-    if (!user) { location.href = 'login.html'; return; }
+    if (!user) { 
+        location.href = 'login.html'; 
+        return; 
+    }
     loadFavorites(user.uid);
 });
 
 async function loadFavorites(uid) {
     const listDiv = document.getElementById('favList');
+    
     try {
-        // 1. Get Favorite Property IDs
-        const favSnap = await db.collection("favorites").where("userId", "==", uid).get();
+        // Get favorite property IDs from Firestore
+        const favSnap = await db.collection("favorites")
+            .where("userId", "==", uid)
+            .get();
+        
         if (favSnap.empty) {
-            listDiv.innerHTML = `<div class="empty-state"><i class="fa fa-heart-crack" style="font-size:50px;color:#ddd;"></i><p>No favorites saved yet.</p><a href="index.html" class="btn-browse">Explore Properties</a></div>`;
+            listDiv.innerHTML = `
+                <div class="empty-state">
+                    <i class="fa fa-heart-crack" style="font-size:50px;color:#ddd;"></i>
+                    <p>No favorites saved yet.</p>
+                    <a href="index.html" class="btn-browse">Explore Properties</a>
+                </div>`;
             return;
         }
 
         const propIds = favSnap.docs.map(doc => doc.data().propertyId);
         
-        // 2. Fetch Property Details
+        // Fetch property details
+        listDiv.innerHTML = '<div style="text-align: center; padding: 50px;">Loading properties...</div>';
+        
         let html = '';
         for (const id of propIds) {
-            const pDoc = await db.collection("properties").doc(id).get();
-            if (pDoc.exists) {
-                const p = pDoc.data();
-                const firstImg = (p.images && p.images.length > 0) ? (typeof p.images[0] === 'object' ? p.images[0].url : p.images[0]) : 'https://via.placeholder.com/400x300';
-                
-                html += `
-                    <div class="prop-card" onclick="location.href='index.html'">
-                        <div class="img-container"><img src="${firstImg}"></div>
-                        <div class="prop-info">
-                            <p class="prop-price">₹${Number(p.price).toLocaleString('en-IN')}</p>
-                            <div style="font-weight:700; margin-top:5px;">${p.title}</div>
-                            <div style="font-size:13px; color:#777;">📍 ${p.location}</div>
-                        </div>
-                    </div>`;
+            try {
+                const pDoc = await db.collection("properties").doc(id).get();
+                if (pDoc.exists) {
+                    const p = pDoc.data();
+                    const firstImg = (p.images && p.images.length > 0) 
+                        ? (typeof p.images[0] === 'object' ? p.images[0].url : p.images[0]) 
+                        : 'https://via.placeholder.com/400x300?text=No+Image';
+                    
+                    html += `
+                        <div class="prop-card" onclick="location.href='index.html'">
+                            <div class="img-container">
+                                <img src="${firstImg}" alt="${p.title || 'Property'}">
+                                <button class="remove-btn" onclick="event.stopPropagation(); removeFromFavorites('${id}')">
+                                    <i class="fa-solid fa-heart"></i>
+                                </button>
+                            </div>
+                            <div class="prop-info">
+                                <p class="prop-price">₹${Number(p.price || 0).toLocaleString('en-IN')}</p>
+                                <div style="font-weight:700; margin-top:5px;">${p.title || 'Untitled Property'}</div>
+                                <div style="font-size:13px; color:#777;">
+                                    <i class="fa-solid fa-location-dot"></i> ${p.location || 'Location not specified'}
+                                </div>
+                            </div>
+                        </div>`;
+                }
+            } catch (err) {
+                console.error('Error loading property:', id, err);
             }
         }
-        listDiv.innerHTML = html;
+        
+        if (html === '') {
+            listDiv.innerHTML = `
+                <div class="empty-state">
+                    <i class="fa fa-heart-crack" style="font-size:50px;color:#ddd;"></i>
+                    <p>No favorites found.</p>
+                    <a href="index.html" class="btn-browse">Explore Properties</a>
+                </div>`;
+        } else {
+            listDiv.innerHTML = html;
+        }
     } catch (e) {
-        listDiv.innerHTML = "<center style='padding:50px;'>Error loading favorites.</center>";
+        console.error('Error loading favorites:', e);
+        listDiv.innerHTML = `
+            <center style='padding:50px; color:#d32f2f;'>
+                <i class="fa fa-exclamation-triangle" style="font-size:40px; margin-bottom:15px;"></i>
+                <p>Error loading favorites.</p>
+                <p style="font-size:12px; opacity:0.7;">${e.message}</p>
+                <button onclick="location.reload()" style="margin-top:15px; padding:10px 20px; background:var(--primary); color:white; border:none; border-radius:25px; cursor:pointer;">
+                    Retry
+                </button>
+            </center>`;
     }
 }
 </script>
