@@ -17,8 +17,6 @@
             display: flex; 
             flex-direction: column; 
             overflow: hidden;
-            position: fixed;
-            width: 100%;
         }
         header { 
             background: var(--primary); 
@@ -36,39 +34,43 @@
         #chatName { margin: 0; font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         #userStatus { font-size: 11px; color: #e0e0e0; font-weight: 500; }
         
-        /* Pull to Refresh Indicator */
+        /* Pull to Refresh Indicator - FIXED */
+        #chatBox {
+            position: relative;
+        }
         .pull-refresh-indicator {
-            position: absolute;
-            top: 0;
+            position: fixed;
+            top: 55px;
             left: 50%;
-            transform: translateX(-50%) translateY(-100%);
-            padding: 10px 20px;
-            background: rgba(46, 125, 50, 0.9);
+            transform: translateX(-50%) translateY(-60px);
+            padding: 8px 16px;
+            background: var(--primary);
             color: white;
             border-radius: 20px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
-            z-index: 50;
+            z-index: 90;
             transition: transform 0.3s ease;
             display: flex;
             align-items: center;
             gap: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            opacity: 0;
         }
         .pull-refresh-indicator.visible {
             transform: translateX(-50%) translateY(10px);
+            opacity: 1;
         }
         
         #chatBox { 
             flex: 1; 
             overflow-y: auto; 
             overflow-x: hidden;
-            padding: 15px; 
+            padding: 15px 15px 80px 15px;
             display: flex; 
             flex-direction: column; 
             gap: 8px; 
             scroll-behavior: smooth;
-            position: relative;
         }
         .msg { 
             max-width: 80%; 
@@ -97,7 +99,7 @@
         }
         .tick-blue { color: #34B7F1; }
         
-        /* Input Area - FIXED */
+        /* Input Area - ALWAYS VISIBLE */
         .input-area { 
             background: #f0f0f0; 
             padding: 8px 12px;
@@ -105,11 +107,12 @@
             align-items: center; 
             gap: 10px; 
             border-top: 1px solid #ddd;
-            flex-shrink: 0;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
             min-height: 56px;
-            max-height: 56px;
-            position: relative;
-            z-index: 10;
         }
         .input-area input { 
             flex: 1; 
@@ -190,6 +193,73 @@
         .spinner { animation: rotate 2s linear infinite; }
         @keyframes rotate { 100% { transform: rotate(360deg); } }
         
+        /* Report Modal */
+        .report-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .report-modal.active {
+            display: flex;
+        }
+        .report-content {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            max-width: 350px;
+            width: 100%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .report-content h3 {
+            margin: 0 0 15px 0;
+            color: var(--primary);
+        }
+        .report-option {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s;
+        }
+        .report-option:hover {
+            background: #f5f5f5;
+            border-color: var(--primary);
+        }
+        .report-option i {
+            font-size: 18px;
+            color: var(--primary);
+        }
+        .report-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .report-buttons button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .report-submit {
+            background: #d32f2f;
+            color: white;
+        }
+        .report-cancel {
+            background: #e0e0e0;
+            color: #333;
+        }
+        
         /* Blocked/Restricted State Message */
         .status-message {
             text-align: center;
@@ -217,18 +287,19 @@
     <div style="position:relative;">
         <i class="fa fa-ellipsis-v menu-trigger" onclick="toggleMenu(event)" style="cursor:pointer; padding:5px;"></i>
         <div id="menuDropdown" class="dropdown">
-            <div onclick="reportUser()">Report User</div>
+            <div onclick="showReportModal()">Report User</div>
             <div id="blockMenuBtn" onclick="blockUser()" style="color:red;">Block User</div>
         </div>
     </div>
 </header>
 
-<div id="chatBox">
-    <div class="pull-refresh-indicator" id="pullRefreshIndicator">
-        <i class="fa fa-sync-alt"></i>
-        <span>Pull to refresh</span>
-    </div>
+<!-- Pull to Refresh Indicator -->
+<div class="pull-refresh-indicator" id="pullRefreshIndicator">
+    <i class="fa fa-sync-alt"></i>
+    <span>Pull to refresh</span>
 </div>
+
+<div id="chatBox"></div>
 
 <div class="input-area" id="inputArea">
     <label for="photoInput" class="camera-btn">
@@ -237,6 +308,51 @@
     <input type="file" id="photoInput" accept="image/*" hidden onchange="uploadPhoto(this)">
     <input type="text" id="msgInput" placeholder="Type a message..." autocomplete="off">
     <button class="send-btn" onclick="sendMsg()"><i class="fa fa-paper-plane"></i></button>
+</div>
+
+<!-- Report Modal -->
+<div class="report-modal" id="reportModal">
+    <div class="report-content">
+        <h3>Report User</h3>
+        <div class="report-option" onclick="selectReason('Spam')">
+            <i class="fa fa-ban"></i>
+            <div>
+                <div style="font-weight:600;">Spam</div>
+                <div style="font-size:12px; color:#777;">Unwanted promotional messages</div>
+            </div>
+        </div>
+        <div class="report-option" onclick="selectReason('Abusive')">
+            <i class="fa fa-exclamation-triangle"></i>
+            <div>
+                <div style="font-weight:600;">Abusive Language</div>
+                <div style="font-size:12px; color:#777;">Harassment or offensive content</div>
+            </div>
+        </div>
+        <div class="report-option" onclick="selectReason('Fake')">
+            <i class="fa fa-user-times"></i>
+            <div>
+                <div style="font-weight:600;">Fake Account</div>
+                <div style="font-size:12px; color:#777;">Pretending to be someone else</div>
+            </div>
+        </div>
+        <div class="report-option" onclick="selectReason('Scam')">
+            <i class="fa fa-money-bill-wave"></i>
+            <div>
+                <div style="font-weight:600;">Scam/Fraud</div>
+                <div style="font-size:12px; color:#777;">Fraudulent property listings</div>
+            </div>
+        </div>
+        <div class="report-option" onclick="selectReason('Other')">
+            <i class="fa fa-ellipsis-h"></i>
+            <div>
+                <div style="font-weight:600;">Other</div>
+                <div style="font-size:12px; color:#777;">Different issue</div>
+            </div>
+        </div>
+        <div class="report-buttons">
+            <button class="report-cancel" onclick="closeReportModal()">Cancel</button>
+        </div>
+    </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -271,13 +387,11 @@ auth.onAuthStateChanged(user => {
     if (!user || !partnerId) { location.href = 'index.html'; return; }
     currentUserId = user.uid;
     
-    // ✅ SET USER ONLINE
     db.collection("users").doc(currentUserId).update({ 
         status: "Online",
         lastSeen: firebase.firestore.FieldValue.serverTimestamp()
     });
     
-    // ✅ MARK MESSAGES AS READ AS SOON AS CHAT OPENS
     setTimeout(() => markMessagesAsRead(), 1000);
     
     checkBlockStatus();
@@ -286,7 +400,6 @@ auth.onAuthStateChanged(user => {
     setupPullToRefresh();
 });
 
-// ✅ SET USER OFFLINE WHEN LEAVING PAGE
 window.addEventListener('beforeunload', () => {
     if(auth.currentUser) {
         db.collection("users").doc(auth.currentUser.uid).update({ 
@@ -296,14 +409,14 @@ window.addEventListener('beforeunload', () => {
     }
 });
 
-// ✅ PULL TO REFRESH SETUP
+// ✅ PULL TO REFRESH - FIXED
 function setupPullToRefresh() {
     const chatBox = document.getElementById('chatBox');
     const indicator = document.getElementById('pullRefreshIndicator');
     
     chatBox.addEventListener('touchstart', (e) => {
         if (chatBox.scrollTop === 0) {
-            startY = e.touches[0].pageY;
+            startY = e.touches[0].clientY;
             isPulling = true;
         }
     });
@@ -311,13 +424,15 @@ function setupPullToRefresh() {
     chatBox.addEventListener('touchmove', (e) => {
         if (!isPulling) return;
         
-        currentY = e.touches[0].pageY;
+        currentY = e.touches[0].clientY;
         const pullDistance = currentY - startY;
         
-        if (pullDistance > 0 && pullDistance < 100) {
+        if (pullDistance > 20 && pullDistance < 80) {
+            e.preventDefault();
             indicator.querySelector('span').innerText = 'Pull to refresh';
             indicator.classList.add('visible');
-        } else if (pullDistance >= 100) {
+        } else if (pullDistance >= 80) {
+            e.preventDefault();
             indicator.querySelector('span').innerText = 'Release to refresh';
         }
     });
@@ -327,17 +442,13 @@ function setupPullToRefresh() {
         
         const pullDistance = currentY - startY;
         
-        if (pullDistance >= 100) {
+        if (pullDistance >= 80) {
             indicator.querySelector('span').innerText = 'Refreshing...';
             indicator.querySelector('i').classList.add('spinner');
             
-            // Reload messages
             setTimeout(() => {
-                listenMessages();
-                indicator.classList.remove('visible');
-                indicator.querySelector('i').classList.remove('spinner');
-                indicator.querySelector('span').innerText = 'Pull to refresh';
-            }, 1000);
+                location.reload();
+            }, 800);
         } else {
             indicator.classList.remove('visible');
         }
@@ -348,7 +459,6 @@ function setupPullToRefresh() {
     });
 }
 
-// ✅ MARK ALL MESSAGES AS READ
 function markMessagesAsRead() {
     const chatId = currentUserId < partnerId ? `${currentUserId}_${partnerId}` : `${partnerId}_${currentUserId}`;
     
@@ -368,16 +478,13 @@ function markMessagesAsRead() {
             return batch.commit();
         })
         .then(() => {
-            // Reset unread count
             db.collection("chats").doc(chatId).update({
                 [`unreadCount_${currentUserId}`]: 0
             });
-            console.log("All messages marked as read");
         })
         .catch(err => console.error("Error marking read:", err));
 }
 
-// ✅ REAL-TIME BLOCK STATUS LISTEN
 function checkBlockStatus() {
     db.collection("users").doc(currentUserId).onSnapshot(myDoc => {
         db.collection("users").doc(partnerId).onSnapshot(partnerDoc => {
@@ -410,11 +517,9 @@ function checkBlockStatus() {
                 menuBtn.style.display = 'block';
                 menuBtn.innerText = "Block User";
                 
-                // Re-bind enter key
                 const msgInput = document.getElementById('msgInput');
                 if (msgInput) {
                     msgInput.addEventListener('keypress', e => { if(e.key === 'Enter') sendMsg(); });
-                    msgInput.focus();
                 }
             }
         });
@@ -428,7 +533,6 @@ function listenMessages() {
       .orderBy("timestamp", "asc").limitToLast(50)
       .onSnapshot(snap => {
           const chatBox = document.getElementById('chatBox');
-          const indicator = chatBox.querySelector('.pull-refresh-indicator');
           
           if (isIBlocked) {
               chatBox.innerHTML = `<div style="text-align:center; margin-top:50px; color:#999;"><i class="fa fa-ban fa-3x"></i><p>Messages hidden (User Blocked)</p></div>`;
@@ -436,8 +540,6 @@ function listenMessages() {
           }
           
           chatBox.innerHTML = "";
-          chatBox.appendChild(indicator);
-          
           let hasNewMessages = false;
           
           snap.forEach(doc => {
@@ -445,13 +547,11 @@ function listenMessages() {
               const type = m.senderId === currentUserId ? 'sent' : 'received';
               const time = m.timestamp ? new Date(m.timestamp.seconds * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "...";
               
-              // ✅ AUTO MARK AS READ (Received messages only)
               if(type === 'received' && m.status === 'unread') {
                   db.collection("chats").doc(chatId).collection("messages").doc(doc.id).update({ status: 'read' });
                   hasNewMessages = true;
               }
               
-              // Tick marks for sent messages
               let ticks = '';
               if (type === 'sent') {
                   if (m.status === 'read') {
@@ -469,7 +569,6 @@ function listenMessages() {
           
           chatBox.scrollTop = chatBox.scrollHeight;
           
-          // ✅ RESET UNREAD COUNT IF NEW MESSAGES ARRIVED
           if (hasNewMessages) {
               db.collection("chats").doc(chatId).update({
                   [`unreadCount_${currentUserId}`]: 0
@@ -496,7 +595,6 @@ async function sendMsg(imageUrl = null) {
         });
         if(input) input.value = "";
         
-        // Update last message in chat list
         await db.collection("chats").doc(chatId).set({ 
             lastMsg: imageUrl ? "📷 Photo" : text, 
             lastTime: firebase.firestore.FieldValue.serverTimestamp(), 
@@ -519,11 +617,40 @@ async function unblockUser() {
     }
 }
 
-async function reportUser() {
-    const reason = prompt("Enter detailed reason (Min 10 chars):");
-    if(!reason || reason.trim().length < 10) return alert("Please provide more detail.");
-    await db.collection("reports").add({ reporter: currentUserId, reported: partnerId, reason: reason, status: "pending", time: firebase.firestore.FieldValue.serverTimestamp() });
-    alert("User reported to Admin.");
+// ✅ REPORT MODAL FUNCTIONS
+function showReportModal() {
+    document.getElementById('reportModal').classList.add('active');
+}
+
+function closeReportModal() {
+    document.getElementById('reportModal').classList.remove('active');
+}
+
+async function selectReason(reason) {
+    let details = '';
+    if (reason === 'Other') {
+        details = prompt("Please provide details (minimum 10 characters):");
+        if (!details || details.trim().length < 10) {
+            alert("Please provide more details.");
+            return;
+        }
+    }
+    
+    closeReportModal();
+    
+    try {
+        await db.collection("reports").add({ 
+            reporter: currentUserId, 
+            reported: partnerId, 
+            reason: reason,
+            details: details || '',
+            status: "pending", 
+            time: firebase.firestore.FieldValue.serverTimestamp() 
+        });
+        alert(`User reported for: ${reason}\nAdmin will review your report.`);
+    } catch (e) {
+        alert("Error submitting report. Please try again.");
+    }
 }
 
 async function uploadPhoto(input) {
@@ -555,7 +682,9 @@ function toggleMenu(e) {
     m.style.display = m.style.display === 'block' ? 'none' : 'block'; 
 }
 
-document.addEventListener('click', () => document.getElementById('menuDropdown').style.display = 'none');
+document.addEventListener('click', () => {
+    document.getElementById('menuDropdown').style.display = 'none';
+});
 </script>
 </body>
 </html>
