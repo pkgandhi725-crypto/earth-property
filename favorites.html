@@ -11,7 +11,7 @@
         header { background: var(--primary); padding: 15px; color: white; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; }
         header a { color: white; text-decoration: none; font-size: 18px; }
         
-        .prop-card { background: white; border-radius: 16px; margin: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+        .prop-card { background: white; border-radius: 16px; margin: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.06); cursor: pointer; }
         .img-container { width: 100%; aspect-ratio: 4/3; background: #eee; }
         .img-container img { width: 100%; height: 100%; object-fit: cover; }
         .prop-info { padding: 15px; }
@@ -36,45 +36,62 @@
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
 
 <script>
-const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
+const firebaseConfig = { 
+    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
+    authDomain: "earth-properties-c3c56.firebaseapp.com", 
+    projectId: "earth-properties-c3c56" 
+};
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
 auth.onAuthStateChanged(user => {
-    if (!user) { location.href = 'login.html'; return; }
+    if (!user) { 
+        location.href = 'login.html'; 
+        return; 
+    }
     loadFavorites(user.uid);
 });
 
 async function loadFavorites(uid) {
     const listDiv = document.getElementById('favList');
     try {
-        // 1. Get Favorite Property IDs
+        // 1. Get Favorite Property IDs from Firestore
         const favSnap = await db.collection("favorites").where("userId", "==", uid).get();
+        
         if (favSnap.empty) {
-            listDiv.innerHTML = `<div class="empty-state"><i class="fa fa-heart-crack" style="font-size:50px;color:#ddd;"></i><p>No favorites saved yet.</p><a href="index.html" class="btn-browse">Explore Properties</a></div>`;
+            listDiv.innerHTML = `
+                <div class="empty-state">
+                    <i class="fa fa-heart-crack" style="font-size:50px;color:#ddd;"></i>
+                    <p>No favorites saved yet.</p>
+                    <a href="index.html" class="btn-browse">Explore Properties</a>
+                </div>`;
             return;
         }
 
-                // Safely map only valid property IDs
+        // Safely map only valid property IDs
         const propIds = favSnap.docs.map(doc => doc.data().propertyId).filter(id => id != null);
         
         let html = '';
         for (const id of propIds) {
-            // Document fetch logic with error handling
+            // Fetch each property document
             const pDoc = await db.collection("properties").doc(id).get();
+            
             if (pDoc.exists) {
                 const p = pDoc.data();
                 
-                // Professional Image Handling (Check if string or object)
+                // Professional Image Handling
                 let firstImg = 'https://via.placeholder.com/400x300?text=No+Image';
                 if (p.images && p.images.length > 0) {
                     firstImg = (typeof p.images[0] === 'object') ? p.images[0].url : p.images[0];
                 }
                 
-                html += `<div class="prop-card" onclick="location.href='property-detail.html?id=${id}'">`
-
-                        <div class="img-container"><img src="${firstImg}" loading="lazy"></div>
+                // FIXED: Template literal with correct backticks
+                html += `
+                    <div class="prop-card" onclick="location.href='property-detail.html?id=${id}'">
+                        <div class="img-container">
+                            <img src="${firstImg}" loading="lazy">
+                        </div>
                         <div class="prop-info">
                             <p class="prop-price">₹${Number(p.price || 0).toLocaleString('en-IN')}</p>
                             <div style="font-weight:700; margin-top:5px;">${p.title || 'Property'}</div>
@@ -84,9 +101,10 @@ async function loadFavorites(uid) {
             }
         }
 
-        listDiv.innerHTML = html;
+        listDiv.innerHTML = html || '<div class="empty-state"><p>No active properties found in favorites.</p></div>';
     } catch (e) {
-        listDiv.innerHTML = "<center style='padding:50px;'>Error loading favorites.</center>";
+        console.error("Error loading favorites:", e);
+        listDiv.innerHTML = "<center style='padding:50px; color:red;'>Error loading favorites. Please try again.</center>";
     }
 }
 </script>
