@@ -34,39 +34,12 @@
         #chatName { margin: 0; font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         #userStatus { font-size: 11px; color: #e0e0e0; font-weight: 500; }
         
-        /* Pull to Refresh Indicator - FIXED */
-        #chatBox {
-            position: relative;
-        }
-        .pull-refresh-indicator {
-            position: fixed;
-            top: 55px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-60px);
-            padding: 8px 16px;
-            background: var(--primary);
-            color: white;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            z-index: 90;
-            transition: transform 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            opacity: 0;
-        }
-        .pull-refresh-indicator.visible {
-            transform: translateX(-50%) translateY(10px);
-            opacity: 1;
-        }
-        
         #chatBox { 
             flex: 1; 
             overflow-y: auto; 
             overflow-x: hidden;
-            padding: 15px 15px 80px 15px;
+            padding: 15px;
+            padding-bottom: 20px;
             display: flex; 
             flex-direction: column; 
             gap: 8px; 
@@ -107,11 +80,7 @@
             align-items: center; 
             gap: 10px; 
             border-top: 1px solid #ddd;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            z-index: 100;
+            flex-shrink: 0;
             min-height: 56px;
         }
         .input-area input { 
@@ -251,10 +220,6 @@
             font-weight: 600;
             cursor: pointer;
         }
-        .report-submit {
-            background: #d32f2f;
-            color: white;
-        }
         .report-cancel {
             background: #e0e0e0;
             color: #333;
@@ -292,12 +257,6 @@
         </div>
     </div>
 </header>
-
-<!-- Pull to Refresh Indicator -->
-<div class="pull-refresh-indicator" id="pullRefreshIndicator">
-    <i class="fa fa-sync-alt"></i>
-    <span>Pull to refresh</span>
-</div>
 
 <div id="chatBox"></div>
 
@@ -372,11 +331,6 @@ const partnerId = urlParams.get('to');
 let currentUserId = "";
 let isIBlocked = false;
 
-// Pull to Refresh Variables
-let startY = 0;
-let currentY = 0;
-let isPulling = false;
-
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
@@ -397,7 +351,6 @@ auth.onAuthStateChanged(user => {
     checkBlockStatus();
     loadPartnerInfo();
     listenMessages();
-    setupPullToRefresh();
 });
 
 window.addEventListener('beforeunload', () => {
@@ -408,56 +361,6 @@ window.addEventListener('beforeunload', () => {
         });
     }
 });
-
-// ✅ PULL TO REFRESH - FIXED
-function setupPullToRefresh() {
-    const chatBox = document.getElementById('chatBox');
-    const indicator = document.getElementById('pullRefreshIndicator');
-    
-    chatBox.addEventListener('touchstart', (e) => {
-        if (chatBox.scrollTop === 0) {
-            startY = e.touches[0].clientY;
-            isPulling = true;
-        }
-    });
-    
-    chatBox.addEventListener('touchmove', (e) => {
-        if (!isPulling) return;
-        
-        currentY = e.touches[0].clientY;
-        const pullDistance = currentY - startY;
-        
-        if (pullDistance > 20 && pullDistance < 80) {
-            e.preventDefault();
-            indicator.querySelector('span').innerText = 'Pull to refresh';
-            indicator.classList.add('visible');
-        } else if (pullDistance >= 80) {
-            e.preventDefault();
-            indicator.querySelector('span').innerText = 'Release to refresh';
-        }
-    });
-    
-    chatBox.addEventListener('touchend', () => {
-        if (!isPulling) return;
-        
-        const pullDistance = currentY - startY;
-        
-        if (pullDistance >= 80) {
-            indicator.querySelector('span').innerText = 'Refreshing...';
-            indicator.querySelector('i').classList.add('spinner');
-            
-            setTimeout(() => {
-                location.reload();
-            }, 800);
-        } else {
-            indicator.classList.remove('visible');
-        }
-        
-        isPulling = false;
-        startY = 0;
-        currentY = 0;
-    });
-}
 
 function markMessagesAsRead() {
     const chatId = currentUserId < partnerId ? `${currentUserId}_${partnerId}` : `${partnerId}_${currentUserId}`;
@@ -567,7 +470,10 @@ function listenMessages() {
               chatBox.innerHTML += `<div class="msg ${type}">${content}<div class="msg-footer">${time}${ticks}</div></div>`;
           });
           
-          chatBox.scrollTop = chatBox.scrollHeight;
+          // Scroll to bottom
+          setTimeout(() => {
+              chatBox.scrollTop = chatBox.scrollHeight;
+          }, 100);
           
           if (hasNewMessages) {
               db.collection("chats").doc(chatId).update({
