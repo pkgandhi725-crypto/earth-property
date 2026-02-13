@@ -18,17 +18,23 @@
         .admin-btn { color: #ffd700; font-size: 20px; cursor: pointer; display: none; }
         .bell-icon { position: relative; font-size: 18px; cursor: pointer; }
         
-        /* Bell Dot */
-        .bell-dot { 
+        /* Bell Badge - Changed from dot to number */
+        .bell-badge { 
             position: absolute; 
-            top: -2px; 
-            right: -2px; 
-            width: 8px; 
-            height: 8px; 
+            top: -8px; 
+            right: -8px; 
+            min-width: 18px;
+            height: 18px;
             background: #ff5252; 
-            border-radius: 50%; 
-            border: 1.5px solid var(--primary);
+            border-radius: 10px; 
+            border: 2px solid var(--primary);
             display: none;
+            font-size: 10px;
+            font-weight: 700;
+            color: white;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
         }
 
         /* Sidebar */
@@ -77,12 +83,59 @@
         .btn-wa { background: #25D366; color: white; }
         .btn-chat { background: var(--primary); color: white; }
 
-        /* Bottom Nav */
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: white; display: flex; padding: 10px 0; border-top: 1px solid #eee; z-index: 1000; height: 65px; }
-        .nav-item { flex: 1; text-align: center; color: #777; text-decoration: none; font-size: 10px; font-weight: 600; }
+        /* Bottom Nav - Updated for centered add button */
+        .bottom-nav { 
+            position: fixed; 
+            bottom: 0; 
+            width: 100%; 
+            background: white; 
+            display: flex; 
+            align-items: flex-end;
+            padding: 0;
+            border-top: 1px solid #eee; 
+            z-index: 1000; 
+            height: 65px; 
+        }
+        .nav-item { 
+            flex: 1; 
+            text-align: center; 
+            color: #777; 
+            text-decoration: none; 
+            font-size: 10px; 
+            font-weight: 600; 
+            padding: 10px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+        }
         .nav-item i { font-size: 20px; margin-bottom: 3px; }
         .nav-item.active { color: var(--primary); }
-        .post-btn { background: var(--primary); color: white !important; width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: -35px; border: 5px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-size: 24px; }
+        
+        /* Centered Post Button */
+        .post-btn-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .post-btn { 
+            background: var(--primary); 
+            color: white !important; 
+            width: 55px; 
+            height: 55px; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            border: 5px solid white; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
+            font-size: 24px;
+            position: absolute;
+            bottom: 10px;
+            text-decoration: none;
+        }
 
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4500; display: none; backdrop-filter: blur(2px); }
 
@@ -134,7 +187,7 @@
             <i class="fa fa-info-circle" style="color:#FF9800;"></i> <span>About Us</span>
         </div>
 
-        <div id="adminSideBtn" class="drawer-item" onclick="location.href='admin-portal.html'" style="display:none; color:#ffd700;">
+        <div id="adminSideBtn" class="drawer-item" onclick="location.href='admin.html'" style="display:none; color:#ffd700;">
             <i class="fa fa-user-shield"></i> <span>Admin Portal</span>
         </div>
 
@@ -152,7 +205,7 @@
     </div>
     <div class="gallery-content">
         <button class="gallery-nav gallery-prev" onclick="changeImage(-1)">&#10094;</button>
-        <img class="gallery-img" id="galleryImg" src="">
+        <img id="galleryImage" class="gallery-img" src="" alt="Property Image">
         <button class="gallery-nav gallery-next" onclick="changeImage(1)">&#10095;</button>
     </div>
     <div class="gallery-dots" id="galleryDots"></div>
@@ -161,179 +214,275 @@
 <header>
     <div class="header-top">
         <div class="logo-area">
-            <i class="fa fa-bars" onclick="toggleDrawer()" style="font-size:22px; cursor: pointer;"></i>
-            <span style="font-size:1.3rem; font-weight:900;">Earth Property</span>
+            <i class="fa fa-bars fa-lg" onclick="toggleDrawer()" style="cursor:pointer;"></i>
+            <div>
+                <div style="font-weight:800; font-size:16px; letter-spacing:0.5px;">EARTH PROPERTY</div>
+                <div style="font-size:9px; opacity:0.85; font-weight:600;" id="headerUserName">Guest</div>
+            </div>
         </div>
         <div class="header-right">
-            <i class="fa fa-user-shield admin-btn" id="adminIcon" onclick="location.href='admin-portal.html'" title="Admin Portal"></i>
+            <i id="adminIcon" class="fa fa-user-shield admin-btn" onclick="location.href='admin.html'"></i>
             <div class="bell-icon" onclick="location.href='notifications.html'">
                 <i class="fa-regular fa-bell"></i>
-                <div class="bell-dot" id="bellDot"></div>
+                <div id="bellBadge" class="bell-badge">0</div>
             </div>
-            <button id="authBtn" style="background:white; border:none; color:var(--primary); padding:6px 15px; border-radius:8px; font-weight:800; font-size:12px; cursor: pointer;">LOGIN</button>
+            <button id="authBtn" onclick="location.href='login.html'" style="background:rgba(255,255,255,0.2); border:none; color:white; padding:8px 15px; border-radius:25px; cursor:pointer; font-weight:700; font-size:12px;">Login</button>
         </div>
     </div>
-    <div style="margin-bottom:5px; font-size:11px; font-weight:600; opacity:0.9;"><span id="hiText">Hi</span>, <span id="headerUserName">Guest</span></div>
     <div class="search-box">
-        <i class="fa fa-search" style="color:#aaa;"></i>
-        <input type="text" placeholder="Search Chandigarh, Delhi, Plot..." id="searchInput" oninput="filterAds()">
+        <i class="fa fa-search" style="color:#999;"></i>
+        <input type="text" id="searchInput" placeholder="Search location, property type..." oninput="filterAds()">
     </div>
 </header>
 
-<div id="propertyList"></div>
+<div id="propertyList">
+    <center style="margin-top:50px; color:#888;">Loading properties...</center>
+</div>
 
 <nav class="bottom-nav">
-    <a href="index.html" class="nav-item active"><i class="fa fa-house"></i><br><span id="navExplore">Explore</span></a>
-    <a href="my-ads.html" class="nav-item"><i class="fa fa-layer-group"></i><br><span id="navMyAds">My Ads</span></a>
-    <a href="add-property.html" class="nav-item"><div class="post-btn"><i class="fa fa-plus"></i></div></a>
-    <a href="favorites.html" class="nav-item"><i class="fa-regular fa-heart"></i><br><span id="navFavs">Favs</span></a>
-    <a href="profile.html" class="nav-item"><i class="fa fa-user-circle"></i><br><span id="navProfile">Profile</span></a>
+    <a href="index.html" class="nav-item active">
+        <i class="fa fa-home"></i>
+        <div>Explore</div>
+    </a>
+    <a href="my-ads.html" class="nav-item">
+        <i class="fa fa-layer-group"></i>
+        <div>My Ads</div>
+    </a>
+    <div class="post-btn-wrapper">
+        <a href="post-ad.html" class="post-btn">
+            <i class="fa fa-plus"></i>
+        </a>
+    </div>
+    <a href="favorites.html" class="nav-item">
+        <i class="fa-regular fa-heart"></i>
+        <div>Favs</div>
+    </a>
+    <a href="profile.html" class="nav-item">
+        <i class="fa-regular fa-user"></i>
+        <div>Profile</div>
+    </a>
 </nav>
 
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
 
 <script>
-const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
+const firebaseConfig = { 
+    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
+    authDomain: "earth-properties-c3c56.firebaseapp.com", 
+    projectId: "earth-properties-c3c56" 
+};
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 
+// Admin UID - Updated as requested
+const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
+
 let allAds = [];
-let currentGallery = [];
+let currentImages = [];
 let currentImageIndex = 0;
+let userLocation = null;
 
-const languages = [
-    {c:'en', n:'English (Def)'}, {c:'hi', n:'हिंदी'}, {c:'pa', n:'ਪੰਜਾਬੀ'}, {c:'ar', n:'العربية'},
-    {c:'es', n:'Español'}, {c:'fr', n:'Français'}, {c:'de', n:'Deutsch'}, {c:'tr', n:'Türkçe'},
-    {c:'ru', n:'Русский'}, {c:'zh', n:'中文'}, {c:'ja', n:'日本語'}, {c:'ko', n:'한국어'},
-    {c:'pt', n:'Português'}, {c:'bn', n:'বাংলা'}, {c:'te', n:'తెలుగు'}, {c:'mr', n:'मराठी'},
-    {c:'ta', n:'தமிழ்'}, {c:'gu', n:'ગુજરાતી'}, {c:'kn', n:'ಕನ್ನಡ'}, {c:'ml', n:'മലയാളം'}
-];
-
-const translations = {
-    en: { explore:"Explore", myAds:"My Ads", favs:"Favs", favorites:"Favorites", profile:"Profile", call:"Call", chat:"Chat", login:"LOGIN", logout:"LOGOUT", search:"Search Chandigarh, Delhi, Plot...", hi:"Hi", langHeader:"GLOBAL LANGUAGES", welcome:"Welcome Guest" },
-    hi: { explore:"खोजें", myAds:"मेरे विज्ञापन", favs:"पसंदीदा", favorites:"पसंदीदा", profile:"प्रोफ़ाइल", call:"कॉल", chat:"चैट", login:"लॉगिन", logout:"लॉगआउट", search:"चंडीगढ़, दिल्ली, प्लॉट खोजें...", hi:"नमस्ते", langHeader:"वैश्विक भाषाएं", welcome:"स्वागत है अतिथि" },
-    pa: { explore:"ਖੋਜੋ", myAds:"ਮੇਰੇ ਵਿਗਿਆਪਨ", favs:"ਪਸੰਦੀਦਾ", favorites:"ਪਸੰਦੀਦਾ", profile:"ਪ੍ਰੋਫਾਈਲ", call:"ਕਾਲ", chat:"ਚੈਟ", login:"ਲੌਗਇਨ", logout:"ਲੌਗਆਉਟ", search:"ਚੰਡੀਗੜ੍ਹ, ਦਿੱਲੀ ਖੋਜੋ...", hi:"ਸਤ ਸ੍ਰੀ ਅਕਾਲ", langHeader:"ਗਲੋਬਲ ਭਾਸ਼ਾਵਾਂ", welcome:"ਜੀ ਆਇਆਂ ਨੂੰ" },
-    ar: { explore:"استكشف", myAds:"إعلاناتي", favs:"المفضلة", favorites:"المفضلة", profile:"الملف الشخصي", call:"اتصال", chat:"دردشة", login:"تسجيل الدخول", logout:"تسجيل خروج", search:"ابحث عن تشانديغار، دلهي...", hi:"مرحبا", langHeader:"اللغات العالمية", welcome:"مرحبا بك" },
-    es: { explore:"Explorar", myAds:"Mis Anuncios", favs:"Favoritos", favorites:"Favoritos", profile:"Perfil", call:"Llamar", chat:"Chat", login:"ENTRAR", logout:"SALIR", search:"Buscar Chandigarh, Delhi...", hi:"Hola", langHeader:"IDIOMAS GLOBALES", welcome:"Bienvenido Invitado" },
-    fr: { explore:"Explorer", myAds:"Mes Annonces", favs:"Favoris", favorites:"Favoris", profile:"Profil", call:"Appeler", chat:"Chat", login:"CONNEXION", logout:"DÉCONNEXION", search:"Rechercher Chandigarh, Delhi...", hi:"Bonjour", langHeader:"LANGUES MONDIALES", welcome:"Bienvenue Invité" },
-    de: { explore:"Erkunden", myAds:"Meine Anzeigen", favs:"Favoriten", favorites:"Favoriten", profile:"Profil", call:"Anrufen", chat:"Chat", login:"ANMELDEN", logout:"ABMELDEN", search:"Chandigarh, Delhi suchen...", hi:"Hallo", langHeader:"GLOBALE SPRACHEN", welcome:"Willkommen Gast" },
-    tr: { explore:"Keşfet", myAds:"İlanlarım", favs:"Favoriler", favorites:"Favoriler", profile:"Profil", call:"Ara", chat:"Sohbet", login:"GİRİŞ", logout:"ÇIKIŞ", search:"Chandigarh, Delhi ara...", hi:"Merhaba", langHeader:"KÜRESEL DİLLER", welcome:"Hoş Geldin Misafir" },
-    ru: { explore:"Обзор", myAds:"Мои объявления", favs:"Избранное", favorites:"Избранное", profile:"Профиль", call:"Звонок", chat:"Чат", login:"ВОЙТИ", logout:"ВЫЙТИ", search:"Поиск Чандигарх, Дели...", hi:"Привет", langHeader:"МИРОВЫЕ ЯЗЫКИ", welcome:"Добро пожаловать" },
-    zh: { explore:"探索", myAds:"我的广告", favs:"收藏", favorites:"收藏", profile:"个人资料", call:"电话", chat:"聊天", login:"登录", logout:"登出", search:"搜索昌迪加尔，德里...", hi:"你好", langHeader:"全球语言", welcome:"欢迎访客" },
-    ja: { explore:"探索", myAds:"マイ広告", favs:"お気に入り", favorites:"お気に入り", profile:"プロフィール", call:"電話", chat:"チャット", login:"ログイン", logout:"ログアウト", search:"チャンディーガル、デリーを検索...", hi:"こんにちは", langHeader:"グローバル言語", welcome:"ようこそゲスト" },
-    ko: { explore:"탐색", myAds:"내 광고", favs:"즐겨찾기", favorites:"즐겨찾기", profile:"프로필", call:"전화", chat:"채팅", login:"로그인", logout:"로그아웃", search:"찬디가르, 델리 검색...", hi:"안녕하세요", langHeader:"글로벌 언어", welcome:"환영합니다 게스트" },
-    pt: { explore:"Explorar", myAds:"Meus Anúncios", favs:"Favoritos", favorites:"Favoritos", profile:"Perfil", call:"Ligar", chat:"Chat", login:"ENTRAR", logout:"SAIR", search:"Pesquisar Chandigarh, Delhi...", hi:"Olá", langHeader:"IDIOMAS GLOBAIS", welcome:"Bem-vindo Convidado" },
-    bn: { explore:"অন্বেষণ", myAds:"আমার বিজ্ঞাপন", favs:"প্রিয়", favorites:"প্রিয়", profile:"প্রোফাইল", call:"কল", chat:"চ্যাট", login:"লগইন", logout:"লগআউট", search:"চন্ডীগড়, দিল্লি অনুসন্ধান...", hi:"হ্যালো", langHeader:"বৈশ্বিক ভাষা", welcome:"স্বাগতম অতিথি" },
-    te: { explore:"అన్వేషించు", myAds:"నా ప్రకటనలు", favs:"ఇష్టాలు", favorites:"ఇష్టాలు", profile:"ప్రొఫైల్", call:"కాల్", chat:"చాట్", login:"లాగిన్", logout:"లాగౌట్", search:"చండీగఢ్, ఢిల్లీ వెతకండి...", hi:"హలో", langHeader:"ప్రపంచ భాషలు", welcome:"స్వాగతం అతిథి" },
-    mr: { explore:"शोधा", myAds:"माझ्या जाहिराती", favs:"आवडते", favorites:"आवडते", profile:"प्रोफाइल", call:"कॉल", chat:"चॅट", login:"लॉगिन", logout:"लॉगआउट", search:"चंदीगड, दिल्ली शोधा...", hi:"नमस्कार", langHeader:"जागतिक भाषा", welcome:"स्वागत आहे अतिथी" },
-    ta: { explore:"ஆராயுங்கள்", myAds:"என் விளம்பரங்கள்", favs:"பிடித்தவை", favorites:"பிடித்தவை", profile:"சுயவிவரம்", call:"அழைப்பு", chat:"அரட்டை", login:"உள்நுழைய", logout:"வெளியேறு", search:"சண்டிகர், டெல்லி தேடுங்கள்...", hi:"வணக்கம்", langHeader:"உலகளாவிய மொழிகள்", welcome:"வரவேற்பு விருந்தினர்" },
-    gu: { explore:"અન્વેષણ", myAds:"મારી જાહેરાતો", favs:"મનપસંદ", favorites:"મનપસંદ", profile:"પ્રોફાઇલ", call:"કૉલ", chat:"ચેટ", login:"લૉગિન", logout:"લૉગઆઉટ", search:"ચંડીગઢ, દિલ્હી શોધો...", hi:"નમસ્તે", langHeader:"વૈશ્વિક ભાષાઓ", welcome:"સ્વાગત છે મહેમાન" },
-    kn: { explore:"ಅನ್ವೇಷಿಸಿ", myAds:"ನನ್ನ ಜಾಹೀರಾತುಗಳು", favs:"ಮೆಚ್ಚಿನವುಗಳು", favorites:"ಮೆಚ್ಚಿನವುಗಳು", profile:"ಪ್ರೊಫೈಲ್", call:"ಕರೆ", chat:"ಚಾಟ್", login:"ಲಾಗಿನ್", logout:"ಲಾಗ್ಔಟ್", search:"ಚಂಡೀಗಢ, ಡೆಲ್ಲಿ ಹುಡುಕಿ...", hi:"ನಮಸ್ಕಾರ", langHeader:"ಜಾಗತಿಕ ಭಾಷೆಗಳು", welcome:"ಸ್ವಾಗತ ಅತಿಥಿ" },
-    ml: { explore:"പര്യവേക്ഷണം", myAds:"എന്റെ പരസ്യങ്ങൾ", favs:"പ്രിയപ്പെട്ടവ", favorites:"പ്രിയപ്പെട്ടവ", profile:"പ്രൊഫൈൽ", call:"കോൾ", chat:"ചാറ്റ്", login:"ലോഗിൻ", logout:"ലോഗ്ഔട്ട്", search:"ചണ്ഡിഗഡ്, ഡൽഹി തിരയുക...", hi:"ഹലോ", langHeader:"ആഗോള ഭാഷകൾ", welcome:"സ്വാഗതം അതിഥി" }
-};
-
-function applyLanguage() {
-    const lang = localStorage.getItem('earthLang') || 'en';
-    const t = translations[lang] || translations['en'];
-    document.getElementById('navExplore').innerText = t.explore;
-    document.getElementById('navMyAds').innerText = t.myAds;
-    document.getElementById('navFavs').innerText = t.favs;
-    document.getElementById('navProfile').innerText = t.profile;
-    document.getElementById('myAdsText').innerText = t.myAds;
-    document.getElementById('logoutText').innerText = t.logout;
-    document.getElementById('langHeader').innerText = t.langHeader;
-    if (document.getElementById('favsText')) document.getElementById('favsText').innerText = t.favorites;
-    document.getElementById('hiText').innerText = t.hi;
-    document.getElementById('searchInput').placeholder = t.search;
-    const user = auth.currentUser;
-    document.getElementById('authBtn').innerText = user ? t.logout : t.login;
+// Get user's location for proximity-based sorting
+if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            userLocation = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            };
+            // Reload ads with location-based sorting
+            if (allAds.length > 0) {
+                renderAds(sortByProximity(allAds));
+            }
+        },
+        (error) => {
+            console.log('Location access denied or unavailable');
+        }
+    );
 }
 
-function loadLanguages() {
-    const langGrid = document.getElementById('langGrid');
-    langGrid.innerHTML = '';
-    const currentLang = localStorage.getItem('earthLang') || 'en';
-    languages.forEach(l => {
-        const btn = document.createElement('div');
-        btn.className = `lang-btn ${currentLang === l.c ? 'active' : ''}`;
-        btn.innerText = l.n;
-        btn.setAttribute('data-lang', l.c);
-        btn.addEventListener('click', function() { switchLanguage(this.getAttribute('data-lang')); });
-        langGrid.appendChild(btn);
+// Calculate distance between two coordinates (Haversine formula)
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c; // Distance in km
+}
+
+// Sort ads by proximity to user's location
+function sortByProximity(ads) {
+    if (!userLocation) return ads;
+    
+    return ads.sort((a, b) => {
+        const distA = a.latitude && a.longitude 
+            ? calculateDistance(userLocation.lat, userLocation.lng, a.latitude, a.longitude)
+            : Infinity;
+        const distB = b.latitude && b.longitude 
+            ? calculateDistance(userLocation.lat, userLocation.lng, b.latitude, b.longitude)
+            : Infinity;
+        return distA - distB;
     });
 }
 
-function switchLanguage(langCode) {
-    localStorage.setItem('earthLang', langCode);
-    applyLanguage();
-    loadLanguages();
-    toggleDrawer();
-}
-
-function toggleDrawer() {
-    const drawer = document.getElementById('sideDrawer');
-    const overlay = document.getElementById('overlay');
-    const isOpen = drawer.classList.contains('open');
-    if (isOpen) {
-        drawer.classList.remove('open');
-        overlay.style.display = 'none';
-    } else {
-        drawer.classList.add('open');
-        overlay.style.display = 'block';
-    }
-}
-
-function listenForNotifications(uid) {
-    db.collection("chats").where("users", "array-contains", uid).onSnapshot(snapshot => {
-        let hasUnread = false;
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            const unreadCount = data[`unreadCount_${uid}`] || 0;
-            if (unreadCount > 0) hasUnread = true;
-        });
-        const bellDot = document.getElementById('bellDot');
-        if (bellDot) bellDot.style.display = hasUnread ? 'block' : 'none';
-    });
-}
-
-function openGallery(images, startIndex = 0) {
-    currentGallery = images;
-    currentImageIndex = startIndex;
+// Gallery Functions
+function openGallery(images, index) {
+    currentImages = images;
+    currentImageIndex = index;
     document.getElementById('galleryModal').classList.add('active');
     updateGalleryImage();
+    updateGalleryDots();
+    document.body.style.overflow = 'hidden';
+    window.history.pushState(null, null, window.location.href);
 }
 
 function closeGallery() {
     document.getElementById('galleryModal').classList.remove('active');
+    document.body.style.overflow = '';
 }
 
 function changeImage(direction) {
     currentImageIndex += direction;
-    if (currentImageIndex < 0) currentImageIndex = currentGallery.length - 1;
-    if (currentImageIndex >= currentGallery.length) currentImageIndex = 0;
+    if (currentImageIndex < 0) currentImageIndex = currentImages.length - 1;
+    if (currentImageIndex >= currentImages.length) currentImageIndex = 0;
     updateGalleryImage();
+    updateGalleryDots();
 }
 
 function updateGalleryImage() {
-    document.getElementById('galleryImg').src = currentGallery[currentImageIndex];
-    document.getElementById('galleryCounter').innerText = `${currentImageIndex + 1} / ${currentGallery.length}`;
+    document.getElementById('galleryImage').src = currentImages[currentImageIndex];
+    document.getElementById('galleryCounter').innerText = `${currentImageIndex + 1} / ${currentImages.length}`;
+}
+
+function updateGalleryDots() {
     const dotsContainer = document.getElementById('galleryDots');
     dotsContainer.innerHTML = '';
-    currentGallery.forEach((_, i) => {
+    currentImages.forEach((_, i) => {
         const dot = document.createElement('div');
-        dot.className = `gallery-dot ${i === currentImageIndex ? 'active' : ''}`;
-        dot.onclick = () => { currentImageIndex = i; updateGalleryImage(); };
+        dot.className = 'gallery-dot' + (i === currentImageIndex ? ' active' : '');
+        dot.onclick = () => { currentImageIndex = i; updateGalleryImage(); updateGalleryDots(); };
         dotsContainer.appendChild(dot);
     });
 }
 
-auth.onAuthStateChanged(async user => {
-    const adminSideBtn = document.getElementById('adminSideBtn');
-    const adminIcon = document.getElementById('adminIcon');
+// Handle back button for gallery - FIXED
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle hardware back button for gallery
+    window.addEventListener('popstate', function(event) {
+        const galleryModal = document.getElementById('galleryModal');
+        if (galleryModal.classList.contains('active')) {
+            closeGallery();
+            // Prevent default back navigation
+            window.history.pushState(null, null, window.location.href);
+        }
+    });
+    
+    // Push initial state to enable back button handling
+    window.history.pushState(null, null, window.location.href);
+});
+
+function toggleDrawer() {
+    const drawer = document.getElementById('sideDrawer');
+    const overlay = document.getElementById('overlay');
+    drawer.classList.toggle('open');
+    overlay.style.display = drawer.classList.contains('open') ? 'block' : 'none';
+}
+
+const translations = {
+    en: { welcome: "Welcome Guest", login: "Login", logout: "Logout", call: "Call", chat: "Chat" },
+    hi: { welcome: "स्वागत अतिथि", login: "लॉगिन", logout: "लॉगआउट", call: "कॉल", chat: "चैट" },
+    ar: { welcome: "أهلاً بك ضيف", login: "تسجيل الدخول", logout: "تسجيل خروج", call: "اتصال", chat: "دردشة" },
+    es: { welcome: "Bienvenido Invitado", login: "Iniciar sesión", logout: "Cerrar sesión", call: "Llamar", chat: "Chat" },
+    fr: { welcome: "Bienvenue Invité", login: "Connexion", logout: "Déconnexion", call: "Appeler", chat: "Chat" },
+    pt: { welcome: "Bem-vindo Convidado", login: "Entrar", logout: "Sair", call: "Ligar", chat: "Chat" },
+    ru: { welcome: "Добро пожаловать Гость", login: "Войти", logout: "Выйти", call: "Звонок", chat: "Чат" },
+    zh: { welcome: "欢迎访客", login: "登录", logout: "登出", call: "呼叫", chat: "聊天" },
+    ja: { welcome: "ようこそゲスト", login: "ログイン", logout: "ログアウト", call: "電話", chat: "チャット" },
+    de: { welcome: "Willkommen Gast", login: "Anmelden", logout: "Abmelden", call: "Anrufen", chat: "Chat" },
+    it: { welcome: "Benvenuto Ospite", login: "Accedi", logout: "Esci", call: "Chiama", chat: "Chat" },
+    ko: { welcome: "환영합니다 손님", login: "로그인", logout: "로그아웃", call: "전화", chat: "채팅" },
+    tr: { welcome: "Hoş Geldiniz Misafir", login: "Giriş", logout: "Çıkış", call: "Ara", chat: "Sohbet" },
+    nl: { welcome: "Welkom Gast", login: "Inloggen", logout: "Uitloggen", call: "Bellen", chat: "Chat" },
+    pl: { welcome: "Witaj Gość", login: "Zaloguj", logout: "Wyloguj", call: "Zadzwoń", chat: "Czat" }
+};
+
+const languages = [
+    { code: 'en', name: 'English' },
+    { code: 'hi', name: 'हिंदी' },
+    { code: 'ar', name: 'العربية' },
+    { code: 'es', name: 'Español' },
+    { code: 'fr', name: 'Français' },
+    { code: 'pt', name: 'Português' },
+    { code: 'ru', name: 'Русский' },
+    { code: 'zh', name: '中文' },
+    { code: 'ja', name: '日本語' },
+    { code: 'de', name: 'Deutsch' },
+    { code: 'it', name: 'Italiano' },
+    { code: 'ko', name: '한국어' },
+    { code: 'tr', name: 'Türkçe' },
+    { code: 'nl', name: 'Nederlands' },
+    { code: 'pl', name: 'Polski' }
+];
+
+function loadLanguages() {
+    const grid = document.getElementById('langGrid');
+    const currentLang = localStorage.getItem('earthLang') || 'en';
+    grid.innerHTML = '';
+    languages.forEach(lang => {
+        const btn = document.createElement('div');
+        btn.className = 'lang-btn' + (lang.code === currentLang ? ' active' : '');
+        btn.innerText = lang.name;
+        btn.onclick = () => {
+            localStorage.setItem('earthLang', lang.code);
+            loadLanguages();
+            applyLanguage();
+        };
+        grid.appendChild(btn);
+    });
+}
+
+function applyLanguage() {
+    const lang = localStorage.getItem('earthLang') || 'en';
+    const t = translations[lang] || translations['en'];
+    const user = auth.currentUser;
+    if (!user) {
+        document.getElementById('sideUserName').innerText = t.welcome;
+        document.getElementById('authBtn').innerText = t.login;
+    } else {
+        document.getElementById('authBtn').innerText = t.logout;
+    }
+    document.getElementById('logoutText').innerText = t.logout;
+    renderAds(allAds);
+}
+
+// Listen for notifications and update badge
+function listenForNotifications(uid) {
+    db.collection("notifications")
+        .where("recipientId", "==", uid)
+        .where("read", "==", false)
+        .onSnapshot(snapshot => {
+            const unreadCount = snapshot.size;
+            const badge = document.getElementById('bellBadge');
+            if (unreadCount > 0) {
+                badge.innerText = unreadCount;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        });
+}
+
+auth.onAuthStateChanged(user => {
     const logoutBtn = document.getElementById('logoutBtn');
+    const adminIcon = document.getElementById('adminIcon');
+    const adminSideBtn = document.getElementById('adminSideBtn');
+    
     if (user) {
         const userName = user.displayName || user.email?.split('@')[0] || "Earth User";
         document.getElementById('sideUserName').innerText = userName;
@@ -343,7 +492,9 @@ auth.onAuthStateChanged(async user => {
         document.getElementById('authBtn').innerText = t.logout;
         document.getElementById('authBtn').onclick = handleLogout;
         logoutBtn.style.display = 'flex';
-        if (user.email === "admin@earth.com") {
+        
+        // Check if user is admin by UID
+        if (user.uid === ADMIN_UID) {
             if(adminIcon) adminIcon.style.display = 'inline-block';
             if(adminSideBtn) adminSideBtn.style.display = 'flex';
         } else {
@@ -374,7 +525,9 @@ function handleLogout() {
 function loadProperties() {
     db.collection("properties").orderBy("createdAt", "desc").onSnapshot(snap => {
         allAds = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
-        renderAds(allAds);
+        // Sort by proximity if location is available
+        const sortedAds = userLocation ? sortByProximity(allAds) : allAds;
+        renderAds(sortedAds);
     }, err => {
         document.getElementById('propertyList').innerHTML = '<center style="margin-top:50px; color:#d32f2f;">Error loading properties. Please refresh.</center>';
     });
@@ -435,7 +588,8 @@ function contact(num, type, title) {
 function filterAds() {
     const val = document.getElementById('searchInput').value.toLowerCase().trim();
     if (val === '') {
-        renderAds(allAds);
+        const sortedAds = userLocation ? sortByProximity(allAds) : allAds;
+        renderAds(sortedAds);
         return;
     }
     const filtered = allAds.filter(a => 
@@ -443,7 +597,8 @@ function filterAds() {
         (a.title || '').toLowerCase().includes(val) ||
         (a.description || '').toLowerCase().includes(val)
     );
-    renderAds(filtered);
+    const sortedFiltered = userLocation ? sortByProximity(filtered) : filtered;
+    renderAds(sortedFiltered);
 }
 
 function getFavorites() {
