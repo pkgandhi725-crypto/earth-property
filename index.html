@@ -655,16 +655,30 @@ function isFavorite(propId) {
     return getFavorites().includes(propId);
 }
 
-function toggleFavorite(propId) {
-    let favs = getFavorites();
-    if (favs.includes(propId)) {
-        favs = favs.filter(id => id !== propId);
+async function toggleFavorite(propId) {
+    const user = auth.currentUser;
+    if (!user) {
+        alert("Please login to add favorites");
+        location.href = 'login.html';
+        return;
+    }
+
+    // Professional Way: Har user ka apna document favorites collection mein
+    const favRef = db.collection("favorites").doc(`${user.uid}_${propId}`);
+    const doc = await favRef.get();
+
+    if (doc.exists) {
+        await favRef.delete();
         alert('Removed from favorites');
     } else {
-        favs.push(propId);
+        await favRef.set({
+            userId: user.uid,
+            propertyId: propId,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
         alert('Added to favorites ❤️');
     }
-    localStorage.setItem('earthFavorites', JSON.stringify(favs));
+    // Isse UI update ho jayegi
     renderAds(allAds);
 }
 
