@@ -522,12 +522,16 @@ function listenForNotifications(uid) {
         });
 }
 
-auth.onAuthStateChanged(user => {
+auth.onAuthStateChanged(async user => {
+
     const logoutBtn = document.getElementById('logoutBtn');
     const adminIcon = document.getElementById('adminIcon');
     const adminSideBtn = document.getElementById('adminSideBtn');
     
     if (user) {
+
+        await loadUserFavorites();   // 👈 YAHI IMPORTANT LINE HAI
+
         const userName = user.displayName || user.email?.split('@')[0] || "Earth User";
         document.getElementById('sideUserName').innerText = userName;
         document.getElementById('headerUserName').innerText = userName;
@@ -538,16 +542,12 @@ auth.onAuthStateChanged(user => {
         document.getElementById('authBtn').innerText = t.logout;
         document.getElementById('authBtn').onclick = handleLogout;
         logoutBtn.style.display = 'flex';
-        
-        if (user.uid === ADMIN_UID) {
-            if(adminIcon) adminIcon.style.display = 'inline-block';
-            if(adminSideBtn) adminSideBtn.style.display = 'flex';
-        } else {
-            if(adminIcon) adminIcon.style.display = 'none';
-            if(adminSideBtn) adminSideBtn.style.display = 'none';
-        }
+
         listenForNotifications(user.uid);
+
     } else {
+        userFavorites = [];   // 👈 logout me clear kar do
+
         const t = translations[localStorage.getItem('earthLang') || 'en'] || translations['en'];
         document.getElementById('sideUserName').innerText = t.welcome;
         document.getElementById('headerUserName').innerText = "Guest";
@@ -555,10 +555,8 @@ auth.onAuthStateChanged(user => {
         updateProfilePhoto(null);
         document.getElementById('authBtn').innerText = t.login;
         document.getElementById('authBtn').onclick = () => location.href='login.html';
-        if(logoutBtn) logoutBtn.style.display = 'none';
-        if(adminIcon) adminIcon.style.display = 'none';
-        if(adminSideBtn) adminSideBtn.style.display = 'none';
     }
+
     loadProperties();
 });
 
