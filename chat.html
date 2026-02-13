@@ -9,17 +9,14 @@
         :root { --primary: #2e7d32; --chat-bg: #e5ddd5; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        body { 
-            font-family: system-ui, sans-serif; 
-            margin: 0; 
-            background: var(--chat-bg); 
-            height: 100vh; 
+        /* ✅ STEP 1: Body CSS Fixed (Removed fixed & hidden overflow) */
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 0;
+            background: var(--chat-bg);
             height: 100dvh;
-            display: flex; 
-            flex-direction: column; 
-            overflow: hidden;
-            position: fixed;
-            width: 100%;
+            display: flex;
+            flex-direction: column;
         }
 
         header { 
@@ -39,14 +36,12 @@
         #chatName { margin: 0; font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         #userStatus { font-size: 11px; color: #e0e0e0; font-weight: 500; }
         
+        /* ✅ STEP 2: Chat Container Updated for Scroll Stability */
         .chat-container {
             flex: 1;
             overflow-y: auto;
-            overflow-x: hidden;
-            position: relative;
             -webkit-overflow-scrolling: touch;
-            display: flex;
-            flex-direction: column;
+            position: relative;
         }
         
         .refresh-loader {
@@ -59,68 +54,56 @@
             background: white;
             border-radius: 50%;
             box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 999;
-            opacity: 0;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 99; opacity: 0;
             transition: top 0.3s ease, opacity 0.3s ease;
         }
-
         .refresh-loader svg { width: 25px; height: 25px; }
-        .refresh-loader circle {
-            fill: none;
-            stroke: var(--primary);
-            stroke-width: 4;
-            stroke-linecap: round;
-            stroke-dasharray: 90, 150;
-        }
+        .refresh-loader circle { fill: none; stroke: var(--primary); stroke-width: 4; stroke-linecap: round; stroke-dasharray: 90, 150; }
 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        #chatBox { padding: 15px; display: flex; flex-direction: column; gap: 8px; min-height: 100%; flex: 1; }
+        #chatBox { padding: 15px; display: flex; flex-direction: column; gap: 8px; }
 
         .msg { 
             max-width: 80%; padding: 8px 12px; border-radius: 12px; font-size: 14px; 
             position: relative; word-wrap: break-word; box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-            animation: slideIn 0.2s ease;
         }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
         .sent { align-self: flex-end; background: #dcf8c6; border-bottom-right-radius: 2px; }
         .received { align-self: flex-start; background: white; border-bottom-left-radius: 2px; }
-        
         .msg-footer { display: flex; align-items: center; justify-content: flex-end; gap: 4px; margin-top: 2px; font-size: 10px; color: #777; }
         .tick-blue { color: #34B7F1; }
         
+        /* ✅ STEP 3: Sticky Input Area for 100% Visibility */
         .input-area { 
-            background: #f0f0f0; padding: 8px 12px;
+            background: #f0f0f0; 
+            padding: 8px 12px;
             padding-bottom: calc(8px + env(safe-area-inset-bottom));
-            display: flex; align-items: center; gap: 10px; border-top: 1px solid #ddd; flex-shrink: 0; z-index: 101;
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            border-top: 1px solid #ddd;
+            flex-shrink: 0;
+            position: sticky;
+            bottom: 0;
+            z-index: 101;
         }
 
         .input-area input { 
             flex: 1; border: none; padding: 10px 16px; border-radius: 22px; 
-            outline: none; font-size: 15px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            outline: none; font-size: 15px; background: white;
         }
 
         .camera-btn { color: #555; font-size: 24px; cursor: pointer; padding: 5px; }
-        .send-btn { 
-            background: var(--primary); color: white; border: none; 
-            width: 44px; height: 44px; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; cursor: pointer;
-        }
+        .send-btn { background: var(--primary); color: white; border: none; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 
         .dropdown { display: none; position: absolute; right: 15px; top: 50px; background: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); min-width: 130px; z-index: 1000; }
-        .dropdown div { padding: 12px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #eee; color: #333;}
+        .dropdown div { padding: 12px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #eee; color: #333; }
         .spinner { animation: spin 1s linear infinite; }
-        
         .report-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
         .report-modal.active { display: flex; }
         .report-content { background: white; border-radius: 15px; padding: 20px; max-width: 350px; width: 100%; }
         .report-option { padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; cursor: pointer; display: flex; align-items: center; gap: 10px; color: #333; }
-        .status-message { text-align: center; width: 100%; color: #666; font-size: 13px; padding: 12px; background: white; border-radius: 8px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
-        .unblock-btn { background: var(--primary); color: white; border: none; padding: 8px 18px; border-radius: 20px; font-weight: 600; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -159,9 +142,9 @@
 <div class="report-modal" id="reportModal">
     <div class="report-content">
         <h3 style="margin-bottom:15px; color:var(--primary)">Report User</h3>
-        <div class="report-option" onclick="selectReason('Spam')"><i class="fa fa-ban"></i> Spam</div>
-        <div class="report-option" onclick="selectReason('Abusive')"><i class="fa fa-exclamation-triangle"></i> Abusive</div>
-        <div class="report-option" onclick="selectReason('Scam')"><i class="fa fa-money-bill-wave"></i> Scam/Fraud</div>
+        <div class="report-option" onclick="selectReason('Spam')">Spam</div>
+        <div class="report-option" onclick="selectReason('Abusive')">Abusive</div>
+        <div class="report-option" onclick="selectReason('Scam')">Scam</div>
         <button onclick="closeReportModal()" style="width:100%; padding:10px; border:none; background:#eee; border-radius:8px; margin-top:5px;">Cancel</button>
     </div>
 </div>
@@ -180,20 +163,12 @@ const CLOUD_NAME = "dnkhurnbv", UPLOAD_PRESET = "earth_property";
 const urlParams = new URLSearchParams(window.location.search);
 const partnerId = urlParams.get('to');
 let currentUserId = "", isIBlocked = false, chatListener = null;
-
-// Pull to Refresh Logic
 let startY = 0, isPulling = false, pullDistance = 0;
 
 auth.onAuthStateChanged(user => {
     if (!user || !partnerId) { location.href = 'index.html'; return; }
     currentUserId = user.uid;
-    
-    // Status Online
-    db.collection("users").doc(currentUserId).update({ 
-        status: "Online", 
-        lastSeen: firebase.firestore.FieldValue.serverTimestamp() 
-    });
-
+    db.collection("users").doc(currentUserId).update({ status: "Online", lastSeen: firebase.firestore.FieldValue.serverTimestamp() });
     checkBlockStatus();
     loadPartnerInfo();
     listenMessages();
@@ -201,10 +176,11 @@ auth.onAuthStateChanged(user => {
     setupTypingIndicator();
 });
 
-// Presence System (Offline when leave)
-window.onbeforeunload = () => {
+// ✅ Cleanup and Presence
+window.addEventListener('beforeunload', () => {
     if(currentUserId) db.collection("users").doc(currentUserId).update({ status: "Offline", lastSeen: firebase.firestore.FieldValue.serverTimestamp() });
-};
+    if(chatListener) chatListener();
+});
 
 function setupPullToRefresh() {
     const container = document.getElementById('chatContainer');
@@ -231,33 +207,27 @@ function setupPullToRefresh() {
 }
 
 function listenMessages() {
-    if (chatListener) chatListener(); // Cleanup previous
+    if (chatListener) chatListener();
     const chatId = currentUserId < partnerId ? `${currentUserId}_${partnerId}` : `${partnerId}_${currentUserId}`;
-    
     chatListener = db.collection("chats").doc(chatId).collection("messages").orderBy("timestamp", "asc").limitToLast(50)
       .onSnapshot(snap => {
           const chatBox = document.getElementById('chatBox');
           if (isIBlocked) { chatBox.innerHTML = "<center style='margin-top:50px; color:#999;'>Blocked</center>"; return; }
           chatBox.innerHTML = "";
-          
           snap.forEach(doc => {
               const m = doc.data();
               const type = m.senderId === currentUserId ? 'sent' : 'received';
-              
-              // ✅ Mark as Read Logic
               if (type === 'received' && m.status === 'unread') {
                   db.collection("chats").doc(chatId).collection("messages").doc(doc.id).update({ status: 'read' });
               }
-
               const time = m.timestamp ? new Date(m.timestamp.seconds * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "...";
               let ticks = (type === 'sent') ? `<i class="fa fa-check${m.status==='read' ? '-double tick-blue' : ''}" style="font-size:10px; margin-left:4px;"></i>` : '';
               let content = m.image ? `<img src="${m.image}" style="max-width:100%; border-radius:8px; display:block;" onclick="window.open(this.src)">` : '';
               content += m.text ? `<div>${m.text}</div>` : '';
               chatBox.innerHTML += `<div class="msg ${type}">${content}<div class="msg-footer">${time}${ticks}</div></div>`;
           });
-          document.getElementById('chatContainer').scrollTop = document.getElementById('chatContainer').scrollHeight;
-          
-          // Reset unread count for me
+          const container = document.getElementById('chatContainer');
+          container.scrollTop = container.scrollHeight;
           db.collection("chats").doc(chatId).update({ [`unreadCount_${currentUserId}`]: 0 }).catch(()=>{});
       });
 }
@@ -267,41 +237,27 @@ async function sendMsg(imageUrl = null) {
     const text = input ? input.value.trim() : "";
     if (!text && !imageUrl) return;
     const chatId = currentUserId < partnerId ? `${currentUserId}_${partnerId}` : `${partnerId}_${currentUserId}`;
-    
     await db.collection("chats").doc(chatId).collection("messages").add({
         senderId: currentUserId, receiverId: partnerId, text: text, image: imageUrl,
         status: 'unread', timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
-    
     if(input) input.value = "";
-    db.collection("chats").doc(chatId).set({ 
-        lastMsg: text || "📷 Photo", 
-        lastTime: firebase.firestore.FieldValue.serverTimestamp(), 
-        users: [currentUserId, partnerId], 
-        [`unreadCount_${partnerId}`]: firebase.firestore.FieldValue.increment(1) 
-    }, { merge: true });
+    db.collection("chats").doc(chatId).set({ lastMsg: text || "📷 Photo", lastTime: firebase.firestore.FieldValue.serverTimestamp(), users: [currentUserId, partnerId], [`unreadCount_${partnerId}`]: firebase.firestore.FieldValue.increment(1) }, { merge: true });
 }
 
-// ✅ Typing Indicator Logic
 function setupTypingIndicator() {
     const input = document.getElementById('msgInput');
     const chatId = currentUserId < partnerId ? `${currentUserId}_${partnerId}` : `${partnerId}_${currentUserId}`;
-    
     input.addEventListener('input', () => {
         db.collection("chats").doc(chatId).update({ [`typing_${currentUserId}`]: true });
         clearTimeout(window.typingTimeout);
-        window.typingTimeout = setTimeout(() => {
-            db.collection("chats").doc(chatId).update({ [`typing_${currentUserId}`]: false });
-        }, 2000);
+        window.typingTimeout = setTimeout(() => db.collection("chats").doc(chatId).update({ [`typing_${currentUserId}`]: false }), 2000);
     });
-
     db.collection("chats").doc(chatId).onSnapshot(doc => {
         if(doc.exists() && doc.data()[`typing_${partnerId}`]) {
             document.getElementById('userStatus').innerText = "typing...";
             document.getElementById('userStatus').style.color = "#90EE90";
-        } else {
-            loadPartnerInfo(); // revert to last seen
-        }
+        } else { loadPartnerInfo(); }
     });
 }
 
@@ -311,7 +267,6 @@ function loadPartnerInfo() {
             const data = doc.data();
             document.getElementById('chatName').innerText = data.name || "User";
             const status = data.status || "Offline";
-            
             if (status === "Online") {
                 document.getElementById('userStatus').innerText = "Online";
                 document.getElementById('userStatus').style.color = "#90EE90";
@@ -333,32 +288,16 @@ async function uploadPhoto(input) {
         const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: 'POST', body: formData });
         const data = await res.json();
         if(data.secure_url) await sendMsg(data.secure_url);
-    } finally { document.getElementById('camIcon').className = "fa fa-camera"; input.value="";}
+    } finally { document.getElementById('camIcon').className = "fa fa-camera"; input.value=""; }
 }
 
-function checkBlockStatus() {
-    db.collection("users").doc(currentUserId).onSnapshot(doc => {
-        isIBlocked = (doc.data()?.blockedUsers || []).includes(partnerId);
-    });
-}
-
+function checkBlockStatus() { db.collection("users").doc(currentUserId).onSnapshot(doc => { isIBlocked = (doc.data()?.blockedUsers || []).includes(partnerId); }); }
 function toggleMenu(e) { e.stopPropagation(); const m = document.getElementById('menuDropdown'); m.style.display = m.style.display === 'block' ? 'none' : 'block'; }
 document.addEventListener('click', () => document.getElementById('menuDropdown').style.display = 'none');
 function showReportModal() { document.getElementById('reportModal').classList.add('active'); }
 function closeReportModal() { document.getElementById('reportModal').classList.remove('active'); }
-
-async function blockUser() {
-    if(confirm("Block this user?")) {
-        await db.collection("users").doc(currentUserId).update({ blockedUsers: firebase.firestore.FieldValue.arrayUnion(partnerId) });
-        alert("User Blocked");
-    }
-}
-
-async function selectReason(reason) {
-    await db.collection("reports").add({ reporter: currentUserId, reported: partnerId, reason: reason, time: firebase.firestore.FieldValue.serverTimestamp() });
-    alert("Report Submitted");
-    closeReportModal();
-}
+async function blockUser() { if(confirm("Block this user?")) { await db.collection("users").doc(currentUserId).update({ blockedUsers: firebase.firestore.FieldValue.arrayUnion(partnerId) }); } }
+async function selectReason(reason) { await db.collection("reports").add({ reporter: currentUserId, reported: partnerId, reason: reason, time: firebase.firestore.FieldValue.serverTimestamp() }); alert("Report Submitted"); closeReportModal(); }
 </script>
 </body>
 </html>
