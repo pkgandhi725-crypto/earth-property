@@ -568,23 +568,13 @@ function handleLogout() {
     }
 }
 
-async function loadProperties() {
-    const user = auth.currentUser;
-    window.userFavIds = []; 
-    
-    if (user) {
-        try {
-            const favSnap = await db.collection("favorites").where("userId", "==", user.uid).get();
-            window.userFavIds = favSnap.docs.map(doc => doc.data().propertyId);
-        } catch (e) { console.log("Fav fetch error:", e); }
-    }
-
+function loadProperties() {
     db.collection("properties").orderBy("createdAt", "desc").onSnapshot(snap => {
         allAds = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
         const sortedAds = userLocation ? sortByProximity(allAds) : allAds;
         renderAds(sortedAds);
     }, err => {
-        document.getElementById('propertyList').innerHTML = '<center style="margin-top:50px; color:#d32f2f;">Error loading properties.</center>';
+        document.getElementById('propertyList').innerHTML = '<center style="margin-top:50px; color:#d32f2f;">Error loading properties. Please refresh.</center>';
     });
 }
 
@@ -662,39 +652,19 @@ function getFavorites() {
 }
 
 function isFavorite(propId) {
-    return (window.userFavIds || []).includes(propId);
+    return getFavorites().includes(propId);
 }
 
-async function toggleFavorite(propId) {
-    const user = auth.currentUser;
-    if (!user) {
-        alert("Please login to add favorites");
-        location.href = 'login.html';
-        return;
-    }
-
-    const favRef = db.collection("favorites").doc(`${user.uid}_${propId}`);
-    const doc = await favRef.get();
-
-    if (doc.exists) {
-        // Database se hatao
-        await favRef.delete();
-        // Screen par turant update ke liye array se bhi hatao
-        window.userFavIds = (window.userFavIds || []).filter(id => id !== propId);
+function toggleFavorite(propId) {
+    let favs = getFavorites();
+    if (favs.includes(propId)) {
+        favs = favs.filter(id => id !== propId);
         alert('Removed from favorites');
     } else {
-        // Database mein add karo
-        await favRef.set({
-            userId: user.uid,
-            propertyId: propId,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        // Screen par turant update ke liye array mein add karo
-        if(!window.userFavIds) window.userFavIds = [];
-        window.userFavIds.push(propId);
+        favs.push(propId);
         alert('Added to favorites ❤️');
     }
-    // UI ko refresh karo
+    localStorage.setItem('earthFavorites', JSON.stringify(favs));
     renderAds(allAds);
 }
 
