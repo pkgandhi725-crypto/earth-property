@@ -72,8 +72,8 @@ async function loadFavorites(uid) {
                     firstImg = (typeof p.images[0] === 'object') ? p.images[0].url : p.images[0];
                 }
                 
-                html += `
-                    <div class="prop-card" onclick="location.href='index.html'">
+                html += `<div class="prop-card" onclick="location.href='property-detail.html?id=${id}'">`
+
                         <div class="img-container"><img src="${firstImg}" loading="lazy"></div>
                         <div class="prop-info">
                             <p class="prop-price">₹${Number(p.price || 0).toLocaleString('en-IN')}</p>
