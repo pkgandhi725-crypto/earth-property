@@ -646,28 +646,63 @@ function filterAds() {
     renderAds(sortedFiltered);
 }
 
-function getFavorites() {
-    const favs = localStorage.getItem('earthFavorites');
-    return favs ? JSON.parse(favs) : [];
-}
+// ===== PROFESSIONAL FIRESTORE FAVORITES SYSTEM =====
 
-function isFavorite(propId) {
-    return getFavorites().includes(propId);
-}
+let userFavorites = [];
 
-function toggleFavorite(propId) {
-    let favs = getFavorites();
-    if (favs.includes(propId)) {
-        favs = favs.filter(id => id !== propId);
-        alert('Removed from favorites');
-    } else {
-        favs.push(propId);
-        alert('Added to favorites ❤️');
+// Load user favorites once
+async function loadUserFavorites() {
+    const user = auth.currentUser;
+    if (!user) {
+        userFavorites = [];
+        return;
     }
-    localStorage.setItem('earthFavorites', JSON.stringify(favs));
+
+    const snap = await db.collection("favorites")
+        .where("userId", "==", user.uid)
+        .get();
+
+    userFavorites = snap.docs.map(doc => doc.data().propertyId);
+}
+
+// Check if property is favorite
+function isFavorite(propId) {
+    return userFavorites.includes(propId);
+}
+
+// Toggle favorite
+async function toggleFavorite(propId) {
+    const user = auth.currentUser;
+
+    if (!user) {
+        alert("Please login first");
+        location.href = "login.html";
+        return;
+    }
+
+    const favQuery = await db.collection("favorites")
+        .where("userId", "==", user.uid)
+        .where("propertyId", "==", propId)
+        .get();
+
+    if (!favQuery.empty) {
+        // Remove
+        favQuery.forEach(doc => doc.ref.delete());
+        userFavorites = userFavorites.filter(id => id !== propId);
+        alert("Removed from favorites");
+    } else {
+        // Add
+        await db.collection("favorites").add({
+            userId: user.uid,
+            propertyId: propId,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        userFavorites.push(propId);
+        alert("Added to favorites ❤️");
+    }
+
     renderAds(allAds);
 }
-
 function shareProperty(propId, title) {
     const url = window.location.origin + '/property-detail.html?id=' + propId;
     const text = decodeURIComponent(title) + ' - Earth Property Global';
