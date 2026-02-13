@@ -522,16 +522,12 @@ function listenForNotifications(uid) {
         });
 }
 
-auth.onAuthStateChanged(async user => {
-
+auth.onAuthStateChanged(user => {
     const logoutBtn = document.getElementById('logoutBtn');
     const adminIcon = document.getElementById('adminIcon');
     const adminSideBtn = document.getElementById('adminSideBtn');
     
     if (user) {
-
-        await loadUserFavorites();   // 👈 YAHI IMPORTANT LINE HAI
-
         const userName = user.displayName || user.email?.split('@')[0] || "Earth User";
         document.getElementById('sideUserName').innerText = userName;
         document.getElementById('headerUserName').innerText = userName;
@@ -542,12 +538,16 @@ auth.onAuthStateChanged(async user => {
         document.getElementById('authBtn').innerText = t.logout;
         document.getElementById('authBtn').onclick = handleLogout;
         logoutBtn.style.display = 'flex';
-
+        
+        if (user.uid === ADMIN_UID) {
+            if(adminIcon) adminIcon.style.display = 'inline-block';
+            if(adminSideBtn) adminSideBtn.style.display = 'flex';
+        } else {
+            if(adminIcon) adminIcon.style.display = 'none';
+            if(adminSideBtn) adminSideBtn.style.display = 'none';
+        }
         listenForNotifications(user.uid);
-
     } else {
-        userFavorites = [];   // 👈 logout me clear kar do
-
         const t = translations[localStorage.getItem('earthLang') || 'en'] || translations['en'];
         document.getElementById('sideUserName').innerText = t.welcome;
         document.getElementById('headerUserName').innerText = "Guest";
@@ -555,8 +555,10 @@ auth.onAuthStateChanged(async user => {
         updateProfilePhoto(null);
         document.getElementById('authBtn').innerText = t.login;
         document.getElementById('authBtn').onclick = () => location.href='login.html';
+        if(logoutBtn) logoutBtn.style.display = 'none';
+        if(adminIcon) adminIcon.style.display = 'none';
+        if(adminSideBtn) adminSideBtn.style.display = 'none';
     }
-
     loadProperties();
 });
 
@@ -644,63 +646,28 @@ function filterAds() {
     renderAds(sortedFiltered);
 }
 
-// ===== PROFESSIONAL FIRESTORE FAVORITES SYSTEM =====
-
-let userFavorites = [];
-
-// Load user favorites once
-async function loadUserFavorites() {
-    const user = auth.currentUser;
-    if (!user) {
-        userFavorites = [];
-        return;
-    }
-
-    const snap = await db.collection("favorites")
-        .where("userId", "==", user.uid)
-        .get();
-
-    userFavorites = snap.docs.map(doc => doc.data().propertyId);
+function getFavorites() {
+    const favs = localStorage.getItem('earthFavorites');
+    return favs ? JSON.parse(favs) : [];
 }
 
-// Check if property is favorite
 function isFavorite(propId) {
-    return userFavorites.includes(propId);
+    return getFavorites().includes(propId);
 }
 
-// Toggle favorite
-async function toggleFavorite(propId) {
-    const user = auth.currentUser;
-
-    if (!user) {
-        alert("Please login first");
-        location.href = "login.html";
-        return;
-    }
-
-    const favQuery = await db.collection("favorites")
-        .where("userId", "==", user.uid)
-        .where("propertyId", "==", propId)
-        .get();
-
-    if (!favQuery.empty) {
-        // Remove
-        favQuery.forEach(doc => doc.ref.delete());
-        userFavorites = userFavorites.filter(id => id !== propId);
-        alert("Removed from favorites");
+function toggleFavorite(propId) {
+    let favs = getFavorites();
+    if (favs.includes(propId)) {
+        favs = favs.filter(id => id !== propId);
+        alert('Removed from favorites');
     } else {
-        // Add
-        await db.collection("favorites").add({
-            userId: user.uid,
-            propertyId: propId,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        userFavorites.push(propId);
-        alert("Added to favorites ❤️");
+        favs.push(propId);
+        alert('Added to favorites ❤️');
     }
-
+    localStorage.setItem('earthFavorites', JSON.stringify(favs));
     renderAds(allAds);
 }
+
 function shareProperty(propId, title) {
     const url = window.location.origin + '/property-detail.html?id=' + propId;
     const text = decodeURIComponent(title) + ' - Earth Property Global';
