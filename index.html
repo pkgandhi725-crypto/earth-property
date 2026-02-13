@@ -42,7 +42,7 @@
         .drawer.open { left: 0; }
         .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; flex-shrink: 0; position: relative; }
         
-        /* Profile Photo Circle - FIXED */
+        /* Profile Photo Circle */
         .profile-photo-circle {
             width: 80px;
             height: 80px;
@@ -107,7 +107,7 @@
         .btn-wa { background: #25D366; color: white; }
         .btn-chat { background: var(--primary); color: white; }
 
-        /* Bottom Nav - Centered add button like photo */
+        /* Bottom Nav */
         .bottom-nav { 
             position: fixed; 
             bottom: 0; 
@@ -276,7 +276,7 @@
         <div>My Ads</div>
     </a>
     <div class="post-btn-wrapper">
-        <a href="add-property.html" class="post-btn">
+        <a href="post-ad.html" class="post-btn">
             <i class="fa fa-plus"></i>
         </a>
     </div>
@@ -311,6 +311,8 @@ let allAds = [];
 let currentImages = [];
 let currentImageIndex = 0;
 let userLocation = null;
+let currentUser = null;
+let userFavorites = [];
 
 // Get user's location for proximity-based sorting
 if (navigator.geolocation) {
@@ -505,6 +507,54 @@ function updateProfilePhoto(photoURL) {
     }
 }
 
+// Load user favorites from Firestore
+function loadUserFavorites(uid) {
+    db.collection("favorites")
+        .where("userId", "==", uid)
+        .onSnapshot(snapshot => {
+            userFavorites = snapshot.docs.map(doc => doc.data().propertyId);
+            renderAds(allAds);
+        });
+}
+
+// Check if property is favorited
+function isFavorite(propId) {
+    return userFavorites.includes(propId);
+}
+
+// Toggle favorite in Firestore
+async function toggleFavorite(propId) {
+    if (!currentUser) {
+        alert('Please login to add favorites');
+        location.href = 'login.html';
+        return;
+    }
+
+    try {
+        const favQuery = await db.collection("favorites")
+            .where("userId", "==", currentUser.uid)
+            .where("propertyId", "==", propId)
+            .get();
+
+        if (!favQuery.empty) {
+            // Remove from favorites
+            await favQuery.docs[0].ref.delete();
+            alert('Removed from favorites');
+        } else {
+            // Add to favorites
+            await db.collection("favorites").add({
+                userId: currentUser.uid,
+                propertyId: propId,
+                addedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            alert('Added to favorites ❤️');
+        }
+    } catch (error) {
+        console.error('Error toggling favorite:', error);
+        alert('Error updating favorites. Please try again.');
+    }
+}
+
 // Listen for notifications
 function listenForNotifications(uid) {
     db.collection("notifications")
@@ -523,6 +573,7 @@ function listenForNotifications(uid) {
 }
 
 auth.onAuthStateChanged(user => {
+    currentUser = user;
     const logoutBtn = document.getElementById('logoutBtn');
     const adminIcon = document.getElementById('adminIcon');
     const adminSideBtn = document.getElementById('adminSideBtn');
@@ -546,8 +597,11 @@ auth.onAuthStateChanged(user => {
             if(adminIcon) adminIcon.style.display = 'none';
             if(adminSideBtn) adminSideBtn.style.display = 'none';
         }
+        
+        loadUserFavorites(user.uid);
         listenForNotifications(user.uid);
     } else {
+        userFavorites = [];
         const t = translations[localStorage.getItem('earthLang') || 'en'] || translations['en'];
         document.getElementById('sideUserName').innerText = t.welcome;
         document.getElementById('headerUserName').innerText = "Guest";
@@ -644,28 +698,6 @@ function filterAds() {
     );
     const sortedFiltered = userLocation ? sortByProximity(filtered) : filtered;
     renderAds(sortedFiltered);
-}
-
-function getFavorites() {
-    const favs = localStorage.getItem('earthFavorites');
-    return favs ? JSON.parse(favs) : [];
-}
-
-function isFavorite(propId) {
-    return getFavorites().includes(propId);
-}
-
-function toggleFavorite(propId) {
-    let favs = getFavorites();
-    if (favs.includes(propId)) {
-        favs = favs.filter(id => id !== propId);
-        alert('Removed from favorites');
-    } else {
-        favs.push(propId);
-        alert('Added to favorites ❤️');
-    }
-    localStorage.setItem('earthFavorites', JSON.stringify(favs));
-    renderAds(allAds);
 }
 
 function shareProperty(propId, title) {
