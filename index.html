@@ -652,7 +652,7 @@ function getFavorites() {
 }
 
 function isFavorite(propId) {
-    return getFavorites().includes(propId);
+    return (window.userFavIds || []).includes(propId);
 }
 
 async function toggleFavorite(propId) {
