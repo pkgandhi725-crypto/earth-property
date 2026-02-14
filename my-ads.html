@@ -44,28 +44,44 @@
 
 <header>
     <div onclick="location.href='index.html'" style="cursor:pointer; padding: 5px;"><i class="fa fa-chevron-left"></i></div>
-    <div style="font-weight: 800; font-size: 19px;">My Properties</div>
+    <div style="font-weight: 800; font-size: 19px;" id="headerTitle">My Properties</div>
 </header>
 
 <div class="container">
     <div class="stats-bar">
-        <div class="stat-item"> <div id="totalCount">0</div> <div>Total</div> </div>
-        <div class="stat-item"> <div id="activeCount" style="color:#2e7d32;">0</div> <div>Active</div> </div>
-        <div class="stat-item"> <div id="expiredCount" style="color:#d32f2f;">0</div> <div>Expired</div> </div>
+        <div class="stat-item"> <div id="totalCount">0</div> <div id="totalText">Total</div> </div>
+        <div class="stat-item"> <div id="activeCount" style="color:#2e7d32;">0</div> <div id="activeText">Active</div> </div>
+        <div class="stat-item"> <div id="expiredCount" style="color:#d32f2f;">0</div> <div id="expiredText">Expired</div> </div>
     </div>
 
-    <div id="loader"><i class="fa fa-spinner fa-spin fa-2x"></i><p>Loading ads...</p></div>
+    <div id="loader"><i class="fa fa-spinner fa-spin fa-2x"></i><p id="loadingText">Loading ads...</p></div>
     <div id="adList"></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="translations.js"></script>
 
 <script>
 const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+
+// Get current language
+const currentLang = sessionStorage.getItem('selectedLang') || 'en';
+const t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+
+// Apply translations
+function applyTranslations() {
+    document.getElementById('headerTitle').innerText = t.myProperties;
+    document.getElementById('totalText').innerText = t.total;
+    document.getElementById('activeText').innerText = t.active;
+    document.getElementById('expiredText').innerText = t.expired;
+    document.getElementById('loadingText').innerText = t.loadingAds;
+}
+
+applyTranslations();
 
 function escapeHtml(text) {
     const div = document.createElement('div');
@@ -88,8 +104,8 @@ firebase.auth().onAuthStateChanged(user => {
               adList.innerHTML = `
                 <div class="empty-state">
                     <i class="fa fa-home fa-4x" style="color:#ddd; margin-bottom:15px;"></i>
-                    <h3>No properties found</h3>
-                    <button onclick="location.href='add-property.html'" style="background:var(--primary); color:white; padding:12px 25px; border-radius:25px; margin-top:10px;">Post Your First Ad</button>
+                    <h3>${t.noAds}</h3>
+                    <button onclick="location.href='add-property.html'" style="background:var(--primary); color:white; padding:12px 25px; border-radius:25px; margin-top:10px;">${t.postFirstAd}</button>
                 </div>`;
           } else {
               snapshot.forEach(doc => {
@@ -98,14 +114,12 @@ firebase.auth().onAuthStateChanged(user => {
                   const purpose = data.purpose || 'Sell';
                   const limit = (purpose === 'Rent' || purpose === 'Lease') ? 30 : 180;
                   
-                  // Use renewedAt if available, otherwise createdAt
                   const baseDate = data.renewedAt ? data.renewedAt.toDate() : (data.createdAt ? data.createdAt.toDate() : new Date());
                   const expDate = new Date(baseDate);
                   expDate.setDate(expDate.getDate() + limit);
                   
                   const isExp = new Date() > expDate;
 
-                  // ✅ CRITICAL FIX: Only write to DB if status actually changed
                   if (isExp && data.isExpired !== true) {
                       db.collection("properties").doc(doc.id).update({ isExpired: true });
                   } else if (!isExp && data.isExpired !== false) {
@@ -116,7 +130,15 @@ firebase.auth().onAuthStateChanged(user => {
                   
                   const diff = expDate - new Date();
                   const daysLeft = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
-                  const statusText = isExp ? 'Expired' : (daysLeft === 0 ? 'Expires Today' : daysLeft + ' Days Left');
+                  
+                  let statusText;
+                  if (isExp) {
+                      statusText = t.expired;
+                  } else if (daysLeft === 0) {
+                      statusText = t.expiringSoon;
+                  } else {
+                      statusText = daysLeft + ' ' + t.daysLeft;
+                  }
 
                   adList.innerHTML += `
                   <div class="ad-card" style="${isExp ? 'opacity:0.8;' : ''}">
@@ -131,10 +153,10 @@ firebase.auth().onAuthStateChanged(user => {
                           </div>
                       </div>
                       <div class="btn-group">
-                          <button class="edit-btn" onclick="location.href='add-property.html?edit=${doc.id}'">Edit</button>
+                          <button class="edit-btn" onclick="location.href='add-property.html?edit=${doc.id}'">${t.edit}</button>
                           ${isExp ? 
-                              `<button class="renew-btn" onclick="renewAd('${doc.id}', this)">Renew</button>` : 
-                              `<button style="background:#f8f9fa; color:#2e7d32; cursor:default; border:1px solid #e8f5e9;">Live</button>`
+                              `<button class="renew-btn" onclick="renewAd('${doc.id}', this)">${t.renew}</button>` : 
+                              `<button style="background:#f8f9fa; color:#2e7d32; cursor:default; border:1px solid #e8f5e9;">${t.active}</button>`
                           }
                           <button class="delete-btn" onclick="deleteAd('${doc.id}')"><i class="fa fa-trash-alt"></i></button>
                       </div>
@@ -158,8 +180,9 @@ async function renewAd(id, btn) {
             isExpired: false,
             renewedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        btn.innerHTML = '<i class="fa fa-check"></i> Renewed';
+        btn.innerHTML = '<i class="fa fa-check"></i> ' + t.renewSuccess.split(' ')[0];
         btn.style.background = "#4caf50";
+        alert(t.renewSuccess);
     } catch(e) {
         alert("Renewal failed!");
         btn.disabled = false;
