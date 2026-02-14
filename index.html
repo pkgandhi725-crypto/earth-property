@@ -172,11 +172,11 @@
         .gallery-content { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; }
         .gallery-img { max-width: 90%; max-height: 80vh; object-fit: contain; }
         .gallery-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.3); color: white; border: none; font-size: 24px; padding: 15px 20px; cursor: pointer; border-radius: 5px; }
-        .gallery-prev { left: 10px; }
-        .gallery-next { right: 10px; }
-        .gallery-dots { padding: 20px; display: flex; justify-content: center; gap: 8px; }
-        .gallery-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; }
-        .gallery-dot.active { background: white; }
+        .gallery-prev { left: 20px; }
+        .gallery-next { right: 20px; }
+        .gallery-dots { display: flex; justify-content: center; gap: 8px; padding: 20px; }
+        .gallery-dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; transition: 0.2s; }
+        .gallery-dot.active { background: white; width: 12px; height: 12px; }
     </style>
 </head>
 <body>
@@ -188,12 +188,12 @@
         <div class="profile-photo-circle" id="profilePhotoCircle">
             <i class="fa fa-user-circle"></i>
         </div>
-        <h3 id="sideUserName" style="margin-top:0;">Welcome Guest</h3>
-        <p id="userMail" style="font-size:11px; opacity:0.8;"></p>
+        <div style="font-weight:700; font-size:18px; margin-bottom:3px;" id="sideUserName">Welcome Guest</div>
+        <div style="font-size:12px; opacity:0.9;" id="userMail"></div>
     </div>
-    
-    <div style="padding:15px 15px 5px; font-size:11px; font-weight:800; color:#999; letter-spacing:1px;" id="langHeader">GLOBAL LANGUAGES</div>
+
     <div class="lang-container">
+        <div style="font-weight:700; font-size:14px; margin-bottom:10px; color:#666;">🌍 Select Language</div>
         <div class="lang-grid" id="langGrid"></div>
     </div>
 
@@ -207,15 +207,15 @@
         </div>
 
         <div class="drawer-item" onclick="alert('Help & Support coming soon!')">
-            <i class="fa fa-question-circle" style="color:#2196F3;"></i> <span>Help & Support</span>
+            <i class="fa fa-question-circle" style="color:#2196F3;"></i> <span id="helpText">Help & Support</span>
         </div>
 
         <div class="drawer-item" onclick="alert('About Us: Earth Property Global - Your trusted real estate partner.')">
-            <i class="fa fa-info-circle" style="color:#FF9800;"></i> <span>About Us</span>
+            <i class="fa fa-info-circle" style="color:#FF9800;"></i> <span id="aboutText">About Us</span>
         </div>
 
         <div id="adminSideBtn" class="drawer-item" onclick="location.href='admin.html'" style="display:none; color:#ffd700;">
-            <i class="fa fa-user-shield"></i> <span>Admin Portal</span>
+            <i class="fa fa-user-shield"></i> <span id="adminText">Admin Portal</span>
         </div>
 
         <div id="logoutBtn" class="drawer-item" style="display:none; color:#d32f2f;" onclick="handleLogout()">
@@ -269,11 +269,11 @@
 <nav class="bottom-nav">
     <a href="index.html" class="nav-item active">
         <i class="fa fa-home"></i>
-        <div>Explore</div>
+        <div id="navExplore">Explore</div>
     </a>
     <a href="my-ads.html" class="nav-item">
         <i class="fa fa-layer-group"></i>
-        <div>My Ads</div>
+        <div id="navMyAds">My Ads</div>
     </a>
     <div class="post-btn-wrapper">
         <a href="add-property.html" class="post-btn">
@@ -282,17 +282,18 @@
     </div>
     <a href="favorites.html" class="nav-item">
         <i class="fa-regular fa-heart"></i>
-        <div>Favs</div>
+        <div id="navFavs">Favs</div>
     </a>
     <a href="profile.html" class="nav-item">
         <i class="fa-regular fa-user"></i>
-        <div>Profile</div>
+        <div id="navProfile">Profile</div>
     </a>
 </nav>
 
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+<script src="translations.js"></script>
 
 <script>
 const firebaseConfig = { 
@@ -418,34 +419,12 @@ function toggleDrawer() {
     overlay.style.display = drawer.classList.contains('open') ? 'block' : 'none';
 }
 
-const translations = {
-    en: { welcome: "Welcome Guest", login: "Login", logout: "Logout", call: "Call", chat: "Chat" },
-    hi: { welcome: "स्वागत अतिथि", login: "लॉगिन", logout: "लॉगआउट", call: "कॉल", chat: "चैट" },
-    ar: { welcome: "أهلاً بك ضيف", login: "تسجيل الدخول", logout: "تسجيل خروج", call: "اتصال", chat: "دردشة" },
-    es: { welcome: "Bienvenido Invitado", login: "Iniciar sesión", logout: "Cerrar sesión", call: "Llamar", chat: "Chat" },
-    fr: { welcome: "Bienvenue Invité", login: "Connexion", logout: "Déconnexion", call: "Appeler", chat: "Chat" },
-    pt: { welcome: "Bem-vindo Convidado", login: "Entrar", logout: "Sair", call: "Ligar", chat: "Chat" },
-    ru: { welcome: "Добро пожаловать Гость", login: "Войти", logout: "Выйти", call: "Звонок", chat: "Чат" },
-    zh: { welcome: "欢迎访客", login: "登录", logout: "登出", call: "呼叫", chat: "聊天" },
-    ja: { welcome: "ようこそゲスト", login: "ログイン", logout: "ログアウト", call: "電話", chat: "チャット" },
-    de: { welcome: "Willkommen Gast", login: "Anmelden", logout: "Abmelden", call: "Anrufen", chat: "Chat" },
-    it: { welcome: "Benvenuto Ospite", login: "Accedi", logout: "Esci", call: "Chiama", chat: "Chat" },
-    ko: { welcome: "환영합니다 손님", login: "로그인", logout: "로그아웃", call: "전화", chat: "채팅" },
-    tr: { welcome: "Hoş Geldiniz Misafir", login: "Giriş", logout: "Çıkış", call: "Ara", chat: "Sohbet" },
-    nl: { welcome: "Welkom Gast", login: "Inloggen", logout: "Uitloggen", call: "Bellen", chat: "Chat" },
-    pl: { welcome: "Witaj Gość", login: "Zaloguj", logout: "Wyloguj", call: "Zadzwoń", chat: "Czat" },
-    id: { welcome: "Selamat Datang Tamu", login: "Masuk", logout: "Keluar", call: "Panggil", chat: "Obrolan" },
-    th: { welcome: "ยินดีต้อนรับแขก", login: "เข้าสู่ระบบ", logout: "ออกจากระบบ", call: "โทร", chat: "แชท" },
-    vi: { welcome: "Chào mừng khách", login: "Đăng nhập", logout: "Đăng xuất", call: "Gọi", chat: "Trò chuyện" },
-    sw: { welcome: "Karibu Mgeni", login: "Ingia", logout: "Toka", call: "Piga simu", chat: "Gumzo" },
-    bn: { welcome: "স্বাগত অতিথি", login: "লগইন", logout: "লগআউট", call: "কল", chat: "চ্যাট" },
-    ur: { welcome: "خوش آمدید مہمان", login: "لاگ ان", logout: "لاگ آؤٹ", call: "کال", chat: "چیٹ" }
-};
-
 const languages = [
     { code: 'en', name: 'English' },
     { code: 'hi', name: 'हिंदी' },
     { code: 'ar', name: 'العربية' },
+    { code: 'bn', name: 'বাংলা' },
+    { code: 'ur', name: 'اردو' },
     { code: 'es', name: 'Español' },
     { code: 'fr', name: 'Français' },
     { code: 'pt', name: 'Português' },
@@ -461,21 +440,19 @@ const languages = [
     { code: 'id', name: 'Indonesian' },
     { code: 'th', name: 'ไทย' },
     { code: 'vi', name: 'Tiếng Việt' },
-    { code: 'sw', name: 'Swahili' },
-    { code: 'bn', name: 'বাংলা' },
-    { code: 'ur', name: 'اردو' }
+    { code: 'sw', name: 'Swahili' }
 ];
 
 function loadLanguages() {
     const grid = document.getElementById('langGrid');
-    const currentLang = localStorage.getItem('earthLang') || 'en';
+    const currentLang = sessionStorage.getItem('selectedLang') || 'en';
     grid.innerHTML = '';
     languages.forEach(lang => {
         const btn = document.createElement('div');
         btn.className = 'lang-btn' + (lang.code === currentLang ? ' active' : '');
         btn.innerText = lang.name;
         btn.onclick = () => {
-            localStorage.setItem('earthLang', lang.code);
+            sessionStorage.setItem('selectedLang', lang.code);
             loadLanguages();
             applyLanguage();
         };
@@ -484,16 +461,36 @@ function loadLanguages() {
 }
 
 function applyLanguage() {
-    const lang = localStorage.getItem('earthLang') || 'en';
-    const t = translations[lang] || translations['en'];
+    const lang = sessionStorage.getItem('selectedLang') || 'en';
+    const t = TRANSLATIONS[lang] || TRANSLATIONS['en'];
     const user = auth.currentUser;
+    
+    // Update sidebar
     if (!user) {
         document.getElementById('sideUserName').innerText = t.welcome;
         document.getElementById('authBtn').innerText = t.login;
     } else {
         document.getElementById('authBtn').innerText = t.logout;
     }
+    
+    // Update sidebar menu items
+    document.getElementById('myAdsText').innerText = t.myAds;
+    document.getElementById('favsText').innerText = t.favorites;
+    document.getElementById('helpText').innerText = t.helpSupport;
+    document.getElementById('aboutText').innerText = t.aboutUs;
+    document.getElementById('adminText').innerText = t.adminPortal;
     document.getElementById('logoutText').innerText = t.logout;
+    
+    // Update bottom navigation
+    document.getElementById('navExplore').innerText = t.explore;
+    document.getElementById('navMyAds').innerText = t.myAds;
+    document.getElementById('navFavs').innerText = t.favorites;
+    document.getElementById('navProfile').innerText = t.profile;
+    
+    // Update search placeholder
+    document.getElementById('searchInput').placeholder = t.searchPlaceholder;
+    
+    // Re-render ads with new language
     renderAds(allAds);
 }
 
@@ -585,7 +582,7 @@ auth.onAuthStateChanged(user => {
         document.getElementById('userMail').innerText = user.email || '';
         updateProfilePhoto(user.photoURL);
         
-        const t = translations[localStorage.getItem('earthLang') || 'en'] || translations['en'];
+        const t = TRANSLATIONS[sessionStorage.getItem('selectedLang') || 'en'] || TRANSLATIONS['en'];
         document.getElementById('authBtn').innerText = t.logout;
         document.getElementById('authBtn').onclick = handleLogout;
         logoutBtn.style.display = 'flex';
@@ -602,7 +599,7 @@ auth.onAuthStateChanged(user => {
         listenForNotifications(user.uid);
     } else {
         userFavorites = [];
-        const t = translations[localStorage.getItem('earthLang') || 'en'] || translations['en'];
+        const t = TRANSLATIONS[sessionStorage.getItem('selectedLang') || 'en'] || TRANSLATIONS['en'];
         document.getElementById('sideUserName').innerText = t.welcome;
         document.getElementById('headerUserName').innerText = "Guest";
         document.getElementById('userMail').innerText = "";
@@ -634,8 +631,8 @@ function loadProperties() {
 
 function renderAds(ads) {
     const list = document.getElementById('propertyList');
-    const lang = localStorage.getItem('earthLang') || 'en';
-    const t = translations[lang] || translations['en'];
+    const lang = sessionStorage.getItem('selectedLang') || 'en';
+    const t = TRANSLATIONS[lang] || TRANSLATIONS['en'];
     if (ads.length === 0) {
         list.innerHTML = '<center style="margin-top:50px; color:#888;">No properties found.</center>';
         return;
@@ -660,7 +657,7 @@ function renderAds(ads) {
                 <div class="location"><i class="fa-solid fa-location-dot"></i> ${p.location || 'Location not specified'}</div>
                 <div class="btn-group">
                     <button class="btn btn-call" onclick="contact('${p.phone}', 'tel')"><i class="fa fa-phone"></i> ${t.call}</button>
-                    <button class="btn btn-wa" onclick="contact('${p.phone}', 'wa', '${encodeURIComponent(p.title || 'Property')}')"><i class="fa-brands fa-whatsapp"></i> WA</button>
+                    <button class="btn btn-wa" onclick="contact('${p.phone}', 'wa', '${encodeURIComponent(p.title || 'Property')}')"><i class="fa-brands fa-whatsapp"></i> ${t.whatsapp}</button>
                     <button class="btn btn-chat" onclick="location.href='chat.html?to=${p.ownerId}'"><i class="fa-regular fa-comment"></i> ${t.chat}</button>
                 </div>
             </div>
