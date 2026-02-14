@@ -24,25 +24,19 @@
         #chatName { font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         #userStatus { font-size: 11px; color: #e0e0e0; }
         
-        /* Chat Container with Absolute Boundaries */
         .chat-container {
-            position: absolute;
-            top: var(--header-height);
+            position: absolute; top: var(--header-height);
             bottom: calc(var(--input-height) + env(safe-area-inset-bottom));
-            left: 0; right: 0;
-            overflow-y: auto; -webkit-overflow-scrolling: touch;
+            left: 0; right: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
             padding: 10px; display: flex; flex-direction: column;
         }
         
-        /* Pull to Refresh Loader */
         .refresh-loader {
             position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
             width: 40px; height: 40px; background: white; border-radius: 50%;
             box-shadow: 0 3px 10px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center;
             z-index: 999; opacity: 0; transition: top 0.3s ease, opacity 0.3s ease;
         }
-        .refresh-loader svg { width: 25px; height: 25px; }
-        .refresh-loader circle { fill: none; stroke: var(--primary); stroke-width: 4; stroke-linecap: round; stroke-dasharray: 90, 150; }
 
         #chatBox { display: flex; flex-direction: column; gap: 10px; width: 100%; }
 
@@ -52,6 +46,9 @@
         .msg-footer { display: flex; align-items: center; justify-content: flex-end; gap: 4px; font-size: 10px; color: #777; margin-top: 2px; }
         .tick-blue { color: #34B7F1; }
         
+        /* Image Style */
+        .msg img { max-width: 100%; border-radius: 8px; cursor: pointer; display: block; margin-bottom: 5px; }
+
         .input-area { 
             position: absolute; bottom: 0; left: 0; right: 0;
             height: calc(var(--input-height) + env(safe-area-inset-bottom));
@@ -62,19 +59,24 @@
         .input-area input { flex: 1; border: none; padding: 10px 16px; border-radius: 22px; outline: none; font-size: 15px; background: white; }
         .send-btn { background: var(--primary); color: white; border: none; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 
-        /* Dropdown & Modals */
+        /* Modals & UI */
         .dropdown { display: none; position: absolute; right: 15px; top: 55px; background: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); min-width: 150px; z-index: 2000; overflow: hidden;}
         .dropdown div { padding: 12px 15px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #eee; color: #333; }
         
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 3000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 3000; display: none; align-items: center; justify-content: center; padding: 20px; }
         .modal.active { display: flex; }
         .modal-content { background: white; border-radius: 15px; padding: 20px; width: 100%; max-width: 320px; }
-        .report-option { padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
         
-        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
-        .btn-group button { flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
-        .btn-confirm { background: #d32f2f; color: white; }
-        .btn-cancel { background: #eee; color: #333; }
+        /* Report Extra Style */
+        .report-option { padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 8px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+        .report-option.selected { border-color: var(--primary); background: #e8f5e9; }
+        #reportDetails { width: 100%; height: 80px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; margin-top: 10px; font-family: inherit; resize: none; display: none; }
+
+        /* Full Screen Preview */
+        #previewImg { max-width: 100%; max-height: 80vh; border-radius: 8px; }
+
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-group button { flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: bold; }
         
         .spinner { animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -83,52 +85,61 @@
 <body>
 
 <header>
-    <div onclick="history.back()" style="cursor:pointer; padding:5px;"><i class="fa fa-arrow-left"></i></div>
+    <div onclick="history.back()" style="padding:5px;"><i class="fa fa-arrow-left"></i></div>
     <div class="user-info">
         <div id="chatName">Loading...</div>
         <div id="userStatus">Offline</div>
     </div>
     <div style="position:relative;">
-        <i class="fa fa-ellipsis-v" onclick="toggleMenu(event)" style="cursor:pointer; padding:10px;"></i>
+        <i class="fa fa-ellipsis-v" onclick="toggleMenu(event)" style="padding:10px; cursor:pointer;"></i>
         <div id="menuDropdown" class="dropdown">
             <div onclick="showReportModal()">Report User</div>
-            <div id="blockBtn" onclick="showBlockModal()" style="color:red;">Block User</div>
+            <div onclick="showBlockModal()" style="color:red;">Block User</div>
         </div>
     </div>
 </header>
 
 <div class="chat-container" id="chatContainer">
-    <div class="refresh-loader" id="refreshLoader">
-        <svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="20"></circle></svg>
-    </div>
+    <div class="refresh-loader" id="refreshLoader"><svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#2e7d32" stroke-width="4"></circle></svg></div>
     <div id="chatBox"></div>
 </div>
 
 <div class="input-area">
-    <label for="photoInput" style="cursor:pointer; padding:5px;"><i class="fa fa-camera" id="camIcon" style="font-size:22px; color:#555;"></i></label>
+    <label for="photoInput"><i class="fa fa-camera" id="camIcon" style="font-size:22px; color:#555; padding:5px;"></i></label>
     <input type="file" id="photoInput" accept="image/*" hidden onchange="uploadPhoto(this)">
     <input type="text" id="msgInput" placeholder="Type a message..." autocomplete="off">
     <button class="send-btn" onclick="sendMsg()"><i class="fa fa-paper-plane"></i></button>
 </div>
 
+<div class="modal" id="imgModal" onclick="closeModal('imgModal')">
+    <img id="previewImg" src="">
+</div>
+
 <div class="modal" id="blockModal">
     <div class="modal-content">
-        <h3 style="margin-bottom:10px;">Block <span id="blockTargetName">User</span>?</h3>
-        <p style="color:#666; font-size:14px;">They won't be able to message you anymore.</p>
+        <h3>Block <span id="blockTargetName">User</span>?</h3>
+        <p style="font-size:14px; color:#666; margin:10px 0;">They won't be able to message you.</p>
         <div class="btn-group">
-            <button class="btn-cancel" onclick="closeModal('blockModal')">No</button>
-            <button class="btn-confirm" onclick="confirmBlock()">Yes, Block</button>
+            <button onclick="closeModal('blockModal')" style="background:#eee;">No</button>
+            <button onclick="confirmBlock()" style="background:#d32f2f; color:white;">Yes, Block</button>
         </div>
     </div>
 </div>
 
 <div class="modal" id="reportModal">
     <div class="modal-content">
-        <h3 style="margin-bottom:15px; color:var(--primary)">Report User</h3>
-        <div class="report-option" onclick="submitReport('Spam')"><i class="fa fa-ban"></i> Spam</div>
-        <div class="report-option" onclick="submitReport('Abusive')"><i class="fa fa-warning"></i> Abusive</div>
-        <div class="report-option" onclick="submitReport('Scam')"><i class="fa fa-money-bill"></i> Scam/Fraud</div>
-        <button onclick="closeModal('reportModal')" style="width:100%; padding:10px; border:none; background:#eee; border-radius:8px; margin-top:5px;">Cancel</button>
+        <h3>Report User</h3>
+        <p style="font-size:12px; color:#777; margin-bottom:10px;">Select a reason and provide details.</p>
+        <div id="reportOptions">
+            <div class="report-option" onclick="selectReportReason(this, 'Spam')">Spam</div>
+            <div class="report-option" onclick="selectReportReason(this, 'Abusive')">Abusive</div>
+            <div class="report-option" onclick="selectReportReason(this, 'Scam')">Scam/Fraud</div>
+        </div>
+        <textarea id="reportDetails" placeholder="Tell us more about the issue..."></textarea>
+        <div class="btn-group">
+            <button onclick="closeModal('reportModal')" style="background:#eee;">Cancel</button>
+            <button onclick="confirmReport()" id="submitReportBtn" style="background:var(--primary); color:white; opacity:0.5;" disabled>Submit</button>
+        </div>
     </div>
 </div>
 
@@ -145,55 +156,31 @@ const auth = firebase.auth();
 const CLOUD_NAME = "dnkhurnbv", UPLOAD_PRESET = "earth_property";
 const urlParams = new URLSearchParams(window.location.search);
 const partnerId = urlParams.get('to');
-let currentUserId = "", partnerName = "", chatListener = null;
+let currentUserId = "", partnerName = "", selectedReason = "";
 
 auth.onAuthStateChanged(user => {
     if (!user || !partnerId) { location.href = 'index.html'; return; }
     currentUserId = user.uid;
-    db.collection("users").doc(currentUserId).update({ status: "Online", lastSeen: firebase.firestore.FieldValue.serverTimestamp() });
+    db.collection("users").doc(currentUserId).update({ status: "Online" });
     loadPartnerInfo();
     listenMessages();
     setupPullToRefresh();
 });
 
-// ✅ Pull to Refresh Logic (Wapas add kiya)
-function setupPullToRefresh() {
-    const container = document.getElementById('chatContainer');
-    const loader = document.getElementById('refreshLoader');
-    let startY = 0, pulling = false;
-
-    container.addEventListener('touchstart', (e) => { if (container.scrollTop <= 0) { startY = e.touches[0].clientY; pulling = true; } });
-    container.addEventListener('touchmove', (e) => {
-        if (!pulling || container.scrollTop > 0) return;
-        let diff = (e.touches[0].clientY - startY) * 0.4;
-        if (diff > 0) {
-            loader.style.opacity = '1';
-            loader.style.top = Math.min(diff - 50, 20) + 'px';
-            loader.style.transform = `translateX(-50%) rotate(${diff*2}deg)`;
-        }
-    });
-    container.addEventListener('touchend', () => {
-        loader.style.top = '-60px'; loader.style.opacity = '0';
-        if (pulling) location.reload();
-        pulling = false;
-    });
-}
-
 function loadPartnerInfo() {
     db.collection("users").doc(partnerId).onSnapshot(doc => {
         if(doc.exists) {
-            const data = doc.data();
-            partnerName = data.name || "User";
+            partnerName = doc.data().name || "User";
             document.getElementById('chatName').innerText = partnerName;
             document.getElementById('blockTargetName').innerText = partnerName;
-            document.getElementById('userStatus').innerText = data.status === "Online" ? "Online" : "Offline";
+            document.getElementById('userStatus').innerText = doc.data().status || "Offline";
         }
     });
 }
 
 function listenMessages() {
     const chatId = currentUserId < partnerId ? `${currentUserId}_${partnerId}` : `${partnerId}_${currentUserId}`;
-    chatListener = db.collection("chats").doc(chatId).collection("messages").orderBy("timestamp", "asc").limitToLast(50)
+    db.collection("chats").doc(chatId).collection("messages").orderBy("timestamp", "asc").limitToLast(50)
       .onSnapshot(snap => {
           const chatBox = document.getElementById('chatBox');
           chatBox.innerHTML = "";
@@ -204,8 +191,9 @@ function listenMessages() {
               
               const time = m.timestamp ? new Date(m.timestamp.seconds * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "...";
               let ticks = (type === 'sent') ? `<i class="fa fa-check${m.status==='read' ? '-double tick-blue' : ''}"></i>` : '';
-              let content = m.image ? `<img src="${m.image}" style="max-width:100%; border-radius:8px;">` : `<div>${m.text}</div>`;
               
+              // Photo Click logic added here
+              let content = m.image ? `<img src="${m.image}" onclick="openImagePreview('${m.image}')">` : `<div>${m.text}</div>`;
               chatBox.innerHTML += `<div class="msg ${type}">${content}<div class="msg-footer">${time} ${ticks}</div></div>`;
           });
           document.getElementById('chatContainer').scrollTop = document.getElementById('chatContainer').scrollHeight;
@@ -216,7 +204,6 @@ async function sendMsg(img = null) {
     const input = document.getElementById('msgInput');
     if (!input.value.trim() && !img) return;
     const chatId = currentUserId < partnerId ? `${currentUserId}_${partnerId}` : `${partnerId}_${currentUserId}`;
-    
     await db.collection("chats").doc(chatId).collection("messages").add({
         senderId: currentUserId, text: input.value, image: img, status: 'unread', timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -234,25 +221,48 @@ async function uploadPhoto(el) {
     document.getElementById('camIcon').className = "fa fa-camera";
 }
 
-// UI Functions
-function toggleMenu(e) { e.stopPropagation(); const d = document.getElementById('menuDropdown'); d.style.display = d.style.display === 'block' ? 'none' : 'block'; }
-document.addEventListener('click', () => document.getElementById('menuDropdown').style.display = 'none');
+// UI & Logic Functions
+function openImagePreview(url) {
+    document.getElementById('previewImg').src = url;
+    document.getElementById('imgModal').classList.add('active');
+}
 
-function showBlockModal() { document.getElementById('blockModal').classList.add('active'); }
-function showReportModal() { document.getElementById('reportModal').classList.add('active'); }
-function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function selectReportReason(el, reason) {
+    document.querySelectorAll('.report-option').forEach(opt => opt.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedReason = reason;
+    document.getElementById('reportDetails').style.display = 'block';
+    document.getElementById('submitReportBtn').disabled = false;
+    document.getElementById('submitReportBtn').style.opacity = '1';
+}
+
+async function confirmReport() {
+    const details = document.getElementById('reportDetails').value;
+    await db.collection("reports").add({
+        reporter: currentUserId, reported: partnerId, reason: selectedReason, details: details, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    alert("Report submitted successfully.");
+    closeModal('reportModal');
+}
 
 async function confirmBlock() {
     await db.collection("users").doc(currentUserId).update({ blockedUsers: firebase.firestore.FieldValue.arrayUnion(partnerId) });
-    alert(partnerName + " Blocked");
+    alert("User blocked.");
     closeModal('blockModal');
 }
 
-async function submitReport(reason) {
-    await db.collection("reports").add({ reporter: currentUserId, reported: partnerId, reason: reason, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
-    alert("User reported for " + reason);
-    closeModal('reportModal');
+function setupPullToRefresh() {
+    const container = document.getElementById('chatContainer');
+    let startY = 0;
+    container.addEventListener('touchstart', (e) => { startY = e.touches[0].clientY; });
+    container.addEventListener('touchend', (e) => { if(e.changedTouches[0].clientY - startY > 100 && container.scrollTop <= 0) location.reload(); });
 }
+
+function toggleMenu(e) { e.stopPropagation(); const d = document.getElementById('menuDropdown'); d.style.display = d.style.display === 'block' ? 'none' : 'block'; }
+document.addEventListener('click', () => { if(document.getElementById('menuDropdown')) document.getElementById('menuDropdown').style.display = 'none'; });
+function showBlockModal() { document.getElementById('blockModal').classList.add('active'); }
+function showReportModal() { document.getElementById('reportModal').classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 </script>
 </body>
 </html>
