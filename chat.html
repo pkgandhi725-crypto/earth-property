@@ -65,15 +65,50 @@
         
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 3000; display: none; align-items: center; justify-content: center; padding: 20px; }
         .modal.active { display: flex; }
-        .modal-content { background: white; border-radius: 15px; padding: 20px; width: 100%; max-width: 320px; }
+        .modal-content { background: white; border-radius: 15px; padding: 20px; width: 100%; max-width: 320px; max-height: 90vh; overflow-y: auto; }
         
         /* Report Extra Style */
         .report-option { padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 8px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
         .report-option.selected { border-color: var(--primary); background: #e8f5e9; }
         #reportDetails { width: 100%; height: 80px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; margin-top: 10px; font-family: inherit; resize: none; display: none; }
 
-        /* Full Screen Preview */
-        #previewImg { max-width: 100%; max-height: 80vh; border-radius: 8px; }
+        /* Full Screen Preview with Zoom */
+        #imgModal { 
+            cursor: zoom-out; 
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        #previewImg { 
+            max-width: 100%; 
+            max-height: 80vh; 
+            border-radius: 8px; 
+            transition: transform 0.3s ease; 
+            cursor: zoom-in;
+            display: block;
+            margin: auto;
+        }
+        #previewImg.zoomed { 
+            transform: scale(2); 
+            cursor: zoom-out; 
+            max-width: none; 
+            max-height: none;
+        }
+        
+        .zoom-hint {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .zoom-hint.show { opacity: 1; }
 
         .btn-group { display: flex; gap: 10px; margin-top: 15px; }
         .btn-group button { flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: bold; }
@@ -111,8 +146,9 @@
     <button class="send-btn" onclick="sendMsg()"><i class="fa fa-paper-plane"></i></button>
 </div>
 
-<div class="modal" id="imgModal" onclick="closeModal('imgModal')">
-    <img id="previewImg" src="">
+<div class="modal" id="imgModal" onclick="closeImagePreview(event)">
+    <img id="previewImg" src="" onclick="toggleZoom(event)">
+    <div class="zoom-hint" id="zoomHint">Tap to zoom</div>
 </div>
 
 <div class="modal" id="blockModal">
@@ -131,11 +167,24 @@
         <h3>Report User</h3>
         <p style="font-size:12px; color:#777; margin-bottom:10px;">Select a reason and provide details.</p>
         <div id="reportOptions">
-            <div class="report-option" onclick="selectReportReason(this, 'Spam')">Spam</div>
-            <div class="report-option" onclick="selectReportReason(this, 'Abusive')">Abusive</div>
-            <div class="report-option" onclick="selectReportReason(this, 'Scam')">Scam/Fraud</div>
+            <div class="report-option" onclick="selectReportReason(this, 'Spam')">
+                <i class="fa fa-exclamation-circle"></i>
+                <span>Spam</span>
+            </div>
+            <div class="report-option" onclick="selectReportReason(this, 'Abusive')">
+                <i class="fa fa-user-slash"></i>
+                <span>Abusive Behavior</span>
+            </div>
+            <div class="report-option" onclick="selectReportReason(this, 'Scam')">
+                <i class="fa fa-shield-alt"></i>
+                <span>Scam/Fraud</span>
+            </div>
+            <div class="report-option" onclick="selectReportReason(this, 'Other')">
+                <i class="fa fa-ellipsis-h"></i>
+                <span>Other</span>
+            </div>
         </div>
-        <textarea id="reportDetails" placeholder="Tell us more about the issue..."></textarea>
+        <textarea id="reportDetails" placeholder="Please describe the issue in detail..."></textarea>
         <div class="btn-group">
             <button onclick="closeModal('reportModal')" style="background:#eee;">Cancel</button>
             <button onclick="confirmReport()" id="submitReportBtn" style="background:var(--primary); color:white; opacity:0.5;" disabled>Submit</button>
@@ -192,7 +241,7 @@ function listenMessages() {
               const time = m.timestamp ? new Date(m.timestamp.seconds * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "...";
               let ticks = (type === 'sent') ? `<i class="fa fa-check${m.status==='read' ? '-double tick-blue' : ''}"></i>` : '';
               
-              // Photo Click logic added here
+              // Photo Click logic with zoom
               let content = m.image ? `<img src="${m.image}" onclick="openImagePreview('${m.image}')">` : `<div>${m.text}</div>`;
               chatBox.innerHTML += `<div class="msg ${type}">${content}<div class="msg-footer">${time} ${ticks}</div></div>`;
           });
@@ -221,33 +270,104 @@ async function uploadPhoto(el) {
     document.getElementById('camIcon').className = "fa fa-camera";
 }
 
-// UI & Logic Functions
+// Image Preview with Zoom Functionality
 function openImagePreview(url) {
-    document.getElementById('previewImg').src = url;
-    document.getElementById('imgModal').classList.add('active');
+    const img = document.getElementById('previewImg');
+    const modal = document.getElementById('imgModal');
+    const hint = document.getElementById('zoomHint');
+    
+    img.src = url;
+    img.classList.remove('zoomed');
+    modal.classList.add('active');
+    
+    // Show hint briefly
+    setTimeout(() => {
+        hint.classList.add('show');
+        setTimeout(() => hint.classList.remove('show'), 2000);
+    }, 300);
 }
 
+function toggleZoom(e) {
+    e.stopPropagation();
+    const img = document.getElementById('previewImg');
+    img.classList.toggle('zoomed');
+}
+
+function closeImagePreview(e) {
+    if (e.target.id === 'imgModal') {
+        const img = document.getElementById('previewImg');
+        img.classList.remove('zoomed');
+        document.getElementById('imgModal').classList.remove('active');
+    }
+}
+
+// Report Modal Functions
 function selectReportReason(el, reason) {
     document.querySelectorAll('.report-option').forEach(opt => opt.classList.remove('selected'));
     el.classList.add('selected');
     selectedReason = reason;
-    document.getElementById('reportDetails').style.display = 'block';
-    document.getElementById('submitReportBtn').disabled = false;
-    document.getElementById('submitReportBtn').style.opacity = '1';
+    
+    const detailsBox = document.getElementById('reportDetails');
+    const submitBtn = document.getElementById('submitReportBtn');
+    
+    detailsBox.style.display = 'block';
+    detailsBox.value = '';
+    
+    // For "Other", make details mandatory
+    if (reason === 'Other') {
+        detailsBox.placeholder = "Please describe the issue in detail (required)...";
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.5';
+        
+        // Enable submit only when user types something
+        detailsBox.oninput = function() {
+            if (this.value.trim().length > 10) {
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+            } else {
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.5';
+            }
+        };
+    } else {
+        detailsBox.placeholder = "Provide additional details (optional)...";
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+        detailsBox.oninput = null;
+    }
 }
 
 async function confirmReport() {
-    const details = document.getElementById('reportDetails').value;
+    const details = document.getElementById('reportDetails').value.trim();
+    
+    // Validation for "Other" reason
+    if (selectedReason === 'Other' && details.length < 10) {
+        alert("Please provide detailed information about the issue.");
+        return;
+    }
+    
     await db.collection("reports").add({
-        reporter: currentUserId, reported: partnerId, reason: selectedReason, details: details, timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        reporter: currentUserId, 
+        reported: partnerId, 
+        reason: selectedReason, 
+        details: details, 
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
-    alert("Report submitted successfully.");
+    
+    alert("Report submitted successfully. We'll review it soon.");
+    
+    // Reset modal
+    selectedReason = "";
+    document.querySelectorAll('.report-option').forEach(opt => opt.classList.remove('selected'));
+    document.getElementById('reportDetails').value = '';
+    document.getElementById('reportDetails').style.display = 'none';
+    
     closeModal('reportModal');
 }
 
 async function confirmBlock() {
     await db.collection("users").doc(currentUserId).update({ blockedUsers: firebase.firestore.FieldValue.arrayUnion(partnerId) });
-    alert("User blocked.");
+    alert("User blocked successfully.");
     closeModal('blockModal');
 }
 
@@ -258,11 +378,40 @@ function setupPullToRefresh() {
     container.addEventListener('touchend', (e) => { if(e.changedTouches[0].clientY - startY > 100 && container.scrollTop <= 0) location.reload(); });
 }
 
-function toggleMenu(e) { e.stopPropagation(); const d = document.getElementById('menuDropdown'); d.style.display = d.style.display === 'block' ? 'none' : 'block'; }
-document.addEventListener('click', () => { if(document.getElementById('menuDropdown')) document.getElementById('menuDropdown').style.display = 'none'; });
-function showBlockModal() { document.getElementById('blockModal').classList.add('active'); }
-function showReportModal() { document.getElementById('reportModal').classList.add('active'); }
-function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function toggleMenu(e) { 
+    e.stopPropagation(); 
+    const d = document.getElementById('menuDropdown'); 
+    d.style.display = d.style.display === 'block' ? 'none' : 'block'; 
+}
+
+document.addEventListener('click', () => { 
+    const menu = document.getElementById('menuDropdown');
+    if(menu) menu.style.display = 'none'; 
+});
+
+function showBlockModal() { 
+    document.getElementById('menuDropdown').style.display = 'none';
+    document.getElementById('blockModal').classList.add('active'); 
+}
+
+function showReportModal() { 
+    document.getElementById('menuDropdown').style.display = 'none';
+    document.getElementById('reportModal').classList.add('active'); 
+}
+
+function closeModal(id) { 
+    document.getElementById(id).classList.remove('active'); 
+    
+    // Reset report modal when closed
+    if (id === 'reportModal') {
+        selectedReason = "";
+        document.querySelectorAll('.report-option').forEach(opt => opt.classList.remove('selected'));
+        document.getElementById('reportDetails').value = '';
+        document.getElementById('reportDetails').style.display = 'none';
+        document.getElementById('submitReportBtn').disabled = true;
+        document.getElementById('submitReportBtn').style.opacity = '0.5';
+    }
+}
 </script>
 </body>
 </html>
