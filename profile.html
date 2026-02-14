@@ -44,13 +44,14 @@ input:disabled{background:#f5f5f5;color:#666;}
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+<script src="translations.js"></script>
 
 </head>
 <body>
 
 <header>
- <h1>👤 My Profile</h1>
- <button class="back-btn" onclick="goHome()">🏠 Home</button>
+ <h1 id="headerTitle">👤 My Profile</h1>
+ <button class="back-btn" onclick="goHome()" id="homeBtn">🏠 Home</button>
 </header>
 
 <div class="cover">
@@ -60,7 +61,7 @@ input:disabled{background:#f5f5f5;color:#666;}
 
 <div class="profile-pic">
  <img id="profileImg" src="https://via.placeholder.com/110/2e7d32/ffffff?text=👤">
- <button class="edit-btn" onclick="document.getElementById('profileInput').click()">✏️ Edit</button>
+ <button class="edit-btn" onclick="document.getElementById('profileInput').click()" id="editPhotoBtn">✏️ Edit</button>
  <input type="file" id="profileInput" accept="image/*" hidden>
 </div>
 
@@ -91,11 +92,28 @@ const db=firebase.firestore();
 
 let uid=null;
 
-// ✅ Cloudinary FREE TIER config
+// Get current language and translations
+const currentLang = sessionStorage.getItem('selectedLang') || 'en';
+const t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+
+// Apply translations
+function applyTranslations() {
+    document.getElementById('headerTitle').innerText = '👤 ' + t.myProfileTitle;
+    document.getElementById('homeBtn').innerText = '🏠 ' + t.home;
+    document.getElementById('editPhotoBtn').innerText = '✏️ ' + t.editBtn;
+    document.getElementById('name').placeholder = t.yourName;
+    document.getElementById('phone').placeholder = t.phoneNumber;
+    document.getElementById('email').placeholder = t.email;
+    document.getElementById('saveBtn').innerText = '💾 ' + t.saveProfile;
+}
+
+applyTranslations();
+
+// Cloudinary FREE TIER config
 const CLOUD_NAME = "dnkhurnbv";
 const UPLOAD_PRESET = "earth_property";
 
-// 🔥 Upload to Cloudinary + Progress
+// Upload to Cloudinary + Progress
 async function uploadToCloudinary(file, isCover=false){
  const previewImg = isCover ? document.getElementById('coverImg') : document.getElementById('profileImg');
  previewImg.src = "https://i.imgur.com/8Km9tLL.gif"; // Loading spinner
@@ -120,7 +138,7 @@ async function uploadToCloudinary(file, isCover=false){
  }
 }
 
-// 🔐 Auth + Load Profile
+// Auth + Load Profile
 auth.onAuthStateChanged(async user=>{
  if(!user){
   showStatus("Please login first", "error");
@@ -144,7 +162,7 @@ auth.onAuthStateChanged(async user=>{
  }
 });
 
-// 🖼️ Profile Photo Upload
+// Profile Photo Upload
 document.getElementById('profileInput').onchange = async (e)=>{
  const file = e.target.files[0];
  if(!file || !uid) return;
@@ -159,7 +177,7 @@ document.getElementById('profileInput').onchange = async (e)=>{
  }
 };
 
-// 🖼️ Cover Photo Upload
+// Cover Photo Upload
 document.getElementById('coverImg').onclick = ()=>document.getElementById('coverInput').click();
 document.getElementById('coverInput').onchange = async (e)=>{
  const file = e.target.files[0];
@@ -175,7 +193,7 @@ document.getElementById('coverInput').onchange = async (e)=>{
  }
 };
 
-// 💾 Save Profile Data
+// Save Profile Data
 async function saveProfile(){
  const saveBtn = document.getElementById('saveBtn');
  const name = document.getElementById('name').value.trim();
@@ -203,11 +221,10 @@ async function saveProfile(){
   console.error("Save error:", e);
  }finally{
   saveBtn.disabled = false;
-  saveBtn.textContent = "💾 Save Profile";
+  saveBtn.textContent = "💾 " + t.saveProfile;
  }
 }
 
-// 🔥 MISSING FUNCTIONS ADD KIYE (YEH PROBLEM THI!)
 function showStatus(msg, type){
  const status = document.getElementById('statusMsg');
  status.textContent = msg;
@@ -220,7 +237,7 @@ function goHome(){
  window.location.href='index.html';
 }
 
-// 📱 PWA Ready
+// PWA Ready
 if("serviceWorker" in navigator){
  navigator.serviceWorker.register("/earth-property/sw.js").catch(console.log);
 }
