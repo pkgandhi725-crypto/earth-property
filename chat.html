@@ -72,43 +72,32 @@
         .report-option.selected { border-color: var(--primary); background: #e8f5e9; }
         #reportDetails { width: 100%; height: 80px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; margin-top: 10px; font-family: inherit; resize: none; display: none; }
 
-        /* Full Screen Preview with Zoom */
+        /* Full Screen Preview with Pinch Zoom */
         #imgModal { 
-            cursor: zoom-out; 
+            cursor: pointer;
+            overflow: hidden;
+            touch-action: none;
+        }
+        
+        .img-wrapper {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             overflow: auto;
             -webkit-overflow-scrolling: touch;
         }
+        
         #previewImg { 
             max-width: 100%; 
             max-height: 80vh; 
-            border-radius: 8px; 
-            transition: transform 0.3s ease; 
-            cursor: zoom-in;
+            border-radius: 8px;
             display: block;
-            margin: auto;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
         }
-        #previewImg.zoomed { 
-            transform: scale(2); 
-            cursor: zoom-out; 
-            max-width: none; 
-            max-height: none;
-        }
-        
-        .zoom-hint {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
-        }
-        .zoom-hint.show { opacity: 1; }
 
         .btn-group { display: flex; gap: 10px; margin-top: 15px; }
         .btn-group button { flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: bold; }
@@ -147,8 +136,9 @@
 </div>
 
 <div class="modal" id="imgModal" onclick="closeImagePreview(event)">
-    <img id="previewImg" src="" onclick="toggleZoom(event)">
-    <div class="zoom-hint" id="zoomHint">Tap to zoom</div>
+    <div class="img-wrapper" id="imgWrapper">
+        <img id="previewImg" src="">
+    </div>
 </div>
 
 <div class="modal" id="blockModal">
@@ -270,34 +260,100 @@ async function uploadPhoto(el) {
     document.getElementById('camIcon').className = "fa fa-camera";
 }
 
-// Image Preview with Zoom Functionality
+// Image Preview with Pinch-to-Zoom Functionality
+let scale = 1;
+let panning = false;
+let pointX = 0;
+let pointY = 0;
+let start = { x: 0, y: 0 };
+
 function openImagePreview(url) {
     const img = document.getElementById('previewImg');
     const modal = document.getElementById('imgModal');
-    const hint = document.getElementById('zoomHint');
     
     img.src = url;
-    img.classList.remove('zoomed');
+    scale = 1;
+    img.style.transform = 'scale(1)';
     modal.classList.add('active');
     
-    // Show hint briefly
-    setTimeout(() => {
-        hint.classList.add('show');
-        setTimeout(() => hint.classList.remove('show'), 2000);
-    }, 300);
+    // Add to browser history for back button handling
+    history.pushState({ imagePreview: true }, '');
+    
+    setupPinchZoom();
 }
 
-function toggleZoom(e) {
-    e.stopPropagation();
+function setupPinchZoom() {
     const img = document.getElementById('previewImg');
-    img.classList.toggle('zoomed');
+    const wrapper = document.getElementById('imgWrapper');
+    let initialDistance = 0;
+    let initialScale = 1;
+
+    // Touch events for pinch zoom
+    wrapper.addEventListener('touchstart', function(e) {
+        if (e.touches.length === 2) {
+            e.preventDefault();
+            initialDistance = getDistance(e.touches[0], e.touches[1]);
+            initialScale = scale;
+        } else if (e.touches.length === 1 && scale > 1) {
+            panning = true;
+            start = { x: e.touches[0].clientX - pointX, y: e.touches[0].clientY - pointY };
+        }
+    });
+
+    wrapper.addEventListener('touchmove', function(e) {
+        if (e.touches.length === 2) {
+            e.preventDefault();
+            const currentDistance = getDistance(e.touches[0], e.touches[1]);
+            scale = initialScale * (currentDistance / initialDistance);
+            scale = Math.min(Math.max(1, scale), 4); // Min 1x, Max 4x
+            
+            img.style.transform = `scale(${scale}) translate(${pointX}px, ${pointY}px)`;
+        } else if (panning && e.touches.length === 1) {
+            e.preventDefault();
+            pointX = e.touches[0].clientX - start.x;
+            pointY = e.touches[0].clientY - start.y;
+            img.style.transform = `scale(${scale}) translate(${pointX}px, ${pointY}px)`;
+        }
+    });
+
+    wrapper.addEventListener('touchend', function(e) {
+        if (e.touches.length < 2) {
+            initialDistance = 0;
+        }
+        if (e.touches.length === 0) {
+            panning = false;
+            // Reset if zoomed out completely
+            if (scale <= 1) {
+                scale = 1;
+                pointX = 0;
+                pointY = 0;
+                img.style.transform = 'scale(1)';
+            }
+        }
+    });
+}
+
+function getDistance(touch1, touch2) {
+    const dx = touch1.clientX - touch2.clientX;
+    const dy = touch1.clientY - touch2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
 }
 
 function closeImagePreview(e) {
-    if (e.target.id === 'imgModal') {
+    if (e.target.id === 'imgModal' || e.target.id === 'imgWrapper') {
+        const modal = document.getElementById('imgModal');
         const img = document.getElementById('previewImg');
-        img.classList.remove('zoomed');
-        document.getElementById('imgModal').classList.remove('active');
+        
+        scale = 1;
+        pointX = 0;
+        pointY = 0;
+        img.style.transform = 'scale(1)';
+        modal.classList.remove('active');
+        
+        // Remove from history
+        if (window.history.state && window.history.state.imagePreview) {
+            history.back();
+        }
     }
 }
 
@@ -412,6 +468,19 @@ function closeModal(id) {
         document.getElementById('submitReportBtn').style.opacity = '0.5';
     }
 }
+
+// Handle browser back button for image preview
+window.addEventListener('popstate', function(e) {
+    const imgModal = document.getElementById('imgModal');
+    if (imgModal.classList.contains('active')) {
+        const img = document.getElementById('previewImg');
+        scale = 1;
+        pointX = 0;
+        pointY = 0;
+        img.style.transform = 'scale(1)';
+        imgModal.classList.remove('active');
+    }
+});
 </script>
 </body>
 </html>
