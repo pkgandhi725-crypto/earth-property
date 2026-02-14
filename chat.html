@@ -117,8 +117,8 @@
     <div style="position:relative;">
         <i class="fa fa-ellipsis-v" onclick="toggleMenu(event)" style="padding:10px; cursor:pointer;"></i>
         <div id="menuDropdown" class="dropdown">
-            <div onclick="showReportModal()">Report User</div>
-            <div onclick="showBlockModal()" style="color:red;">Block User</div>
+            <div onclick="showReportModal()" id="reportUserText">Report User</div>
+            <div onclick="showBlockModal()" style="color:red;" id="blockUserText">Block User</div>
         </div>
     </div>
 </header>
@@ -143,40 +143,40 @@
 
 <div class="modal" id="blockModal">
     <div class="modal-content">
-        <h3>Block <span id="blockTargetName">User</span>?</h3>
-        <p style="font-size:14px; color:#666; margin:10px 0;">They won't be able to message you.</p>
+        <h3 id="blockModalTitle">Block <span id="blockTargetName">User</span>?</h3>
+        <p style="font-size:14px; color:#666; margin:10px 0;" id="blockModalMsg">They won't be able to message you.</p>
         <div class="btn-group">
-            <button onclick="closeModal('blockModal')" style="background:#eee;">No</button>
-            <button onclick="confirmBlock()" style="background:#d32f2f; color:white;">Yes, Block</button>
+            <button onclick="closeModal('blockModal')" style="background:#eee;" id="blockNoBtn">No</button>
+            <button onclick="confirmBlock()" style="background:#d32f2f; color:white;" id="blockYesBtn">Yes, Block</button>
         </div>
     </div>
 </div>
 
 <div class="modal" id="reportModal">
     <div class="modal-content">
-        <h3>Report User</h3>
-        <p style="font-size:12px; color:#777; margin-bottom:10px;">Select a reason and provide details.</p>
+        <h3 id="reportModalTitle">Report User</h3>
+        <p style="font-size:12px; color:#777; margin-bottom:10px;" id="reportModalDesc">Select a reason and provide details.</p>
         <div id="reportOptions">
             <div class="report-option" onclick="selectReportReason(this, 'Spam')">
                 <i class="fa fa-exclamation-circle"></i>
-                <span>Spam</span>
+                <span id="reportSpam">Spam</span>
             </div>
             <div class="report-option" onclick="selectReportReason(this, 'Abusive')">
                 <i class="fa fa-user-slash"></i>
-                <span>Abusive Behavior</span>
+                <span id="reportAbusive">Abusive Behavior</span>
             </div>
             <div class="report-option" onclick="selectReportReason(this, 'Scam')">
                 <i class="fa fa-shield-alt"></i>
-                <span>Scam/Fraud</span>
+                <span id="reportScam">Scam/Fraud</span>
             </div>
             <div class="report-option" onclick="selectReportReason(this, 'Other')">
                 <i class="fa fa-ellipsis-h"></i>
-                <span>Other</span>
+                <span id="reportOther">Other</span>
             </div>
         </div>
         <textarea id="reportDetails" placeholder="Please describe the issue in detail..."></textarea>
         <div class="btn-group">
-            <button onclick="closeModal('reportModal')" style="background:#eee;">Cancel</button>
+            <button onclick="closeModal('reportModal')" style="background:#eee;" id="reportCancelBtn">Cancel</button>
             <button onclick="confirmReport()" id="submitReportBtn" style="background:var(--primary); color:white; opacity:0.5;" disabled>Submit</button>
         </div>
     </div>
@@ -185,6 +185,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="translations.js"></script>
 
 <script>
 const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
@@ -197,6 +198,42 @@ const urlParams = new URLSearchParams(window.location.search);
 const partnerId = urlParams.get('to');
 let currentUserId = "", partnerName = "", selectedReason = "";
 
+// Get current language and apply translations
+const currentLang = sessionStorage.getItem('selectedLang') || 'en';
+const t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+
+// Apply translations on page load
+function applyTranslations() {
+    const t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
+    
+    // Update input placeholder
+    document.getElementById('msgInput').placeholder = t.typeMessage;
+    
+    // Update status (will be overwritten by actual status later)
+    document.getElementById('userStatus').innerText = t.offline;
+    
+    // Update dropdown menu
+    document.getElementById('reportUserText').innerText = t.reportUser;
+    document.getElementById('blockUserText').innerText = t.blockUser;
+    
+    // Update block modal
+    document.getElementById('blockModalTitle').innerHTML = t.blockTitle + ' <span id="blockTargetName">' + (partnerName || 'User') + '</span>?';
+    document.getElementById('blockModalMsg').innerText = t.blockMsg;
+    document.getElementById('blockNoBtn').innerText = t.no;
+    document.getElementById('blockYesBtn').innerText = t.yesBlock;
+    
+    // Update report modal
+    document.getElementById('reportModalTitle').innerText = t.reportTitle;
+    document.getElementById('reportModalDesc').innerText = t.reportDesc;
+    document.getElementById('reportSpam').innerText = t.spam;
+    document.getElementById('reportAbusive').innerText = t.abusive;
+    document.getElementById('reportScam').innerText = t.scam;
+    document.getElementById('reportOther').innerText = t.other;
+    document.getElementById('reportDetails').placeholder = t.reportDetails;
+    document.getElementById('reportCancelBtn').innerText = t.cancel;
+    document.getElementById('submitReportBtn').innerText = t.submit;
+}
+
 auth.onAuthStateChanged(user => {
     if (!user || !partnerId) { location.href = 'index.html'; return; }
     currentUserId = user.uid;
@@ -204,6 +241,7 @@ auth.onAuthStateChanged(user => {
     loadPartnerInfo();
     listenMessages();
     setupPullToRefresh();
+    applyTranslations();
 });
 
 function loadPartnerInfo() {
@@ -212,7 +250,11 @@ function loadPartnerInfo() {
             partnerName = doc.data().name || "User";
             document.getElementById('chatName').innerText = partnerName;
             document.getElementById('blockTargetName').innerText = partnerName;
-            document.getElementById('userStatus').innerText = doc.data().status || "Offline";
+            
+            // Update status with translation
+            const status = doc.data().status || "Offline";
+            const statusText = status === "Online" ? t.online : t.offline;
+            document.getElementById('userStatus').innerText = statusText;
         }
     });
 }
@@ -231,7 +273,6 @@ function listenMessages() {
               const time = m.timestamp ? new Date(m.timestamp.seconds * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "...";
               let ticks = (type === 'sent') ? `<i class="fa fa-check${m.status==='read' ? '-double tick-blue' : ''}"></i>` : '';
               
-              // Photo Click logic with zoom
               let content = m.image ? `<img src="${m.image}" onclick="openImagePreview('${m.image}')">` : `<div>${m.text}</div>`;
               chatBox.innerHTML += `<div class="msg ${type}">${content}<div class="msg-footer">${time} ${ticks}</div></div>`;
           });
@@ -276,7 +317,6 @@ function openImagePreview(url) {
     img.style.transform = 'scale(1)';
     modal.classList.add('active');
     
-    // Add to browser history for back button handling
     history.pushState({ imagePreview: true }, '');
     
     setupPinchZoom();
@@ -288,7 +328,6 @@ function setupPinchZoom() {
     let initialDistance = 0;
     let initialScale = 1;
 
-    // Touch events for pinch zoom
     wrapper.addEventListener('touchstart', function(e) {
         if (e.touches.length === 2) {
             e.preventDefault();
@@ -305,7 +344,7 @@ function setupPinchZoom() {
             e.preventDefault();
             const currentDistance = getDistance(e.touches[0], e.touches[1]);
             scale = initialScale * (currentDistance / initialDistance);
-            scale = Math.min(Math.max(1, scale), 4); // Min 1x, Max 4x
+            scale = Math.min(Math.max(1, scale), 4);
             
             img.style.transform = `scale(${scale}) translate(${pointX}px, ${pointY}px)`;
         } else if (panning && e.touches.length === 1) {
@@ -322,7 +361,6 @@ function setupPinchZoom() {
         }
         if (e.touches.length === 0) {
             panning = false;
-            // Reset if zoomed out completely
             if (scale <= 1) {
                 scale = 1;
                 pointX = 0;
@@ -350,14 +388,12 @@ function closeImagePreview(e) {
         img.style.transform = 'scale(1)';
         modal.classList.remove('active');
         
-        // Remove from history
         if (window.history.state && window.history.state.imagePreview) {
             history.back();
         }
     }
 }
 
-// Report Modal Functions
 function selectReportReason(el, reason) {
     document.querySelectorAll('.report-option').forEach(opt => opt.classList.remove('selected'));
     el.classList.add('selected');
@@ -369,13 +405,11 @@ function selectReportReason(el, reason) {
     detailsBox.style.display = 'block';
     detailsBox.value = '';
     
-    // For "Other", make details mandatory
     if (reason === 'Other') {
-        detailsBox.placeholder = "Please describe the issue in detail (required)...";
+        detailsBox.placeholder = t.reportDetails + " (required)";
         submitBtn.disabled = true;
         submitBtn.style.opacity = '0.5';
         
-        // Enable submit only when user types something
         detailsBox.oninput = function() {
             if (this.value.trim().length > 10) {
                 submitBtn.disabled = false;
@@ -386,7 +420,7 @@ function selectReportReason(el, reason) {
             }
         };
     } else {
-        detailsBox.placeholder = "Provide additional details (optional)...";
+        detailsBox.placeholder = t.reportDetails + " (optional)";
         submitBtn.disabled = false;
         submitBtn.style.opacity = '1';
         detailsBox.oninput = null;
@@ -396,7 +430,6 @@ function selectReportReason(el, reason) {
 async function confirmReport() {
     const details = document.getElementById('reportDetails').value.trim();
     
-    // Validation for "Other" reason
     if (selectedReason === 'Other' && details.length < 10) {
         alert("Please provide detailed information about the issue.");
         return;
@@ -410,9 +443,8 @@ async function confirmReport() {
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
     
-    alert("Report submitted successfully. We'll review it soon.");
+    alert(t.reportSuccess);
     
-    // Reset modal
     selectedReason = "";
     document.querySelectorAll('.report-option').forEach(opt => opt.classList.remove('selected'));
     document.getElementById('reportDetails').value = '';
@@ -423,7 +455,7 @@ async function confirmReport() {
 
 async function confirmBlock() {
     await db.collection("users").doc(currentUserId).update({ blockedUsers: firebase.firestore.FieldValue.arrayUnion(partnerId) });
-    alert("User blocked successfully.");
+    alert(t.blockSuccess);
     closeModal('blockModal');
 }
 
@@ -458,7 +490,6 @@ function showReportModal() {
 function closeModal(id) { 
     document.getElementById(id).classList.remove('active'); 
     
-    // Reset report modal when closed
     if (id === 'reportModal') {
         selectedReason = "";
         document.querySelectorAll('.report-option').forEach(opt => opt.classList.remove('selected'));
@@ -469,7 +500,6 @@ function closeModal(id) {
     }
 }
 
-// Handle browser back button for image preview
 window.addEventListener('popstate', function(e) {
     const imgModal = document.getElementById('imgModal');
     if (imgModal.classList.contains('active')) {
