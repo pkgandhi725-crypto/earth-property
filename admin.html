@@ -6,83 +6,465 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
-        header { background: #1b5e20; color: white; padding: 20px; text-align: center; border-radius: 15px; margin-bottom: 20px; }
-        .stats-bar { display: flex; justify-content: space-around; background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; font-weight: bold; color: #2e7d32; align-items: center; }
-        .search-box { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; margin-bottom: 15px; box-sizing: border-box; }
-        .card { background: white; margin-bottom: 15px; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 5px solid #2e7d32; }
-        .btn-group { margin-top: 12px; display: flex; gap: 10px; }
-        button { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .del-btn { background: #ff4757; color: white; }
-        .view-btn { background: #e8f5e9; color: #2e7d32; }
+        header { background: linear-gradient(135deg, #1b5e20, #2e7d32); color: white; padding: 20px; text-align: center; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        
+        .stats-bar { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 15px; 
+            margin-bottom: 20px; 
+        }
+        .stat-card { 
+            background: white; 
+            padding: 15px; 
+            border-radius: 12px; 
+            text-align: center; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+        }
+        .stat-card .number { font-size: 24px; font-weight: 800; color: #2e7d32; }
+        .stat-card .label { font-size: 12px; color: #666; margin-top: 5px; text-transform: uppercase; }
+        
+        .controls { 
+            background: white; 
+            padding: 15px; 
+            border-radius: 12px; 
+            margin-bottom: 20px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+        }
+        .search-box { 
+            width: 100%; 
+            padding: 12px; 
+            border-radius: 10px; 
+            border: 1px solid #ddd; 
+            box-sizing: border-box; 
+            font-size: 14px; 
+            margin-bottom: 12px; 
+        }
+        
+        .filter-row { 
+            display: flex; 
+            gap: 10px; 
+            flex-wrap: wrap; 
+        }
+        .filter-btn { 
+            padding: 8px 15px; 
+            border: 1px solid #ddd; 
+            background: white; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 13px; 
+            font-weight: 600; 
+            transition: 0.2s; 
+        }
+        .filter-btn.active { 
+            background: #2e7d32; 
+            color: white; 
+            border-color: #2e7d32; 
+        }
+        
+        .card { 
+            background: white; 
+            margin-bottom: 15px; 
+            padding: 15px; 
+            border-radius: 12px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+            border-left: 5px solid #2e7d32; 
+        }
+        .card-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: start; 
+            margin-bottom: 10px; 
+        }
+        .card h3 { 
+            margin: 0; 
+            font-size: 16px; 
+            color: #333; 
+        }
+        
+        .status-badge { 
+            padding: 4px 10px; 
+            border-radius: 12px; 
+            font-size: 11px; 
+            font-weight: 700; 
+            text-transform: uppercase; 
+        }
+        .status-active { background: #e8f5e9; color: #2e7d32; }
+        .status-expired { background: #ffebee; color: #d32f2f; }
+        
+        .property-info { 
+            display: grid; 
+            gap: 8px; 
+            margin-top: 10px; 
+            font-size: 13px; 
+        }
+        .info-row { 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            color: #666; 
+        }
+        .info-row i { 
+            width: 16px; 
+            color: #2e7d32; 
+        }
+        .info-row strong { 
+            color: #333; 
+        }
+        
+        .btn-group { 
+            margin-top: 15px; 
+            padding-top: 15px; 
+            border-top: 1px solid #eee; 
+            display: flex; 
+            gap: 10px; 
+        }
+        button { 
+            flex: 1; 
+            padding: 10px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: 700; 
+            font-size: 13px; 
+            transition: 0.2s; 
+        }
+        .del-btn { 
+            background: #ffebee; 
+            color: #d32f2f; 
+        }
+        .del-btn:hover { 
+            background: #d32f2f; 
+            color: white; 
+        }
+        .view-btn { 
+            background: #e3f2fd; 
+            color: #1976d2; 
+        }
+        .view-btn:hover { 
+            background: #1976d2; 
+            color: white; 
+        }
+        .copy-btn { 
+            background: #fff3e0; 
+            color: #f57c00; 
+        }
+        .copy-btn:hover { 
+            background: #f57c00; 
+            color: white; 
+        }
+        
+        .verify-link { 
+            background: linear-gradient(135deg, #ffd700, #ffa500); 
+            color: #000; 
+            padding: 12px 20px; 
+            border-radius: 10px; 
+            text-decoration: none; 
+            font-weight: 700; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 8px; 
+            box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3); 
+        }
+        
+        .empty-state { 
+            text-align: center; 
+            padding: 50px 20px; 
+            color: #999; 
+        }
+        .empty-state i { 
+            font-size: 60px; 
+            margin-bottom: 20px; 
+            opacity: 0.3; 
+        }
+        
+        .loading { 
+            text-align: center; 
+            padding: 50px; 
+            color: #2e7d32; 
+        }
+        .loading i { 
+            font-size: 40px; 
+            animation: spin 1s linear infinite; 
+        }
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
     </style>
 </head>
 <body>
 
 <header>
-    <h2 style="margin:0;">👑 Admin Control</h2>
+    <h2 style="margin:0; display: flex; align-items: center; justify-content: center; gap: 10px;">
+        <i class="fa fa-shield-halved"></i>
+        Admin Control Panel
+    </h2>
 </header>
 
 <div class="stats-bar">
-    <span>Total Ads: <span id="totalAds">0</span></span>
-    <button onclick="location.href='admin-verify.html'" class="view-btn" style="flex:none; padding: 8px 15px;">Verify Requests ➔</button>
+    <div class="stat-card">
+        <div class="number" id="totalAds">0</div>
+        <div class="label">Total Posts</div>
+    </div>
+    <div class="stat-card">
+        <div class="number" id="activeAds" style="color: #2e7d32;">0</div>
+        <div class="label">Active</div>
+    </div>
+    <div class="stat-card">
+        <div class="number" id="expiredAds" style="color: #d32f2f;">0</div>
+        <div class="label">Expired</div>
+    </div>
 </div>
 
-<input type="text" id="searchBox" class="search-box" placeholder="🔍 Search by Title or Location...">
+<div style="text-align: center; margin-bottom: 20px;">
+    <a href="admin-verify.html" class="verify-link">
+        <i class="fa fa-certificate"></i>
+        Verification Requests
+    </a>
+</div>
 
-<div id="list"></div>
+<div class="controls">
+    <input type="text" id="searchBox" class="search-box" placeholder="🔍 Search by Title, Location, Phone, or Owner...">
+    
+    <div class="filter-row">
+        <button class="filter-btn active" onclick="filterByStatus('all')">All Posts</button>
+        <button class="filter-btn" onclick="filterByStatus('active')">Active Only</button>
+        <button class="filter-btn" onclick="filterByStatus('expired')">Expired Only</button>
+    </div>
+</div>
+
+<div id="list" class="loading">
+    <i class="fa fa-spinner fa-spin"></i>
+    <p>Loading properties...</p>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
 import { getFirestore, collection, doc, deleteDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 
-const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
+const firebaseConfig = { 
+    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
+    authDomain: "earth-properties-c3c56.firebaseapp.com", 
+    projectId: "earth-properties-c3c56" 
+};
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
 
-function escape(str) { return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+let allProperties = [];
+let currentFilter = 'all';
+
+function escape(str) { 
+    return String(str || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); 
+}
 
 onAuthStateChanged(auth, (user) => {
-    if (!user || user.uid !== ADMIN_UID) window.location.href = "index.html";
-    else loadProperties();
+    if (!user || user.uid !== ADMIN_UID) {
+        window.location.href = "index.html";
+    } else {
+        loadProperties();
+    }
 });
 
-function loadProperties() {
-    onSnapshot(query(collection(db, "properties")), (snap) => {
+async function loadProperties() {
+    onSnapshot(query(collection(db, "properties")), async (snap) => {
         const list = document.getElementById("list");
-        list.innerHTML = "";
-        document.getElementById("totalAds").innerText = snap.size;
+        
+        if (snap.empty) {
+            list.innerHTML = `
+                <div class="empty-state">
+                    <i class="fa fa-home"></i>
+                    <h3>No Properties Found</h3>
+                    <p>No properties have been posted yet.</p>
+                </div>`;
+            return;
+        }
 
-        snap.forEach(docSnap => {
+        // Store all properties
+        allProperties = [];
+        let activeCount = 0;
+        let expiredCount = 0;
+
+        // Fetch owner info for each property
+        for (const docSnap of snap.docs) {
             const d = docSnap.data();
             const id = docSnap.id;
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `
-                <h3>${escape(d.title)}</h3>
-                <p>${escape(d.location)}</p>
-                <div class="btn-group">
-                    <button class="view-btn" onclick="window.open('property-details.html?id=${id}', '_blank')">View</button>
-                    <button class="del-btn" onclick="window.deletePost('${id}')">Delete</button>
-                </div>`;
-            list.appendChild(card);
-        });
+            
+            // Fetch owner details
+            let ownerName = "Unknown";
+            let ownerEmail = "";
+            try {
+                const ownerDoc = await db.collection("users").doc(d.ownerId).get();
+                if (ownerDoc.exists) {
+                    const ownerData = ownerDoc.data();
+                    ownerName = ownerData.displayName || ownerData.name || ownerData.email?.split('@')[0] || "User";
+                    ownerEmail = ownerData.email || "";
+                }
+            } catch (e) {
+                console.error("Error fetching owner:", e);
+            }
+
+            // Check if expired
+            const isExpired = d.isExpired || false;
+            if (isExpired) expiredCount++;
+            else activeCount++;
+
+            // Format date
+            let postDate = "Unknown";
+            if (d.createdAt) {
+                const date = d.createdAt.toDate();
+                postDate = date.toLocaleDateString('en-IN', { 
+                    day: 'numeric', 
+                    month: 'short', 
+                    year: 'numeric' 
+                });
+            }
+
+            allProperties.push({
+                id,
+                title: d.title || "Untitled",
+                location: d.location || "Location not specified",
+                price: d.price || 0,
+                phone: d.phone || "N/A",
+                purpose: d.purpose || "Sell",
+                ownerName,
+                ownerEmail,
+                postDate,
+                isExpired,
+                searchText: `${d.title} ${d.location} ${d.phone} ${ownerName} ${ownerEmail}`.toLowerCase()
+            });
+        }
+
+        // Update stats
+        document.getElementById("totalAds").innerText = allProperties.length;
+        document.getElementById("activeAds").innerText = activeCount;
+        document.getElementById("expiredAds").innerText = expiredCount;
+
+        // Render properties
+        renderProperties();
     });
 }
 
-document.getElementById('searchBox').addEventListener('input', (e) => {
-    const term = e.target.value.toLowerCase();
-    document.querySelectorAll('.card').forEach(card => {
-        card.style.display = card.textContent.toLowerCase().includes(term) ? 'block' : 'none';
+function renderProperties() {
+    const list = document.getElementById("list");
+    const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+    
+    let filtered = allProperties.filter(p => {
+        // Filter by status
+        if (currentFilter === 'active' && p.isExpired) return false;
+        if (currentFilter === 'expired' && !p.isExpired) return false;
+        
+        // Filter by search
+        if (searchTerm && !p.searchText.includes(searchTerm)) return false;
+        
+        return true;
     });
+
+    if (filtered.length === 0) {
+        list.innerHTML = `
+            <div class="empty-state">
+                <i class="fa fa-search"></i>
+                <h3>No Results Found</h3>
+                <p>Try different search terms or filters.</p>
+            </div>`;
+        return;
+    }
+
+    list.innerHTML = filtered.map(p => `
+        <div class="card">
+            <div class="card-header">
+                <h3>${escape(p.title)}</h3>
+                <span class="status-badge ${p.isExpired ? 'status-expired' : 'status-active'}">
+                    ${p.isExpired ? 'EXPIRED' : 'ACTIVE'}
+                </span>
+            </div>
+            
+            <div class="property-info">
+                <div class="info-row">
+                    <i class="fa fa-location-dot"></i>
+                    <span>${escape(p.location)}</span>
+                </div>
+                <div class="info-row">
+                    <i class="fa fa-indian-rupee-sign"></i>
+                    <strong>₹${Number(p.price).toLocaleString('en-IN')}</strong>
+                    <span style="color: #999; margin-left: 8px;">(${p.purpose})</span>
+                </div>
+                <div class="info-row">
+                    <i class="fa fa-phone"></i>
+                    <span>${escape(p.phone)}</span>
+                </div>
+                <div class="info-row">
+                    <i class="fa fa-user"></i>
+                    <span><strong>${escape(p.ownerName)}</strong></span>
+                    ${p.ownerEmail ? `<span style="color: #999; font-size: 11px;">(${escape(p.ownerEmail)})</span>` : ''}
+                </div>
+                <div class="info-row">
+                    <i class="fa fa-calendar"></i>
+                    <span>Posted: ${p.postDate}</span>
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button class="view-btn" onclick="window.viewProperty('${p.id}')">
+                    <i class="fa fa-eye"></i> View
+                </button>
+                <button class="copy-btn" onclick="window.copyPropertyId('${p.id}')">
+                    <i class="fa fa-copy"></i> Copy ID
+                </button>
+                <button class="del-btn" onclick="window.deletePost('${p.id}', '${escape(p.title)}')">
+                    <i class="fa fa-trash-alt"></i> Delete
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Filter by status
+window.filterByStatus = (status) => {
+    currentFilter = status;
+    
+    // Update button states
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    renderProperties();
+};
+
+// Search functionality
+document.getElementById('searchBox').addEventListener('input', () => {
+    renderProperties();
 });
 
-window.deletePost = async (id) => {
-    if (!confirm("Delete permanently?")) return;
-    try { await deleteDoc(doc(db, "properties", id)); } 
-    catch (e) { alert("Permission Denied!"); }
+// Copy property ID
+window.copyPropertyId = (id) => {
+    navigator.clipboard.writeText(id).then(() => {
+        alert('Property ID copied to clipboard!\n\nID: ' + id);
+    }).catch(err => {
+        prompt('Copy this Property ID:', id);
+    });
+};
+
+// View property
+window.viewProperty = (id) => {
+    // Open index.html with property ID (if you have a detail page, change the URL)
+    window.open(`index.html#${id}`, '_blank');
+};
+
+// Delete property
+window.deletePost = async (id, title) => {
+    if (!confirm(`Delete this property permanently?\n\nTitle: ${title}\n\nThis action cannot be undone.`)) return;
+    
+    try { 
+        await deleteDoc(doc(db, "properties", id));
+        alert("Property deleted successfully!");
+    } catch (e) { 
+        alert("Error: " + e.message); 
+    }
 };
 </script>
 </body>
