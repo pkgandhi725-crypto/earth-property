@@ -145,6 +145,14 @@
             background: #1976d2; 
             color: white; 
         }
+        .edit-btn { 
+            background: #e8f5e9; 
+            color: #2e7d32; 
+        }
+        .edit-btn:hover { 
+            background: #2e7d32; 
+            color: white; 
+        }
         .copy-btn { 
             background: #fff3e0; 
             color: #f57c00; 
@@ -185,11 +193,6 @@
         }
         .loading i { 
             font-size: 40px; 
-            animation: spin 1s linear infinite; 
-        }
-        @keyframes spin { 
-            0% { transform: rotate(0deg); } 
-            100% { transform: rotate(360deg); } 
         }
     </style>
 </head>
@@ -235,7 +238,7 @@
 </div>
 
 <div id="list" class="loading">
-    <i class="fa fa-spinner fa-spin"></i>
+    <i class="fa fa-database"></i>
     <p>Loading properties...</p>
 </div>
 
@@ -411,6 +414,9 @@ function renderProperties() {
                 <button class="view-btn" onclick="window.viewProperty('${p.id}')">
                     <i class="fa fa-eye"></i> View
                 </button>
+                <button class="edit-btn" onclick="window.editProperty('${p.id}')">
+                    <i class="fa fa-edit"></i> Edit
+                </button>
                 <button class="copy-btn" onclick="window.copyPropertyId('${p.id}')">
                     <i class="fa fa-copy"></i> Copy ID
                 </button>
@@ -449,10 +455,150 @@ window.copyPropertyId = (id) => {
     });
 };
 
-// View property
+// View property - Open detail modal
 window.viewProperty = (id) => {
-    // Open index.html with property ID (if you have a detail page, change the URL)
-    window.open(`index.html#${id}`, '_blank');
+    const property = allProperties.find(p => p.id === id);
+    if (!property) return;
+    
+    // Create modal
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.8); z-index: 9999;
+        display: flex; align-items: center; justify-content: center;
+        padding: 20px; box-sizing: border-box;
+    `;
+    
+    modal.innerHTML = `
+        <div style="
+            background: white; 
+            max-width: 600px; 
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border-radius: 15px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+        ">
+            <div style="
+                padding: 20px;
+                border-bottom: 1px solid #eee;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                position: sticky;
+                top: 0;
+                background: white;
+                z-index: 1;
+            ">
+                <h2 style="margin: 0; font-size: 18px;">Property Details</h2>
+                <button onclick="this.closest('[style*=\\'position: fixed\\']').remove()" 
+                    style="
+                        background: none;
+                        border: none;
+                        font-size: 24px;
+                        cursor: pointer;
+                        color: #999;
+                    ">&times;</button>
+            </div>
+            <div style="padding: 20px;">
+                <h3 style="color: #2e7d32; margin-top: 0;">${escape(property.title)}</h3>
+                
+                <div style="display: grid; gap: 15px; margin-top: 20px;">
+                    <div>
+                        <strong style="color: #666; font-size: 12px; text-transform: uppercase;">Status</strong>
+                        <div style="margin-top: 5px;">
+                            <span class="status-badge ${property.isExpired ? 'status-expired' : 'status-active'}">
+                                ${property.isExpired ? 'EXPIRED' : 'ACTIVE'}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <strong style="color: #666; font-size: 12px; text-transform: uppercase;">Price</strong>
+                        <div style="font-size: 20px; font-weight: 800; color: #2e7d32; margin-top: 5px;">
+                            ₹${Number(property.price).toLocaleString('en-IN')}
+                        </div>
+                        <div style="color: #999; font-size: 13px;">Purpose: ${property.purpose}</div>
+                    </div>
+                    
+                    <div>
+                        <strong style="color: #666; font-size: 12px; text-transform: uppercase;">Location</strong>
+                        <div style="margin-top: 5px;">${escape(property.location)}</div>
+                    </div>
+                    
+                    <div>
+                        <strong style="color: #666; font-size: 12px; text-transform: uppercase;">Contact</strong>
+                        <div style="margin-top: 5px;">${escape(property.phone)}</div>
+                    </div>
+                    
+                    <div>
+                        <strong style="color: #666; font-size: 12px; text-transform: uppercase;">Owner</strong>
+                        <div style="margin-top: 5px;">
+                            <div style="font-weight: 600;">${escape(property.ownerName)}</div>
+                            ${property.ownerEmail ? `<div style="color: #999; font-size: 13px;">${escape(property.ownerEmail)}</div>` : ''}
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <strong style="color: #666; font-size: 12px; text-transform: uppercase;">Posted On</strong>
+                        <div style="margin-top: 5px;">${property.postDate}</div>
+                    </div>
+                    
+                    <div>
+                        <strong style="color: #666; font-size: 12px; text-transform: uppercase;">Property ID</strong>
+                        <div style="margin-top: 5px; font-family: monospace; background: #f5f5f5; padding: 8px; border-radius: 5px; font-size: 12px;">
+                            ${property.id}
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 30px; display: flex; gap: 10px;">
+                    <button onclick="window.editProperty('${property.id}')" 
+                        style="
+                            flex: 1;
+                            background: #2e7d32;
+                            color: white;
+                            border: none;
+                            padding: 12px;
+                            border-radius: 8px;
+                            font-weight: 700;
+                            cursor: pointer;
+                        ">
+                        <i class="fa fa-edit"></i> Edit Property
+                    </button>
+                    <button onclick="this.closest('[style*=\\'position: fixed\\']').remove()" 
+                        style="
+                            background: #f5f5f5;
+                            color: #666;
+                            border: none;
+                            padding: 12px 20px;
+                            border-radius: 8px;
+                            font-weight: 700;
+                            cursor: pointer;
+                        ">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Close on outside click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+    });
+};
+
+// Edit property
+window.editProperty = (id) => {
+    // Close modal if open
+    const modal = document.querySelector('[style*="position: fixed"]');
+    if (modal) modal.remove();
+    
+    // Open edit page
+    window.open(`add-property.html?edit=${id}`, '_blank');
 };
 
 // Delete property
