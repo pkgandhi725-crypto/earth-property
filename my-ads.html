@@ -3,330 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Post Property - Earth Property</title>
+    <title>Manage Ads - Earth Property</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary: #2e7d32; --bg: #f8f9fa; --danger: #d32f2f; --accent: #e8f5e9; }
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); padding-bottom: 30px; }
-        header { background: var(--primary); color: white; padding: 15px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; }
-        .container { padding: 20px; max-width: 500px; margin: auto; }
+        :root { --primary: #2e7d32; --bg: #f5f6f7; --danger: #d32f2f; --warning: #ff9800; }
+        body { font-family: 'Segoe UI', system-ui; margin: 0; background: var(--bg); }
+        header { background: var(--primary); color: white; padding: 16px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .container { padding: 15px; max-width: 650px; margin: auto; }
         
-        .form-group { margin-bottom: 18px; position: relative; }
-        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; color: #444; }
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 15px; outline: none; transition: 0.3s; }
-        input:focus { border-color: var(--primary); box-shadow: 0 0 5px rgba(46,125,50,0.2); }
-        
-        /* 5 Photo Grid */
-        .img-upload-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
-        .img-box { aspect-ratio: 1/1; border: 2px dashed #ccc; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #fff; cursor: pointer; }
-        .img-box img { width: 100%; height: 100%; object-fit: cover; position: absolute; z-index: 2; }
-        
-        .remove-btn { position: absolute; top: 5px; right: 5px; background: var(--danger); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; z-index: 10; border: none; cursor: pointer; }
+        /* Stats Summary */
+        .stats-bar { background: white; padding: 15px; border-radius: 18px; margin-bottom: 20px; display: flex; justify-content: space-around; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .stat-item div:first-child { font-size: 20px; font-weight: 800; color: var(--primary); }
+        .stat-item div:last-child { font-size: 11px; color: #666; text-transform: uppercase; }
 
-        .prog-container { width: 80%; height: 6px; background: #eee; border-radius: 10px; overflow: hidden; display: none; z-index: 5; }
-        .prog-bar { height: 100%; background: var(--primary); width: 0%; transition: width 0.2s; }
+        /* Ad Cards */
+        .ad-card { background: white; border-radius: 18px; padding: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); margin-bottom: 20px; border: 1px solid #eee; transition: 0.3s; }
+        .ad-info { display: flex; gap: 15px; }
+        .ad-img { width: 100px; height: 100px; border-radius: 14px; object-fit: cover; background: #f0f0f0; }
         
-        .btn-small { background: #fff; border: 1px solid var(--primary); color: var(--primary); padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; flex: 1; }
-        .btn-small.active { background: var(--primary); color: white; }
-
-        .btn-post { background: var(--primary); color: white; border: none; width: 100%; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 700; margin-top: 25px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3); }
-        .btn-post:disabled { background: #999; cursor: not-allowed; }
-
-        #rentFields { background: var(--accent); padding: 15px; border-radius: 15px; display: none; border: 1px solid #c8e6c9; margin-bottom: 18px; }
+        .ad-details { flex: 1; }
+        .ad-details h4 { margin: 0; font-size: 16px; color: #222; font-weight: 700; }
+        .price { font-size: 18px; font-weight: 800; color: var(--primary); margin: 4px 0; }
+        
+        .status-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; }
+        .active-badge { background: #e8f5e9; color: #2e7d32; }
+        .expired-badge { background: #ffebee; color: #d32f2f; }
+        
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #eee; }
+        button { flex: 1; cursor: pointer; border: none; font-weight: 700; border-radius: 12px; font-size: 13px; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; }
+        
+        .edit-btn { background: #f0f2f5; color: #444; }
+        .renew-btn { background: var(--warning); color: white; }
+        .delete-btn { background: #fff0f0; color: var(--danger); flex: 0.3; }
+        
+        #loader { text-align: center; padding: 50px; color: var(--primary); }
+        .empty-state { text-align: center; padding: 60px 20px; color: #666; }
     </style>
 </head>
 <body>
 
 <header>
-    <div onclick="history.back()" style="cursor:pointer; padding:5px;"><i class="fa fa-arrow-left"></i></div>
-    <div id="pageTitle" style="font-weight: 700; font-size: 18px;">Post Property</div>
+    <div onclick="location.href='index.html'" style="cursor:pointer; padding: 5px;"><i class="fa fa-chevron-left"></i></div>
+    <div style="font-weight: 800; font-size: 19px;" id="headerTitle">My Properties</div>
 </header>
 
 <div class="container">
-    <div class="form-group">
-        <label>Property Title <span id="titleCount" style="float:right; font-size:12px; color:#999;">0/100</span></label>
-        <input type="text" id="title" maxlength="100" placeholder="e.g. 3BHK Flat in City Center">
+    <div class="stats-bar">
+        <div class="stat-item"> <div id="totalCount">0</div> <div id="totalText">Total</div> </div>
+        <div class="stat-item"> <div id="activeCount" style="color:#2e7d32;">0</div> <div id="activeText">Active</div> </div>
+        <div class="stat-item"> <div id="expiredCount" style="color:#d32f2f;">0</div> <div id="expiredText">Expired</div> </div>
     </div>
 
-    <div class="form-group" style="display: flex; gap: 10px;">
-        <div style="flex: 1.2;"><label>Price (₹)</label><input type="number" id="price" placeholder="Amount"></div>
-        <div style="flex: 1;">
-            <label>Purpose</label>
-            <select id="purpose" onchange="toggleRentFields()">
-                <option value="Sell">Sell (180d)</option>
-                <option value="Rent">Rent (30d)</option>
-            </select>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label>Contact Number (WhatsApp)</label>
-        <input type="tel" id="phone" placeholder="10 digit mobile number">
-    </div>
-
-    <div class="form-group">
-        <label>Location Mode</label>
-        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-            <button type="button" class="btn-small active" id="btnManual" onclick="setLocationMode('manual')">Manual</button>
-            <button type="button" class="btn-small" id="btnMap" onclick="setLocationMode('map')">Current GPS</button>
-        </div>
-        <input type="text" id="location" placeholder="Area, City, State">
-    </div>
-
-    <div class="form-group">
-        <label>Property Size</label>
-        <input type="text" id="size" placeholder="e.g. 1200 Sq.Ft / 100 Gaj">
-    </div>
-
-    <div id="rentFields">
-        <div class="form-group">
-            <label>Furnished Status</label>
-            <select id="furnished">
-                <option value="Unfurnished">Unfurnished</option>
-                <option value="Semi-Furnished">Semi-Furnished</option>
-                <option value="Fully-Furnished">Fully-Furnished</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Electricity & Water</label>
-            <select id="bills">
-                <option value="Extra">Extra (As per usage)</option>
-                <option value="Included">Included in Rent</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Advance / Security Deposit</label>
-            <input type="text" id="advance" placeholder="e.g. 2 Months Rent">
-        </div>
-        <div class="form-group">
-            <label>Society Maintenance</label>
-            <select id="maintenance">
-                <option value="Included">Included in Rent</option>
-                <option value="Extra Monthly">Extra Monthly Charge</option>
-                <option value="Not Applicable">Not Applicable</option>
-            </select>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label>Nearby Landmarks (Optional)</label>
-        <input type="text" id="nearby" placeholder="e.g. Near Metro, Hospital">
-    </div>
-
-    <div class="form-group">
-        <label>Description</label>
-        <textarea id="desc" rows="3" placeholder="Features, facilities, etc."></textarea>
-    </div>
-
-    <label>Photos (Max 5)</label>
-    <div class="img-upload-grid">
-        <div class="img-box" id="box0" onclick="triggerUpload(0)"><i class="fa fa-camera" id="icon0"></i><img id="prev0" style="display:none;"><div class="prog-container" id="cont0"><div class="prog-bar" id="bar0"></div></div></div>
-        <div class="img-box" id="box1" onclick="triggerUpload(1)"><i class="fa fa-camera" id="icon1"></i><img id="prev1" style="display:none;"><div class="prog-container" id="cont1"><div class="prog-bar" id="bar1"></div></div></div>
-        <div class="img-box" id="box2" onclick="triggerUpload(2)"><i class="fa fa-camera" id="icon2"></i><img id="prev2" style="display:none;"><div class="prog-container" id="cont2"><div class="prog-bar" id="bar2"></div></div></div>
-        <div class="img-box" id="box3" onclick="triggerUpload(3)"><i class="fa fa-camera" id="icon3"></i><img id="prev3" style="display:none;"><div class="prog-container" id="cont3"><div class="prog-bar" id="bar3"></div></div></div>
-        <div class="img-box" id="box4" onclick="triggerUpload(4)"><i class="fa fa-camera" id="icon4"></i><img id="prev4" style="display:none;"><div class="prog-container" id="cont4"><div class="prog-bar" id="bar4"></div></div></div>
-    </div>
-    
-    <input type="file" id="fileInput" hidden accept="image/*" onchange="handleFile(event)">
-    <button class="btn-post" id="postBtn" onclick="submitProperty()">Post Property</button>
+    <div id="loader"><i class="fa fa-spinner fa-spin fa-2x"></i><p id="loadingText">Loading ads...</p></div>
+    <div id="adList"></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="translations.js"></script>
 
 <script>
 const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-const CLOUD_NAME = "dnkhurnbv"; 
-const UPLOAD_PRESET = "earth_property"; 
+// Get current language
+const currentLang = sessionStorage.getItem('selectedLang') || 'en';
+const t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
 
-let uploadedUrls = [null, null, null, null, null];
-let uploadingCount = 0;
-let activeSlot = 0;
-let currentCoords = { lat: null, lng: null };
+// Apply translations
+function applyTranslations() {
+    document.getElementById('headerTitle').innerText = t.myProperties;
+    document.getElementById('totalText').innerText = t.total;
+    document.getElementById('activeText').innerText = t.active;
+    document.getElementById('expiredText').innerText = t.expired;
+    document.getElementById('loadingText').innerText = t.loadingAds;
+}
 
-const urlParams = new URLSearchParams(window.location.search);
-const editId = urlParams.get('edit');
+applyTranslations();
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
+}
 
 firebase.auth().onAuthStateChanged(user => {
     if (!user) return location.href = 'login.html';
-    if (editId) loadEditData(editId, user.uid);
+    
+    db.collection("properties").where("ownerId", "==", user.uid)
+      .onSnapshot(snapshot => {
+          document.getElementById('loader').style.display = 'none';
+          const adList = document.getElementById('adList');
+          adList.innerHTML = '';
+          
+          let total = 0, active = 0, expired = 0;
+
+          if (snapshot.empty) {
+              adList.innerHTML = `
+                <div class="empty-state">
+                    <i class="fa fa-home fa-4x" style="color:#ddd; margin-bottom:15px;"></i>
+                    <h3>${t.noAds}</h3>
+                    <button onclick="location.href='add-property.html'" style="background:var(--primary); color:white; padding:12px 25px; border-radius:25px; margin-top:10px;">${t.postFirstAd}</button>
+                </div>`;
+          } else {
+              snapshot.forEach(doc => {
+                  total++;
+                  const data = doc.data();
+                  const purpose = data.purpose || 'Sell';
+                  const limit = (purpose === 'Rent' || purpose === 'Lease') ? 30 : 180;
+                  
+                  const baseDate = data.renewedAt ? data.renewedAt.toDate() : (data.createdAt ? data.createdAt.toDate() : new Date());
+                  const expDate = new Date(baseDate);
+                  expDate.setDate(expDate.getDate() + limit);
+                  
+                  const isExp = new Date() > expDate;
+
+                  if (isExp && data.isExpired !== true) {
+                      db.collection("properties").doc(doc.id).update({ isExpired: true });
+                  } else if (!isExp && data.isExpired !== false) {
+                      db.collection("properties").doc(doc.id).update({ isExpired: false });
+                  }
+
+                  isExp ? expired++ : active++;
+                  
+                  const diff = expDate - new Date();
+                  const daysLeft = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+                  
+                  let statusText;
+                  if (isExp) {
+                      statusText = t.expired;
+                  } else if (daysLeft === 0) {
+                      statusText = t.expiringSoon;
+                  } else {
+                      statusText = daysLeft + ' ' + t.daysLeft;
+                  }
+
+                  adList.innerHTML += `
+                  <div class="ad-card" style="${isExp ? 'opacity:0.8;' : ''}">
+                      <div class="ad-info">
+                          <img src="${data.images?.[0] || 'https://via.placeholder.com/150'}" class="ad-img" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
+                          <div class="ad-details">
+                              <h4>${escapeHtml(data.title)}</h4>
+                              <div class="price">₹${Number(data.price || 0).toLocaleString('en-IN')}</div>
+                              <div class="status-badge ${isExp ? 'expired-badge' : 'active-badge'}">
+                                  <i class="fa ${isExp ? 'fa-exclamation-triangle' : 'fa-clock'}"></i> ${statusText}
+                              </div>
+                          </div>
+                      </div>
+                      <div class="btn-group">
+                          <button class="edit-btn" onclick="location.href='add-property.html?edit=${doc.id}'">${t.edit}</button>
+                          ${isExp ? 
+                              `<button class="renew-btn" onclick="renewAd('${doc.id}', this)">${t.renew}</button>` : 
+                              `<button style="background:#f8f9fa; color:#2e7d32; cursor:default; border:1px solid #e8f5e9;">${t.active}</button>`
+                          }
+                          <button class="delete-btn" onclick="deleteAd('${doc.id}')"><i class="fa fa-trash-alt"></i></button>
+                      </div>
+                  </div>`;
+              });
+          }
+          document.getElementById('totalCount').innerText = total;
+          document.getElementById('activeCount').innerText = active;
+          document.getElementById('expiredCount').innerText = expired;
+      });
 });
 
-async function loadEditData(id, uid) {
-    const doc = await db.collection("properties").doc(id).get();
-    if (!doc.exists || doc.data().ownerId !== uid) return history.back();
+async function renewAd(id, btn) {
+    if (!confirm("Renew this ad for another period?")) return;
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
     
-    const data = doc.data();
-    document.getElementById('pageTitle').innerText = "Edit Property";
-    document.getElementById('postBtn').innerText = "Update Property";
-    
-    document.getElementById('title').value = data.title || '';
-    document.getElementById('price').value = data.price || '';
-    document.getElementById('purpose').value = data.purpose || 'Sell';
-    document.getElementById('location').value = data.location || '';
-    document.getElementById('desc').value = data.description || '';
-    document.getElementById('phone').value = data.phone || '';
-    document.getElementById('size').value = data.size || '';
-    document.getElementById('nearby').value = data.nearby || '';
-
-    toggleRentFields();
-    if(data.purpose === 'Rent' && data.rentDetails) {
-        document.getElementById('furnished').value = data.rentDetails.furnished;
-        document.getElementById('bills').value = data.rentDetails.bills;
-        document.getElementById('advance').value = data.rentDetails.advance;
-        document.getElementById('maintenance').value = data.rentDetails.maintenance;
-    }
-    
-    data.images?.forEach((url, i) => {
-        if (i < 5) { uploadedUrls[i] = url; showImage(i, url); }
-    });
-}
-
-function toggleRentFields() {
-    const rentFields = document.getElementById('rentFields');
-    rentFields.style.display = document.getElementById('purpose').value === 'Rent' ? 'block' : 'none';
-}
-
-function setLocationMode(mode) {
-    const locInput = document.getElementById('location');
-    document.getElementById('btnManual').classList.toggle('active', mode === 'manual');
-    document.getElementById('btnMap').classList.toggle('active', mode === 'map');
-
-    if(mode === 'map') {
-        if (navigator.geolocation) {
-            locInput.placeholder = "Locating...";
-            navigator.geolocation.getCurrentPosition(pos => {
-                currentCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                locInput.value = "Pinned via GPS";
-                locInput.readOnly = true;
-            }, () => { alert("GPS failed."); setLocationMode('manual'); });
-        }
-    } else {
-        locInput.value = ""; locInput.readOnly = false;
-        locInput.placeholder = "Area, City, State";
-        currentCoords = { lat: null, lng: null };
-    }
-}
-
-function triggerUpload(slot) { 
-    if (uploadedUrls[slot]) return; 
-    activeSlot = slot; document.getElementById('fileInput').click(); 
-}
-
-function handleFile(e) {
-    const file = e.target.files[0];
-    if(!file) return;
-    const bar = document.getElementById(`bar${activeSlot}`);
-    const cont = document.getElementById(`cont${activeSlot}`);
-    const icon = document.getElementById(`icon${activeSlot}`);
-    
-    cont.style.display = 'block'; icon.style.display = 'none';
-    uploadingCount++; document.getElementById('postBtn').disabled = true;
-
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', UPLOAD_PRESET);
-
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
-    xhr.upload.onprogress = (ev) => bar.style.width = (ev.loaded / ev.total * 100) + '%';
-    xhr.onload = () => {
-        if (xhr.status === 200) {
-            const url = JSON.parse(xhr.responseText).secure_url;
-            uploadedUrls[activeSlot] = url;
-            showImage(activeSlot, url);
-        }
-        cont.style.display = 'none'; uploadingCount--;
-        if(uploadingCount === 0) document.getElementById('postBtn').disabled = false;
-    };
-    xhr.send(formData);
-}
-
-function showImage(slot, url) {
-    const box = document.getElementById(`box${slot}`);
-    document.getElementById(`prev${slot}`).src = url;
-    document.getElementById(`prev${slot}`).style.display = 'block';
-    document.getElementById(`icon${slot}`).style.display = 'none';
-    if(!box.querySelector('.remove-btn')) {
-        const btn = document.createElement('button');
-        btn.className = 'remove-btn'; btn.innerHTML = '×';
-        btn.onclick = (e) => { e.stopPropagation(); removeImage(slot); };
-        box.appendChild(btn);
-    }
-}
-
-function removeImage(slot) {
-    uploadedUrls[slot] = null;
-    document.getElementById(`prev${slot}`).style.display = 'none';
-    document.getElementById(`icon${slot}`).style.display = 'block';
-    const btn = document.getElementById(`box${slot}`).querySelector('.remove-btn');
-    if (btn) btn.remove();
-}
-
-async function submitProperty() {
-    const user = firebase.auth().currentUser;
-    const title = document.getElementById('title').value.trim();
-    const price = Number(document.getElementById('price').value);
-    const phone = document.getElementById('phone').value.trim();
-    const finalImages = uploadedUrls.filter(u => u !== null);
-
-    // FIX 4: GPS overwrite logic
-    if(!document.getElementById('location').readOnly) currentCoords = { lat: null, lng: null };
-
-    // FIX 3: Phone validation
-    if(!/^\d{10}$/.test(phone)) return alert("Enter valid 10-digit phone number");
-    if(!title || price <= 0 || finalImages.length === 0) return alert("Fill all details & add photos");
-
-    const purpose = document.getElementById('purpose').value;
-    const propertyData = {
-        ownerId: user.uid, title, price, phone, purpose,
-        size: document.getElementById('size').value,
-        location: document.getElementById('location').value.trim(),
-        description: document.getElementById('desc').value.trim(),
-        nearby: document.getElementById('nearby').value,
-        images: finalImages,
-        latitude: currentCoords.lat,
-        longitude: currentCoords.lng,
-        status: "active",
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
-
-    if(purpose === 'Rent') {
-        propertyData.rentDetails = {
-            furnished: document.getElementById('furnished').value,
-            bills: document.getElementById('bills').value,
-            advance: document.getElementById('advance').value,
-            maintenance: document.getElementById('maintenance').value
-        };
-    }
-
     try {
-        document.getElementById('postBtn').disabled = true;
-        document.getElementById('postBtn').innerText = "Processing...";
+        await db.collection("properties").doc(id).update({
+            isExpired: false,
+            renewedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        btn.innerHTML = '<i class="fa fa-check"></i> ' + t.renewSuccess.split(' ')[0];
+        btn.style.background = "#4caf50";
+        alert(t.renewSuccess);
+    } catch(e) {
+        alert("Renewal failed!");
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}
 
-        if (editId) {
-            // FIX 1: Edit me createdAt safe hai (overwrite nahi hoga)
-            await db.collection("properties").doc(editId).update(propertyData);
-            alert("Updated! ✓");
-        } else {
-            // FIX 2: Expiry flags
-            const expiry = new Date();
-            expiry.setDate(expiry.getDate() + (purpose === 'Rent' ? 30 : 180));
-            propertyData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-            propertyData.isExpired = false;
-            propertyData.expiryDate = firebase.firestore.Timestamp.fromDate(expiry);
-            await db.collection("properties").add(propertyData);
-            alert("Posted Successfully! 🎉");
-        }
-        window.location.href = "my-ads.html";
-    } catch(e) { 
-        alert(e.message); 
-        document.getElementById('postBtn').disabled = false;
-        document.getElementById('postBtn').innerText = editId ? "Update Property" : "Post Property";
+async function deleteAd(id) {
+    if (confirm("Delete this property permanently? This cannot be undone.")) {
+        try {
+            await db.collection("properties").doc(id).delete();
+        } catch(e) { alert("Error deleting property."); }
     }
 }
 </script>
