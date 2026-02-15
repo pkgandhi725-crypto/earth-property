@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Post Property - Earth Property</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Maps API - REPLACE WITH YOUR API KEY -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places"></script>
     <style>
         :root { --primary: #2e7d32; --bg: #f8f9fa; --danger: #d32f2f; --accent: #e8f5e9; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); padding-bottom: 30px; }
@@ -18,7 +20,7 @@
         
         .section-title { font-size: 16px; font-weight: 700; color: var(--primary); margin: 25px 0 15px; border-bottom: 2px solid var(--accent); padding-bottom: 5px; }
 
-        /* Photo Grid for 5 Images */
+        /* 5 Photo Grid */
         .img-upload-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
         .img-box { aspect-ratio: 1/1; border: 2px dashed #ccc; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #fff; cursor: pointer; }
         .img-box img { width: 100%; height: 100%; object-fit: cover; position: absolute; z-index: 2; }
@@ -34,7 +36,7 @@
         .btn-post { background: var(--primary); color: white; border: none; width: 100%; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 700; margin-top: 25px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3); }
         .btn-post:disabled { background: #999; cursor: not-allowed; }
 
-        #rentFields { background: var(--accent); padding: 15px; border-radius: 15px; display: none; border: 1px solid #c8e6c9; }
+        #rentFields { background: var(--accent); padding: 15px; border-radius: 15px; display: none; border: 1px solid #c8e6c9; margin-bottom: 18px; }
     </style>
 </head>
 <body>
@@ -46,7 +48,7 @@
 
 <div class="container">
     <div class="form-group">
-        <label>Property Title</label>
+        <label>Property Title <span id="titleCount" style="float:right; font-size:12px; color:#999;">0/100</span></label>
         <input type="text" id="title" maxlength="100" placeholder="e.g. 3BHK Flat in City Center">
     </div>
 
@@ -63,21 +65,21 @@
 
     <div class="form-group">
         <label>Contact Number (WhatsApp)</label>
-        <input type="tel" id="phone" placeholder="Enter 10 digit number">
+        <input type="text" inputmode="numeric" maxlength="10" id="phone" placeholder="10 digit mobile number">
     </div>
 
     <div class="form-group">
-        <label>Location Mode</label>
+        <label>Location</label>
         <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-            <button type="button" class="btn-small active" id="btnManual" onclick="setLocationMode('manual')">Manual</button>
-            <button type="button" class="btn-small" id="btnMap" onclick="setLocationMode('map')">Current GPS</button>
+            <button type="button" class="btn-small active" id="btnManual" onclick="useManualMode()">✍️ Manual</button>
+            <button type="button" class="btn-small" id="btnMap" onclick="openMapPicker()">📍 Pick from Map</button>
         </div>
         <input type="text" id="location" placeholder="Area, City, State">
     </div>
 
     <div class="form-group">
-        <label>Property Size (e.g. 1200 Sq.Ft / 100 Gaj)</label>
-        <input type="text" id="size" placeholder="Enter size">
+        <label>Property Size</label>
+        <input type="text" id="size" placeholder="e.g. 1200 Sq.Ft / 100 Gaj">
     </div>
 
     <div id="rentFields">
@@ -92,13 +94,13 @@
         <div class="form-group">
             <label>Electricity & Water</label>
             <select id="bills">
-                <option value="Extra">Extra (As per meter)</option>
+                <option value="Extra">Extra (As per usage)</option>
                 <option value="Included">Included in Rent</option>
             </select>
         </div>
         <div class="form-group">
             <label>Advance / Security Deposit</label>
-            <input type="text" id="advance" placeholder="e.g. 1 Month Rent">
+            <input type="text" id="advance" placeholder="e.g. 2 Months Rent">
         </div>
         <div class="form-group">
             <label>Society Maintenance</label>
@@ -111,13 +113,13 @@
     </div>
 
     <div class="form-group">
-        <label>Nearby Landmarks</label>
-        <input type="text" id="nearby" placeholder="e.g. Near Metro, Hospital, School">
+        <label>Nearby Landmarks (Optional)</label>
+        <input type="text" id="nearby" placeholder="e.g. Near Metro, Hospital">
     </div>
 
     <div class="form-group">
         <label>Description</label>
-        <textarea id="desc" rows="3" placeholder="Explain more about your property..."></textarea>
+        <textarea id="desc" rows="3" placeholder="Features, facilities, etc."></textarea>
     </div>
 
     <label>Photos (Max 5)</label>
@@ -149,14 +151,24 @@ let uploadedUrls = [null, null, null, null, null];
 let uploadingCount = 0;
 let activeSlot = 0;
 let currentCoords = { lat: null, lng: null };
+let map, marker, geocoder, selectedLocation;
 
-// ✅ 1. EDIT MODE CHECK
 const urlParams = new URLSearchParams(window.location.search);
 const editId = urlParams.get('edit');
 
 firebase.auth().onAuthStateChanged(user => {
     if (!user) return location.href = 'login.html';
     if (editId) loadEditData(editId, user.uid);
+    
+    // ✅ FIX: Title character counter
+    document.getElementById('title').addEventListener('input', function() {
+        document.getElementById('titleCount').innerText = this.value.length + '/100';
+    });
+    
+    // ✅ FIX: Phone number input sanitization
+    document.getElementById('phone').addEventListener('input', function() {
+        this.value = this.value.replace(/\D/g, '').slice(0, 10);
+    });
 });
 
 async function loadEditData(id, uid) {
@@ -168,6 +180,7 @@ async function loadEditData(id, uid) {
     document.getElementById('postBtn').innerText = "Update Property";
     
     document.getElementById('title').value = data.title || '';
+    document.getElementById('titleCount').innerText = (data.title || '').length + '/100';
     document.getElementById('price').value = data.price || '';
     document.getElementById('purpose').value = data.purpose || 'Sell';
     document.getElementById('location').value = data.location || '';
@@ -176,8 +189,8 @@ async function loadEditData(id, uid) {
     document.getElementById('size').value = data.size || '';
     document.getElementById('nearby').value = data.nearby || '';
 
+    toggleRentFields();
     if(data.purpose === 'Rent' && data.rentDetails) {
-        document.getElementById('rentFields').style.display = 'block';
         document.getElementById('furnished').value = data.rentDetails.furnished;
         document.getElementById('bills').value = data.rentDetails.bills;
         document.getElementById('advance').value = data.rentDetails.advance;
@@ -185,44 +198,168 @@ async function loadEditData(id, uid) {
     }
     
     data.images?.forEach((url, i) => {
-        if (i < 5) {
-            uploadedUrls[i] = url;
-            showImage(i, url);
-        }
+        if (i < 5) { uploadedUrls[i] = url; showImage(i, url); }
     });
 }
 
-// ✅ 2. HELPER FUNCTIONS
 function toggleRentFields() {
     const rentFields = document.getElementById('rentFields');
     rentFields.style.display = document.getElementById('purpose').value === 'Rent' ? 'block' : 'none';
 }
 
-function setLocationMode(mode) {
-    const btnManual = document.getElementById('btnManual');
-    const btnMap = document.getElementById('btnMap');
-    const locInput = document.getElementById('location');
+// ✅ Manual location entry
+function useManualMode() {
+    document.getElementById('btnManual').classList.add('active');
+    document.getElementById('btnMap').classList.remove('active');
+    document.getElementById('location').readOnly = false;
+    document.getElementById('location').placeholder = "Area, City, State";
+    currentCoords = { lat: null, lng: null };
+}
 
-    if(mode === 'map') {
-        btnMap.classList.add('active'); btnManual.classList.remove('active');
-        if (navigator.geolocation) {
-            locInput.placeholder = "Fetching location...";
-            navigator.geolocation.getCurrentPosition(pos => {
-                currentCoords.lat = pos.coords.latitude;
-                currentCoords.lng = pos.coords.longitude;
-                locInput.value = "Pinned via GPS";
-                locInput.readOnly = true;
-            }, err => {
-                alert("Location access denied.");
-                setLocationMode('manual');
-            });
-        }
-    } else {
-        btnManual.classList.add('active'); btnMap.classList.remove('active');
-        locInput.value = ""; locInput.placeholder = "Area, City, State";
-        locInput.readOnly = false;
-        currentCoords = { lat: null, lng: null };
+// ✅ FIX: Google Maps Integration
+function openMapPicker() {
+    document.getElementById('btnMap').classList.add('active');
+    document.getElementById('btnManual').classList.remove('active');
+    
+    // Create modal overlay
+    const modal = document.createElement('div');
+    modal.id = 'mapModal';
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.8); z-index: 9999;
+        display: flex; flex-direction: column;
+    `;
+    
+    // Modal header
+    const header = document.createElement('div');
+    header.style.cssText = `
+        background: var(--primary); color: white; padding: 15px;
+        display: flex; justify-content: space-between; align-items: center;
+    `;
+    header.innerHTML = `
+        <div style="font-weight: 700;">📍 Pick Location</div>
+        <button onclick="closeMapPicker()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">&times;</button>
+    `;
+    
+    // Search box
+    const searchBox = document.createElement('input');
+    searchBox.id = 'mapSearch';
+    searchBox.type = 'text';
+    searchBox.placeholder = '🔍 Search location...';
+    searchBox.style.cssText = `
+        padding: 12px; border: none; font-size: 14px;
+        width: 100%; box-sizing: border-box;
+    `;
+    
+    // Map container
+    const mapDiv = document.createElement('div');
+    mapDiv.id = 'mapCanvas';
+    mapDiv.style.cssText = 'flex: 1; width: 100%;';
+    
+    // Confirm button
+    const confirmBtn = document.createElement('button');
+    confirmBtn.innerHTML = '✓ Confirm Location';
+    confirmBtn.style.cssText = `
+        background: var(--primary); color: white; border: none;
+        padding: 15px; font-weight: 700; font-size: 16px; cursor: pointer;
+    `;
+    confirmBtn.onclick = confirmLocation;
+    
+    // Assemble modal
+    modal.appendChild(header);
+    modal.appendChild(searchBox);
+    modal.appendChild(mapDiv);
+    modal.appendChild(confirmBtn);
+    document.body.appendChild(modal);
+    
+    // Initialize map
+    setTimeout(initializeMap, 100);
+}
+
+function initializeMap() {
+    const defaultLoc = { lat: 28.6139, lng: 77.2090 }; // Delhi
+    
+    map = new google.maps.Map(document.getElementById('mapCanvas'), {
+        center: defaultLoc,
+        zoom: 13,
+        mapTypeControl: false,
+        streetViewControl: false,
+    });
+    
+    marker = new google.maps.Marker({
+        position: defaultLoc,
+        map: map,
+        draggable: true,
+        animation: google.maps.Animation.DROP
+    });
+    
+    geocoder = new google.maps.Geocoder();
+    selectedLocation = defaultLoc;
+    
+    marker.addListener('dragend', function() {
+        selectedLocation = {
+            lat: marker.getPosition().lat(),
+            lng: marker.getPosition().lng()
+        };
+        getAddressFromCoords(selectedLocation);
+    });
+    
+    // Get user's current location
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            const userLoc = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+            };
+            map.setCenter(userLoc);
+            marker.setPosition(userLoc);
+            selectedLocation = userLoc;
+            getAddressFromCoords(userLoc);
+        });
     }
+    
+    // Search autocomplete
+    const searchInput = document.getElementById('mapSearch');
+    const autocomplete = new google.maps.places.Autocomplete(searchInput, {
+        componentRestrictions: { country: 'in' }
+    });
+    
+    autocomplete.addListener('place_changed', function() {
+        const place = autocomplete.getPlace();
+        if (place.geometry) {
+            const loc = {
+                lat: place.geometry.location.lat(),
+                lng: place.geometry.location.lng()
+            };
+            map.setCenter(loc);
+            marker.setPosition(loc);
+            selectedLocation = loc;
+        }
+    });
+}
+
+function getAddressFromCoords(coords) {
+    geocoder.geocode({ location: coords }, function(results, status) {
+        if (status === 'OK' && results[0]) {
+            document.getElementById('mapSearch').value = results[0].formatted_address;
+        }
+    });
+}
+
+function confirmLocation() {
+    const address = document.getElementById('mapSearch').value;
+    if (address && selectedLocation) {
+        document.getElementById('location').value = address;
+        currentCoords = selectedLocation;
+        closeMapPicker();
+    } else {
+        alert('Please select a location on the map');
+    }
+}
+
+function closeMapPicker() {
+    const modal = document.getElementById('mapModal');
+    if (modal) modal.remove();
 }
 
 function triggerUpload(slot) { 
@@ -234,14 +371,22 @@ function triggerUpload(slot) {
 function handleFile(e) {
     const file = e.target.files[0];
     if(!file) return;
-    if(file.size > 5 * 1024 * 1024) return alert("File too large (Max 5MB)");
-
+    
+    // ✅ FIX: File size validation (5MB limit)
+    if(file.size > 5 * 1024 * 1024) {
+        alert("File too large! Maximum 5MB allowed.");
+        e.target.value = '';
+        return;
+    }
+    
     const bar = document.getElementById(`bar${activeSlot}`);
     const cont = document.getElementById(`cont${activeSlot}`);
     const icon = document.getElementById(`icon${activeSlot}`);
     
-    cont.style.display = 'block'; icon.style.display = 'none';
-    uploadingCount++; document.getElementById('postBtn').disabled = true;
+    cont.style.display = 'block'; 
+    icon.style.display = 'none';
+    uploadingCount++; 
+    document.getElementById('postBtn').disabled = true;
 
     const formData = new FormData();
     formData.append('file', file);
@@ -250,14 +395,14 @@ function handleFile(e) {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
     xhr.upload.onprogress = (ev) => bar.style.width = (ev.loaded / ev.total * 100) + '%';
-    
     xhr.onload = () => {
         if (xhr.status === 200) {
             const url = JSON.parse(xhr.responseText).secure_url;
             uploadedUrls[activeSlot] = url;
             showImage(activeSlot, url);
         }
-        cont.style.display = 'none'; uploadingCount--;
+        cont.style.display = 'none'; 
+        uploadingCount--;
         if(uploadingCount === 0) document.getElementById('postBtn').disabled = false;
     };
     xhr.send(formData);
@@ -268,10 +413,10 @@ function showImage(slot, url) {
     document.getElementById(`prev${slot}`).src = url;
     document.getElementById(`prev${slot}`).style.display = 'block';
     document.getElementById(`icon${slot}`).style.display = 'none';
-    
     if(!box.querySelector('.remove-btn')) {
         const btn = document.createElement('button');
-        btn.className = 'remove-btn'; btn.innerHTML = '×';
+        btn.className = 'remove-btn'; 
+        btn.innerHTML = '×';
         btn.onclick = (e) => { e.stopPropagation(); removeImage(slot); };
         box.appendChild(btn);
     }
@@ -285,7 +430,6 @@ function removeImage(slot) {
     if (btn) btn.remove();
 }
 
-// ✅ 3. SUBMIT (POST & UPDATE)
 async function submitProperty() {
     const user = firebase.auth().currentUser;
     const title = document.getElementById('title').value.trim();
@@ -293,16 +437,16 @@ async function submitProperty() {
     const phone = document.getElementById('phone').value.trim();
     const finalImages = uploadedUrls.filter(u => u !== null);
 
-    if(!title || price <= 0 || finalImages.length === 0 || phone.length < 10) {
-        return alert("Please fill Title, Price, Phone and at least 1 Photo.");
-    }
+    // ✅ FIX: Phone validation
+    if(!/^\d{10}$/.test(phone)) return alert("Enter valid 10-digit phone number");
+    if(!title || price <= 0 || finalImages.length === 0) return alert("Fill all details & add photos");
 
     const purpose = document.getElementById('purpose').value;
     const propertyData = {
         ownerId: user.uid, 
         title, 
-        price,
-        phone,
+        price, 
+        phone, 
         purpose,
         size: document.getElementById('size').value,
         location: document.getElementById('location').value.trim(),
@@ -330,18 +474,19 @@ async function submitProperty() {
 
         if (editId) {
             await db.collection("properties").doc(editId).update(propertyData);
-            alert("Property Updated! ✓");
+            alert("Updated! ✓");
         } else {
             const expiry = new Date();
             expiry.setDate(expiry.getDate() + (purpose === 'Rent' ? 30 : 180));
             propertyData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+            propertyData.isExpired = false;
             propertyData.expiryDate = firebase.firestore.Timestamp.fromDate(expiry);
             await db.collection("properties").add(propertyData);
-            alert("Property Posted Successfully! 🎉");
+            alert("Posted Successfully! 🎉");
         }
         window.location.href = "my-ads.html";
     } catch(e) { 
-        alert("Error: " + e.message); 
+        alert(e.message); 
         document.getElementById('postBtn').disabled = false;
         document.getElementById('postBtn').innerText = editId ? "Update Property" : "Post Property";
     }
