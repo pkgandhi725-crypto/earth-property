@@ -18,7 +18,7 @@
         .admin-btn { color: #ffd700; font-size: 20px; cursor: pointer; display: none; }
         .bell-icon { position: relative; font-size: 18px; cursor: pointer; }
         
-        /* Bell Badge - Number instead of dot */
+        /* Bell Badge */
         .bell-badge { 
             position: absolute; 
             top: -8px; 
@@ -35,6 +35,25 @@
             align-items: center;
             justify-content: center;
             padding: 0 4px;
+        }
+
+        /* Verified Badge in Header */
+        .verified-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: linear-gradient(135deg, #1da1f2, #0d8bd9);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 9px;
+            font-weight: 700;
+            margin-left: 5px;
+            letter-spacing: 0.3px;
+        }
+
+        .verified-badge i {
+            font-size: 10px;
         }
 
         /* Sidebar */
@@ -59,18 +78,91 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            display: block;
         }
         .profile-photo-circle i {
             font-size: 40px;
             color: rgba(255,255,255,0.8);
         }
+
+        /* Verification Status Box */
+        .verification-status {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .get-verified-btn {
+            background: linear-gradient(135deg, #ffd700, #ffa500) !important;
+            color: #000 !important;
+            font-weight: 700;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(255, 215, 0, 0); }
+        }
         
-        .lang-container { flex-grow: 1; overflow-y: auto; padding: 15px; border-bottom: 1px solid #eee; }
-        .lang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .lang-btn { padding: 10px; border: 1px solid #ddd; border-radius: 6px; text-align: center; font-size: 13px; cursor: pointer; font-weight: 600; background: #f9f9f9; transition: all 0.2s; }
-        .lang-btn:active { transform: scale(0.95); }
-        .lang-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-        .drawer-footer { padding: 0; flex-shrink: 0; border-top: 1px solid #eee; }
+        /* Language Dropdown Container */
+        .lang-container { 
+            padding: 15px 20px; 
+            border-bottom: 1px solid #eee; 
+            flex-shrink: 0; 
+        }
+
+        .lang-label {
+            font-weight: 700;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .lang-dropdown {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            background: white;
+            color: #333;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            padding-right: 40px;
+        }
+
+        .lang-dropdown:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+        }
+
+        .lang-dropdown option {
+            padding: 10px;
+            font-weight: 600;
+        }
+
+        .drawer-footer { 
+            padding: 0; 
+            flex-grow: 1; 
+            overflow-y: auto; 
+            border-top: 1px solid #eee; 
+        }
 
         .drawer-item {
             padding: 15px 20px;
@@ -91,7 +183,7 @@
         /* Property Card */
         .prop-card { background: white; border-radius: 15px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         .img-box { width: 100%; height: 210px; background: #eee; position: relative; cursor: pointer; }
-        .img-box img { width: 100%; height: 100%; object-fit: cover; }
+        .img-box img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .img-counter { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 15px; font-size: 11px; font-weight: 700; }
         .card-actions { position: absolute; top: 10px; right: 10px; display: flex; gap: 8px; }
         .icon-btn { background: rgba(255,255,255,0.9); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
@@ -100,12 +192,50 @@
         .info { padding: 15px; }
         .price { font-size: 22px; font-weight: 800; color: var(--primary); }
         .location { font-size: 12px; color: #666; margin: 5px 0; }
+        .distance-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            color: #2e7d32;
+            margin-top: 3px;
+        }
         
         .btn-group { display: flex; gap: 8px; margin-top: 15px; }
         .btn { flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; text-decoration: none; }
         .btn-call { background: #e8f5e9; color: #2e7d32; }
         .btn-wa { background: #25D366; color: white; }
         .btn-chat { background: var(--primary); color: white; }
+
+        /* Load More Button */
+        .load-more-container {
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .load-more-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+            transition: all 0.3s;
+        }
+
+        .load-more-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .load-more-btn:active:not(:disabled) {
+            transform: scale(0.95);
+        }
 
         /* Bottom Nav */
         .bottom-nav { 
@@ -136,7 +266,7 @@
         .nav-item i { font-size: 20px; margin-bottom: 3px; }
         .nav-item.active { color: var(--primary); }
         
-        /* Centered Post Button - NO WHITE BORDER */
+        /* Centered Post Button */
         .post-btn-wrapper {
             flex: 1;
             display: flex;
@@ -177,6 +307,44 @@
         .gallery-dots { display: flex; justify-content: center; gap: 8px; padding: 20px; }
         .gallery-dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; transition: 0.2s; }
         .gallery-dot.active { background: white; width: 12px; height: 12px; }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 13px;
+            font-weight: 700;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -192,34 +360,55 @@
         <div style="font-size:12px; opacity:0.9;" id="userMail"></div>
     </div>
 
+    <!-- Verification Status (dynamic) -->
+    <div id="verificationStatus" style="display: none;"></div>
+
+    <!-- Language Dropdown -->
     <div class="lang-container">
-        <div style="font-weight:700; font-size:14px; margin-bottom:10px; color:#666;">🌍 Select Language</div>
-        <div class="lang-grid" id="langGrid"></div>
+        <div class="lang-label">
+            <i class="fa fa-globe"></i>
+            <span id="langLabel">Language</span>
+        </div>
+        <select id="langDropdown" class="lang-dropdown" onchange="handleLanguageChange()">
+            <!-- Options populated by JavaScript -->
+        </select>
     </div>
 
+    <!-- Menu Items -->
     <div class="drawer-footer">
         <div class="drawer-item" onclick="location.href='my-ads.html'">
-            <i class="fa fa-layer-group" style="color:var(--primary);"></i> <span id="myAdsText">My Ads</span>
+            <i class="fa fa-layer-group" style="color:var(--primary);"></i> 
+            <span id="myAdsText">My Ads</span>
         </div>
 
         <div class="drawer-item" onclick="location.href='favorites.html'">
-            <i class="fa fa-heart" style="color:#ff5252;"></i> <span id="favsText">Favorites</span>
+            <i class="fa fa-heart" style="color:#ff5252;"></i> 
+            <span id="favsText">Favorites</span>
         </div>
 
-        <div class="drawer-item" onclick="alert('Help & Support coming soon!')">
-            <i class="fa fa-question-circle" style="color:#2196F3;"></i> <span id="helpText">Help & Support</span>
+        <div class="drawer-item" onclick="location.href='feedback.html'">
+            <i class="fa fa-comment-dots" style="color:#9C27B0;"></i> 
+            <span id="feedbackText">Feedback</span>
         </div>
 
-        <div class="drawer-item" onclick="alert('About Us: Earth Property Global - Your trusted real estate partner.')">
-            <i class="fa fa-info-circle" style="color:#FF9800;"></i> <span id="aboutText">About Us</span>
+        <div class="drawer-item" onclick="location.href='help.html'">
+            <i class="fa fa-question-circle" style="color:#2196F3;"></i> 
+            <span id="helpText">Help & Support</span>
+        </div>
+
+        <div class="drawer-item" onclick="showAboutAlert()">
+            <i class="fa fa-info-circle" style="color:#FF9800;"></i> 
+            <span id="aboutText">About Us</span>
         </div>
 
         <div id="adminSideBtn" class="drawer-item" onclick="location.href='admin.html'" style="display:none; color:#ffd700;">
-            <i class="fa fa-user-shield"></i> <span id="adminText">Admin Portal</span>
+            <i class="fa fa-user-shield"></i> 
+            <span id="adminText">Admin Portal</span>
         </div>
 
         <div id="logoutBtn" class="drawer-item" style="display:none; color:#d32f2f;" onclick="handleLogout()">
-            <i class="fa fa-sign-out-alt"></i> <span id="logoutText">Logout</span>
+            <i class="fa fa-sign-out-alt"></i> 
+            <span id="logoutText">Logout</span>
         </div>
     </div>
 </div>
@@ -227,7 +416,7 @@
 <!-- Gallery Modal -->
 <div class="gallery-modal" id="galleryModal">
     <div class="gallery-header">
-        <div id="galleryCounter" style="font-size: 14px;">1 / 1</div>
+        <div id="galleryCounter" style="font-size: 14px; font-weight: 600;">1 / 1</div>
         <div class="gallery-close" onclick="closeGallery()">&times;</div>
     </div>
     <div class="gallery-content">
@@ -244,7 +433,12 @@
             <i class="fa fa-bars fa-lg" onclick="toggleDrawer()" style="cursor:pointer;"></i>
             <div>
                 <div style="font-weight:800; font-size:16px; letter-spacing:0.5px;">EARTH PROPERTY</div>
-                <div style="font-size:9px; opacity:0.85; font-weight:600;" id="headerUserName">Guest</div>
+                <div style="font-size:9px; opacity:0.85; font-weight:600; display: flex; align-items: center;">
+                    <span id="headerUserName">Guest</span>
+                    <span id="headerVerifiedBadge" style="display: none;" class="verified-badge">
+                        <i class="fa fa-check-circle"></i> VERIFIED
+                    </span>
+                </div>
             </div>
         </div>
         <div class="header-right">
@@ -264,6 +458,13 @@
 
 <div id="propertyList">
     <center style="margin-top:50px; color:#888;">Loading properties...</center>
+</div>
+
+<!-- Load More Button -->
+<div id="loadMoreContainer" class="load-more-container" style="display: none;">
+    <button id="loadMoreBtn" class="load-more-btn" onclick="loadMoreProperties()">
+        <span id="loadMoreText">Load More</span>
+    </button>
 </div>
 
 <nav class="bottom-nav">
@@ -308,12 +509,49 @@ const auth = firebase.auth();
 // Admin UID
 const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
 
+// Global Variables
 let allAds = [];
+let displayedAds = [];
 let currentImages = [];
 let currentImageIndex = 0;
 let userLocation = null;
 let currentUser = null;
+let currentUserData = null;
 let userFavorites = [];
+
+// Lazy Loading Variables
+let lastVisible = null;
+let isLoading = false;
+let hasMoreAds = true;
+const ADS_PER_PAGE = 20;
+
+// Search Debouncing
+let searchTimeout;
+
+// Language Data
+const languages = [
+    { code: 'en', name: 'English', flag: '🇬🇧' },
+    { code: 'hi', name: 'हिंदी', flag: '🇮🇳' },
+    { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+    { code: 'bn', name: 'বাংলা', flag: '🇧🇩' },
+    { code: 'ur', name: 'اردو', flag: '🇵🇰' },
+    { code: 'es', name: 'Español', flag: '🇪🇸' },
+    { code: 'fr', name: 'Français', flag: '🇫🇷' },
+    { code: 'pt', name: 'Português', flag: '🇵🇹' },
+    { code: 'ru', name: 'Русский', flag: '🇷🇺' },
+    { code: 'zh', name: '中文', flag: '🇨🇳' },
+    { code: 'ja', name: '日本語', flag: '🇯🇵' },
+    { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+    { code: 'it', name: 'Italiano', flag: '🇮🇹' },
+    { code: 'ko', name: '한국어', flag: '🇰🇷' },
+    { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
+    { code: 'nl', name: 'Nederlands', flag: '🇳🇱' },
+    { code: 'pl', name: 'Polski', flag: '🇵🇱' },
+    { code: 'id', name: 'Indonesian', flag: '🇮🇩' },
+    { code: 'th', name: 'ไทย', flag: '🇹🇭' },
+    { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳' },
+    { code: 'sw', name: 'Swahili', flag: '🇰🇪' }
+];
 
 // Get user's location for proximity-based sorting
 if (navigator.geolocation) {
@@ -323,8 +561,9 @@ if (navigator.geolocation) {
                 lat: position.coords.latitude,
                 lng: position.coords.longitude
             };
-            if (allAds.length > 0) {
-                renderAds(sortByProximity(allAds));
+            if (displayedAds.length > 0) {
+                displayedAds = sortByProximity(displayedAds);
+                renderAds(displayedAds);
             }
         },
         (error) => {
@@ -333,9 +572,9 @@ if (navigator.geolocation) {
     );
 }
 
-// Calculate distance between two coordinates
+// Calculate distance between two coordinates (Haversine formula)
 function calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371;
+    const R = 6371; // Earth's radius in km
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -345,7 +584,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     return R * c;
 }
 
-// Sort ads by proximity
+// Sort ads by proximity to user location
 function sortByProximity(ads) {
     if (!userLocation) return ads;
     
@@ -368,7 +607,7 @@ function openGallery(images, index) {
     updateGalleryImage();
     updateGalleryDots();
     document.body.style.overflow = 'hidden';
-    window.history.pushState(null, null, window.location.href);
+    window.history.pushState({gallery: true}, null, window.location.href);
 }
 
 function closeGallery() {
@@ -400,66 +639,139 @@ function updateGalleryDots() {
     });
 }
 
-// Handle back button for gallery
+// Gallery Swipe Gestures for Mobile
+let touchStartX = 0;
+let touchEndX = 0;
+
 document.addEventListener('DOMContentLoaded', function() {
+    const galleryImg = document.getElementById('galleryImage');
+    
+    galleryImg.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+    });
+
+    galleryImg.addEventListener('touchend', e => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    });
+
+    function handleSwipe() {
+        if (touchEndX < touchStartX - 50) changeImage(1);  // Swipe left
+        if (touchEndX > touchStartX + 50) changeImage(-1); // Swipe right
+    }
+
+    // Handle back button for gallery and sidebar
     window.addEventListener('popstate', function(event) {
         const galleryModal = document.getElementById('galleryModal');
+        const drawer = document.getElementById('sideDrawer');
+        
         if (galleryModal.classList.contains('active')) {
             closeGallery();
             window.history.pushState(null, null, window.location.href);
+        } else if (drawer.classList.contains('open')) {
+            toggleDrawer();
         }
     });
+    
     window.history.pushState(null, null, window.location.href);
 });
 
+// Sidebar Toggle with Back Button Support
 function toggleDrawer() {
     const drawer = document.getElementById('sideDrawer');
     const overlay = document.getElementById('overlay');
+    const isOpening = !drawer.classList.contains('open');
+    
     drawer.classList.toggle('open');
     overlay.style.display = drawer.classList.contains('open') ? 'block' : 'none';
+    
+    if (isOpening) {
+        window.history.pushState({drawer: true}, null, window.location.href);
+    }
 }
 
-const languages = [
-    { code: 'en', name: 'English' },
-    { code: 'hi', name: 'हिंदी' },
-    { code: 'ar', name: 'العربية' },
-    { code: 'bn', name: 'বাংলা' },
-    { code: 'ur', name: 'اردو' },
-    { code: 'es', name: 'Español' },
-    { code: 'fr', name: 'Français' },
-    { code: 'pt', name: 'Português' },
-    { code: 'ru', name: 'Русский' },
-    { code: 'zh', name: '中文' },
-    { code: 'ja', name: '日本語' },
-    { code: 'de', name: 'Deutsch' },
-    { code: 'it', name: 'Italiano' },
-    { code: 'ko', name: '한국어' },
-    { code: 'tr', name: 'Türkçe' },
-    { code: 'nl', name: 'Nederlands' },
-    { code: 'pl', name: 'Polski' },
-    { code: 'id', name: 'Indonesian' },
-    { code: 'th', name: 'ไทย' },
-    { code: 'vi', name: 'Tiếng Việt' },
-    { code: 'sw', name: 'Swahili' }
-];
-
-function loadLanguages() {
-    const grid = document.getElementById('langGrid');
+// Populate Language Dropdown
+function loadLanguageDropdown() {
+    const dropdown = document.getElementById('langDropdown');
     const currentLang = sessionStorage.getItem('selectedLang') || 'en';
-    grid.innerHTML = '';
+    
+    dropdown.innerHTML = '';
+    
     languages.forEach(lang => {
-        const btn = document.createElement('div');
-        btn.className = 'lang-btn' + (lang.code === currentLang ? ' active' : '');
-        btn.innerText = lang.name;
-        btn.onclick = () => {
-            sessionStorage.setItem('selectedLang', lang.code);
-            loadLanguages();
-            applyLanguage();
-        };
-        grid.appendChild(btn);
+        const option = document.createElement('option');
+        option.value = lang.code;
+        option.textContent = `${lang.flag} ${lang.name}`;
+        if (lang.code === currentLang) {
+            option.selected = true;
+        }
+        dropdown.appendChild(option);
     });
 }
 
+// Handle Language Change with Toast Notification
+function handleLanguageChange() {
+    const selectedLang = document.getElementById('langDropdown').value;
+    sessionStorage.setItem('selectedLang', selectedLang);
+    applyLanguage();
+    
+    // Show toast notification
+    const langName = languages.find(l => l.code === selectedLang)?.name || 'Language';
+    showToast(`✓ Language changed to ${langName}`);
+}
+
+// Show Toast Notification
+function showToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.classList.add('show'), 100);
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 2000);
+}
+
+// Get About Text in Current Language
+function showAboutAlert() {
+    const t = TRANSLATIONS[sessionStorage.getItem('selectedLang') || 'en'] || TRANSLATIONS['en'];
+    const aboutText = t.aboutUs || 'About Us';
+    const aboutDesc = 'Earth Property Global - Your trusted real estate partner worldwide.';
+    alert(`${aboutText}\n\n${aboutDesc}`);
+}
+
+// Update Verification Status in Sidebar
+function updateVerificationStatus(isVerified) {
+    const statusDiv = document.getElementById('verificationStatus');
+    const t = TRANSLATIONS[sessionStorage.getItem('selectedLang') || 'en'] || TRANSLATIONS['en'];
+    
+    if (isVerified) {
+        statusDiv.innerHTML = `
+            <div class="verification-status">
+                <i class="fa fa-check-circle" style="font-size: 16px;"></i>
+                <div>
+                    <div style="font-weight: 700;">✅ ${t.verified || 'Verified Account'}</div>
+                    <div style="font-size: 9px; opacity: 0.8; margin-top: 2px;">
+                        Premium features unlocked
+                    </div>
+                </div>
+            </div>
+        `;
+        statusDiv.style.display = 'block';
+    } else {
+        statusDiv.innerHTML = `
+            <div class="drawer-item get-verified-btn" onclick="location.href='verify.html'">
+                <i class="fa fa-certificate" style="color: #000;"></i>
+                <span>⭐ ${t.getVerified || 'Get Verified'}</span>
+            </div>
+        `;
+        statusDiv.style.display = 'block';
+    }
+}
+
+// Apply Language Translations
 function applyLanguage() {
     const lang = sessionStorage.getItem('selectedLang') || 'en';
     const t = TRANSLATIONS[lang] || TRANSLATIONS['en'];
@@ -473,9 +785,13 @@ function applyLanguage() {
         document.getElementById('authBtn').innerText = t.logout;
     }
     
+    // Update language label
+    document.getElementById('langLabel').innerText = t.language || 'Language';
+    
     // Update sidebar menu items
     document.getElementById('myAdsText').innerText = t.myAds;
     document.getElementById('favsText').innerText = t.favorites;
+    document.getElementById('feedbackText').innerText = t.feedback || 'Feedback';
     document.getElementById('helpText').innerText = t.helpSupport;
     document.getElementById('aboutText').innerText = t.aboutUs;
     document.getElementById('adminText').innerText = t.adminPortal;
@@ -490,8 +806,19 @@ function applyLanguage() {
     // Update search placeholder
     document.getElementById('searchInput').placeholder = t.searchPlaceholder;
     
+    // Update load more button
+    const loadMoreText = document.getElementById('loadMoreText');
+    if (loadMoreText) {
+        loadMoreText.innerText = t.loadMore || 'Load More';
+    }
+    
+    // Update verification status if user is logged in
+    if (currentUserData) {
+        updateVerificationStatus(currentUserData.isVerified || false);
+    }
+    
     // Re-render ads with new language
-    renderAds(allAds);
+    renderAds(displayedAds);
 }
 
 // Update profile photo
@@ -510,7 +837,7 @@ function loadUserFavorites(uid) {
         .where("userId", "==", uid)
         .onSnapshot(snapshot => {
             userFavorites = snapshot.docs.map(doc => doc.data().propertyId);
-            renderAds(allAds);
+            renderAds(displayedAds);
         });
 }
 
@@ -536,7 +863,7 @@ async function toggleFavorite(propId) {
         if (!favQuery.empty) {
             // Remove from favorites
             await favQuery.docs[0].ref.delete();
-            alert('Removed from favorites');
+            showToast('Removed from favorites');
         } else {
             // Add to favorites
             await db.collection("favorites").add({
@@ -544,7 +871,7 @@ async function toggleFavorite(propId) {
                 propertyId: propId,
                 addedAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            alert('Added to favorites ❤️');
+            showToast('Added to favorites ❤️');
         }
     } catch (error) {
         console.error('Error toggling favorite:', error);
@@ -569,6 +896,7 @@ function listenForNotifications(uid) {
         });
 }
 
+// Auth State Observer
 auth.onAuthStateChanged(user => {
     currentUser = user;
     const logoutBtn = document.getElementById('logoutBtn');
@@ -576,33 +904,55 @@ auth.onAuthStateChanged(user => {
     const adminSideBtn = document.getElementById('adminSideBtn');
     
     if (user) {
-        const userName = user.displayName || user.email?.split('@')[0] || "Earth User";
-        document.getElementById('sideUserName').innerText = userName;
-        document.getElementById('headerUserName').innerText = userName;
-        document.getElementById('userMail').innerText = user.email || '';
-        updateProfilePhoto(user.photoURL);
-        
-        const t = TRANSLATIONS[sessionStorage.getItem('selectedLang') || 'en'] || TRANSLATIONS['en'];
-        document.getElementById('authBtn').innerText = t.logout;
-        document.getElementById('authBtn').onclick = handleLogout;
-        logoutBtn.style.display = 'flex';
-        
-        if (user.uid === ADMIN_UID) {
-            if(adminIcon) adminIcon.style.display = 'inline-block';
-            if(adminSideBtn) adminSideBtn.style.display = 'flex';
-        } else {
-            if(adminIcon) adminIcon.style.display = 'none';
-            if(adminSideBtn) adminSideBtn.style.display = 'none';
-        }
-        
-        loadUserFavorites(user.uid);
-        listenForNotifications(user.uid);
+        // Fetch user data from Firestore
+        db.collection("users").doc(user.uid).get().then(doc => {
+            currentUserData = doc.exists ? doc.data() : {};
+            const isVerified = currentUserData.isVerified || false;
+            
+            const userName = user.displayName || user.email?.split('@')[0] || "Earth User";
+            document.getElementById('sideUserName').innerText = userName;
+            document.getElementById('headerUserName').innerText = userName;
+            document.getElementById('userMail').innerText = user.email || '';
+            updateProfilePhoto(user.photoURL);
+            
+            // Show/Hide Verified Badge in Header
+            const headerBadge = document.getElementById('headerVerifiedBadge');
+            if (isVerified) {
+                headerBadge.style.display = 'inline-flex';
+            } else {
+                headerBadge.style.display = 'none';
+            }
+            
+            // Update Sidebar Verification Status
+            updateVerificationStatus(isVerified);
+            
+            const t = TRANSLATIONS[sessionStorage.getItem('selectedLang') || 'en'] || TRANSLATIONS['en'];
+            document.getElementById('authBtn').innerText = t.logout;
+            document.getElementById('authBtn').onclick = handleLogout;
+            logoutBtn.style.display = 'flex';
+            
+            if (user.uid === ADMIN_UID) {
+                if(adminIcon) adminIcon.style.display = 'inline-block';
+                if(adminSideBtn) adminSideBtn.style.display = 'flex';
+            } else {
+                if(adminIcon) adminIcon.style.display = 'none';
+                if(adminSideBtn) adminSideBtn.style.display = 'none';
+            }
+            
+            loadUserFavorites(user.uid);
+            listenForNotifications(user.uid);
+        }).catch(err => {
+            console.error("Error fetching user data:", err);
+        });
     } else {
+        currentUserData = null;
         userFavorites = [];
         const t = TRANSLATIONS[sessionStorage.getItem('selectedLang') || 'en'] || TRANSLATIONS['en'];
         document.getElementById('sideUserName').innerText = t.welcome;
         document.getElementById('headerUserName').innerText = "Guest";
         document.getElementById('userMail').innerText = "";
+        document.getElementById('headerVerifiedBadge').style.display = 'none';
+        document.getElementById('verificationStatus').style.display = 'none';
         updateProfilePhoto(null);
         document.getElementById('authBtn').innerText = t.login;
         document.getElementById('authBtn').onclick = () => location.href='login.html';
@@ -610,6 +960,8 @@ auth.onAuthStateChanged(user => {
         if(adminIcon) adminIcon.style.display = 'none';
         if(adminSideBtn) adminSideBtn.style.display = 'none';
     }
+    
+    // Load properties after auth state is determined
     loadProperties();
 });
 
@@ -619,46 +971,155 @@ function handleLogout() {
     }
 }
 
-function loadProperties() {
-    db.collection("properties").orderBy("createdAt", "desc").onSnapshot(snap => {
-        allAds = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
-        const sortedAds = userLocation ? sortByProximity(allAds) : allAds;
-        renderAds(sortedAds);
-    }, err => {
+// Load Properties with Lazy Loading and Status Filter
+function loadProperties(isLoadMore = false) {
+    if (isLoading) return;
+    isLoading = true;
+    
+    // Show loading state
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    if (isLoadMore && loadMoreBtn) {
+        loadMoreBtn.disabled = true;
+        loadMoreBtn.innerHTML = '<span class="loading-spinner"></span>';
+    }
+    
+    let query = db.collection("properties")
+        .where("status", "==", "active")  // ✅ CRITICAL: Only active properties
+        .orderBy("createdAt", "desc")
+        .limit(ADS_PER_PAGE);
+    
+    if (isLoadMore && lastVisible) {
+        query = query.startAfter(lastVisible);
+    }
+    
+    query.get().then(snap => {
+        const newAds = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+        
+        if (isLoadMore) {
+            allAds = [...allAds, ...newAds];
+            displayedAds = [...displayedAds, ...newAds];
+        } else {
+            allAds = newAds;
+            displayedAds = newAds;
+        }
+        
+        // Check if there are more ads to load
+        if (snap.docs.length < ADS_PER_PAGE) {
+            hasMoreAds = false;
+            document.getElementById('loadMoreContainer').style.display = 'none';
+        } else {
+            hasMoreAds = true;
+            lastVisible = snap.docs[snap.docs.length - 1];
+            document.getElementById('loadMoreContainer').style.display = 'block';
+        }
+        
+        // Sort by proximity if location is available
+        if (userLocation) {
+            displayedAds = sortByProximity(displayedAds);
+        }
+        
+        renderAds(displayedAds, isLoadMore);
+        isLoading = false;
+        
+        // Reset load more button
+        if (loadMoreBtn) {
+            loadMoreBtn.disabled = false;
+            const t = TRANSLATIONS[sessionStorage.getItem('selectedLang') || 'en'] || TRANSLATIONS['en'];
+            loadMoreBtn.innerHTML = `<span id="loadMoreText">${t.loadMore || 'Load More'}</span>`;
+        }
+    }).catch(err => {
+        console.error('Error loading properties:', err);
         document.getElementById('propertyList').innerHTML = '<center style="margin-top:50px; color:#d32f2f;">Error loading properties. Please refresh.</center>';
+        isLoading = false;
+        
+        if (loadMoreBtn) {
+            loadMoreBtn.disabled = false;
+            loadMoreBtn.innerHTML = '<span>Try Again</span>';
+        }
     });
 }
 
-function renderAds(ads) {
+// Load More Properties Function
+function loadMoreProperties() {
+    if (hasMoreAds && !isLoading) {
+        loadProperties(true);
+    }
+}
+
+// Render Ads with Distance Display and Verified Badge
+function renderAds(ads, append = false) {
     const list = document.getElementById('propertyList');
     const lang = sessionStorage.getItem('selectedLang') || 'en';
     const t = TRANSLATIONS[lang] || TRANSLATIONS['en'];
-    if (ads.length === 0) {
-        list.innerHTML = '<center style="margin-top:50px; color:#888;">No properties found.</center>';
+    
+    if (ads.length === 0 && !append) {
+        list.innerHTML = `
+            <center style="margin-top:50px; color:#888;">
+                <i class="fa fa-search" style="font-size:60px; opacity:0.3; margin-bottom:20px;"></i>
+                <div style="font-size:16px; font-weight:600;">No properties found</div>
+                <div style="font-size:13px; margin-top:5px;">Try different keywords</div>
+            </center>
+        `;
         return;
     }
-    list.innerHTML = '';
+    
+    if (!append) {
+        list.innerHTML = '';
+    }
+    
     ads.forEach(p => {
-        const images = p.images && Array.isArray(p.images) && p.images.length > 0 ? p.images : ['https://via.placeholder.com/400x210?text=No+Image'];
+        const images = p.images && Array.isArray(p.images) && p.images.length > 0 
+            ? p.images 
+            : ['https://via.placeholder.com/400x210?text=No+Image'];
+        
+        // Calculate distance if user location is available
+        let distanceHTML = '';
+        if (userLocation && p.latitude && p.longitude) {
+            const dist = calculateDistance(userLocation.lat, userLocation.lng, p.latitude, p.longitude);
+            distanceHTML = `
+                <div class="distance-badge">
+                    <i class="fa fa-location-arrow"></i> ${dist.toFixed(1)} km away
+                </div>
+            `;
+        }
+        
         const card = document.createElement('div');
         card.className = 'prop-card';
         card.innerHTML = `
             <div class="img-box" onclick='openGallery(${JSON.stringify(images)}, 0)'>
-                <img src="${images[0]}" alt="${p.title || 'Property'}">
+                <img src="${images[0]}" 
+                     alt="${p.title || 'Property'}"
+                     onerror="this.src='https://via.placeholder.com/400x210?text=Image+Not+Available'">
                 <div class="card-actions">
-                    <button class="icon-btn share" onclick="event.stopPropagation(); shareProperty('${p.id}', '${encodeURIComponent(p.title || '')}')"><i class="fa fa-share-alt"></i></button>
-                    <button class="icon-btn fav" onclick="event.stopPropagation(); toggleFavorite('${p.id}')"><i class="fa${isFavorite(p.id) ? ' fa-solid' : '-regular'} fa-heart"></i></button>
+                    <button class="icon-btn share" onclick="event.stopPropagation(); shareProperty('${p.id}', '${encodeURIComponent(p.title || '')}')">
+                        <i class="fa fa-share-alt"></i>
+                    </button>
+                    <button class="icon-btn fav" onclick="event.stopPropagation(); toggleFavorite('${p.id}')">
+                        <i class="fa${isFavorite(p.id) ? ' fa-solid' : '-regular'} fa-heart"></i>
+                    </button>
                 </div>
                 ${images.length > 1 ? `<div class="img-counter">${images.length} <i class="fa fa-images"></i></div>` : ''}
             </div>
             <div class="info">
                 <div class="price">₹${Number(p.price || 0).toLocaleString('en-IN')}</div>
-                <div style="font-weight:700; margin:5px 0; color:#333;">${p.title || 'Untitled Property'}</div>
-                <div class="location"><i class="fa-solid fa-location-dot"></i> ${p.location || 'Location not specified'}</div>
+                <div style="font-weight:700; margin:5px 0; color:#333;">
+                    ${p.isVerified ? '<i class="fa fa-check-circle" style="color:#1da1f2; margin-right:3px;"></i>' : ''}
+                    ${p.title || 'Untitled Property'}
+                </div>
+                <div class="location">
+                    <i class="fa-solid fa-location-dot"></i> ${p.location || 'Location not specified'}
+                </div>
+                ${distanceHTML}
                 <div class="btn-group">
-                    <button class="btn btn-call" onclick="contact('${p.phone}', 'tel')"><i class="fa fa-phone"></i> ${t.call}</button>
-                    <button class="btn btn-wa" onclick="contact('${p.phone}', 'wa', '${encodeURIComponent(p.title || 'Property')}')"><i class="fa-brands fa-whatsapp"></i> ${t.whatsapp}</button>
-                    <button class="btn btn-chat" onclick="location.href='chat.html?to=${p.ownerId}'"><i class="fa-regular fa-comment"></i> ${t.chat}</button>
+                    <button class="btn btn-call" onclick="contact('${p.phone}', 'tel')">
+                        <i class="fa fa-phone"></i> ${t.call}
+                    </button>
+                    <button class="btn btn-wa" onclick="contact('${p.phone}', 'wa', '${encodeURIComponent(p.title || 'Property')}')">
+                        <i class="fa-brands fa-whatsapp"></i> ${t.whatsapp}
+                    </button>
+                    <button class="btn btn-chat" onclick="location.href='chat.html?to=${p.ownerId}'">
+                        <i class="fa-regular fa-comment"></i> ${t.chat}
+                    </button>
                 </div>
             </div>
         `;
@@ -666,13 +1127,23 @@ function renderAds(ads) {
     });
 }
 
+// Contact Function with Better Validation
 function contact(num, type, title) {
     if (!num || num === 'undefined' || num === 'null' || num.trim() === '') {
         alert("Error: Owner has not provided a contact number.");
         return;
     }
+    
     let cleanNum = num.toString().replace(/\D/g, '');
+    
+    // Validate phone number
+    if (cleanNum.length < 10) {
+        alert("Invalid phone number");
+        return;
+    }
+    
     if (cleanNum.length === 10) cleanNum = "91" + cleanNum;
+    
     if (type === 'wa') {
         const message = encodeURIComponent(`Hi, I'm interested in: ${decodeURIComponent(title)}`);
         window.open(`https://wa.me/${cleanNum}?text=${message}`, '_blank');
@@ -681,25 +1152,39 @@ function contact(num, type, title) {
     }
 }
 
+// Filter Ads with Debouncing
 function filterAds() {
-    const val = document.getElementById('searchInput').value.toLowerCase().trim();
-    if (val === '') {
-        const sortedAds = userLocation ? sortByProximity(allAds) : allAds;
-        renderAds(sortedAds);
-        return;
-    }
-    const filtered = allAds.filter(a => 
-        (a.location || '').toLowerCase().includes(val) || 
-        (a.title || '').toLowerCase().includes(val) ||
-        (a.description || '').toLowerCase().includes(val)
-    );
-    const sortedFiltered = userLocation ? sortByProximity(filtered) : filtered;
-    renderAds(sortedFiltered);
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        const val = document.getElementById('searchInput').value.toLowerCase().trim();
+        
+        if (val === '') {
+            displayedAds = allAds;
+            const sortedAds = userLocation ? sortByProximity(displayedAds) : displayedAds;
+            renderAds(sortedAds);
+            return;
+        }
+        
+        const filtered = allAds.filter(a => 
+            (a.location || '').toLowerCase().includes(val) || 
+            (a.title || '').toLowerCase().includes(val) ||
+            (a.description || '').toLowerCase().includes(val)
+        );
+        
+        displayedAds = filtered;
+        const sortedFiltered = userLocation ? sortByProximity(displayedAds) : displayedAds;
+        renderAds(sortedFiltered);
+        
+        // Hide load more button when searching
+        document.getElementById('loadMoreContainer').style.display = 'none';
+    }, 300); // 300ms debounce delay
 }
 
+// Share Property Function
 function shareProperty(propId, title) {
     const url = window.location.origin + '/property-detail.html?id=' + propId;
     const text = decodeURIComponent(title) + ' - Earth Property Global';
+    
     if (navigator.share) {
         navigator.share({ title: text, url: url }).catch(err => console.log('Share cancelled'));
     } else {
@@ -709,11 +1194,12 @@ function shareProperty(propId, title) {
         tempInput.select();
         document.execCommand('copy');
         document.body.removeChild(tempInput);
-        alert('Link copied to clipboard!');
+        showToast('Link copied to clipboard!');
     }
 }
 
-loadLanguages();
+// Initialize Page
+loadLanguageDropdown();
 applyLanguage();
 </script>
 </body>
