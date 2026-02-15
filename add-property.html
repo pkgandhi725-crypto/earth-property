@@ -6,7 +6,7 @@
     <title>Post Property - Earth Property</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary: #2e7d32; --bg: #f8f9fa; --danger: #d32f2f; }
+        :root { --primary: #2e7d32; --bg: #f8f9fa; --danger: #d32f2f; --accent: #e8f5e9; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); padding-bottom: 30px; }
         header { background: var(--primary); color: white; padding: 15px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; }
         .container { padding: 20px; max-width: 500px; margin: auto; }
@@ -16,19 +16,25 @@
         input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 15px; outline: none; transition: 0.3s; }
         input:focus { border-color: var(--primary); box-shadow: 0 0 5px rgba(46,125,50,0.2); }
         
-        /* Photo Grid */
+        .section-title { font-size: 16px; font-weight: 700; color: var(--primary); margin: 25px 0 15px; border-bottom: 2px solid var(--accent); padding-bottom: 5px; }
+
+        /* Photo Grid for 5 Images */
         .img-upload-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
         .img-box { aspect-ratio: 1/1; border: 2px dashed #ccc; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #fff; cursor: pointer; }
         .img-box img { width: 100%; height: 100%; object-fit: cover; position: absolute; z-index: 2; }
         
-        /* Remove Button */
         .remove-btn { position: absolute; top: 5px; right: 5px; background: var(--danger); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; z-index: 10; border: none; cursor: pointer; }
 
         .prog-container { width: 80%; height: 6px; background: #eee; border-radius: 10px; overflow: hidden; display: none; z-index: 5; }
         .prog-bar { height: 100%; background: var(--primary); width: 0%; transition: width 0.2s; }
         
-        .btn-post { background: var(--primary); color: white; border: none; width: 100%; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 700; margin-top: 25px; cursor: pointer; transition: 0.3s; }
+        .btn-small { background: #fff; border: 1px solid var(--primary); color: var(--primary); padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; flex: 1; }
+        .btn-small.active { background: var(--primary); color: white; }
+
+        .btn-post { background: var(--primary); color: white; border: none; width: 100%; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 700; margin-top: 25px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3); }
         .btn-post:disabled { background: #999; cursor: not-allowed; }
+
+        #rentFields { background: var(--accent); padding: 15px; border-radius: 15px; display: none; border: 1px solid #c8e6c9; }
     </style>
 </head>
 <body>
@@ -40,7 +46,7 @@
 
 <div class="container">
     <div class="form-group">
-        <label>Property Title <span id="titleCount" style="float:right; font-size:12px; color:#999;">0/100</span></label>
+        <label>Property Title</label>
         <input type="text" id="title" maxlength="100" placeholder="e.g. 3BHK Flat in City Center">
     </div>
 
@@ -48,33 +54,79 @@
         <div style="flex: 1.2;"><label>Price (₹)</label><input type="number" id="price" placeholder="Amount"></div>
         <div style="flex: 1;">
             <label>Purpose</label>
-            <select id="purpose">
+            <select id="purpose" onchange="toggleRentFields()">
                 <option value="Sell">Sell (180d)</option>
                 <option value="Rent">Rent (30d)</option>
             </select>
         </div>
     </div>
 
-    <div class="form-group"><label>Location</label><input type="text" id="location" placeholder="Area, City"></div>
-    <div class="form-group"><label>Description</label><textarea id="desc" rows="3" placeholder="Features, facilities, etc."></textarea></div>
+    <div class="form-group">
+        <label>Contact Number (WhatsApp)</label>
+        <input type="tel" id="phone" placeholder="Enter 10 digit number">
+    </div>
 
-    <label>Photos (Max 3)</label>
+    <div class="form-group">
+        <label>Location Mode</label>
+        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <button type="button" class="btn-small active" id="btnManual" onclick="setLocationMode('manual')">Manual</button>
+            <button type="button" class="btn-small" id="btnMap" onclick="setLocationMode('map')">Current GPS</button>
+        </div>
+        <input type="text" id="location" placeholder="Area, City, State">
+    </div>
+
+    <div class="form-group">
+        <label>Property Size (e.g. 1200 Sq.Ft / 100 Gaj)</label>
+        <input type="text" id="size" placeholder="Enter size">
+    </div>
+
+    <div id="rentFields">
+        <div class="form-group">
+            <label>Furnished Status</label>
+            <select id="furnished">
+                <option value="Unfurnished">Unfurnished</option>
+                <option value="Semi-Furnished">Semi-Furnished</option>
+                <option value="Fully-Furnished">Fully-Furnished</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Electricity & Water</label>
+            <select id="bills">
+                <option value="Extra">Extra (As per meter)</option>
+                <option value="Included">Included in Rent</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Advance / Security Deposit</label>
+            <input type="text" id="advance" placeholder="e.g. 1 Month Rent">
+        </div>
+        <div class="form-group">
+            <label>Society Maintenance</label>
+            <select id="maintenance">
+                <option value="Included">Included in Rent</option>
+                <option value="Extra Monthly">Extra Monthly Charge</option>
+                <option value="Not Applicable">Not Applicable</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Nearby Landmarks</label>
+        <input type="text" id="nearby" placeholder="e.g. Near Metro, Hospital, School">
+    </div>
+
+    <div class="form-group">
+        <label>Description</label>
+        <textarea id="desc" rows="3" placeholder="Explain more about your property..."></textarea>
+    </div>
+
+    <label>Photos (Max 5)</label>
     <div class="img-upload-grid">
-        <div class="img-box" id="box0" onclick="triggerUpload(0)">
-            <i class="fa fa-camera" id="icon0"></i>
-            <img id="prev0" style="display:none;">
-            <div class="prog-container" id="cont0"><div class="prog-bar" id="bar0"></div></div>
-        </div>
-        <div class="img-box" id="box1" onclick="triggerUpload(1)">
-            <i class="fa fa-camera" id="icon1"></i>
-            <img id="prev1" style="display:none;">
-            <div class="prog-container" id="cont1"><div class="prog-bar" id="bar1"></div></div>
-        </div>
-        <div class="img-box" id="box2" onclick="triggerUpload(2)">
-            <i class="fa fa-camera" id="icon2"></i>
-            <img id="prev2" style="display:none;">
-            <div class="prog-container" id="cont2"><div class="prog-bar" id="bar2"></div></div>
-        </div>
+        <div class="img-box" id="box0" onclick="triggerUpload(0)"><i class="fa fa-camera" id="icon0"></i><img id="prev0" style="display:none;"><div class="prog-container" id="cont0"><div class="prog-bar" id="bar0"></div></div></div>
+        <div class="img-box" id="box1" onclick="triggerUpload(1)"><i class="fa fa-camera" id="icon1"></i><img id="prev1" style="display:none;"><div class="prog-container" id="cont1"><div class="prog-bar" id="bar1"></div></div></div>
+        <div class="img-box" id="box2" onclick="triggerUpload(2)"><i class="fa fa-camera" id="icon2"></i><img id="prev2" style="display:none;"><div class="prog-container" id="cont2"><div class="prog-bar" id="bar2"></div></div></div>
+        <div class="img-box" id="box3" onclick="triggerUpload(3)"><i class="fa fa-camera" id="icon3"></i><img id="prev3" style="display:none;"><div class="prog-container" id="cont3"><div class="prog-bar" id="bar3"></div></div></div>
+        <div class="img-box" id="box4" onclick="triggerUpload(4)"><i class="fa fa-camera" id="icon4"></i><img id="prev4" style="display:none;"><div class="prog-container" id="cont4"><div class="prog-bar" id="bar4"></div></div></div>
     </div>
     
     <input type="file" id="fileInput" hidden accept="image/*" onchange="handleFile(event)">
@@ -93,9 +145,10 @@ const db = firebase.firestore();
 const CLOUD_NAME = "dnkhurnbv"; 
 const UPLOAD_PRESET = "earth_property"; 
 
-let uploadedUrls = [null, null, null];
+let uploadedUrls = [null, null, null, null, null];
 let uploadingCount = 0;
 let activeSlot = 0;
+let currentCoords = { lat: null, lng: null };
 
 // ✅ 1. EDIT MODE CHECK
 const urlParams = new URLSearchParams(window.location.search);
@@ -119,18 +172,61 @@ async function loadEditData(id, uid) {
     document.getElementById('purpose').value = data.purpose || 'Sell';
     document.getElementById('location').value = data.location || '';
     document.getElementById('desc').value = data.description || '';
+    document.getElementById('phone').value = data.phone || '';
+    document.getElementById('size').value = data.size || '';
+    document.getElementById('nearby').value = data.nearby || '';
+
+    if(data.purpose === 'Rent' && data.rentDetails) {
+        document.getElementById('rentFields').style.display = 'block';
+        document.getElementById('furnished').value = data.rentDetails.furnished;
+        document.getElementById('bills').value = data.rentDetails.bills;
+        document.getElementById('advance').value = data.rentDetails.advance;
+        document.getElementById('maintenance').value = data.rentDetails.maintenance;
+    }
     
     data.images?.forEach((url, i) => {
-        if (i < 3) {
+        if (i < 5) {
             uploadedUrls[i] = url;
             showImage(i, url);
         }
     });
 }
 
-// ✅ 2. IMAGE HANDLING
+// ✅ 2. HELPER FUNCTIONS
+function toggleRentFields() {
+    const rentFields = document.getElementById('rentFields');
+    rentFields.style.display = document.getElementById('purpose').value === 'Rent' ? 'block' : 'none';
+}
+
+function setLocationMode(mode) {
+    const btnManual = document.getElementById('btnManual');
+    const btnMap = document.getElementById('btnMap');
+    const locInput = document.getElementById('location');
+
+    if(mode === 'map') {
+        btnMap.classList.add('active'); btnManual.classList.remove('active');
+        if (navigator.geolocation) {
+            locInput.placeholder = "Fetching location...";
+            navigator.geolocation.getCurrentPosition(pos => {
+                currentCoords.lat = pos.coords.latitude;
+                currentCoords.lng = pos.coords.longitude;
+                locInput.value = "Pinned via GPS";
+                locInput.readOnly = true;
+            }, err => {
+                alert("Location access denied.");
+                setLocationMode('manual');
+            });
+        }
+    } else {
+        btnManual.classList.add('active'); btnMap.classList.remove('active');
+        locInput.value = ""; locInput.placeholder = "Area, City, State";
+        locInput.readOnly = false;
+        currentCoords = { lat: null, lng: null };
+    }
+}
+
 function triggerUpload(slot) { 
-    if (uploadedUrls[slot]) return; // Stop if already has image
+    if (uploadedUrls[slot]) return; 
     activeSlot = slot; 
     document.getElementById('fileInput').click(); 
 }
@@ -194,35 +290,61 @@ async function submitProperty() {
     const user = firebase.auth().currentUser;
     const title = document.getElementById('title').value.trim();
     const price = Number(document.getElementById('price').value);
+    const phone = document.getElementById('phone').value.trim();
     const finalImages = uploadedUrls.filter(u => u !== null);
 
-    if(!title || price <= 0 || finalImages.length === 0) return alert("Invalid details!");
+    if(!title || price <= 0 || finalImages.length === 0 || phone.length < 10) {
+        return alert("Please fill Title, Price, Phone and at least 1 Photo.");
+    }
 
+    const purpose = document.getElementById('purpose').value;
     const propertyData = {
-        ownerId: user.uid, title, price,
-        purpose: document.getElementById('purpose').value,
+        ownerId: user.uid, 
+        title, 
+        price,
+        phone,
+        purpose,
+        size: document.getElementById('size').value,
         location: document.getElementById('location').value.trim(),
         description: document.getElementById('desc').value.trim(),
+        nearby: document.getElementById('nearby').value,
         images: finalImages,
+        latitude: currentCoords.lat,
+        longitude: currentCoords.lng,
+        status: "active",
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
 
+    if(purpose === 'Rent') {
+        propertyData.rentDetails = {
+            furnished: document.getElementById('furnished').value,
+            bills: document.getElementById('bills').value,
+            advance: document.getElementById('advance').value,
+            maintenance: document.getElementById('maintenance').value
+        };
+    }
+
     try {
         document.getElementById('postBtn').disabled = true;
+        document.getElementById('postBtn').innerText = "Processing...";
+
         if (editId) {
             await db.collection("properties").doc(editId).update(propertyData);
-            alert("Updated! ✓");
+            alert("Property Updated! ✓");
         } else {
             const expiry = new Date();
-            expiry.setDate(expiry.getDate() + (propertyData.purpose === 'Rent' ? 30 : 180));
+            expiry.setDate(expiry.getDate() + (purpose === 'Rent' ? 30 : 180));
             propertyData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-            propertyData.isExpired = false;
             propertyData.expiryDate = firebase.firestore.Timestamp.fromDate(expiry);
             await db.collection("properties").add(propertyData);
-            alert("Posted! 🎉");
+            alert("Property Posted Successfully! 🎉");
         }
         window.location.href = "my-ads.html";
-    } catch(e) { alert(e.message); document.getElementById('postBtn').disabled = false; }
+    } catch(e) { 
+        alert("Error: " + e.message); 
+        document.getElementById('postBtn').disabled = false;
+        document.getElementById('postBtn').innerText = editId ? "Update Property" : "Post Property";
+    }
 }
 </script>
 </body>
