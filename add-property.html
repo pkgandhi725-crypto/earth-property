@@ -364,8 +364,9 @@ async function submitProperty() {
     }
 
     const purpose = document.getElementById('purpose').value;
+    
+    // ✅ Property data WITHOUT protected fields (ownerId, createdAt, expiryDate, isExpired)
     const propertyData = {
-        ownerId: user.uid, 
         title, 
         price, 
         phone, 
@@ -395,14 +396,20 @@ async function submitProperty() {
         document.getElementById('postBtn').innerText = "Processing...";
 
         if (editId) {
+            // ✅ EDIT MODE: Only update editable fields
+            // Protected fields (ownerId, createdAt, expiryDate, isExpired) remain unchanged
             await db.collection("properties").doc(editId).update(propertyData);
             alert("Property Updated Successfully! ✓");
         } else {
-            const expiry = new Date();
-            expiry.setDate(expiry.getDate() + (purpose === 'Rent' ? 30 : 180));
+            // ✅ NEW POST: Set all fields including protected ones
+            propertyData.ownerId = user.uid;
             propertyData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
             propertyData.isExpired = false;
+            
+            const expiry = new Date();
+            expiry.setDate(expiry.getDate() + (purpose === 'Rent' ? 30 : 180));
             propertyData.expiryDate = firebase.firestore.Timestamp.fromDate(expiry);
+            
             await db.collection("properties").add(propertyData);
             alert("Property Posted Successfully! 🎉");
         }
