@@ -175,6 +175,39 @@
             box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3); 
         }
         
+        .admin-tabs { 
+            display: flex; 
+            gap: 10px; 
+            background: white; 
+            padding: 10px; 
+            border-radius: 12px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+            margin-bottom: 20px;
+        }
+        .tab-btn { 
+            flex: 1; 
+            padding: 12px 20px; 
+            border: 2px solid #e0e0e0; 
+            background: white; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            font-size: 14px; 
+            transition: 0.2s; 
+            color: #666; 
+        }
+        .tab-btn.active { 
+            background: linear-gradient(135deg, #2e7d32, #1b5e20); 
+            color: white; 
+            border-color: #2e7d32; 
+        }
+        .tab-btn:hover:not(.active) { 
+            background: #f5f5f5; 
+        }
+        .admin-section {
+            display: block;
+        }
+        
         .empty-state { 
             text-align: center; 
             padding: 50px 20px; 
@@ -227,6 +260,21 @@
     </a>
 </div>
 
+<!-- Tab Navigation -->
+<div class="admin-tabs">
+    <button class="tab-btn active" onclick="showTab('properties')" id="propertiesTab">
+        <i class="fa fa-home"></i> Properties (<span id="propertiesTabCount">0</span>)
+    </button>
+    <button class="tab-btn" onclick="showTab('feedbacks')" id="feedbacksTab">
+        <i class="fa fa-comment-dots"></i> Feedbacks (<span id="feedbacksTabCount">0</span>)
+    </button>
+    <button class="tab-btn" onclick="showTab('support')" id="supportTab">
+        <i class="fa fa-headset"></i> Support (<span id="supportTabCount">0</span>)
+    </button>
+</div>
+
+<!-- Properties Section -->
+<div id="propertiesSection" class="admin-section">
 <div class="controls">
     <input type="text" id="searchBox" class="search-box" placeholder="🔍 Search by Title, Location, Phone, or Owner...">
     
@@ -241,10 +289,27 @@
     <i class="fa fa-database"></i>
     <p>Loading properties...</p>
 </div>
+</div>
+
+<!-- Feedbacks Section -->
+<div id="feedbacksSection" class="admin-section" style="display: none;">
+    <div id="feedbacksList" class="loading">
+        <i class="fa fa-database"></i>
+        <p>Loading feedbacks...</p>
+    </div>
+</div>
+
+<!-- Support Section -->
+<div id="supportSection" class="admin-section" style="display: none;">
+    <div id="supportTicketsList" class="loading">
+        <i class="fa fa-database"></i>
+        <p>Loading support tickets...</p>
+    </div>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-import { getFirestore, collection, doc, deleteDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+import { getFirestore, collection, doc, deleteDoc, updateDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 
 const firebaseConfig = { 
@@ -345,11 +410,269 @@ async function loadProperties() {
         document.getElementById("totalAds").innerText = allProperties.length;
         document.getElementById("activeAds").innerText = activeCount;
         document.getElementById("expiredAds").innerText = expiredCount;
+        document.getElementById("propertiesTabCount").innerText = allProperties.length;
 
         // Render properties
         renderProperties();
     });
 }
+
+// Tab switching
+window.showTab = function(tab) {
+    document.querySelectorAll('.admin-section').forEach(section => {
+        section.style.display = 'none';
+    });
+    
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    if (tab === 'properties') {
+        document.getElementById('propertiesSection').style.display = 'block';
+        document.getElementById('propertiesTab').classList.add('active');
+    } else if (tab === 'feedbacks') {
+        document.getElementById('feedbacksSection').style.display = 'block';
+        document.getElementById('feedbacksTab').classList.add('active');
+        loadFeedbacks();
+    } else if (tab === 'support') {
+        document.getElementById('supportSection').style.display = 'block';
+        document.getElementById('supportTab').classList.add('active');
+        loadSupportTickets();
+    }
+};
+
+// Load feedbacks
+function loadFeedbacks() {
+    onSnapshot(query(collection(db, 'feedbacks')), async (snapshot) => {
+        const container = document.getElementById('feedbacksList');
+        document.getElementById('feedbacksTabCount').innerText = snapshot.size;
+        
+        if (snapshot.empty) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fa fa-comment-slash"></i>
+                    <h3>No Feedbacks Yet</h3>
+                    <p>Users haven't submitted any feedback.</p>
+                </div>`;
+            return;
+        }
+        
+        const feedbacks = [];
+        for (const docSnap of snapshot.docs) {
+            const d = docSnap.data();
+            const date = d.createdAt ? d.createdAt.toDate().toLocaleDateString('en-IN', {
+                day: 'numeric', month: 'short', year: 'numeric'
+            }) : 'Just now';
+            
+            feedbacks.push({
+                id: docSnap.id,
+                userName: d.userName || 'Unknown',
+                userEmail: d.userEmail || '',
+                rating: d.rating || 0,
+                category: d.category || 'General',
+                feedbackText: d.feedbackText || '',
+                status: d.status || 'pending',
+                date: date
+            });
+        }
+        
+        let html = '';
+        feedbacks.forEach(f => {
+            const stars = '★'.repeat(f.rating) + '☆'.repeat(5 - f.rating);
+            
+            html += `
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div style="color: #ffd700; font-size: 18px; margin-bottom: 5px;">${stars}</div>
+                            <h3>${escape(f.userName)}</h3>
+                            <div style="font-size: 12px; color: #999;">${escape(f.userEmail)}</div>
+                        </div>
+                        <span class="status-badge ${f.status === 'resolved' ? 'status-active' : 'status-expired'}">
+                            ${f.status === 'resolved' ? 'RESOLVED' : 'PENDING'}
+                        </span>
+                    </div>
+                    <div class="property-info">
+                        <div class="info-row">
+                            <i class="fa fa-tag"></i>
+                            <span>${escape(f.category)}</span>
+                        </div>
+                        <div class="info-row">
+                            <i class="fa fa-message"></i>
+                            <span>${escape(f.feedbackText)}</span>
+                        </div>
+                        <div class="info-row">
+                            <i class="fa fa-calendar"></i>
+                            <span>${f.date}</span>
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        ${f.status === 'pending' ? 
+                            `<button class="edit-btn" onclick="window.markFeedbackResolved('${f.id}')">
+                                <i class="fa fa-check"></i> Mark Resolved
+                            </button>` : 
+                            `<button class="view-btn" disabled style="opacity: 0.5; cursor: not-allowed;">
+                                <i class="fa fa-check-circle"></i> Resolved
+                            </button>`
+                        }
+                        <button class="del-btn" onclick="window.deleteFeedback('${f.id}')">
+                            <i class="fa fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+    });
+}
+
+// Load support tickets
+function loadSupportTickets() {
+    onSnapshot(query(collection(db, 'support_tickets')), async (snapshot) => {
+        const container = document.getElementById('supportTicketsList');
+        document.getElementById('supportTabCount').innerText = snapshot.size;
+        
+        if (snapshot.empty) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fa fa-ticket"></i>
+                    <h3>No Support Tickets</h3>
+                    <p>No support tickets have been submitted.</p>
+                </div>`;
+            return;
+        }
+        
+        const tickets = [];
+        for (const docSnap of snapshot.docs) {
+            const d = docSnap.data();
+            const date = d.createdAt ? d.createdAt.toDate().toLocaleDateString('en-IN', {
+                day: 'numeric', month: 'short', year: 'numeric'
+            }) : 'Just now';
+            
+            tickets.push({
+                id: docSnap.id,
+                userName: d.userName || 'Unknown',
+                userEmail: d.userEmail || '',
+                subject: d.subject || 'No subject',
+                category: d.category || 'Other',
+                priority: d.priority || 'medium',
+                description: d.description || '',
+                status: d.status || 'open',
+                replies: d.replies || [],
+                date: date
+            });
+        }
+        
+        let html = '';
+        tickets.forEach(t => {
+            const priorityColor = t.priority === 'high' ? '#d32f2f' : 
+                                 t.priority === 'medium' ? '#f57c00' : '#2e7d32';
+            
+            html += `
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h3>${escape(t.subject)}</h3>
+                            <div style="font-size: 12px; color: #999;">${escape(t.userName)} (${escape(t.userEmail)})</div>
+                        </div>
+                        <span class="status-badge" style="background: ${priorityColor}20; color: ${priorityColor};">
+                            ${t.priority.toUpperCase()} PRIORITY
+                        </span>
+                    </div>
+                    <div class="property-info">
+                        <div class="info-row">
+                            <i class="fa fa-tag"></i>
+                            <span>${escape(t.category)}</span>
+                        </div>
+                        <div class="info-row">
+                            <i class="fa fa-message"></i>
+                            <span>${escape(t.description)}</span>
+                        </div>
+                        <div class="info-row">
+                            <i class="fa fa-calendar"></i>
+                            <span>${t.date}</span>
+                        </div>
+                        <div class="info-row">
+                            <i class="fa fa-signal"></i>
+                            <span>Status: ${t.status.toUpperCase()}</span>
+                        </div>
+                        ${t.replies.length > 0 ? 
+                            `<div class="info-row">
+                                <i class="fa fa-comments"></i>
+                                <span>${t.replies.length} ${t.replies.length === 1 ? 'Reply' : 'Replies'}</span>
+                            </div>` : ''
+                        }
+                    </div>
+                    <div class="btn-group">
+                        ${t.status !== 'closed' ? 
+                            `<button class="edit-btn" onclick="window.closeTicket('${t.id}')">
+                                <i class="fa fa-check"></i> Close Ticket
+                            </button>` : 
+                            `<button class="view-btn" disabled style="opacity: 0.5; cursor: not-allowed;">
+                                <i class="fa fa-check-circle"></i> Closed
+                            </button>`
+                        }
+                        <button class="del-btn" onclick="window.deleteTicket('${t.id}')">
+                            <i class="fa fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+    });
+}
+
+// Feedback actions
+window.markFeedbackResolved = async (id) => {
+    if (!confirm('Mark this feedback as resolved?')) return;
+    try {
+        await updateDoc(doc(db, 'feedbacks', id), {
+            status: 'resolved',
+            resolvedAt: new Date(),
+            resolvedBy: auth.currentUser.uid
+        });
+        alert('Feedback marked as resolved!');
+    } catch (e) {
+        alert('Error: ' + e.message);
+    }
+};
+
+window.deleteFeedback = async (id) => {
+    if (!confirm('Delete this feedback permanently?')) return;
+    try {
+        await deleteDoc(doc(db, 'feedbacks', id));
+        alert('Feedback deleted!');
+    } catch (e) {
+        alert('Error: ' + e.message);
+    }
+};
+
+// Support ticket actions
+window.closeTicket = async (id) => {
+    if (!confirm('Close this support ticket?')) return;
+    try {
+        await updateDoc(doc(db, 'support_tickets', id), {
+            status: 'closed',
+            lastReply: new Date()
+        });
+        alert('Ticket closed!');
+    } catch (e) {
+        alert('Error: ' + e.message);
+    }
+};
+
+window.deleteTicket = async (id) => {
+    if (!confirm('Delete this support ticket permanently?')) return;
+    try {
+        await deleteDoc(doc(db, 'support_tickets', id));
+        alert('Ticket deleted!');
+    } catch (e) {
+        alert('Error: ' + e.message);
+    }
+};
 
 function renderProperties() {
     const list = document.getElementById("list");
