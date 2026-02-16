@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback - Earth Property</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #f0f2f5; }
+        header { 
+            background: linear-gradient(135deg, #2e7d32, #1b5e20); 
+            color: white; 
+            padding: 15px; 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        .header-title { flex: 1; font-size: 18px; font-weight: 700; }
+        
+        .container { padding: 20px; max-width: 600px; margin: auto; }
+        
+        .feedback-form { 
+            background: white; 
+            border-radius: 15px; 
+            padding: 25px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08); 
+            margin-bottom: 30px; 
+        }
+        
+        .form-title { 
+            font-size: 20px; 
+            font-weight: 800; 
+            color: #333; 
+            margin-bottom: 5px; 
+        }
+        .form-subtitle { 
+            font-size: 13px; 
+            color: #666; 
+            margin-bottom: 25px; 
+        }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-label { 
+            display: block; 
+            font-weight: 600; 
+            font-size: 14px; 
+            color: #444; 
+            margin-bottom: 8px; 
+        }
+        
+        /* Star Rating */
+        .star-rating { 
+            display: flex; 
+            gap: 10px; 
+            font-size: 40px; 
+            margin-bottom: 10px; 
+        }
+        .star { 
+            color: #ddd; 
+            cursor: pointer; 
+            transition: 0.2s; 
+        }
+        .star.active { color: #ffd700; }
+        .star:hover { transform: scale(1.1); }
+        
+        select, textarea { 
+            width: 100%; 
+            padding: 12px; 
+            border: 2px solid #e0e0e0; 
+            border-radius: 10px; 
+            font-size: 14px; 
+            font-family: inherit; 
+            box-sizing: border-box; 
+            outline: none; 
+            transition: 0.2s; 
+        }
+        select:focus, textarea:focus { 
+            border-color: #2e7d32; 
+            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1); 
+        }
+        
+        textarea { 
+            min-height: 120px; 
+            resize: vertical; 
+        }
+        
+        .char-counter { 
+            text-align: right; 
+            font-size: 12px; 
+            color: #999; 
+            margin-top: 5px; 
+        }
+        
+        .submit-btn { 
+            background: linear-gradient(135deg, #2e7d32, #1b5e20); 
+            color: white; 
+            border: none; 
+            width: 100%; 
+            padding: 15px; 
+            border-radius: 10px; 
+            font-size: 16px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3); 
+        }
+        .submit-btn:disabled { 
+            background: #ccc; 
+            cursor: not-allowed; 
+            box-shadow: none; 
+        }
+        .submit-btn:active:not(:disabled) { 
+            transform: scale(0.98); 
+        }
+        
+        /* Previous Feedbacks */
+        .section-title { 
+            font-size: 18px; 
+            font-weight: 700; 
+            color: #333; 
+            margin: 30px 0 15px; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+        }
+        
+        .feedback-card { 
+            background: white; 
+            border-radius: 12px; 
+            padding: 15px; 
+            margin-bottom: 15px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+            border-left: 4px solid #2e7d32; 
+        }
+        .feedback-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 10px; 
+        }
+        .feedback-stars { 
+            color: #ffd700; 
+            font-size: 16px; 
+        }
+        .feedback-date { 
+            font-size: 12px; 
+            color: #999; 
+        }
+        .feedback-category { 
+            display: inline-block; 
+            background: #e8f5e9; 
+            color: #2e7d32; 
+            padding: 4px 10px; 
+            border-radius: 12px; 
+            font-size: 11px; 
+            font-weight: 700; 
+            text-transform: uppercase; 
+            margin-bottom: 8px; 
+        }
+        .feedback-text { 
+            color: #555; 
+            font-size: 14px; 
+            line-height: 1.6; 
+        }
+        .feedback-status { 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 5px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            margin-top: 10px; 
+            padding: 6px 12px; 
+            border-radius: 8px; 
+        }
+        .status-pending { 
+            background: #fff3e0; 
+            color: #f57c00; 
+        }
+        .status-resolved { 
+            background: #e8f5e9; 
+            color: #2e7d32; 
+        }
+        
+        .empty-state { 
+            text-align: center; 
+            padding: 50px 20px; 
+            color: #999; 
+        }
+        .empty-state i { 
+            font-size: 60px; 
+            margin-bottom: 15px; 
+            opacity: 0.3; 
+        }
+        
+        .loading { 
+            text-align: center; 
+            padding: 50px; 
+            color: #2e7d32; 
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <i class="fa fa-arrow-left" style="cursor: pointer;" onclick="location.href='index.html'"></i>
+    <span class="header-title">📝 Feedback & Suggestions</span>
+</header>
+
+<div class="container">
+    <!-- Feedback Form -->
+    <div class="feedback-form">
+        <div class="form-title">Share Your Feedback</div>
+        <div class="form-subtitle">Help us improve Earth Property Global</div>
+        
+        <div class="form-group">
+            <label class="form-label">How would you rate us?</label>
+            <div class="star-rating" id="starRating">
+                <i class="fa fa-star star" onclick="setRating(1)"></i>
+                <i class="fa fa-star star" onclick="setRating(2)"></i>
+                <i class="fa fa-star star" onclick="setRating(3)"></i>
+                <i class="fa fa-star star" onclick="setRating(4)"></i>
+                <i class="fa fa-star star" onclick="setRating(5)"></i>
+            </div>
+            <div id="ratingText" style="font-size: 13px; color: #666; margin-top: 5px;"></div>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Category</label>
+            <select id="category">
+                <option value="">Select category...</option>
+                <option value="Bug Report">🐛 Bug Report</option>
+                <option value="Feature Suggestion">💡 Feature Suggestion</option>
+                <option value="Complaint">😞 Complaint</option>
+                <option value="General Feedback">💬 General Feedback</option>
+                <option value="Other">📌 Other</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Your Feedback</label>
+            <textarea id="feedbackText" maxlength="500" placeholder="Share your thoughts, suggestions, or report issues..."></textarea>
+            <div class="char-counter"><span id="charCount">0</span>/500</div>
+        </div>
+        
+        <button class="submit-btn" id="submitBtn" onclick="submitFeedback()">
+            <i class="fa fa-paper-plane"></i> Submit Feedback
+        </button>
+    </div>
+    
+    <!-- Previous Feedbacks -->
+    <div class="section-title">
+        <i class="fa fa-history"></i>
+        Your Previous Feedbacks
+    </div>
+    
+    <div id="previousFeedbacks" class="loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <p>Loading your feedbacks...</p>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = { 
+    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
+    authDomain: "earth-properties-c3c56.firebaseapp.com", 
+    projectId: "earth-properties-c3c56" 
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+let selectedRating = 0;
+let currentUser = null;
+
+// Character counter
+document.getElementById('feedbackText').addEventListener('input', function() {
+    document.getElementById('charCount').innerText = this.value.length;
+});
+
+// Star rating
+function setRating(rating) {
+    selectedRating = rating;
+    const stars = document.querySelectorAll('.star');
+    const ratingTexts = ['Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+    
+    stars.forEach((star, index) => {
+        if (index < rating) {
+            star.classList.add('active');
+        } else {
+            star.classList.remove('active');
+        }
+    });
+    
+    document.getElementById('ratingText').innerText = `Rating: ${ratingTexts[rating - 1]}`;
+}
+
+// Auth check
+auth.onAuthStateChanged(user => {
+    if (!user) {
+        location.href = 'login.html';
+        return;
+    }
+    currentUser = user;
+    loadPreviousFeedbacks(user.uid);
+});
+
+// Submit feedback
+async function submitFeedback() {
+    if (!currentUser) {
+        alert('Please login first');
+        return;
+    }
+    
+    const category = document.getElementById('category').value;
+    const feedbackText = document.getElementById('feedbackText').value.trim();
+    
+    if (selectedRating === 0) {
+        alert('Please select a rating');
+        return;
+    }
+    
+    if (!category) {
+        alert('Please select a category');
+        return;
+    }
+    
+    if (!feedbackText || feedbackText.length < 10) {
+        alert('Please write at least 10 characters');
+        return;
+    }
+    
+    try {
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('submitBtn').innerHTML = '<i class="fa fa-spinner fa-spin"></i> Submitting...';
+        
+        await db.collection('feedbacks').add({
+            userId: currentUser.uid,
+            userName: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
+            userEmail: currentUser.email || '',
+            rating: selectedRating,
+            category: category,
+            feedbackText: feedbackText,
+            status: 'pending',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        alert('✓ Thank you for your feedback!\n\nYour feedback has been submitted successfully.');
+        
+        // Reset form
+        selectedRating = 0;
+        document.querySelectorAll('.star').forEach(star => star.classList.remove('active'));
+        document.getElementById('ratingText').innerText = '';
+        document.getElementById('category').value = '';
+        document.getElementById('feedbackText').value = '';
+        document.getElementById('charCount').innerText = '0';
+        
+        // Reload feedbacks
+        loadPreviousFeedbacks(currentUser.uid);
+        
+    } catch (e) {
+        alert('Error submitting feedback: ' + e.message);
+    } finally {
+        document.getElementById('submitBtn').disabled = false;
+        document.getElementById('submitBtn').innerHTML = '<i class="fa fa-paper-plane"></i> Submit Feedback';
+    }
+}
+
+// Load previous feedbacks
+function loadPreviousFeedbacks(uid) {
+    db.collection('feedbacks')
+        .where('userId', '==', uid)
+        .orderBy('createdAt', 'desc')
+        .onSnapshot(snapshot => {
+            const container = document.getElementById('previousFeedbacks');
+            
+            if (snapshot.empty) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa fa-comment-slash"></i>
+                        <h3>No Feedbacks Yet</h3>
+                        <p>Submit your first feedback above!</p>
+                    </div>`;
+                return;
+            }
+            
+            let html = '';
+            snapshot.forEach(doc => {
+                const d = doc.data();
+                const date = d.createdAt ? d.createdAt.toDate().toLocaleDateString('en-IN', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                }) : 'Just now';
+                
+                const stars = '★'.repeat(d.rating) + '☆'.repeat(5 - d.rating);
+                
+                html += `
+                    <div class="feedback-card">
+                        <div class="feedback-header">
+                            <div class="feedback-stars">${stars}</div>
+                            <div class="feedback-date">${date}</div>
+                        </div>
+                        <div class="feedback-category">${d.category}</div>
+                        <div class="feedback-text">${escapeHtml(d.feedbackText)}</div>
+                        <div class="feedback-status ${d.status === 'resolved' ? 'status-resolved' : 'status-pending'}">
+                            <i class="fa fa-${d.status === 'resolved' ? 'check-circle' : 'clock'}"></i>
+                            ${d.status === 'resolved' ? 'Resolved' : 'Pending Review'}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        });
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
+}
+</script>
+</body>
+</html>
