@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help & Support - Earth Property</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: #f0f2f5; }
+        header { 
+            background: linear-gradient(135deg, #2e7d32, #1b5e20); 
+            color: white; 
+            padding: 15px; 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        .header-title { flex: 1; font-size: 18px; font-weight: 700; }
+        
+        .container { padding: 20px; max-width: 700px; margin: auto; }
+        
+        /* Tabs */
+        .tabs { 
+            display: flex; 
+            background: white; 
+            border-radius: 12px; 
+            padding: 5px; 
+            margin-bottom: 20px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+        }
+        .tab { 
+            flex: 1; 
+            padding: 12px; 
+            text-align: center; 
+            font-weight: 600; 
+            font-size: 14px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            transition: 0.2s; 
+            color: #666; 
+        }
+        .tab.active { 
+            background: linear-gradient(135deg, #2e7d32, #1b5e20); 
+            color: white; 
+        }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        /* FAQ Section */
+        .faq-item { 
+            background: white; 
+            border-radius: 12px; 
+            margin-bottom: 12px; 
+            overflow: hidden; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+        }
+        .faq-question { 
+            padding: 15px 20px; 
+            font-weight: 600; 
+            color: #333; 
+            cursor: pointer; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            transition: 0.2s; 
+        }
+        .faq-question:hover { background: #f8f9fa; }
+        .faq-question i { 
+            font-size: 12px; 
+            color: #2e7d32; 
+            transition: 0.3s; 
+        }
+        .faq-item.open .faq-question i { transform: rotate(180deg); }
+        .faq-answer { 
+            padding: 0 20px; 
+            max-height: 0; 
+            overflow: hidden; 
+            transition: 0.3s; 
+            color: #666; 
+            font-size: 14px; 
+            line-height: 1.6; 
+        }
+        .faq-item.open .faq-answer { 
+            padding: 0 20px 15px; 
+            max-height: 500px; 
+        }
+        
+        /* Support Form */
+        .support-form { 
+            background: white; 
+            border-radius: 15px; 
+            padding: 25px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08); 
+        }
+        
+        .form-group { margin-bottom: 18px; }
+        .form-label { 
+            display: block; 
+            font-weight: 600; 
+            font-size: 14px; 
+            color: #444; 
+            margin-bottom: 8px; 
+        }
+        
+        input, select, textarea { 
+            width: 100%; 
+            padding: 12px; 
+            border: 2px solid #e0e0e0; 
+            border-radius: 10px; 
+            font-size: 14px; 
+            font-family: inherit; 
+            box-sizing: border-box; 
+            outline: none; 
+            transition: 0.2s; 
+        }
+        input:focus, select:focus, textarea:focus { 
+            border-color: #2e7d32; 
+            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1); 
+        }
+        
+        textarea { min-height: 120px; resize: vertical; }
+        
+        .submit-btn { 
+            background: linear-gradient(135deg, #2e7d32, #1b5e20); 
+            color: white; 
+            border: none; 
+            width: 100%; 
+            padding: 15px; 
+            border-radius: 10px; 
+            font-size: 16px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3); 
+        }
+        .submit-btn:disabled { 
+            background: #ccc; 
+            cursor: not-allowed; 
+            box-shadow: none; 
+        }
+        
+        /* Ticket Cards */
+        .ticket-card { 
+            background: white; 
+            border-radius: 12px; 
+            padding: 15px; 
+            margin-bottom: 15px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+        }
+        .ticket-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: start; 
+            margin-bottom: 10px; 
+        }
+        .ticket-subject { 
+            font-weight: 700; 
+            font-size: 15px; 
+            color: #333; 
+        }
+        .ticket-status { 
+            padding: 4px 10px; 
+            border-radius: 12px; 
+            font-size: 11px; 
+            font-weight: 700; 
+            text-transform: uppercase; 
+        }
+        .status-open { background: #e3f2fd; color: #1976d2; }
+        .status-in-progress { background: #fff3e0; color: #f57c00; }
+        .status-closed { background: #e8f5e9; color: #2e7d32; }
+        
+        .ticket-category { 
+            display: inline-block; 
+            background: #f5f5f5; 
+            padding: 4px 10px; 
+            border-radius: 8px; 
+            font-size: 12px; 
+            margin-bottom: 8px; 
+        }
+        .ticket-description { 
+            color: #666; 
+            font-size: 14px; 
+            line-height: 1.6; 
+            margin-bottom: 10px; 
+        }
+        .ticket-footer { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-size: 12px; 
+            color: #999; 
+            padding-top: 10px; 
+            border-top: 1px solid #eee; 
+        }
+        
+        .empty-state { 
+            text-align: center; 
+            padding: 50px 20px; 
+            color: #999; 
+        }
+        .empty-state i { 
+            font-size: 60px; 
+            margin-bottom: 15px; 
+            opacity: 0.3; 
+        }
+        
+        .loading { 
+            text-align: center; 
+            padding: 50px; 
+            color: #2e7d32; 
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <i class="fa fa-arrow-left" style="cursor: pointer;" onclick="location.href='index.html'"></i>
+    <span class="header-title">❓ Help & Support</span>
+</header>
+
+<div class="container">
+    <!-- Tabs -->
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('faq')">
+            <i class="fa fa-question-circle"></i> FAQ
+        </div>
+        <div class="tab" onclick="switchTab('support')">
+            <i class="fa fa-headset"></i> Support
+        </div>
+        <div class="tab" onclick="switchTab('tickets')">
+            <i class="fa fa-ticket"></i> My Tickets
+        </div>
+    </div>
+    
+    <!-- FAQ Tab -->
+    <div id="faqTab" class="tab-content active">
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                How do I post a property?
+                <i class="fa fa-chevron-down"></i>
+            </div>
+            <div class="faq-answer">
+                Click the "+" button at the bottom of the home page, fill in property details, add photos, and submit. Your property will be live immediately.
+            </div>
+        </div>
+        
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                How long does my ad stay active?
+                <i class="fa fa-chevron-down"></i>
+            </div>
+            <div class="faq-answer">
+                Sell properties stay active for 180 days (6 months). Rent properties stay active for 30 days. You can renew expired ads from "My Ads" section.
+            </div>
+        </div>
+        
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                How do I edit my property?
+                <i class="fa fa-chevron-down"></i>
+            </div>
+            <div class="faq-answer">
+                Go to "My Ads", find your property, and click the "Edit" button. Make changes and save. Your property will be updated immediately.
+            </div>
+        </div>
+        
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                How can I delete my property?
+                <i class="fa fa-chevron-down"></i>
+            </div>
+            <div class="faq-answer">
+                Go to "My Ads", find your property, and click the "Delete" button. Confirm deletion. This action cannot be undone.
+            </div>
+        </div>
+        
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                How do I contact property owners?
+                <i class="fa fa-chevron-down"></i>
+            </div>
+            <div class="faq-answer">
+                On each property card, you'll find "Call", "WhatsApp", and "Chat" buttons. Choose your preferred method to contact the owner directly.
+            </div>
+        </div>
+        
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                What is verification?
+                <i class="fa fa-chevron-down"></i>
+            </div>
+            <div class="faq-answer">
+                Verified accounts get a blue checkmark badge and premium features. To get verified, go to your profile and click "Get Verified", then submit required documents.
+            </div>
+        </div>
+        
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                Is posting properties free?
+                <i class="fa fa-chevron-down"></i>
+            </div>
+            <div class="faq-answer">
+                Yes! Posting properties is completely free. There are no hidden charges. You can post unlimited properties.
+            </div>
+        </div>
+        
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleFAQ(this)">
+                How do I report a fake listing?
+                <i class="fa fa-chevron-down"></i>
+            </div>
+            <div class="faq-answer">
+                If you find a suspicious or fake listing, please submit a support ticket below with the property details. Our team will investigate and take action.
+            </div>
+        </div>
+    </div>
+    
+    <!-- Support Tab -->
+    <div id="supportTab" class="tab-content">
+        <div class="support-form">
+            <h3 style="margin-top: 0;">Submit Support Ticket</h3>
+            
+            <div class="form-group">
+                <label class="form-label">Subject</label>
+                <input type="text" id="subject" maxlength="100" placeholder="Brief description of your issue">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Category</label>
+                <select id="ticketCategory">
+                    <option value="">Select category...</option>
+                    <option value="Account">👤 Account Issues</option>
+                    <option value="Property">🏠 Property Posting Issues</option>
+                    <option value="Payment">💳 Payment Issues</option>
+                    <option value="Technical">⚙️ Technical Problem</option>
+                    <option value="Report">🚫 Report Fake Listing</option>
+                    <option value="Other">📌 Other</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Priority</label>
+                <select id="priority">
+                    <option value="low">Low</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high">High</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Detailed Description</label>
+                <textarea id="ticketDescription" maxlength="1000" placeholder="Describe your issue in detail..."></textarea>
+            </div>
+            
+            <button class="submit-btn" id="submitTicketBtn" onclick="submitTicket()">
+                <i class="fa fa-paper-plane"></i> Submit Ticket
+            </button>
+        </div>
+    </div>
+    
+    <!-- My Tickets Tab -->
+    <div id="ticketsTab" class="tab-content">
+        <div id="ticketsList" class="loading">
+            <i class="fa fa-spinner fa-spin"></i>
+            <p>Loading your tickets...</p>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = { 
+    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
+    authDomain: "earth-properties-c3c56.firebaseapp.com", 
+    projectId: "earth-properties-c3c56" 
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+let currentUser = null;
+
+// Tab switching
+function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
+    event.target.closest('.tab').classList.add('active');
+    
+    if (tab === 'faq') document.getElementById('faqTab').classList.add('active');
+    if (tab === 'support') document.getElementById('supportTab').classList.add('active');
+    if (tab === 'tickets') document.getElementById('ticketsTab').classList.add('active');
+}
+
+// FAQ toggle
+function toggleFAQ(element) {
+    const faqItem = element.closest('.faq-item');
+    const wasOpen = faqItem.classList.contains('open');
+    
+    // Close all
+    document.querySelectorAll('.faq-item').forEach(item => {
+        item.classList.remove('open');
+    });
+    
+    // Open clicked if it was closed
+    if (!wasOpen) {
+        faqItem.classList.add('open');
+    }
+}
+
+// Auth check
+auth.onAuthStateChanged(user => {
+    if (!user) {
+        location.href = 'login.html';
+        return;
+    }
+    currentUser = user;
+    loadUserTickets(user.uid);
+});
+
+// Submit ticket
+async function submitTicket() {
+    if (!currentUser) {
+        alert('Please login first');
+        return;
+    }
+    
+    const subject = document.getElementById('subject').value.trim();
+    const category = document.getElementById('ticketCategory').value;
+    const priority = document.getElementById('priority').value;
+    const description = document.getElementById('ticketDescription').value.trim();
+    
+    if (!subject || subject.length < 5) {
+        alert('Please enter a subject (minimum 5 characters)');
+        return;
+    }
+    
+    if (!category) {
+        alert('Please select a category');
+        return;
+    }
+    
+    if (!description || description.length < 20) {
+        alert('Please provide detailed description (minimum 20 characters)');
+        return;
+    }
+    
+    try {
+        document.getElementById('submitTicketBtn').disabled = true;
+        document.getElementById('submitTicketBtn').innerHTML = '<i class="fa fa-spinner fa-spin"></i> Submitting...';
+        
+        await db.collection('support_tickets').add({
+            userId: currentUser.uid,
+            userName: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
+            userEmail: currentUser.email || '',
+            subject: subject,
+            category: category,
+            priority: priority,
+            description: description,
+            status: 'open',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            lastReply: firebase.firestore.FieldValue.serverTimestamp(),
+            replies: []
+        });
+        
+        alert('✓ Ticket Submitted!\n\nYour support ticket has been created. Our team will respond soon.');
+        
+        // Reset form
+        document.getElementById('subject').value = '';
+        document.getElementById('ticketCategory').value = '';
+        document.getElementById('priority').value = 'medium';
+        document.getElementById('ticketDescription').value = '';
+        
+        // Switch to tickets tab
+        switchTab('tickets');
+        loadUserTickets(currentUser.uid);
+        
+    } catch (e) {
+        alert('Error submitting ticket: ' + e.message);
+    } finally {
+        document.getElementById('submitTicketBtn').disabled = false;
+        document.getElementById('submitTicketBtn').innerHTML = '<i class="fa fa-paper-plane"></i> Submit Ticket';
+    }
+}
+
+// Load user tickets
+function loadUserTickets(uid) {
+    db.collection('support_tickets')
+        .where('userId', '==', uid)
+        .orderBy('createdAt', 'desc')
+        .onSnapshot(snapshot => {
+            const container = document.getElementById('ticketsList');
+            
+            if (snapshot.empty) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa fa-ticket"></i>
+                        <h3>No Support Tickets</h3>
+                        <p>You haven't submitted any support tickets yet.</p>
+                    </div>`;
+                return;
+            }
+            
+            let html = '';
+            snapshot.forEach(doc => {
+                const d = doc.data();
+                const date = d.createdAt ? d.createdAt.toDate().toLocaleDateString('en-IN', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
+                }) : 'Just now';
+                
+                const statusClass = d.status === 'closed' ? 'status-closed' : 
+                                   d.status === 'in-progress' ? 'status-in-progress' : 
+                                   'status-open';
+                
+                const statusText = d.status === 'closed' ? 'Closed' : 
+                                  d.status === 'in-progress' ? 'In Progress' : 
+                                  'Open';
+                
+                const priorityIcon = d.priority === 'high' ? '🔴' : 
+                                    d.priority === 'medium' ? '🟡' : '🟢';
+                
+                html += `
+                    <div class="ticket-card">
+                        <div class="ticket-header">
+                            <div>
+                                <div class="ticket-subject">${escapeHtml(d.subject)}</div>
+                                <div class="ticket-category">${priorityIcon} ${d.category}</div>
+                            </div>
+                            <div class="ticket-status ${statusClass}">${statusText}</div>
+                        </div>
+                        <div class="ticket-description">${escapeHtml(d.description)}</div>
+                        <div class="ticket-footer">
+                            <div>
+                                <i class="fa fa-calendar"></i> ${date}
+                            </div>
+                            <div>
+                                ${d.replies && d.replies.length > 0 ? 
+                                  `<i class="fa fa-comments"></i> ${d.replies.length} ${d.replies.length === 1 ? 'Reply' : 'Replies'}` : 
+                                  '<i class="fa fa-clock"></i> Awaiting response'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        });
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
+}
+</script>
+</body>
+</html>
