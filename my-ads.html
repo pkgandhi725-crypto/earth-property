@@ -28,6 +28,7 @@
         .status-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; }
         .active-badge { background: #e8f5e9; color: #2e7d32; }
         .expired-badge { background: #ffebee; color: #d32f2f; }
+        .delete-soon-badge { background: #fff3e0; color: #e65100; }
         
         .btn-group { display: flex; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #eee; }
         button { flex: 1; cursor: pointer; border: none; font-weight: 700; border-radius: 12px; font-size: 13px; padding: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; }
@@ -38,6 +39,9 @@
         
         #loader { text-align: center; padding: 50px; color: var(--primary); }
         .empty-state { text-align: center; padding: 60px 20px; color: #666; }
+
+        /* Delete countdown info line */
+        .delete-info { font-size: 11px; color: #e65100; margin-top: 6px; display: flex; align-items: center; gap: 4px; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -114,23 +118,53 @@ firebase.auth().onAuthStateChanged(user => {
                   const purpose = data.purpose || 'Sell';
                   const limit = (purpose === 'Rent' || purpose === 'Lease') ? 30 : 180;
                   
+                  // Calculate expiry date from renewedAt or createdAt
                   const baseDate = data.renewedAt ? data.renewedAt.toDate() : (data.createdAt ? data.createdAt.toDate() : new Date());
                   const expDate = new Date(baseDate);
                   expDate.setDate(expDate.getDate() + limit);
                   
-                  const isExp = new Date() > expDate;
+                  const now = new Date();
+                  const isExp = now > expDate;
 
+                  // ✅ Auto-update isExpired flag in Firestore
                   if (isExp && data.isExpired !== true) {
                       db.collection("properties").doc(doc.id).update({ isExpired: true });
                   } else if (!isExp && data.isExpired !== false) {
                       db.collection("properties").doc(doc.id).update({ isExpired: false });
                   }
 
+                  // ✅ Auto-delete: if expired more than 30 days ago, delete from Firestore
+                  if (isExp) {
+                      const autoDeleteDate = new Date(expDate);
+                      autoDeleteDate.setDate(autoDeleteDate.getDate() + 30);
+                      if (now > autoDeleteDate) {
+                          db.collection("properties").doc(doc.id).delete();
+                          return; // skip rendering this card
+                      }
+                  }
+
                   isExp ? expired++ : active++;
                   
-                  const diff = expDate - new Date();
+                  // Days left before expiry
+                  const diff = expDate - now;
                   const daysLeft = Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+
+                  // Days left before auto-delete (only for expired ads)
+                  let daysUntilDelete = 0;
+                  let deleteInfoHTML = '';
+                  if (isExp) {
+                      const autoDeleteDate = new Date(expDate);
+                      autoDeleteDate.setDate(autoDeleteDate.getDate() + 30);
+                      const deleteDiff = autoDeleteDate - now;
+                      daysUntilDelete = Math.max(0, Math.ceil(deleteDiff / (1000 * 60 * 60 * 24)));
+                      deleteInfoHTML = `
+                          <div class="delete-info">
+                              <i class="fa fa-trash-clock"></i>
+                              Ad will be deleted in ${daysUntilDelete} day${daysUntilDelete !== 1 ? 's' : ''}
+                          </div>`;
+                  }
                   
+                  // Status badge text
                   let statusText;
                   if (isExp) {
                       statusText = t.expired;
@@ -141,7 +175,7 @@ firebase.auth().onAuthStateChanged(user => {
                   }
 
                   adList.innerHTML += `
-                  <div class="ad-card" style="${isExp ? 'opacity:0.8;' : ''}">
+                  <div class="ad-card" style="${isExp ? 'opacity:0.85;' : ''}">
                       <div class="ad-info">
                           <img src="${data.images?.[0] || 'https://via.placeholder.com/150'}" class="ad-img" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
                           <div class="ad-details">
@@ -150,12 +184,13 @@ firebase.auth().onAuthStateChanged(user => {
                               <div class="status-badge ${isExp ? 'expired-badge' : 'active-badge'}">
                                   <i class="fa ${isExp ? 'fa-exclamation-triangle' : 'fa-clock'}"></i> ${statusText}
                               </div>
+                              ${deleteInfoHTML}
                           </div>
                       </div>
                       <div class="btn-group">
                           <button class="edit-btn" onclick="location.href='add-property.html?edit=${doc.id}'">${t.edit}</button>
                           ${isExp ? 
-                              `<button class="renew-btn" onclick="renewAd('${doc.id}', this)">${t.renew}</button>` : 
+                              `<button class="renew-btn" onclick="renewAd('${doc.id}', '${purpose}', this)">${t.renew}</button>` : 
                               `<button style="background:#f8f9fa; color:#2e7d32; cursor:default; border:1px solid #e8f5e9;">${t.active}</button>`
                           }
                           <button class="delete-btn" onclick="deleteAd('${doc.id}')"><i class="fa fa-trash-alt"></i></button>
@@ -169,17 +204,24 @@ firebase.auth().onAuthStateChanged(user => {
       });
 });
 
-async function renewAd(id, btn) {
+// ✅ renewAd: now accepts purpose to correctly calculate new expiryDate
+async function renewAd(id, purpose, btn) {
     if (!confirm("Renew this ad for another period?")) return;
     const originalText = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
     
     try {
+        const limit = (purpose === 'Rent' || purpose === 'Lease') ? 30 : 180;
+        const newExpiry = new Date();
+        newExpiry.setDate(newExpiry.getDate() + limit);
+
         await db.collection("properties").doc(id).update({
             isExpired: false,
-            renewedAt: firebase.firestore.FieldValue.serverTimestamp()
+            renewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            expiryDate: firebase.firestore.Timestamp.fromDate(newExpiry)
         });
+
         btn.innerHTML = '<i class="fa fa-check"></i> ' + t.renewSuccess.split(' ')[0];
         btn.style.background = "#4caf50";
         alert(t.renewSuccess);
