@@ -15,15 +15,33 @@
         input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
         .upload-btn { background: #e8f5e9; color: #2e7d32; padding: 15px; border-radius: 10px; text-align: center; border: 2px dashed #2e7d32; cursor: pointer; margin-bottom: 10px; transition: 0.3s; }
         .upload-btn:active { transform: scale(0.98); background: #c8e6c9; }
-        .btn-submit { background: #2e7d32; color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.3s; }
+        .btn-submit { background: #2e7d32; color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
         .btn-submit:disabled { background: #ccc; cursor: not-allowed; }
-        #successBox, #pendingBox { display: none; text-align: center; color: #2e7d32; }
         .file-name { font-size: 12px; color: #666; margin-top: 5px; font-weight: normal; }
+
+        /* Status Boxes */
+        #successBox, #pendingBox, #approvedBox, #rejectedBox { 
+            display: none; text-align: center; color: #2e7d32; 
+        }
+
+        /* Rejected Box */
+        .rejected-reason {
+            background: #ffebee;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: left;
+            border-left: 4px solid #d32f2f;
+        }
+        .rejected-reason p { margin: 5px 0; font-size: 14px; color: #333; }
+        .rejected-reason strong { color: #d32f2f; }
     </style>
 </head>
 <body>
 
 <div class="container">
+
+    <!-- FORM: New Request -->
     <div id="verifyForm">
         <div class="header">
             <i class="fa fa-shield-halved"></i>
@@ -53,6 +71,7 @@
         <button class="btn-submit" id="submitBtn">Submit for Review</button>
     </div>
 
+    <!-- PENDING: Request Under Review -->
     <div id="pendingBox">
         <i class="fa fa-clock fa-4x" style="color: orange;"></i>
         <h3>Under Review</h3>
@@ -60,12 +79,35 @@
         <button class="btn-submit" onclick="location.href='index.html'">Back to Home</button>
     </div>
 
+    <!-- SUCCESS: Just Submitted -->
     <div id="successBox">
         <i class="fa fa-circle-check fa-4x"></i>
         <h3>Request Sent!</h3>
-        <p>Your verification request is successful.</p>
+        <p>Your verification request has been submitted successfully.</p>
         <button class="btn-submit" onclick="location.href='index.html'">Back to Home</button>
     </div>
+
+    <!-- APPROVED: Already Verified -->
+    <div id="approvedBox">
+        <i class="fa fa-certificate fa-4x" style="color: #1da1f2;"></i>
+        <h3 style="color: #1da1f2;">Already Verified! ✅</h3>
+        <p style="color: #666;">You are already a Verified Premium Dealer. No need to apply again.</p>
+        <button class="btn-submit" onclick="location.href='index.html'">Back to Home</button>
+    </div>
+
+    <!-- REJECTED: Show Reason + Allow Reapply -->
+    <div id="rejectedBox">
+        <i class="fa fa-circle-xmark fa-4x" style="color: #d32f2f;"></i>
+        <h3 style="color: #d32f2f;">Request Rejected</h3>
+        <div class="rejected-reason">
+            <strong>Rejection Reason:</strong>
+            <p id="rejectionReasonText">—</p>
+        </div>
+        <p style="color: #666; font-size: 14px;">You can submit a new request with correct documents.</p>
+        <button class="btn-submit" onclick="showFormAgain()">Apply Again</button>
+        <button class="btn-submit" style="background:#f0f2f5; color:#444; margin-top:8px;" onclick="location.href='index.html'">Back to Home</button>
+    </div>
+
 </div>
 
 <script type="module">
@@ -73,7 +115,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebas
 import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 
-// Firebase Config
 const firebaseConfig = { 
     apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
     authDomain: "earth-properties-c3c56.firebaseapp.com", 
@@ -83,21 +124,61 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// ✅ CLOUDINARY CONFIG (Fixed to match your main account)
+// ✅ Cloudinary config — verify_docs folder for organized storage
 const CLOUD_NAME = "dnkhurnbv"; 
 const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
-const CLOUDINARY_PRESET = "earth_property"; 
+const CLOUDINARY_PRESET = "earth_property";
 
 let idFile, payFile;
 
+// ✅ Helper to hide all boxes
+function hideAll() {
+    ['verifyForm','pendingBox','successBox','approvedBox','rejectedBox']
+        .forEach(id => document.getElementById(id).style.display = 'none');
+}
+
+// ✅ Show form again (for rejected users reapplying)
+window.showFormAgain = () => {
+    hideAll();
+    document.getElementById('verifyForm').style.display = 'block';
+};
+
 onAuthStateChanged(auth, async (user) => {
     if (!user) return location.href = 'login.html';
-    
-    // Check if request is already pending
-    const docSnap = await getDoc(doc(db, "verification_requests", user.uid));
-    if(docSnap.exists() && docSnap.data().status === "pending") {
-        document.getElementById('verifyForm').style.display = 'none';
-        document.getElementById('pendingBox').style.display = 'block';
+
+    try {
+        // ✅ Check user's isVerified status first
+        const userSnap = await getDoc(doc(db, "users", user.uid));
+        if (userSnap.exists() && userSnap.data().isVerified === true) {
+            hideAll();
+            document.getElementById('approvedBox').style.display = 'block';
+            return;
+        }
+
+        // ✅ Check verification_requests status
+        const reqSnap = await getDoc(doc(db, "verification_requests", user.uid));
+        if (reqSnap.exists()) {
+            const status = reqSnap.data().status;
+
+            if (status === "pending") {
+                hideAll();
+                document.getElementById('pendingBox').style.display = 'block';
+
+            } else if (status === "rejected") {
+                hideAll();
+                const reason = reqSnap.data().rejectionReason || "No reason provided.";
+                document.getElementById('rejectionReasonText').innerText = reason;
+                document.getElementById('rejectedBox').style.display = 'block';
+            }
+            // If status is "approved" but isVerified not set yet — show approved box
+            else if (status === "approved") {
+                hideAll();
+                document.getElementById('approvedBox').style.display = 'block';
+            }
+        }
+        // else: show form normally (new user)
+    } catch(e) {
+        console.error("Auth check error:", e);
     }
 });
 
@@ -111,16 +192,15 @@ document.getElementById('payInput').onchange = (e) => {
     if(payFile) document.getElementById('payName').innerText = "Selected: " + payFile.name;
 };
 
-// ✅ IMPROVED UPLOAD FUNCTION WITH DEBUGGING
+// ✅ Upload to Cloudinary — verify_docs folder via preset
 async function uploadToCloudinary(file) {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', CLOUDINARY_PRESET);
+    formData.append('folder', 'verify_docs'); // ✅ Organized in separate folder
 
     const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
     const data = await res.json();
-    
-    console.log("Cloudinary Response:", data); // Check console if it fails
 
     if(!data.secure_url) {
         throw new Error(data.error?.message || "Upload Failed");
@@ -132,14 +212,15 @@ document.getElementById('submitBtn').onclick = async () => {
     const user = auth.currentUser;
     const bizName = document.getElementById('bizName').value.trim();
     
-    if(!bizName || !idFile || !payFile) return alert("Please select all files and enter Business Name!");
+    if(!bizName || !idFile || !payFile) return alert("Please fill Business Name and select both files!");
 
     const btn = document.getElementById('submitBtn');
     btn.disabled = true; 
     btn.innerText = "Uploading Documents...";
 
     try {
-        // 1. Parallel Uploads
+        // 1. Parallel Uploads to Cloudinary (verify_docs folder)
+        btn.innerText = "Uploading... Please wait";
         const [idUrl, payUrl] = await Promise.all([
             uploadToCloudinary(idFile),
             uploadToCloudinary(payFile)
@@ -155,8 +236,9 @@ document.getElementById('submitBtn').onclick = async () => {
             submittedAt: serverTimestamp()
         });
 
-        document.getElementById('verifyForm').style.display = 'none';
+        hideAll();
         document.getElementById('successBox').style.display = 'block';
+
     } catch(e) { 
         console.error("Submit Error:", e);
         alert("Error: " + e.message); 
