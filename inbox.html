@@ -421,11 +421,8 @@ function escapeHtml(text) {
 
 function switchTab(tab) {
     currentTab = tab;
-    
-    // Update tab styles
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     event.target.classList.add('active');
-    
     renderChats();
 }
 
@@ -434,6 +431,7 @@ function openChat(otherId, propId) {
     location.href = url;
 }
 
+// ✅ FIXED: Delete messages subcollection FIRST, then parent document
 async function deleteChat(event, chatId, userName) {
     event.stopPropagation();
     
@@ -442,16 +440,16 @@ async function deleteChat(event, chatId, userName) {
     }
     
     try {
-        // Delete chat document
-        await db.collection("chats").doc(chatId).delete();
-        
-        // Delete all messages in this chat
+        // ✅ Step 1: Delete all messages in subcollection FIRST
         const messagesSnap = await db.collection("chats").doc(chatId).collection("messages").get();
-        const deletePromises = messagesSnap.docs.map(doc => doc.ref.delete());
-        await Promise.all(deletePromises);
-        
-        // Show success (list will auto-update via onSnapshot)
-        // Optional: Show a toast notification
+        if (!messagesSnap.empty) {
+            const deletePromises = messagesSnap.docs.map(doc => doc.ref.delete());
+            await Promise.all(deletePromises);
+        }
+
+        // ✅ Step 2: Delete parent chat document AFTER messages are deleted
+        await db.collection("chats").doc(chatId).delete();
+
     } catch (e) {
         alert("Error deleting conversation: " + e.message);
     }
