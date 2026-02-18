@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Reports & Chats</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding-bottom: 30px; }
+
+        header {
+            background: linear-gradient(135deg, #1b5e20, #2e7d32);
+            color: white; padding: 15px 20px;
+            display: flex; align-items: center; gap: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        header h1 { font-size: 18px; font-weight: 700; flex: 1; }
+        header a {
+            color: white; font-size: 13px; opacity: 0.85;
+            text-decoration: none; background: rgba(255,255,255,0.15);
+            padding: 6px 12px; border-radius: 20px;
+        }
+
+        .tabs {
+            display: flex; background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .tab {
+            flex: 1; padding: 15px; text-align: center;
+            font-weight: 600; font-size: 14px; color: #666;
+            cursor: pointer; border-bottom: 3px solid transparent;
+            transition: 0.2s;
+        }
+        .tab.active { color: #2e7d32; border-bottom-color: #2e7d32; }
+
+        .section { display: none; padding: 15px; max-width: 800px; margin: auto; }
+        .section.active { display: block; }
+
+        /* Cards */
+        .card {
+            background: white; border-radius: 14px; padding: 18px;
+            margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border-left: 5px solid #2e7d32;
+        }
+        .card.report-card { border-left-color: #d32f2f; }
+
+        .card-title { font-size: 15px; font-weight: 700; color: #222; margin-bottom: 6px; }
+        .card-meta { font-size: 12px; color: #888; margin-bottom: 10px; }
+        .card-meta span { margin-right: 12px; }
+
+        .reason-badge {
+            display: inline-block; padding: 3px 10px; border-radius: 12px;
+            font-size: 11px; font-weight: 700; margin-bottom: 10px;
+        }
+        .reason-Spam { background: #fff3e0; color: #e65100; }
+        .reason-Abusive { background: #fce4ec; color: #c62828; }
+        .reason-Scam { background: #f3e5f5; color: #6a1b9a; }
+        .reason-Other { background: #e8eaf6; color: #283593; }
+
+        .details-box {
+            background: #f9f9f9; border-radius: 8px; padding: 10px;
+            font-size: 13px; color: #444; margin-bottom: 12px;
+            border-left: 3px solid #ddd; line-height: 1.5;
+        }
+
+        .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn {
+            padding: 9px 16px; border: none; border-radius: 8px;
+            font-weight: 700; font-size: 13px; cursor: pointer;
+            display: flex; align-items: center; gap: 6px; transition: 0.2s;
+        }
+        .btn-view { background: #e3f2fd; color: #1565c0; }
+        .btn-view:hover { background: #1565c0; color: white; }
+        .btn-resolve { background: #e8f5e9; color: #2e7d32; }
+        .btn-resolve:hover { background: #2e7d32; color: white; }
+        .btn-resolved { background: #f5f5f5; color: #aaa; cursor: not-allowed; }
+
+        /* Chat viewer modal */
+        .modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+            z-index: 9999; display: none; align-items: flex-start;
+            justify-content: center; padding: 20px; overflow-y: auto;
+        }
+        .modal.active { display: flex; }
+        .modal-box {
+            background: white; border-radius: 16px; width: 100%;
+            max-width: 600px; margin: auto; overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .modal-header {
+            background: #2e7d32; color: white;
+            padding: 15px 20px; display: flex;
+            align-items: center; justify-content: space-between;
+        }
+        .modal-header h3 { font-size: 16px; }
+        .modal-close {
+            background: rgba(255,255,255,0.2); border: none;
+            color: white; width: 32px; height: 32px; border-radius: 50%;
+            font-size: 18px; cursor: pointer; display: flex;
+            align-items: center; justify-content: center;
+        }
+        .modal-body { padding: 15px; max-height: 70vh; overflow-y: auto; background: #e5ddd5; }
+
+        /* Chat bubbles in modal */
+        .msg-wrap { display: flex; flex-direction: column; gap: 8px; }
+        .bubble {
+            max-width: 75%; padding: 8px 12px; border-radius: 12px;
+            font-size: 13px; word-wrap: break-word;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .bubble.sent { align-self: flex-end; background: #dcf8c6; border-bottom-right-radius: 2px; }
+        .bubble.received { align-self: flex-start; background: white; border-bottom-left-radius: 2px; }
+        .bubble img { max-width: 100%; border-radius: 8px; cursor: pointer; display: block; }
+        .bubble .btime { font-size: 10px; color: #888; margin-top: 3px; text-align: right; }
+        .bubble .deleted-text { color: #aaa; font-style: italic; font-size: 12px; }
+
+        /* All chats list */
+        .chat-item {
+            background: white; border-radius: 12px; padding: 14px;
+            margin-bottom: 12px; display: flex; align-items: center;
+            gap: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            cursor: pointer; transition: 0.2s;
+        }
+        .chat-item:hover { background: #f0f7f0; }
+        .chat-avatar {
+            width: 46px; height: 46px; border-radius: 50%;
+            background: #e8f5e9; display: flex; align-items: center;
+            justify-content: center; font-size: 20px; flex-shrink: 0;
+        }
+        .chat-info { flex: 1; min-width: 0; }
+        .chat-users { font-weight: 700; font-size: 14px; color: #222; margin-bottom: 3px; }
+        .chat-last { font-size: 12px; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chat-time { font-size: 11px; color: #aaa; flex-shrink: 0; }
+
+        /* Empty / loading states */
+        .empty { text-align: center; padding: 60px 20px; color: #bbb; }
+        .empty i { font-size: 50px; margin-bottom: 15px; display: block; opacity: 0.4; }
+        .loading { text-align: center; padding: 50px; color: #2e7d32; }
+        .loading i { font-size: 36px; animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .status-resolved {
+            display: inline-block; background: #e8f5e9; color: #2e7d32;
+            font-size: 11px; font-weight: 700; padding: 3px 10px;
+            border-radius: 12px; margin-left: 8px;
+        }
+
+        /* Image full view */
+        #imgViewer {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95);
+            z-index: 99999; display: none; align-items: center;
+            justify-content: center;
+        }
+        #imgViewer.active { display: flex; }
+        #imgViewer img { max-width: 95%; max-height: 90vh; border-radius: 8px; }
+        #imgViewer .close-img {
+            position: absolute; top: 20px; right: 20px;
+            background: rgba(255,255,255,0.2); border: none; color: white;
+            width: 40px; height: 40px; border-radius: 50%; font-size: 20px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <i class="fa fa-flag" style="font-size:20px;"></i>
+    <h1>Reports & Chats</h1>
+    <a href="admin.html"><i class="fa fa-arrow-left"></i> Admin Panel</a>
+</header>
+
+<!-- Tabs -->
+<div class="tabs">
+    <div class="tab active" onclick="switchTab('reports')">
+        <i class="fa fa-flag"></i> Reports
+        <span id="reportsBadge" style="background:#d32f2f; color:white; font-size:10px; padding:2px 7px; border-radius:10px; margin-left:5px; display:none;"></span>
+    </div>
+    <div class="tab" onclick="switchTab('chats')">
+        <i class="fa fa-comments"></i> All Chats
+    </div>
+</div>
+
+<!-- Reports Section -->
+<div class="section active" id="reportsSection">
+    <div class="loading" id="reportsLoading">
+        <i class="fa fa-spinner"></i>
+        <p style="margin-top:10px; color:#666;">Loading reports...</p>
+    </div>
+    <div id="reportsList"></div>
+</div>
+
+<!-- All Chats Section -->
+<div class="section" id="chatsSection">
+    <div class="loading" id="chatsLoading">
+        <i class="fa fa-spinner"></i>
+        <p style="margin-top:10px; color:#666;">Loading chats...</p>
+    </div>
+    <div id="chatsList"></div>
+</div>
+
+<!-- Chat Viewer Modal -->
+<div class="modal" id="chatModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3 id="modalTitle">Chat Conversation</h3>
+            <button class="modal-close" onclick="closeChat()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="msg-wrap" id="modalMessages">
+                <div class="loading"><i class="fa fa-spinner"></i></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Full View -->
+<div id="imgViewer">
+    <button class="close-img" onclick="closeImgViewer()">&times;</button>
+    <img id="viewerImg" src="" alt="Full Image">
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
+    authDomain: "earth-properties-c3c56.firebaseapp.com",
+    projectId: "earth-properties-c3c56"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
+
+// ─── Auth Guard ───────────────────────────────────────────────────────────────
+auth.onAuthStateChanged(user => {
+    if (!user || user.uid !== ADMIN_UID) {
+        alert("Restricted Access: Admin Only!");
+        location.href = "index.html";
+        return;
+    }
+    loadReports();
+    loadAllChats();
+});
+
+// ─── Tab Switch ───────────────────────────────────────────────────────────────
+function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    event.target.closest('.tab').classList.add('active');
+    document.getElementById(tab + 'Section').classList.add('active');
+}
+
+// ─── FORMAT TIME ─────────────────────────────────────────────────────────────
+function formatTime(ts) {
+    if (!ts) return "—";
+    const d = ts.toDate();
+    return d.toLocaleString('en-IN', {
+        day: 'numeric', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    });
+}
+
+function timeAgo(ts) {
+    if (!ts) return "";
+    const diff = Date.now() - ts.toDate().getTime();
+    const m = Math.floor(diff / 60000);
+    const h = Math.floor(diff / 3600000);
+    const d = Math.floor(diff / 86400000);
+    if (m < 1) return "Just now";
+    if (m < 60) return `${m}m ago`;
+    if (h < 24) return `${h}h ago`;
+    return `${d}d ago`;
+}
+
+// ─── USER NAME CACHE ──────────────────────────────────────────────────────────
+const userCache = {};
+async function getUserName(uid) {
+    if (userCache[uid]) return userCache[uid];
+    try {
+        const doc = await db.collection("users").doc(uid).get();
+        const name = doc.exists ? (doc.data().name || doc.data().email || uid.slice(0, 8)) : uid.slice(0, 8);
+        userCache[uid] = name;
+        return name;
+    } catch {
+        return uid.slice(0, 8);
+    }
+}
+
+// ─── LOAD REPORTS ─────────────────────────────────────────────────────────────
+function loadReports() {
+    db.collection("reports")
+        .orderBy("timestamp", "desc")
+        .onSnapshot(async snap => {
+            document.getElementById('reportsLoading').style.display = 'none';
+            const list = document.getElementById('reportsList');
+            list.innerHTML = "";
+
+            if (snap.empty) {
+                list.innerHTML = `<div class="empty"><i class="fa fa-flag"></i><p>No reports yet.</p></div>`;
+                return;
+            }
+
+            // Badge count — pending only
+            const pendingCount = snap.docs.filter(d => d.data().status !== 'resolved').length;
+            const badge = document.getElementById('reportsBadge');
+            if (pendingCount > 0) {
+                badge.style.display = 'inline';
+                badge.innerText = pendingCount;
+            } else {
+                badge.style.display = 'none';
+            }
+
+            for (const docSnap of snap.docs) {
+                const r = docSnap.data();
+                const rid = docSnap.id;
+                const isResolved = r.status === 'resolved';
+
+                const reporterName = await getUserName(r.reporter);
+                const reportedName = await getUserName(r.reported);
+
+                const card = document.createElement('div');
+                card.className = 'card report-card';
+                card.innerHTML = `
+                    <div class="card-title">
+                        <i class="fa fa-flag" style="color:#d32f2f; margin-right:6px;"></i>
+                        ${escHtml(reporterName)} reported ${escHtml(reportedName)}
+                        ${isResolved ? '<span class="status-resolved">✓ Resolved</span>' : ''}
+                    </div>
+                    <div class="card-meta">
+                        <span><i class="fa fa-clock"></i> ${formatTime(r.timestamp)}</span>
+                    </div>
+                    <span class="reason-badge reason-${r.reason}">${r.reason}</span>
+                    ${r.details ? `<div class="details-box">${escHtml(r.details)}</div>` : ''}
+                    <div class="btn-row">
+                        ${r.chatId ? `
+                        <button class="btn btn-view" onclick="viewChat('${r.chatId}', '${escHtml(reporterName)} ↔ ${escHtml(reportedName)}')">
+                            <i class="fa fa-eye"></i> View Chat
+                        </button>` : ''}
+                        <button class="btn ${isResolved ? 'btn-resolved' : 'btn-resolve'}"
+                            id="resolve-${rid}"
+                            onclick="${isResolved ? '' : `resolveReport('${rid}')`}"
+                            ${isResolved ? 'disabled' : ''}>
+                            <i class="fa fa-check"></i> ${isResolved ? 'Resolved' : 'Mark Resolved'}
+                        </button>
+                    </div>
+                `;
+                list.appendChild(card);
+            }
+        });
+}
+
+// ─── RESOLVE REPORT ───────────────────────────────────────────────────────────
+async function resolveReport(rid) {
+    try {
+        await db.collection("reports").doc(rid).update({
+            status: "resolved",
+            resolvedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    } catch(e) {
+        alert("Error: " + e.message);
+    }
+}
+
+// ─── LOAD ALL CHATS ───────────────────────────────────────────────────────────
+function loadAllChats() {
+    db.collection("chats")
+        .orderBy("lastUpdate", "desc")
+        .onSnapshot(async snap => {
+            document.getElementById('chatsLoading').style.display = 'none';
+            const list = document.getElementById('chatsList');
+            list.innerHTML = "";
+
+            if (snap.empty) {
+                list.innerHTML = `<div class="empty"><i class="fa fa-comments"></i><p>No chats found.</p></div>`;
+                return;
+            }
+
+            for (const docSnap of snap.docs) {
+                const d = docSnap.data();
+                const chatId = docSnap.id;
+                const users = d.users || [];
+
+                // Get both user names
+                const names = await Promise.all(users.map(uid => getUserName(uid)));
+                const title = names.join(' ↔ ');
+
+                const item = document.createElement('div');
+                item.className = 'chat-item';
+                item.onclick = () => viewChat(chatId, title);
+                item.innerHTML = `
+                    <div class="chat-avatar">💬</div>
+                    <div class="chat-info">
+                        <div class="chat-users">${escHtml(title)}</div>
+                        <div class="chat-last">${escHtml(d.lastMsg || "No messages")}</div>
+                    </div>
+                    <div class="chat-time">${timeAgo(d.lastUpdate)}</div>
+                `;
+                list.appendChild(item);
+            }
+        });
+}
+
+// ─── VIEW CHAT ────────────────────────────────────────────────────────────────
+async function viewChat(chatId, title) {
+    document.getElementById('modalTitle').innerText = title;
+    document.getElementById('modalMessages').innerHTML =
+        `<div class="loading"><i class="fa fa-spinner" style="animation: spin 1s linear infinite;"></i></div>`;
+    document.getElementById('chatModal').classList.add('active');
+
+    try {
+        const snap = await db.collection("chats").doc(chatId)
+            .collection("messages")
+            .orderBy("timestamp", "asc")
+            .get();
+
+        const wrap = document.getElementById('modalMessages');
+        wrap.innerHTML = "";
+
+        if (snap.empty) {
+            wrap.innerHTML = `<div class="empty"><i class="fa fa-comments"></i><p>No messages in this chat.</p></div>`;
+            return;
+        }
+
+        // Figure out first sender = "sent" side for admin view
+        const firstSenderId = snap.docs[0]?.data()?.senderId || "";
+
+        snap.forEach(msgDoc => {
+            const m = msgDoc.data();
+            // Admin sees first sender on right (sent), other on left (received)
+            const side = m.senderId === firstSenderId ? 'sent' : 'received';
+
+            const time = m.timestamp
+                ? new Date(m.timestamp.seconds * 1000)
+                    .toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                : "";
+
+            const bubble = document.createElement('div');
+            bubble.className = `bubble ${side}`;
+
+            if (m.deletedForAll) {
+                bubble.innerHTML = `<div class="deleted-text"><i class="fa fa-ban"></i> Message deleted</div>`;
+            } else if (m.image) {
+                bubble.innerHTML = `
+                    <img src="${m.image}" alt="Photo"
+                        onclick="openImgViewer('${m.image}')"
+                        style="max-width:200px;">
+                    <div class="btime">${time}</div>
+                `;
+            } else {
+                bubble.innerHTML = `
+                    <div>${escHtml(m.text || "")}</div>
+                    <div class="btime">${time}</div>
+                `;
+            }
+            wrap.appendChild(bubble);
+        });
+
+        // Scroll to bottom
+        wrap.scrollTop = wrap.scrollHeight;
+
+    } catch(e) {
+        document.getElementById('modalMessages').innerHTML =
+            `<div class="empty"><i class="fa fa-exclamation-circle"></i><p>Could not load messages.</p></div>`;
+        console.error("viewChat error:", e);
+    }
+}
+
+function closeChat() {
+    document.getElementById('chatModal').classList.remove('active');
+    document.getElementById('modalMessages').innerHTML = "";
+}
+
+// ─── IMAGE FULL VIEW ──────────────────────────────────────────────────────────
+function openImgViewer(url) {
+    document.getElementById('viewerImg').src = url;
+    document.getElementById('imgViewer').classList.add('active');
+}
+
+function closeImgViewer() {
+    document.getElementById('imgViewer').classList.remove('active');
+    document.getElementById('viewerImg').src = "";
+}
+
+// ─── ESCAPE HTML ──────────────────────────────────────────────────────────────
+function escHtml(text) {
+    const d = document.createElement('div');
+    d.textContent = text || '';
+    return d.innerHTML;
+}
+</script>
+</body>
+</html>
