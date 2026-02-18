@@ -992,9 +992,10 @@ function loadProperties(isLoadMore = false) {
     }
     
     let query = db.collection("properties")
-        .where("status", "==", "active")  // ✅ CRITICAL: Only active properties
-        .orderBy("createdAt", "desc")
-        .limit(ADS_PER_PAGE);
+    .where("status", "==", "active")
+    .where("isExpired", "==", false)
+    .orderBy("createdAt", "desc")
+    .limit(ADS_PER_PAGE);
     
     if (isLoadMore && lastVisible) {
         query = query.startAfter(lastVisible);
