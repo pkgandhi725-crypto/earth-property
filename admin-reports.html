@@ -38,6 +38,27 @@
         .section { display: none; padding: 15px; max-width: 800px; margin: auto; }
         .section.active { display: block; }
 
+        /* ✅ Search Box */
+        .search-wrap {
+            position: relative; margin-bottom: 15px;
+        }
+        .search-wrap input {
+            width: 100%; padding: 13px 16px 13px 44px;
+            border: 1.5px solid #ddd; border-radius: 12px;
+            font-size: 14px; outline: none; background: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            transition: 0.2s;
+        }
+        .search-wrap input:focus { border-color: #2e7d32; box-shadow: 0 0 0 3px rgba(46,125,50,0.1); }
+        .search-wrap i {
+            position: absolute; left: 15px; top: 50%;
+            transform: translateY(-50%); color: #aaa; font-size: 16px;
+        }
+        .search-hint {
+            font-size: 11px; color: #aaa; margin-bottom: 12px;
+            text-align: center;
+        }
+
         /* Cards */
         .card {
             background: white; border-radius: 14px; padding: 18px;
@@ -131,6 +152,7 @@
         }
         .chat-info { flex: 1; min-width: 0; }
         .chat-users { font-weight: 700; font-size: 14px; color: #222; margin-bottom: 3px; }
+        .chat-sub { font-size: 11px; color: #9c27b0; font-weight: 600; margin-bottom: 2px; }
         .chat-last { font-size: 12px; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .chat-time { font-size: 11px; color: #aaa; flex-shrink: 0; }
 
@@ -161,6 +183,13 @@
             width: 40px; height: 40px; border-radius: 50%; font-size: 20px;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
+
+        /* ✅ No results from search */
+        .no-results {
+            text-align: center; padding: 40px 20px; color: #bbb;
+            font-size: 14px;
+        }
+        .no-results i { font-size: 36px; display: block; margin-bottom: 10px; opacity: 0.4; }
     </style>
 </head>
 <body>
@@ -173,11 +202,11 @@
 
 <!-- Tabs -->
 <div class="tabs">
-    <div class="tab active" onclick="switchTab('reports')">
+    <div class="tab active" onclick="switchTab('reports', event)">
         <i class="fa fa-flag"></i> Reports
         <span id="reportsBadge" style="background:#d32f2f; color:white; font-size:10px; padding:2px 7px; border-radius:10px; margin-left:5px; display:none;"></span>
     </div>
-    <div class="tab" onclick="switchTab('chats')">
+    <div class="tab" onclick="switchTab('chats', event)">
         <i class="fa fa-comments"></i> All Chats
     </div>
 </div>
@@ -193,6 +222,16 @@
 
 <!-- All Chats Section -->
 <div class="section" id="chatsSection">
+
+    <!-- ✅ Search Box -->
+    <div class="search-wrap">
+        <i class="fa fa-search"></i>
+        <input type="text" id="chatSearchInput"
+            placeholder="Search by name or EP ID (e.g. EP-1001)..."
+            oninput="filterChats(this.value)">
+    </div>
+    <div class="search-hint">Search karo naam se ya EP ID se — jaise EP-1001</div>
+
     <div class="loading" id="chatsLoading">
         <i class="fa fa-spinner"></i>
         <p style="margin-top:10px; color:#666;">Loading chats...</p>
@@ -237,6 +276,9 @@ const auth = firebase.auth();
 
 const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
 
+// ✅ All chats data store — search ke liye
+let allChatsData = [];
+
 // ─── Auth Guard ───────────────────────────────────────────────────────────────
 auth.onAuthStateChanged(user => {
     if (!user || user.uid !== ADMIN_UID) {
@@ -249,14 +291,14 @@ auth.onAuthStateChanged(user => {
 });
 
 // ─── Tab Switch ───────────────────────────────────────────────────────────────
-function switchTab(tab) {
+function switchTab(tab, event) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     event.target.closest('.tab').classList.add('active');
     document.getElementById(tab + 'Section').classList.add('active');
 }
 
-// ─── FORMAT TIME ─────────────────────────────────────────────────────────────
+// ─── Format Time ─────────────────────────────────────────────────────────────
 function formatTime(ts) {
     if (!ts) return "—";
     const d = ts.toDate();
@@ -278,21 +320,27 @@ function timeAgo(ts) {
     return `${d}d ago`;
 }
 
-// ─── USER NAME CACHE ──────────────────────────────────────────────────────────
+// ─── User Cache (name + epId) ─────────────────────────────────────────────────
 const userCache = {};
-async function getUserName(uid) {
+async function getUserInfo(uid) {
     if (userCache[uid]) return userCache[uid];
     try {
         const doc = await db.collection("users").doc(uid).get();
-        const name = doc.exists ? (doc.data().name || doc.data().email || uid.slice(0, 8)) : uid.slice(0, 8);
-        userCache[uid] = name;
-        return name;
+        const data = doc.exists ? doc.data() : {};
+        const info = {
+            name: data.name || data.displayName || data.email || uid.slice(0, 8),
+            epId: data.epId || ""
+        };
+        userCache[uid] = info;
+        return info;
     } catch {
-        return uid.slice(0, 8);
+        const info = { name: uid.slice(0, 8), epId: "" };
+        userCache[uid] = info;
+        return info;
     }
 }
 
-// ─── LOAD REPORTS ─────────────────────────────────────────────────────────────
+// ─── Load Reports ─────────────────────────────────────────────────────────────
 function loadReports() {
     db.collection("reports")
         .orderBy("timestamp", "desc")
@@ -306,7 +354,6 @@ function loadReports() {
                 return;
             }
 
-            // Badge count — pending only
             const pendingCount = snap.docs.filter(d => d.data().status !== 'resolved').length;
             const badge = document.getElementById('reportsBadge');
             if (pendingCount > 0) {
@@ -321,15 +368,22 @@ function loadReports() {
                 const rid = docSnap.id;
                 const isResolved = r.status === 'resolved';
 
-                const reporterName = await getUserName(r.reporter);
-                const reportedName = await getUserName(r.reported);
+                const reporterInfo = await getUserInfo(r.reporter);
+                const reportedInfo = await getUserInfo(r.reported);
+
+                const reporterLabel = reporterInfo.epId
+                    ? `${reporterInfo.name} (${reporterInfo.epId})`
+                    : reporterInfo.name;
+                const reportedLabel = reportedInfo.epId
+                    ? `${reportedInfo.name} (${reportedInfo.epId})`
+                    : reportedInfo.name;
 
                 const card = document.createElement('div');
                 card.className = 'card report-card';
                 card.innerHTML = `
                     <div class="card-title">
                         <i class="fa fa-flag" style="color:#d32f2f; margin-right:6px;"></i>
-                        ${escHtml(reporterName)} reported ${escHtml(reportedName)}
+                        ${escHtml(reporterLabel)} reported ${escHtml(reportedLabel)}
                         ${isResolved ? '<span class="status-resolved">✓ Resolved</span>' : ''}
                     </div>
                     <div class="card-meta">
@@ -339,11 +393,10 @@ function loadReports() {
                     ${r.details ? `<div class="details-box">${escHtml(r.details)}</div>` : ''}
                     <div class="btn-row">
                         ${r.chatId ? `
-                        <button class="btn btn-view" onclick="viewChat('${r.chatId}', '${escHtml(reporterName)} ↔ ${escHtml(reportedName)}')">
+                        <button class="btn btn-view" onclick="viewChat('${r.chatId}', '${escHtml(reporterInfo.name)} ↔ ${escHtml(reportedInfo.name)}')">
                             <i class="fa fa-eye"></i> View Chat
                         </button>` : ''}
                         <button class="btn ${isResolved ? 'btn-resolved' : 'btn-resolve'}"
-                            id="resolve-${rid}"
                             onclick="${isResolved ? '' : `resolveReport('${rid}')`}"
                             ${isResolved ? 'disabled' : ''}>
                             <i class="fa fa-check"></i> ${isResolved ? 'Resolved' : 'Mark Resolved'}
@@ -355,58 +408,124 @@ function loadReports() {
         });
 }
 
-// ─── RESOLVE REPORT ───────────────────────────────────────────────────────────
+// ─── Resolve Report ───────────────────────────────────────────────────────────
 async function resolveReport(rid) {
     try {
         await db.collection("reports").doc(rid).update({
             status: "resolved",
             resolvedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-    } catch(e) {
+    } catch (e) {
         alert("Error: " + e.message);
     }
 }
 
-// ─── LOAD ALL CHATS ───────────────────────────────────────────────────────────
+// ─── Load All Chats ───────────────────────────────────────────────────────────
 function loadAllChats() {
+    // No orderBy — client-side sort karo, Firestore index error nahi aayega
     db.collection("chats")
-        .orderBy("lastUpdate", "desc")
         .onSnapshot(async snap => {
             document.getElementById('chatsLoading').style.display = 'none';
             const list = document.getElementById('chatsList');
-            list.innerHTML = "";
 
             if (snap.empty) {
                 list.innerHTML = `<div class="empty"><i class="fa fa-comments"></i><p>No chats found.</p></div>`;
                 return;
             }
 
-            for (const docSnap of snap.docs) {
+            // Client-side sort — lastUpdate ya lastTime dono handle karo
+            const docs = snap.docs.sort((a, b) => {
+                const aTime = a.data().lastUpdate || a.data().lastTime || null;
+                const bTime = b.data().lastUpdate || b.data().lastTime || null;
+                if (!aTime) return 1;
+                if (!bTime) return -1;
+                return bTime.toDate() - aTime.toDate();
+            });
+
+            // ✅ Saari chats ka data + user info cache mein store karo
+            allChatsData = [];
+            for (const docSnap of docs) {
                 const d = docSnap.data();
                 const chatId = docSnap.id;
                 const users = d.users || [];
+                const infos = await Promise.all(users.map(uid => getUserInfo(uid)));
 
-                // Get both user names
-                const names = await Promise.all(users.map(uid => getUserName(uid)));
-                const title = names.join(' ↔ ');
-
-                const item = document.createElement('div');
-                item.className = 'chat-item';
-                item.onclick = () => viewChat(chatId, title);
-                item.innerHTML = `
-                    <div class="chat-avatar">💬</div>
-                    <div class="chat-info">
-                        <div class="chat-users">${escHtml(title)}</div>
-                        <div class="chat-last">${escHtml(d.lastMsg || "No messages")}</div>
-                    </div>
-                    <div class="chat-time">${timeAgo(d.lastUpdate)}</div>
-                `;
-                list.appendChild(item);
+                allChatsData.push({
+                    chatId,
+                    lastMsg: d.lastMsg || "",
+                    lastTime: d.lastUpdate || d.lastTime || null,
+                    users,
+                    infos // [{name, epId}, ...]
+                });
             }
+
+            // Render karo (initial — no filter)
+            renderChats(allChatsData);
+
+        }, err => {
+            document.getElementById('chatsLoading').style.display = 'none';
+            document.getElementById('chatsList').innerHTML =
+                `<div class="empty"><i class="fa fa-exclamation-circle"></i><p>Error: ${err.message}</p></div>`;
         });
 }
 
-// ─── VIEW CHAT ────────────────────────────────────────────────────────────────
+// ─── Render Chats ─────────────────────────────────────────────────────────────
+function renderChats(data) {
+    const list = document.getElementById('chatsList');
+    list.innerHTML = "";
+
+    if (data.length === 0) {
+        list.innerHTML = `<div class="no-results"><i class="fa fa-search"></i>Koi chat nahi mili. Naam ya EP ID check karo.</div>`;
+        return;
+    }
+
+    data.forEach(chat => {
+        const names = chat.infos.map(i => i.name);
+        const epIds = chat.infos.map(i => i.epId).filter(Boolean);
+        const title = names.join(' ↔ ');
+        const epLabel = epIds.join(' · ');
+
+        const item = document.createElement('div');
+        item.className = 'chat-item';
+        item.onclick = () => viewChat(chat.chatId, title);
+        item.innerHTML = `
+            <div class="chat-avatar">💬</div>
+            <div class="chat-info">
+                <div class="chat-users">${escHtml(title)}</div>
+                ${epLabel ? `<div class="chat-sub"><i class="fa fa-id-badge"></i> ${escHtml(epLabel)}</div>` : ''}
+                <div class="chat-last">${escHtml(chat.lastMsg || "No messages")}</div>
+            </div>
+            <div class="chat-time">${timeAgo(chat.lastTime)}</div>
+        `;
+        list.appendChild(item);
+    });
+}
+
+// ─── ✅ Search / Filter Chats ─────────────────────────────────────────────────
+function filterChats(query) {
+    const q = query.trim().toLowerCase();
+
+    if (!q) {
+        renderChats(allChatsData);
+        return;
+    }
+
+    const filtered = allChatsData.filter(chat => {
+        // Name se search
+        const nameMatch = chat.infos.some(info =>
+            info.name.toLowerCase().includes(q)
+        );
+        // EP ID se search (EP-1001 ya sirf 1001)
+        const epMatch = chat.infos.some(info =>
+            info.epId.toLowerCase().includes(q)
+        );
+        return nameMatch || epMatch;
+    });
+
+    renderChats(filtered);
+}
+
+// ─── View Chat ────────────────────────────────────────────────────────────────
 async function viewChat(chatId, title) {
     document.getElementById('modalTitle').innerText = title;
     document.getElementById('modalMessages').innerHTML =
@@ -427,12 +546,10 @@ async function viewChat(chatId, title) {
             return;
         }
 
-        // Figure out first sender = "sent" side for admin view
         const firstSenderId = snap.docs[0]?.data()?.senderId || "";
 
         snap.forEach(msgDoc => {
             const m = msgDoc.data();
-            // Admin sees first sender on right (sent), other on left (received)
             const side = m.senderId === firstSenderId ? 'sent' : 'received';
 
             const time = m.timestamp
@@ -461,12 +578,12 @@ async function viewChat(chatId, title) {
             wrap.appendChild(bubble);
         });
 
-        // ✅ Scroll to bottom with delay — images load hone ka time milega
+        // ✅ Scroll to bottom with delay
         setTimeout(() => {
             wrap.scrollTop = wrap.scrollHeight;
         }, 100);
 
-    } catch(e) {
+    } catch (e) {
         document.getElementById('modalMessages').innerHTML =
             `<div class="empty"><i class="fa fa-exclamation-circle"></i><p>Could not load messages.</p></div>`;
         console.error("viewChat error:", e);
@@ -478,7 +595,7 @@ function closeChat() {
     document.getElementById('modalMessages').innerHTML = "";
 }
 
-// ─── IMAGE FULL VIEW ──────────────────────────────────────────────────────────
+// ─── Image Full View ──────────────────────────────────────────────────────────
 function openImgViewer(url) {
     document.getElementById('viewerImg').src = url;
     document.getElementById('imgViewer').classList.add('active');
@@ -489,7 +606,7 @@ function closeImgViewer() {
     document.getElementById('viewerImg').src = "";
 }
 
-// ─── ESCAPE HTML ──────────────────────────────────────────────────────────────
+// ─── Escape HTML ──────────────────────────────────────────────────────────────
 function escHtml(text) {
     const d = document.createElement('div');
     d.textContent = text || '';
