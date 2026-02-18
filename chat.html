@@ -57,14 +57,14 @@
         .tick-blue { color: #34B7F1; }
         .msg img {
             max-width: 100%; border-radius: 8px; cursor: pointer; display: block; margin-bottom: 5px;
-            min-height: 150px; background: #e0e0e0;  /* placeholder color while loading */
+            min-height: 150px; background: #e0e0e0;
             object-fit: cover;
             transition: min-height 0.2s;
         }
         .msg img.loaded { min-height: unset; background: none; }
         .msg.deleted .msg-text { color: #aaa; font-style: italic; }
 
-        /* Input area fixed at bottom — keyboard push handled by JS transform */
+        /* ✅ Input area */
         .input-area {
             position: fixed;
             bottom: 0; left: 0; right: 0;
@@ -89,6 +89,40 @@
             flex-shrink: 0; cursor: pointer;
         }
         .send-btn:disabled { opacity: 0.6; pointer-events: none; }
+
+        /* ✅ Blocked banner — shown instead of input area */
+        .blocked-banner {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            min-height: var(--input-height);
+            background: #fff3e0;
+            padding: 12px 20px;
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border-top: 1px solid #ffe0b2;
+            z-index: 1000;
+            text-align: center;
+            font-size: 13px;
+            color: #e65100;
+            font-weight: 600;
+        }
+        .blocked-banner i { font-size: 18px; }
+
+        /* ✅ Unblock button inside blocked banner */
+        .unblock-btn {
+            background: #e65100;
+            color: white;
+            border: none;
+            padding: 7px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
 
         .dropdown {
             display: none; position: absolute; right: 15px; top: 55px;
@@ -188,6 +222,7 @@
     <div id="chatBox"></div>
 </div>
 
+<!-- ✅ Normal input area -->
 <div class="input-area" id="inputArea">
     <label for="photoInput">
         <i class="fa fa-camera" id="camIcon" style="font-size:22px; color:#555; padding:5px; cursor:pointer;"></i>
@@ -198,6 +233,19 @@
     <button class="send-btn" id="sendBtn" onclick="sendMsg()">
         <i class="fa fa-paper-plane"></i>
     </button>
+</div>
+
+<!-- ✅ Blocked by ME banner — I blocked this user -->
+<div class="blocked-banner" id="iBlockedBanner">
+    <i class="fa fa-ban"></i>
+    <span id="iBlockedText">You have blocked this user.</span>
+    <button class="unblock-btn" onclick="unblockUser()" id="unblockBtn">Unblock</button>
+</div>
+
+<!-- ✅ Blocked by THEM banner — they blocked me -->
+<div class="blocked-banner" id="theyBlockedBanner">
+    <i class="fa fa-lock"></i>
+    <span id="theyBlockedText">You cannot send messages to this user.</span>
 </div>
 
 <!-- Image Preview -->
@@ -332,15 +380,53 @@ auth.onAuthStateChanged(user => {
     setupKeyboardAvoidance();
 });
 
-// ─── Partner Info ─────────────────────────────────────────────────────────────
+// ─── Partner Info + Block Status Check ───────────────────────────────────────
 function loadPartnerInfo() {
+    // ✅ Listen to CURRENT USER's doc — to check if they blocked partner
+    db.collection("users").doc(currentUserId).onSnapshot(myDoc => {
+        if (!myDoc.exists) return;
+        const myData = myDoc.data();
+        const iBlockedThem = (myData.blockedUsers || []).includes(partnerId);
+
+        if (iBlockedThem) {
+            // I blocked this person — show unblock banner, hide input
+            document.getElementById('inputArea').style.display = 'none';
+            document.getElementById('theyBlockedBanner').style.display = 'none';
+            document.getElementById('iBlockedBanner').style.display = 'flex';
+            // Hide block option from menu (already blocked)
+            document.getElementById('blockUserText').style.display = 'none';
+        } else {
+            // I haven't blocked — check if THEY blocked me (done in partner snapshot)
+            document.getElementById('iBlockedBanner').style.display = 'none';
+            document.getElementById('blockUserText').style.display = 'block';
+        }
+    });
+
+    // ✅ Listen to PARTNER's doc — for name, status, and if they blocked me
     db.collection("users").doc(partnerId).onSnapshot(doc => {
-        if (doc.exists) {
-            partnerName = doc.data().name || "User";
-            document.getElementById('chatName').innerText = partnerName;
-            document.getElementById('blockTargetName').innerText = partnerName;
-            const status = doc.data().status || "Offline";
-            document.getElementById('userStatus').innerText = status === "Online" ? t.online : t.offline;
+        if (!doc.exists) return;
+        const data = doc.data();
+
+        partnerName = data.name || "User";
+        document.getElementById('chatName').innerText = partnerName;
+        document.getElementById('blockTargetName').innerText = partnerName;
+
+        const status = data.status || "Offline";
+        document.getElementById('userStatus').innerText = status === "Online" ? t.online : t.offline;
+
+        // ✅ Check if PARTNER blocked ME
+        const theyBlockedMe = (data.blockedUsers || []).includes(currentUserId);
+
+        // Only update "they blocked me" if I haven't blocked them
+        const iBlockedBannerVisible = document.getElementById('iBlockedBanner').style.display === 'flex';
+        if (!iBlockedBannerVisible) {
+            if (theyBlockedMe) {
+                document.getElementById('inputArea').style.display = 'none';
+                document.getElementById('theyBlockedBanner').style.display = 'flex';
+            } else {
+                document.getElementById('inputArea').style.display = 'flex';
+                document.getElementById('theyBlockedBanner').style.display = 'none';
+            }
         }
     });
 }
@@ -450,7 +536,7 @@ async function sendMsg(img = null) {
     const text = input.value.trim();
     if (!text && !img) return;
 
-    // Fix 1: Check if current user is blocked by partner before sending
+    // ✅ Check if partner blocked current user
     try {
         const partnerDoc = await db.collection("users").doc(partnerId).get();
         const blockedUsers = partnerDoc.data()?.blockedUsers || [];
@@ -459,8 +545,8 @@ async function sendMsg(img = null) {
             return;
         }
     } catch (err) {
+        // If check fails (offline), allow send — don't block unnecessarily
         console.warn("Block check failed, proceeding:", err);
-        // If check fails (e.g. offline), allow send — don't block user unnecessarily
     }
 
     sendBtn.disabled = true;
@@ -474,7 +560,9 @@ async function sendMsg(img = null) {
         });
         await db.collection("chats").doc(chatId).set({
             lastMsg: img ? "📷 Photo" : text,
-            lastTime: firebase.firestore.FieldValue.serverTimestamp(),
+            lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
+            lastSenderId: currentUserId,
+            isSeen: false,
             users: [currentUserId, partnerId]
         }, { merge: true });
     } catch (err) {
@@ -510,7 +598,6 @@ async function uploadPhoto(el) {
 }
 
 // ─── DELETE FEATURE ───────────────────────────────────────────────────────────
-
 function showCtxMenu(msgId, msgDiv) {
     selectedMsgId = msgId;
     const menu = document.getElementById('ctxMenu');
@@ -525,7 +612,6 @@ function showCtxMenu(msgId, msgDiv) {
         </div>
     `;
 
-    // Position menu near tapped message, keep within screen
     const rect = msgDiv.getBoundingClientRect();
     let top = rect.bottom + 4;
     let left = rect.left;
@@ -668,13 +754,6 @@ function closeImagePreview() {
 }
 
 // ─── KEYBOARD FIX ─────────────────────────────────────────────────────────────
-// Problem: On iOS/Android, when keyboard opens, it shrinks visualViewport
-// but NOT window.innerHeight, causing layout to break and input to go offscreen.
-//
-// Solution: Use visualViewport API to detect keyboard height and move ONLY the
-// input bar up by that amount using CSS transform (no layout reflow).
-// Chat container bottom is also adjusted so messages stay visible.
-
 function setupKeyboardAvoidance() {
     const inputArea = document.getElementById('inputArea');
     const chatContainer = document.getElementById('chatContainer');
@@ -682,15 +761,9 @@ function setupKeyboardAvoidance() {
 
     function adjust() {
         const vv = window.visualViewport;
-        // Keyboard height = full window height minus visible viewport
         const keyboardH = Math.max(0, window.innerHeight - vv.offsetTop - vv.height);
-
-        // Move input bar above keyboard using transform (safe, no reflow)
         inputArea.style.transform = keyboardH > 0 ? `translateY(-${keyboardH}px)` : '';
-
-        // Shrink chat area so it doesn't go behind input or keyboard
         chatContainer.style.bottom = (INPUT_H + keyboardH) + 'px';
-
         if (keyboardH > 0) scrollToBottom();
     }
 
@@ -698,10 +771,9 @@ function setupKeyboardAvoidance() {
         window.visualViewport.addEventListener('resize', adjust);
         window.visualViewport.addEventListener('scroll', adjust);
     } else {
-        // Fallback for old browsers
         const input = document.getElementById('msgInput');
         input.addEventListener('focus', () => setTimeout(() => {
-            const keyboardH = 280; // estimate
+            const keyboardH = 280;
             inputArea.style.transform = `translateY(-${keyboardH}px)`;
             chatContainer.style.bottom = (INPUT_H + keyboardH) + 'px';
             scrollToBottom();
@@ -780,8 +852,12 @@ async function confirmReport() {
     }
     try {
         await db.collection("reports").add({
-            reporter: currentUserId, reported: partnerId,
-            reason: selectedReason, details,
+            reporter: currentUserId,
+            reported: partnerId,
+            chatId: getChatId(),
+            reason: selectedReason,
+            details,
+            status: "pending",
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
         alert(t.reportSuccess);
@@ -792,17 +868,37 @@ async function confirmReport() {
     }
 }
 
+// ✅ Block user + go back to inbox
 async function confirmBlock() {
     try {
         await db.collection("users").doc(currentUserId).update({
             blockedUsers: firebase.firestore.FieldValue.arrayUnion(partnerId)
         });
-        alert(t.blockSuccess);
+        closeModal('blockModal');
+        showToast("User blocked.");
+        // ✅ Go back to inbox after blocking
+        setTimeout(() => {
+            location.href = 'inbox.html';
+        }, 800);
     } catch (err) {
         console.error("Block failed:", err);
         alert("Failed to block user. Please try again.");
+        closeModal('blockModal');
     }
-    closeModal('blockModal');
+}
+
+// ✅ Unblock user
+async function unblockUser() {
+    try {
+        await db.collection("users").doc(currentUserId).update({
+            blockedUsers: firebase.firestore.FieldValue.arrayRemove(partnerId)
+        });
+        showToast("User unblocked! ✅");
+        // UI will auto-update via onSnapshot listener in loadPartnerInfo
+    } catch (err) {
+        console.error("Unblock failed:", err);
+        alert("Failed to unblock. Please try again.");
+    }
 }
 
 window.addEventListener('popstate', () => {
