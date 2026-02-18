@@ -17,6 +17,7 @@
         .btn-reject { background: #fff1f0; color: #cf1322; border: 1px solid #ffa39e; }
         .btn:disabled { background: #ccc; cursor: not-allowed; }
         .status-badge { position: absolute; top: 20px; right: 20px; padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; background: #e8f5e9; color: #2e7d32; }
+        .doc-label { font-size: 12px; color: #888; font-weight: 600; text-align: center; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -31,7 +32,10 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-import { getFirestore, collection, doc, setDoc, updateDoc, onSnapshot, query, where, writeBatch, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+import { 
+    getFirestore, collection, doc, setDoc, addDoc, updateDoc, 
+    onSnapshot, query, where, writeBatch, getDocs, serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 
 const firebaseConfig = { 
@@ -43,7 +47,6 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// ✅ YOUR CONFIG
 const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
 
 onAuthStateChanged(auth, (user) => {
@@ -72,20 +75,33 @@ function loadRequests() {
                 <span class="status-badge">PENDING</span>
                 <h3>${d.businessName || 'Unnamed Business'}</h3>
                 <p style="font-size:12px; color:#666;">User ID: ${uid}</p>
+                <p style="font-size:12px; color:#999;">
+                    Submitted: ${d.submittedAt ? d.submittedAt.toDate().toLocaleString('en-IN') : '—'}
+                </p>
                 <div class="doc-grid">
-                    <img src="${d.idProofUrl}" onclick="window.open(this.src)" title="ID Proof">
-                    <img src="${d.paymentUrl}" onclick="window.open(this.src)" title="Payment Proof">
+                    <div>
+                        <img src="${d.idProofUrl}" onclick="window.open(this.src)" title="Click to view full image">
+                        <div class="doc-label">📄 ID Proof</div>
+                    </div>
+                    <div>
+                        <img src="${d.paymentUrl}" onclick="window.open(this.src)" title="Click to view full image">
+                        <div class="doc-label">💳 Payment Screenshot</div>
+                    </div>
                 </div>
                 <div class="btn-group">
-                    <button class="btn btn-approve" id="app-${uid}">APPROVE DEALER</button>
-                    <button class="btn btn-reject" id="rej-${uid}">REJECT</button>
+                    <button class="btn btn-approve" id="app-${uid}">
+                        <i class="fa fa-check"></i> APPROVE DEALER
+                    </button>
+                    <button class="btn btn-reject" id="rej-${uid}">
+                        <i class="fa fa-times"></i> REJECT
+                    </button>
                 </div>
             `;
 
             list.appendChild(card);
 
             document.getElementById(`app-${uid}`).onclick = () => approveDealer(uid, d.businessName);
-            document.getElementById(`rej-${uid}`).onclick = () => rejectDealer(uid);
+            document.getElementById(`rej-${uid}`).onclick = () => rejectDealer(uid, d.businessName);
         });
     }, (err) => {
         console.error("Firestore Error:", err);
@@ -93,18 +109,17 @@ function loadRequests() {
     });
 }
 
-// ✅ IMPROVED APPROVE LOGIC (Based on your Suggestion)
 async function approveDealer(uid, bizName) {
-    if(!confirm(`Are you sure you want to approve ${bizName}?`)) return;
+    if(!confirm(`Are you sure you want to approve "${bizName}"?`)) return;
     
     const appBtn = document.getElementById(`app-${uid}`);
     const rejBtn = document.getElementById(`rej-${uid}`);
-    appBtn.disabled = true; rejBtn.disabled = true;
+    appBtn.disabled = true; 
+    rejBtn.disabled = true;
     appBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
 
     try {
         // Step 1: Update User Profile
-        console.log("Step 1: Updating User...");
         await setDoc(doc(db, "users", uid), { 
             isVerified: true, 
             premiumDealer: true, 
@@ -113,16 +128,13 @@ async function approveDealer(uid, bizName) {
         }, { merge: true });
 
         // Step 2: Update Request Status
-        console.log("Step 2: Updating Request Status...");
         await updateDoc(doc(db, "verification_requests", uid), { 
             status: "approved", 
             approvedAt: serverTimestamp() 
         });
 
-        // Step 3: Update Properties (Safe Check)
-        console.log("Step 3: Updating Properties...");
+        // Step 3: Update Properties
         const propsSnap = await getDocs(query(collection(db, "properties"), where("ownerId", "==", uid)));
-        
         if (!propsSnap.empty) {
             const batch = writeBatch(db);
             propsSnap.forEach(p => {
@@ -132,31 +144,51 @@ async function approveDealer(uid, bizName) {
                 });
             });
             await batch.commit();
-            console.log(`Step 3: ${propsSnap.size} properties updated.`);
-        } else {
-            console.log("Step 3: No properties found for this user.");
         }
 
-        alert(`Success! ${bizName} is now a Verified Dealer.`);
+        // ✅ Step 4: Save Approval Notification for User
+        await addDoc(collection(db, "notifications"), {
+            recipientId: uid,
+            type: "verification_approved",
+            title: "🎉 Verification Approved!",
+            message: `Congratulations! Your dealer verification for "${bizName}" has been approved. You are now a Verified Premium Dealer.`,
+            read: false,
+            createdAt: serverTimestamp()
+        });
+
+        alert(`✅ Success! "${bizName}" is now a Verified Dealer.`);
     } catch(e) { 
-        console.error("Full Error Object:", e);
-        alert("Error at step: " + e.message); 
-        appBtn.disabled = false; rejBtn.disabled = false;
-        appBtn.innerText = "APPROVE DEALER";
+        console.error("Approve Error:", e);
+        alert("Error: " + e.message); 
+        appBtn.disabled = false; 
+        rejBtn.disabled = false;
+        appBtn.innerHTML = '<i class="fa fa-check"></i> APPROVE DEALER';
     }
 }
 
-async function rejectDealer(uid) {
-    const reason = prompt("Enter Rejection Reason (User will see this):");
-    if(!reason) return;
+async function rejectDealer(uid, bizName) {
+    const reason = prompt(`Enter Rejection Reason for "${bizName}":\n(User will see this message)`);
+    if(!reason || reason.trim() === '') return;
 
     try {
+        // Step 1: Update Request Status with Reason
         await updateDoc(doc(db, "verification_requests", uid), { 
             status: "rejected", 
-            rejectionReason: reason,
+            rejectionReason: reason.trim(),
             rejectedAt: serverTimestamp()
         });
-        alert("Request Rejected.");
+
+        // ✅ Step 2: Save Rejection Notification for User
+        await addDoc(collection(db, "notifications"), {
+            recipientId: uid,
+            type: "verification_rejected",
+            title: "❌ Verification Rejected",
+            message: `Your verification request was rejected.\n\nReason: ${reason.trim()}\n\nPlease resubmit with correct documents.`,
+            read: false,
+            createdAt: serverTimestamp()
+        });
+
+        alert(`Request rejected. User has been notified.`);
     } catch(e) { 
         console.error("Reject Error:", e);
         alert(e.message); 
