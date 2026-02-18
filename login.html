@@ -65,16 +65,17 @@
 
     <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // 1. Firebase Config
         const firebaseConfig = {
-          apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
-          authDomain: "earth-properties-c3c56.firebaseapp.com",
-          projectId: "earth-properties-c3c56"
+            apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
+            authDomain: "earth-properties-c3c56.firebaseapp.com",
+            projectId: "earth-properties-c3c56"
         };
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
+        const db = firebase.firestore();
 
         const BASE_URL = "https://pkgandhi725-crypto.github.io/earth-property";
         const COOLDOWN_MS = 60000;
@@ -86,37 +87,67 @@
             setTimeout(() => t.classList.remove('show'), 4000);
         }
 
-        // 2. Google Login Logic
+        // ✅ Naye user ko EP ID assign karo — transaction safe
+        async function assignEpIdIfNew(user) {
+            try {
+                const userRef = db.collection("users").doc(user.uid);
+                const userSnap = await userRef.get();
+
+                // Pehle se EP ID hai to kuch mat karo
+                if (userSnap.exists && userSnap.data().epId) return;
+
+                // ✅ Firestore transaction — 2 users ek saath same ID na paayein
+                const counterRef = db.collection("counters").doc("userCount");
+                const newNumber = await db.runTransaction(async (transaction) => {
+                    const counterSnap = await transaction.get(counterRef);
+                    const current = counterSnap.exists ? counterSnap.data().count : 1000;
+                    const next = current + 1;
+                    transaction.set(counterRef, { count: next }, { merge: true });
+                    return next;
+                });
+
+                // ✅ User doc mein EP ID + basic info save karo
+                await userRef.set({
+                    epId: `EP-${newNumber}`,
+                    email: user.email || "",
+                    displayName: user.displayName || "",
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
+            } catch (e) {
+                // ID assign fail ho to bhi login block mat karo
+                console.error("EP ID assign error:", e);
+            }
+        }
+
+        // ✅ Google Login
         async function loginWithGoogle() {
             const btn = document.getElementById('googleBtn');
             const btnText = document.getElementById('googleBtnText');
-            
             btn.disabled = true;
             btnText.innerHTML = "Logging in...";
-            
             const provider = new firebase.auth.GoogleAuthProvider();
-            
             try {
                 const result = await auth.signInWithPopup(provider);
+                await assignEpIdIfNew(result.user);
                 showToast("✓ Welcome " + (result.user.displayName || "User"));
                 window.location.replace(`${BASE_URL}/index.html`);
             } catch (error) {
                 console.error(error);
                 let msg = "Login Failed";
-                if(error.code === 'auth/popup-closed-by-user') msg = "Login cancelled";
+                if (error.code === 'auth/popup-closed-by-user') msg = "Login cancelled";
                 showToast(msg, true);
                 btn.disabled = false;
                 btnText.innerHTML = "Continue with Google";
             }
         }
 
-        // 3. Email Link Logic
+        // Cooldown timer
         function updateCooldownUI() {
             const timer = document.getElementById('cooldownTimer');
             const btn = document.getElementById('loginBtn');
             const lastSent = parseInt(localStorage.getItem('lastEmailSentTime') || '0');
             const remaining = Math.ceil((lastSent + COOLDOWN_MS - Date.now()) / 1000);
-            
             if (remaining > 0) {
                 btn.disabled = true;
                 timer.style.display = 'block';
@@ -128,13 +159,14 @@
             }
         }
 
+        // Email Link Login
         async function login() {
             const email = document.getElementById('email').value.trim();
             const btn = document.getElementById('loginBtn');
             const loader = document.getElementById('loader');
             const btnText = document.getElementById('btnText');
 
-            if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
                 return showToast("Invalid email format", true);
             }
 
@@ -160,33 +192,34 @@
             }
         }
 
-        // 4. Initialization
-        window.onload = function() {
+        // Initialization
+        window.onload = function () {
             if (localStorage.getItem('lastEmailSentTime')) updateCooldownUI();
 
-            // Handle Email Verification Link
+            // ✅ Email link verify + EP ID assign
             if (auth.isSignInWithEmailLink(window.location.href)) {
                 let email = localStorage.getItem('emailForSignIn') || window.prompt("Confirm your email:");
-                if(email) {
+                if (email) {
                     auth.signInWithEmailLink(email, window.location.href)
-                        .then(() => {
+                        .then(async (result) => {
                             localStorage.removeItem('emailForSignIn');
+                            await assignEpIdIfNew(result.user);
                             window.location.replace(`${BASE_URL}/index.html`);
                         })
                         .catch(() => showToast("Link expired.", true));
                 }
             }
 
-            // Auto-Redirect if logged in
+            // Auto redirect if already logged in
             auth.onAuthStateChanged((user) => {
                 if (user && !auth.isSignInWithEmailLink(window.location.href)) {
                     window.location.replace(`${BASE_URL}/index.html`);
                 }
             });
 
-            // Enter Key Support
+            // Enter key support
             document.getElementById('email').addEventListener('keypress', (e) => {
-                if(e.key === 'Enter') login();
+                if (e.key === 'Enter') login();
             });
         };
     </script>
