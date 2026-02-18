@@ -461,8 +461,10 @@ async function viewChat(chatId, title) {
             wrap.appendChild(bubble);
         });
 
-        // Scroll to bottom
-        wrap.scrollTop = wrap.scrollHeight;
+        // ✅ Scroll to bottom with delay — images load hone ka time milega
+        setTimeout(() => {
+            wrap.scrollTop = wrap.scrollHeight;
+        }, 100);
 
     } catch(e) {
         document.getElementById('modalMessages').innerHTML =
