@@ -39,6 +39,36 @@ input:disabled{background:#f5f5f5;color:#666;}
 .status{padding:10px;border-radius:8px;margin-top:10px;display:none;}
 .status.success{background:#e8f5e9;color:#2e7d32;}
 .status.error{background:#ffebee;color:#c62828;}
+
+/* ✅ Verified Badge */
+.verified-banner {
+    display: none;
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    border: 1.5px solid #1da1f2;
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin-bottom: 15px;
+    align-items: center;
+    gap: 12px;
+}
+.verified-banner i {
+    font-size: 28px;
+    color: #1da1f2;
+    flex-shrink: 0;
+}
+.verified-banner .badge-text {
+    flex: 1;
+}
+.verified-banner .badge-text strong {
+    display: block;
+    font-size: 15px;
+    color: #0d47a1;
+    font-weight: 800;
+}
+.verified-banner .badge-text span {
+    font-size: 12px;
+    color: #1565c0;
+}
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
@@ -66,17 +96,27 @@ input:disabled{background:#f5f5f5;color:#666;}
 </div>
 
 <div class="box">
- <div class="input-group">
-  <input id="name" placeholder="Your Name" maxlength="50">
- </div>
- <div class="input-group">
-  <input id="phone" placeholder="Phone Number" type="tel" maxlength="15">
- </div>
- <div class="input-group">
-  <input id="email" placeholder="Email" disabled>
- </div>
- <button id="saveBtn" class="save-btn" onclick="saveProfile()">💾 Save Profile</button>
- <div id="statusMsg" class="status"></div>
+
+    <!-- ✅ Verified Badge Banner (shown only if verified) -->
+    <div class="verified-banner" id="verifiedBanner">
+        <i class="fa fa-certificate"></i>
+        <div class="badge-text">
+            <strong>✅ Verified Premium Dealer</strong>
+            <span id="businessNameText">—</span>
+        </div>
+    </div>
+
+    <div class="input-group">
+        <input id="name" placeholder="Your Name" maxlength="50">
+    </div>
+    <div class="input-group">
+        <input id="phone" placeholder="Phone Number" type="tel" maxlength="15">
+    </div>
+    <div class="input-group">
+        <input id="email" placeholder="Email" disabled>
+    </div>
+    <button id="saveBtn" class="save-btn" onclick="saveProfile()">💾 Save Profile</button>
+    <div id="statusMsg" class="status"></div>
 </div>
 
 <script>
@@ -92,11 +132,9 @@ const db=firebase.firestore();
 
 let uid=null;
 
-// Get current language and translations
 const currentLang = sessionStorage.getItem('selectedLang') || 'en';
 const t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
 
-// Apply translations
 function applyTranslations() {
     document.getElementById('headerTitle').innerText = '👤 ' + t.myProfileTitle;
     document.getElementById('homeBtn').innerText = '🏠 ' + t.home;
@@ -109,14 +147,12 @@ function applyTranslations() {
 
 applyTranslations();
 
-// Cloudinary FREE TIER config
 const CLOUD_NAME = "dnkhurnbv";
 const UPLOAD_PRESET = "earth_property";
 
-// Upload to Cloudinary + Progress
 async function uploadToCloudinary(file, isCover=false){
  const previewImg = isCover ? document.getElementById('coverImg') : document.getElementById('profileImg');
- previewImg.src = "https://i.imgur.com/8Km9tLL.gif"; // Loading spinner
+ previewImg.src = "https://i.imgur.com/8Km9tLL.gif";
  
  const form = new FormData();
  form.append("file", file);
@@ -127,18 +163,17 @@ async function uploadToCloudinary(file, isCover=false){
    method: "POST",
    body: form
   });
-  
   if(!res.ok) throw new Error('Upload failed');
-  
   const data = await res.json();
   return data.secure_url;
  }catch(e){
-  previewImg.src = isCover ? "https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300&q=80" : "https://via.placeholder.com/110/2e7d32/ffffff?text=👤";
+  previewImg.src = isCover 
+    ? "https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300&q=80" 
+    : "https://via.placeholder.com/110/2e7d32/ffffff?text=👤";
   throw e;
  }
 }
 
-// Auth + Load Profile
 auth.onAuthStateChanged(async user=>{
  if(!user){
   showStatus("Please login first", "error");
@@ -149,24 +184,32 @@ auth.onAuthStateChanged(async user=>{
  document.getElementById('email').value=user.email;
 
  try{
-  const doc = await db.collection("users").doc(uid).get();
-  if(doc.exists){
-   const d = doc.data();
+  const docSnap = await db.collection("users").doc(uid).get();
+  if(docSnap.exists){
+   const d = docSnap.data();
    document.getElementById('name').value = d.name || "";
    document.getElementById('phone').value = d.phone || "";
    if(d.photoURL) document.getElementById('profileImg').src = d.photoURL;
    if(d.coverURL) document.getElementById('coverImg').src = d.coverURL;
+
+   // ✅ Show verified badge if user is verified
+   if(d.isVerified === true) {
+       const banner = document.getElementById('verifiedBanner');
+       banner.style.display = 'flex';
+       const bizName = d.businessName || "";
+       document.getElementById('businessNameText').innerText = bizName 
+           ? bizName 
+           : "Premium Verified Dealer";
+   }
   }
  }catch(e){
   console.error("Profile load error:", e);
  }
 });
 
-// Profile Photo Upload
 document.getElementById('profileInput').onchange = async (e)=>{
  const file = e.target.files[0];
  if(!file || !uid) return;
- 
  try{
   const url = await uploadToCloudinary(file, false);
   document.getElementById('profileImg').src = url;
@@ -177,12 +220,10 @@ document.getElementById('profileInput').onchange = async (e)=>{
  }
 };
 
-// Cover Photo Upload
 document.getElementById('coverImg').onclick = ()=>document.getElementById('coverInput').click();
 document.getElementById('coverInput').onchange = async (e)=>{
  const file = e.target.files[0];
  if(!file || !uid) return;
- 
  try{
   const url = await uploadToCloudinary(file, true);
   document.getElementById('coverImg').src = url;
@@ -193,7 +234,6 @@ document.getElementById('coverInput').onchange = async (e)=>{
  }
 };
 
-// Save Profile Data
 async function saveProfile(){
  const saveBtn = document.getElementById('saveBtn');
  const name = document.getElementById('name').value.trim();
@@ -237,7 +277,6 @@ function goHome(){
  window.location.href='index.html';
 }
 
-// PWA Ready
 if("serviceWorker" in navigator){
  navigator.serviceWorker.register("/earth-property/sw.js").catch(console.log);
 }
