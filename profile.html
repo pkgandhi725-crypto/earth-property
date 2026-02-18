@@ -40,6 +40,49 @@ input:disabled{background:#f5f5f5;color:#666;}
 .status.success{background:#e8f5e9;color:#2e7d32;}
 .status.error{background:#ffebee;color:#c62828;}
 
+/* ✅ EP ID Card */
+.ep-id-card {
+    display: none;
+    background: linear-gradient(135deg, #f3e5f5, #e8eaf6);
+    border: 1.5px solid #9c27b0;
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin-bottom: 15px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.ep-id-info { flex: 1; }
+.ep-id-label {
+    font-size: 11px;
+    color: #7b1fa2;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+.ep-id-value {
+    font-size: 24px;
+    font-weight: 800;
+    color: #4a148c;
+    letter-spacing: 2px;
+}
+.ep-copy-btn {
+    background: #9c27b0;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.ep-copy-btn:active { background: #6a1b9a; transform: scale(0.97); }
+
 /* ✅ Verified Badge */
 .verified-banner {
     display: none;
@@ -56,9 +99,7 @@ input:disabled{background:#f5f5f5;color:#666;}
     color: #1da1f2;
     flex-shrink: 0;
 }
-.verified-banner .badge-text {
-    flex: 1;
-}
+.verified-banner .badge-text { flex: 1; }
 .verified-banner .badge-text strong {
     display: block;
     font-size: 15px;
@@ -71,6 +112,7 @@ input:disabled{background:#f5f5f5;color:#666;}
 }
 </style>
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
@@ -97,7 +139,18 @@ input:disabled{background:#f5f5f5;color:#666;}
 
 <div class="box">
 
-    <!-- ✅ Verified Badge Banner (shown only if verified) -->
+    <!-- ✅ EP ID Card — har user ko dikhega -->
+    <div class="ep-id-card" id="epIdCard">
+        <div class="ep-id-info">
+            <div class="ep-id-label"><i class="fa fa-id-badge"></i> Your Earth Property ID</div>
+            <div class="ep-id-value" id="epIdValue">—</div>
+        </div>
+        <button class="ep-copy-btn" onclick="copyEpId()">
+            <i class="fa fa-copy"></i> Copy
+        </button>
+    </div>
+
+    <!-- ✅ Verified Badge Banner -->
     <div class="verified-banner" id="verifiedBanner">
         <i class="fa fa-certificate"></i>
         <div class="badge-text">
@@ -121,16 +174,17 @@ input:disabled{background:#f5f5f5;color:#666;}
 
 <script>
 const firebaseConfig = {
- apiKey:"AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
- authDomain:"earth-properties-c3c56.firebaseapp.com",
- projectId:"earth-properties-c3c56"
+    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
+    authDomain: "earth-properties-c3c56.firebaseapp.com",
+    projectId: "earth-properties-c3c56"
 };
 
 firebase.initializeApp(firebaseConfig);
-const auth=firebase.auth();
-const db=firebase.firestore();
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-let uid=null;
+let uid = null;
+let currentEpId = "";
 
 const currentLang = sessionStorage.getItem('selectedLang') || 'en';
 const t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
@@ -150,135 +204,154 @@ applyTranslations();
 const CLOUD_NAME = "dnkhurnbv";
 const UPLOAD_PRESET = "earth_property";
 
-async function uploadToCloudinary(file, isCover=false){
- const previewImg = isCover ? document.getElementById('coverImg') : document.getElementById('profileImg');
- previewImg.src = "https://i.imgur.com/8Km9tLL.gif";
- 
- const form = new FormData();
- form.append("file", file);
- form.append("upload_preset", UPLOAD_PRESET);
- 
- try{
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-   method: "POST",
-   body: form
-  });
-  if(!res.ok) throw new Error('Upload failed');
-  const data = await res.json();
-  return data.secure_url;
- }catch(e){
-  previewImg.src = isCover 
-    ? "https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300&q=80" 
-    : "https://via.placeholder.com/110/2e7d32/ffffff?text=👤";
-  throw e;
- }
+async function uploadToCloudinary(file, isCover = false) {
+    const previewImg = isCover ? document.getElementById('coverImg') : document.getElementById('profileImg');
+    previewImg.src = "https://i.imgur.com/8Km9tLL.gif";
+    const form = new FormData();
+    form.append("file", file);
+    form.append("upload_preset", UPLOAD_PRESET);
+    try {
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: "POST", body: form });
+        if (!res.ok) throw new Error('Upload failed');
+        const data = await res.json();
+        return data.secure_url;
+    } catch (e) {
+        previewImg.src = isCover
+            ? "https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300&q=80"
+            : "https://via.placeholder.com/110/2e7d32/ffffff?text=👤";
+        throw e;
+    }
 }
 
-auth.onAuthStateChanged(async user=>{
- if(!user){
-  showStatus("Please login first", "error");
-  setTimeout(()=>location.href="login.html", 1500);
-  return;
- }
- uid=user.uid;
- document.getElementById('email').value=user.email;
+auth.onAuthStateChanged(async user => {
+    if (!user) {
+        showStatus("Please login first", "error");
+        setTimeout(() => location.href = "login.html", 1500);
+        return;
+    }
+    uid = user.uid;
+    document.getElementById('email').value = user.email;
 
- try{
-  const docSnap = await db.collection("users").doc(uid).get();
-  if(docSnap.exists){
-   const d = docSnap.data();
-   document.getElementById('name').value = d.name || "";
-   document.getElementById('phone').value = d.phone || "";
-   if(d.photoURL) document.getElementById('profileImg').src = d.photoURL;
-   if(d.coverURL) document.getElementById('coverImg').src = d.coverURL;
+    try {
+        const docSnap = await db.collection("users").doc(uid).get();
+        if (docSnap.exists) {
+            const d = docSnap.data();
+            document.getElementById('name').value = d.name || "";
+            document.getElementById('phone').value = d.phone || "";
+            if (d.photoURL) document.getElementById('profileImg').src = d.photoURL;
+            if (d.coverURL) document.getElementById('coverImg').src = d.coverURL;
 
-   // ✅ Show verified badge if user is verified
-   if(d.isVerified === true) {
-       const banner = document.getElementById('verifiedBanner');
-       banner.style.display = 'flex';
-       const bizName = d.businessName || "";
-       document.getElementById('businessNameText').innerText = bizName 
-           ? bizName 
-           : "Premium Verified Dealer";
-   }
-  }
- }catch(e){
-  console.error("Profile load error:", e);
- }
+            // ✅ EP ID dikhao
+            if (d.epId) {
+                currentEpId = d.epId;
+                document.getElementById('epIdValue').innerText = d.epId;
+                document.getElementById('epIdCard').style.display = 'flex';
+            }
+
+            // ✅ Verified badge dikhao
+            if (d.isVerified === true) {
+                const banner = document.getElementById('verifiedBanner');
+                banner.style.display = 'flex';
+                const bizName = d.businessName || "";
+                document.getElementById('businessNameText').innerText = bizName ? bizName : "Premium Verified Dealer";
+            }
+        }
+    } catch (e) {
+        console.error("Profile load error:", e);
+    }
 });
 
-document.getElementById('profileInput').onchange = async (e)=>{
- const file = e.target.files[0];
- if(!file || !uid) return;
- try{
-  const url = await uploadToCloudinary(file, false);
-  document.getElementById('profileImg').src = url;
-  await db.collection("users").doc(uid).set({photoURL:url},{merge:true});
-  showStatus("Profile photo updated! ✅", "success");
- }catch(e){
-  showStatus("Upload failed. Try again.", "error");
- }
+// ✅ EP ID copy karo
+function copyEpId() {
+    if (!currentEpId) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(currentEpId).then(() => {
+            showStatus(`${currentEpId} copied! ✅`, "success");
+        });
+    } else {
+        // Fallback for older browsers
+        const el = document.createElement('input');
+        el.value = currentEpId;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        showStatus(`${currentEpId} copied! ✅`, "success");
+    }
+}
+
+document.getElementById('profileInput').onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !uid) return;
+    try {
+        const url = await uploadToCloudinary(file, false);
+        document.getElementById('profileImg').src = url;
+        await db.collection("users").doc(uid).set({ photoURL: url }, { merge: true });
+        showStatus("Profile photo updated! ✅", "success");
+    } catch (e) {
+        showStatus("Upload failed. Try again.", "error");
+    }
 };
 
-document.getElementById('coverImg').onclick = ()=>document.getElementById('coverInput').click();
-document.getElementById('coverInput').onchange = async (e)=>{
- const file = e.target.files[0];
- if(!file || !uid) return;
- try{
-  const url = await uploadToCloudinary(file, true);
-  document.getElementById('coverImg').src = url;
-  await db.collection("users").doc(uid).set({coverURL:url},{merge:true});
-  showStatus("Cover photo updated! ✅", "success");
- }catch(e){
-  showStatus("Upload failed. Try again.", "error");
- }
+document.getElementById('coverImg').onclick = () => document.getElementById('coverInput').click();
+document.getElementById('coverInput').onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !uid) return;
+    try {
+        const url = await uploadToCloudinary(file, true);
+        document.getElementById('coverImg').src = url;
+        await db.collection("users").doc(uid).set({ coverURL: url }, { merge: true });
+        showStatus("Cover photo updated! ✅", "success");
+    } catch (e) {
+        showStatus("Upload failed. Try again.", "error");
+    }
 };
 
-async function saveProfile(){
- const saveBtn = document.getElementById('saveBtn');
- const name = document.getElementById('name').value.trim();
- const phone = document.getElementById('phone').value.trim();
- 
- if(!name && !phone){
-  showStatus("Please fill at least one field", "error");
-  return;
- }
- 
- saveBtn.disabled = true;
- saveBtn.textContent = "Saving...";
- 
- try{
-  await db.collection("users").doc(uid).set({
-   name: name || firebase.firestore.FieldValue.delete(),
-   phone: phone || firebase.firestore.FieldValue.delete(),
-   updated: Date.now()
-  },{merge:true});
-  
-  showStatus("Profile saved successfully! ✅", "success");
-  setTimeout(goHome, 1500);
- }catch(e){
-  showStatus("Save failed. Try again.", "error");
-  console.error("Save error:", e);
- }finally{
-  saveBtn.disabled = false;
-  saveBtn.textContent = "💾 " + t.saveProfile;
- }
+async function saveProfile() {
+    const saveBtn = document.getElementById('saveBtn');
+    const name = document.getElementById('name').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+
+    if (!name && !phone) {
+        showStatus("Please fill at least one field", "error");
+        return;
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Saving...";
+
+    try {
+        await db.collection("users").doc(uid).set({
+            name: name || firebase.firestore.FieldValue.delete(),
+            phone: phone || firebase.firestore.FieldValue.delete(),
+            updated: Date.now()
+        }, { merge: true });
+
+        showStatus("Profile saved successfully! ✅", "success");
+        setTimeout(goHome, 1500);
+    } catch (e) {
+        showStatus("Save failed. Try again.", "error");
+        console.error("Save error:", e);
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = "💾 " + t.saveProfile;
+    }
 }
 
-function showStatus(msg, type){
- const status = document.getElementById('statusMsg');
- status.textContent = msg;
- status.className = `status ${type}`;
- status.style.display = 'block';
- setTimeout(()=>status.style.display='none', 3000);
+function showStatus(msg, type) {
+    const status = document.getElementById('statusMsg');
+    status.textContent = msg;
+    status.className = `status ${type}`;
+    status.style.display = 'block';
+    setTimeout(() => status.style.display = 'none', 3000);
 }
 
-function goHome(){
- window.location.href='index.html';
+function goHome() {
+    window.location.href = 'index.html';
 }
 
-if("serviceWorker" in navigator){
- navigator.serviceWorker.register("/earth-property/sw.js").catch(console.log);
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/earth-property/sw.js").catch(console.log);
 }
 </script>
 
