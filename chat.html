@@ -26,19 +26,19 @@
         
         .chat-container {
             position: absolute; top: var(--header-height);
-            bottom: calc(var(--input-height) + env(safe-area-inset-bottom));
+            bottom: var(--input-height);
             left: 0; right: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
             padding: 10px; display: flex; flex-direction: column;
         }
-        
-        .refresh-loader {
-            position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
-            width: 40px; height: 40px; background: white; border-radius: 50%;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center;
-            z-index: 999; opacity: 0; transition: top 0.3s ease, opacity 0.3s ease;
-        }
 
         #chatBox { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+
+        .empty-state {
+            text-align: center; color: #aaa; font-size: 13px;
+            padding: 40px 20px; flex: 1; display: flex;
+            flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+        }
+        .empty-state i { font-size: 36px; opacity: 0.4; }
 
         .msg { max-width: 80%; padding: 8px 12px; border-radius: 12px; font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); word-wrap: break-word; }
         .sent { align-self: flex-end; background: #dcf8c6; border-bottom-right-radius: 2px; }
@@ -46,20 +46,20 @@
         .msg-footer { display: flex; align-items: center; justify-content: flex-end; gap: 4px; font-size: 10px; color: #777; margin-top: 2px; }
         .tick-blue { color: #34B7F1; }
         
-        /* Image Style */
         .msg img { max-width: 100%; border-radius: 8px; cursor: pointer; display: block; margin-bottom: 5px; }
 
         .input-area { 
             position: absolute; bottom: 0; left: 0; right: 0;
-            height: calc(var(--input-height) + env(safe-area-inset-bottom));
-            background: #f0f0f0; padding: 8px 12px env(safe-area-inset-bottom) 12px;
+            height: var(--input-height);
+            background: #f0f0f0; padding: 8px 12px;
             display: flex; align-items: center; gap: 10px; border-top: 1px solid #ddd; z-index: 1000;
+            transition: bottom 0.25s ease;
         }
 
         .input-area input { flex: 1; border: none; padding: 10px 16px; border-radius: 22px; outline: none; font-size: 15px; background: white; }
-        .send-btn { background: var(--primary); color: white; border: none; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .send-btn { background: var(--primary); color: white; border: none; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .send-btn:disabled { opacity: 0.6; pointer-events: none; }
 
-        /* Modals & UI */
         .dropdown { display: none; position: absolute; right: 15px; top: 55px; background: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); min-width: 150px; z-index: 2000; overflow: hidden;}
         .dropdown div { padding: 12px 15px; cursor: pointer; font-size: 14px; border-bottom: 1px solid #eee; color: #333; }
         
@@ -67,12 +67,10 @@
         .modal.active { display: flex; }
         .modal-content { background: white; border-radius: 15px; padding: 20px; width: 100%; max-width: 320px; max-height: 90vh; overflow-y: auto; }
         
-        /* Report Extra Style */
         .report-option { padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 8px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
         .report-option.selected { border-color: var(--primary); background: #e8f5e9; }
         #reportDetails { width: 100%; height: 80px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; margin-top: 10px; font-family: inherit; resize: none; display: none; }
 
-        /* Full Screen Preview with Pinch Zoom */
         #imgModal { 
             cursor: pointer;
             overflow: hidden;
@@ -85,8 +83,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: auto;
-            -webkit-overflow-scrolling: touch;
+            overflow: hidden;
+            touch-action: none;
         }
         
         #previewImg { 
@@ -97,10 +95,11 @@
             touch-action: none;
             user-select: none;
             -webkit-user-select: none;
+            transform-origin: center center;
         }
 
         .btn-group { display: flex; gap: 10px; margin-top: 15px; }
-        .btn-group button { flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: bold; }
+        .btn-group button { flex: 1; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
         
         .spinner { animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -109,7 +108,7 @@
 <body>
 
 <header>
-    <div onclick="history.back()" style="padding:5px;"><i class="fa fa-arrow-left"></i></div>
+    <div onclick="history.back()" style="padding:5px; cursor:pointer;"><i class="fa fa-arrow-left"></i></div>
     <div class="user-info">
         <div id="chatName">Loading...</div>
         <div id="userStatus">Offline</div>
@@ -124,26 +123,25 @@
 </header>
 
 <div class="chat-container" id="chatContainer">
-    <div class="refresh-loader" id="refreshLoader"><svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#2e7d32" stroke-width="4"></circle></svg></div>
     <div id="chatBox"></div>
 </div>
 
-<div class="input-area">
-    <label for="photoInput"><i class="fa fa-camera" id="camIcon" style="font-size:22px; color:#555; padding:5px;"></i></label>
+<div class="input-area" id="inputArea">
+    <label for="photoInput"><i class="fa fa-camera" id="camIcon" style="font-size:22px; color:#555; padding:5px; cursor:pointer;"></i></label>
     <input type="file" id="photoInput" accept="image/*" hidden onchange="uploadPhoto(this)">
-    <input type="text" id="msgInput" placeholder="Type a message..." autocomplete="off">
-    <button class="send-btn" onclick="sendMsg()"><i class="fa fa-paper-plane"></i></button>
+    <input type="text" id="msgInput" placeholder="Type a message..." autocomplete="off" onkeydown="if(event.key==='Enter') sendMsg()">
+    <button class="send-btn" id="sendBtn" onclick="sendMsg()"><i class="fa fa-paper-plane"></i></button>
 </div>
 
-<div class="modal" id="imgModal" onclick="closeImagePreview(event)">
+<div class="modal" id="imgModal">
     <div class="img-wrapper" id="imgWrapper">
-        <img id="previewImg" src="">
+        <img id="previewImg" src="" alt="Preview">
     </div>
 </div>
 
 <div class="modal" id="blockModal">
     <div class="modal-content">
-        <h3 id="blockModalTitle">Block <span id="blockTargetName">User</span>?</h3>
+        <h3>Block <span id="blockTargetName">User</span>?</h3>
         <p style="font-size:14px; color:#666; margin:10px 0;" id="blockModalMsg">They won't be able to message you.</p>
         <div class="btn-group">
             <button onclick="closeModal('blockModal')" style="background:#eee;" id="blockNoBtn">No</button>
@@ -188,7 +186,11 @@
 <script src="translations.js"></script>
 
 <script>
-const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
+const firebaseConfig = { 
+    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
+    authDomain: "earth-properties-c3c56.firebaseapp.com", 
+    projectId: "earth-properties-c3c56" 
+};
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
@@ -198,31 +200,17 @@ const urlParams = new URLSearchParams(window.location.search);
 const partnerId = urlParams.get('to');
 let currentUserId = "", partnerName = "", selectedReason = "";
 
-// Get current language and apply translations
 const currentLang = sessionStorage.getItem('selectedLang') || 'en';
 const t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
 
-// Apply translations on page load
 function applyTranslations() {
-    const t = TRANSLATIONS[currentLang] || TRANSLATIONS['en'];
-    
-    // Update input placeholder
     document.getElementById('msgInput').placeholder = t.typeMessage;
-    
-    // Update status (will be overwritten by actual status later)
     document.getElementById('userStatus').innerText = t.offline;
-    
-    // Update dropdown menu
     document.getElementById('reportUserText').innerText = t.reportUser;
     document.getElementById('blockUserText').innerText = t.blockUser;
-    
-    // Update block modal
-    document.getElementById('blockModalTitle').innerHTML = t.blockTitle + ' <span id="blockTargetName">' + (partnerName || 'User') + '</span>?';
     document.getElementById('blockModalMsg').innerText = t.blockMsg;
     document.getElementById('blockNoBtn').innerText = t.no;
     document.getElementById('blockYesBtn').innerText = t.yesBlock;
-    
-    // Update report modal
     document.getElementById('reportModalTitle').innerText = t.reportTitle;
     document.getElementById('reportModalDesc').innerText = t.reportDesc;
     document.getElementById('reportSpam').innerText = t.spam;
@@ -238,95 +226,192 @@ auth.onAuthStateChanged(user => {
     if (!user || !partnerId) { location.href = 'index.html'; return; }
     currentUserId = user.uid;
     db.collection("users").doc(currentUserId).update({ status: "Online" });
+    applyTranslations();
     loadPartnerInfo();
     listenMessages();
-    setupPullToRefresh();
-    applyTranslations();
+    setupPinchZoom();
+    setupKeyboardAvoidance();
 });
 
 function loadPartnerInfo() {
     db.collection("users").doc(partnerId).onSnapshot(doc => {
-        if(doc.exists) {
+        if (doc.exists) {
             partnerName = doc.data().name || "User";
             document.getElementById('chatName').innerText = partnerName;
             document.getElementById('blockTargetName').innerText = partnerName;
-            
-            // Update status with translation
             const status = doc.data().status || "Offline";
-            const statusText = status === "Online" ? t.online : t.offline;
-            document.getElementById('userStatus').innerText = statusText;
+            document.getElementById('userStatus').innerText = status === "Online" ? t.online : t.offline;
         }
     });
 }
 
 function listenMessages() {
-    const chatId = currentUserId < partnerId ? `${currentUserId}_${partnerId}` : `${partnerId}_${currentUserId}`;
-    db.collection("chats").doc(chatId).collection("messages").orderBy("timestamp", "asc").limitToLast(50)
-      .onSnapshot(snap => {
-          const chatBox = document.getElementById('chatBox');
-          chatBox.innerHTML = "";
-          snap.forEach(doc => {
-              const m = doc.data();
-              const type = m.senderId === currentUserId ? 'sent' : 'received';
-              if (type === 'received' && m.status === 'unread') doc.ref.update({ status: 'read' });
-              
-              const time = m.timestamp ? new Date(m.timestamp.seconds * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "...";
-              let ticks = (type === 'sent') ? `<i class="fa fa-check${m.status==='read' ? '-double tick-blue' : ''}"></i>` : '';
-              
-              let content = m.image ? `<img src="${m.image}" onclick="openImagePreview('${m.image}')">` : `<div>${m.text}</div>`;
-              chatBox.innerHTML += `<div class="msg ${type}">${content}<div class="msg-footer">${time} ${ticks}</div></div>`;
-          });
-          document.getElementById('chatContainer').scrollTop = document.getElementById('chatContainer').scrollHeight;
-      });
+    const chatId = getChatId();
+    db.collection("chats").doc(chatId).collection("messages")
+        .orderBy("timestamp", "asc").limitToLast(50)
+        .onSnapshot(snap => {
+            const chatBox = document.getElementById('chatBox');
+            if (snap.metadata.hasPendingWrites) return;
+
+            chatBox.innerHTML = "";
+
+            if (snap.empty) {
+                chatBox.innerHTML = `<div class="empty-state"><i class="fa fa-comments"></i><span>No messages yet. Say hi! 👋</span></div>`;
+                return;
+            }
+
+            snap.forEach(doc => renderMessage(doc, chatBox));
+            scrollToBottom();
+        });
+}
+
+function renderMessage(doc, chatBox) {
+    const m = doc.data();
+    const type = m.senderId === currentUserId ? 'sent' : 'received';
+
+    if (type === 'received' && m.status === 'unread') {
+        doc.ref.update({ status: 'read' });
+    }
+
+    const time = m.timestamp 
+        ? new Date(m.timestamp.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+        : "...";
+
+    let ticks = '';
+    if (type === 'sent') {
+        ticks = m.status === 'read'
+            ? `<i class="fa fa-check-double tick-blue"></i>`
+            : `<i class="fa fa-check"></i>`;
+    }
+
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `msg ${type}`;
+
+    if (m.image) {
+        const img = document.createElement('img');
+        img.src = m.image;
+        img.alt = "Image";
+        img.dataset.url = m.image;
+        img.addEventListener('click', () => openImagePreview(img.dataset.url));
+        msgDiv.appendChild(img);
+    } else {
+        const textDiv = document.createElement('div');
+        textDiv.textContent = m.text;
+        msgDiv.appendChild(textDiv);
+    }
+
+    const footer = document.createElement('div');
+    footer.className = 'msg-footer';
+    footer.innerHTML = `${time} ${ticks}`;
+    msgDiv.appendChild(footer);
+
+    chatBox.appendChild(msgDiv);
+}
+
+function scrollToBottom() {
+    const container = document.getElementById('chatContainer');
+    container.scrollTop = container.scrollHeight;
+}
+
+function getChatId() {
+    return currentUserId < partnerId 
+        ? `${currentUserId}_${partnerId}` 
+        : `${partnerId}_${currentUserId}`;
 }
 
 async function sendMsg(img = null) {
     const input = document.getElementById('msgInput');
-    if (!input.value.trim() && !img) return;
-    const chatId = currentUserId < partnerId ? `${currentUserId}_${partnerId}` : `${partnerId}_${currentUserId}`;
-    await db.collection("chats").doc(chatId).collection("messages").add({
-        senderId: currentUserId, text: input.value, image: img, status: 'unread', timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    const sendBtn = document.getElementById('sendBtn');
+    const text = input.value.trim(); // saved before clearing
+
+    if (!text && !img) return;
+
+    sendBtn.disabled = true;
     input.value = "";
-    db.collection("chats").doc(chatId).set({ lastMsg: img ? "📷 Photo" : input.value, lastTime: firebase.firestore.FieldValue.serverTimestamp(), users: [currentUserId, partnerId] }, { merge: true });
+
+    const chatId = getChatId();
+
+    try {
+        await db.collection("chats").doc(chatId).collection("messages").add({
+            senderId: currentUserId, 
+            text: text,
+            image: img || null, 
+            status: 'unread', 
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        await db.collection("chats").doc(chatId).set({ 
+            lastMsg: img ? "📷 Photo" : text, 
+            lastTime: firebase.firestore.FieldValue.serverTimestamp(), 
+            users: [currentUserId, partnerId] 
+        }, { merge: true });
+
+    } catch (err) {
+        console.error("Failed to send message:", err);
+        input.value = text;
+        alert("Failed to send. Please try again.");
+    } finally {
+        sendBtn.disabled = false;
+    }
 }
 
 async function uploadPhoto(el) {
-    const file = el.files[0]; if(!file) return;
+    const file = el.files[0]; 
+    if (!file) return;
+
     document.getElementById('camIcon').className = "fa fa-spinner spinner";
-    const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', UPLOAD_PRESET);
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
-    const data = await res.json();
-    if(data.secure_url) sendMsg(data.secure_url);
-    document.getElementById('camIcon').className = "fa fa-camera";
+
+    try {
+        const fd = new FormData(); 
+        fd.append('file', file); 
+        fd.append('upload_preset', UPLOAD_PRESET);
+
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: 'POST', body: fd });
+        const data = await res.json();
+
+        if (data.secure_url) {
+            await sendMsg(data.secure_url);
+        } else {
+            alert("Image upload failed. Please try again.");
+        }
+    } catch (err) {
+        console.error("Upload error:", err);
+        alert("Image upload failed. Please check your connection.");
+    } finally {
+        document.getElementById('camIcon').className = "fa fa-camera";
+        el.value = "";
+    }
 }
 
-// Image Preview with Pinch-to-Zoom Functionality
-let scale = 1;
-let panning = false;
-let pointX = 0;
-let pointY = 0;
-let start = { x: 0, y: 0 };
+// ─── Image Preview ────────────────────────────────────────────────────────────
+
+let scale = 1, pointX = 0, pointY = 0;
 
 function openImagePreview(url) {
     const img = document.getElementById('previewImg');
     const modal = document.getElementById('imgModal');
-    
     img.src = url;
-    scale = 1;
-    img.style.transform = 'scale(1)';
+    resetZoom();
     modal.classList.add('active');
-    
     history.pushState({ imagePreview: true }, '');
-    
-    setupPinchZoom();
+}
+
+function resetZoom() {
+    scale = 1; pointX = 0; pointY = 0;
+    document.getElementById('previewImg').style.transform = 'scale(1) translate(0px, 0px)';
 }
 
 function setupPinchZoom() {
     const img = document.getElementById('previewImg');
     const wrapper = document.getElementById('imgWrapper');
-    let initialDistance = 0;
-    let initialScale = 1;
+    let initialDistance = 0, initialScale = 1;
+    let panning = false, start = { x: 0, y: 0 };
+
+    wrapper.addEventListener('click', function(e) {
+        if (scale <= 1 && (e.target.id === 'imgWrapper' || e.target.id === 'previewImg')) {
+            closeImagePreview();
+        }
+    });
 
     wrapper.addEventListener('touchstart', function(e) {
         if (e.touches.length === 2) {
@@ -337,15 +422,13 @@ function setupPinchZoom() {
             panning = true;
             start = { x: e.touches[0].clientX - pointX, y: e.touches[0].clientY - pointY };
         }
-    });
+    }, { passive: false });
 
     wrapper.addEventListener('touchmove', function(e) {
         if (e.touches.length === 2) {
             e.preventDefault();
             const currentDistance = getDistance(e.touches[0], e.touches[1]);
-            scale = initialScale * (currentDistance / initialDistance);
-            scale = Math.min(Math.max(1, scale), 4);
-            
+            scale = Math.min(Math.max(1, initialScale * (currentDistance / initialDistance)), 4);
             img.style.transform = `scale(${scale}) translate(${pointX}px, ${pointY}px)`;
         } else if (panning && e.touches.length === 1) {
             e.preventDefault();
@@ -353,118 +436,47 @@ function setupPinchZoom() {
             pointY = e.touches[0].clientY - start.y;
             img.style.transform = `scale(${scale}) translate(${pointX}px, ${pointY}px)`;
         }
-    });
+    }, { passive: false });
 
     wrapper.addEventListener('touchend', function(e) {
-        if (e.touches.length < 2) {
-            initialDistance = 0;
-        }
+        if (e.touches.length < 2) initialDistance = 0;
         if (e.touches.length === 0) {
             panning = false;
-            if (scale <= 1) {
-                scale = 1;
-                pointX = 0;
-                pointY = 0;
-                img.style.transform = 'scale(1)';
-            }
+            if (scale <= 1) resetZoom();
         }
     });
 }
 
-function getDistance(touch1, touch2) {
-    const dx = touch1.clientX - touch2.clientX;
-    const dy = touch1.clientY - touch2.clientY;
-    return Math.sqrt(dx * dx + dy * dy);
+function getDistance(t1, t2) {
+    return Math.sqrt(Math.pow(t1.clientX - t2.clientX, 2) + Math.pow(t1.clientY - t2.clientY, 2));
 }
 
-function closeImagePreview(e) {
-    if (e.target.id === 'imgModal' || e.target.id === 'imgWrapper') {
-        const modal = document.getElementById('imgModal');
-        const img = document.getElementById('previewImg');
-        
-        scale = 1;
-        pointX = 0;
-        pointY = 0;
-        img.style.transform = 'scale(1)';
-        modal.classList.remove('active');
-        
-        if (window.history.state && window.history.state.imagePreview) {
-            history.back();
-        }
+function closeImagePreview() {
+    resetZoom();
+    document.getElementById('imgModal').classList.remove('active');
+    if (window.history.state && window.history.state.imagePreview) {
+        history.back();
     }
 }
 
-function selectReportReason(el, reason) {
-    document.querySelectorAll('.report-option').forEach(opt => opt.classList.remove('selected'));
-    el.classList.add('selected');
-    selectedReason = reason;
-    
-    const detailsBox = document.getElementById('reportDetails');
-    const submitBtn = document.getElementById('submitReportBtn');
-    
-    detailsBox.style.display = 'block';
-    detailsBox.value = '';
-    
-    if (reason === 'Other') {
-        detailsBox.placeholder = t.reportDetails + " (required)";
-        submitBtn.disabled = true;
-        submitBtn.style.opacity = '0.5';
-        
-        detailsBox.oninput = function() {
-            if (this.value.trim().length > 10) {
-                submitBtn.disabled = false;
-                submitBtn.style.opacity = '1';
-            } else {
-                submitBtn.disabled = true;
-                submitBtn.style.opacity = '0.5';
-            }
-        };
-    } else {
-        detailsBox.placeholder = t.reportDetails + " (optional)";
-        submitBtn.disabled = false;
-        submitBtn.style.opacity = '1';
-        detailsBox.oninput = null;
-    }
-}
+// ─── Keyboard Avoidance ───────────────────────────────────────────────────────
 
-async function confirmReport() {
-    const details = document.getElementById('reportDetails').value.trim();
+function setupKeyboardAvoidance() {
+    if (!window.visualViewport) return;
     
-    if (selectedReason === 'Other' && details.length < 10) {
-        alert("Please provide detailed information about the issue.");
-        return;
-    }
-    
-    await db.collection("reports").add({
-        reporter: currentUserId, 
-        reported: partnerId, 
-        reason: selectedReason, 
-        details: details, 
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    const inputArea = document.getElementById('inputArea');
+    const chatContainer = document.getElementById('chatContainer');
+
+    window.visualViewport.addEventListener('resize', () => {
+        const offsetFromBottom = window.innerHeight - window.visualViewport.height - window.visualViewport.offsetTop;
+        const keyboardHeight = Math.max(0, offsetFromBottom);
+        inputArea.style.bottom = keyboardHeight + 'px';
+        chatContainer.style.bottom = (60 + keyboardHeight) + 'px';
+        scrollToBottom();
     });
-    
-    alert(t.reportSuccess);
-    
-    selectedReason = "";
-    document.querySelectorAll('.report-option').forEach(opt => opt.classList.remove('selected'));
-    document.getElementById('reportDetails').value = '';
-    document.getElementById('reportDetails').style.display = 'none';
-    
-    closeModal('reportModal');
 }
 
-async function confirmBlock() {
-    await db.collection("users").doc(currentUserId).update({ blockedUsers: firebase.firestore.FieldValue.arrayUnion(partnerId) });
-    alert(t.blockSuccess);
-    closeModal('blockModal');
-}
-
-function setupPullToRefresh() {
-    const container = document.getElementById('chatContainer');
-    let startY = 0;
-    container.addEventListener('touchstart', (e) => { startY = e.touches[0].clientY; });
-    container.addEventListener('touchend', (e) => { if(e.changedTouches[0].clientY - startY > 100 && container.scrollTop <= 0) location.reload(); });
-}
+// ─── Modals ───────────────────────────────────────────────────────────────────
 
 function toggleMenu(e) { 
     e.stopPropagation(); 
@@ -474,7 +486,7 @@ function toggleMenu(e) {
 
 document.addEventListener('click', () => { 
     const menu = document.getElementById('menuDropdown');
-    if(menu) menu.style.display = 'none'; 
+    if (menu) menu.style.display = 'none'; 
 });
 
 function showBlockModal() { 
@@ -489,7 +501,6 @@ function showReportModal() {
 
 function closeModal(id) { 
     document.getElementById(id).classList.remove('active'); 
-    
     if (id === 'reportModal') {
         selectedReason = "";
         document.querySelectorAll('.report-option').forEach(opt => opt.classList.remove('selected'));
@@ -500,14 +511,79 @@ function closeModal(id) {
     }
 }
 
-window.addEventListener('popstate', function(e) {
+function selectReportReason(el, reason) {
+    document.querySelectorAll('.report-option').forEach(opt => opt.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedReason = reason;
+
+    const detailsBox = document.getElementById('reportDetails');
+    const submitBtn = document.getElementById('submitReportBtn');
+
+    detailsBox.style.display = 'block';
+    detailsBox.value = '';
+
+    if (reason === 'Other') {
+        detailsBox.placeholder = t.reportDetails + " (required)";
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.5';
+        detailsBox.oninput = function() {
+            const valid = this.value.trim().length > 10;
+            submitBtn.disabled = !valid;
+            submitBtn.style.opacity = valid ? '1' : '0.5';
+        };
+    } else {
+        detailsBox.placeholder = t.reportDetails + " (optional)";
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+        detailsBox.oninput = null;
+    }
+}
+
+async function confirmReport() {
+    const details = document.getElementById('reportDetails').value.trim();
+
+    if (selectedReason === 'Other' && details.length < 10) {
+        alert("Please provide detailed information about the issue.");
+        return;
+    }
+
+    try {
+        await db.collection("reports").add({
+            reporter: currentUserId, 
+            reported: partnerId, 
+            reason: selectedReason, 
+            details: details, 
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        alert(t.reportSuccess);
+    } catch (err) {
+        console.error("Report failed:", err);
+        alert("Failed to submit report. Please try again.");
+        return;
+    }
+
+    closeModal('reportModal');
+}
+
+async function confirmBlock() {
+    try {
+        await db.collection("users").doc(currentUserId).update({ 
+            blockedUsers: firebase.firestore.FieldValue.arrayUnion(partnerId) 
+        });
+        alert(t.blockSuccess);
+    } catch (err) {
+        console.error("Block failed:", err);
+        alert("Failed to block user. Please try again.");
+    }
+    closeModal('blockModal');
+}
+
+// ─── Back button ──────────────────────────────────────────────────────────────
+
+window.addEventListener('popstate', function() {
     const imgModal = document.getElementById('imgModal');
     if (imgModal.classList.contains('active')) {
-        const img = document.getElementById('previewImg');
-        scale = 1;
-        pointX = 0;
-        pointY = 0;
-        img.style.transform = 'scale(1)';
+        resetZoom();
         imgModal.classList.remove('active');
     }
 });
