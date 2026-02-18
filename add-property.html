@@ -45,6 +45,25 @@
             margin-top: 8px; 
             display: none; 
         }
+
+        /* ✅ Verified dealer banner */
+        .verified-dealer-banner {
+            display: none;
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            border: 1.5px solid #1da1f2;
+            border-radius: 12px;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #0d47a1;
+        }
+        .verified-dealer-banner i {
+            color: #1da1f2;
+            font-size: 18px;
+        }
     </style>
 </head>
 <body>
@@ -55,6 +74,13 @@
 </header>
 
 <div class="container">
+
+    <!-- ✅ Verified Dealer Banner -->
+    <div class="verified-dealer-banner" id="verifiedDealerBanner">
+        <i class="fa fa-certificate"></i>
+        <span>Your ad will be posted as <strong>Verified ✅</strong> automatically!</span>
+    </div>
+
     <div class="form-group">
         <label>Property Title <span id="titleCount" style="float:right; font-size:12px; color:#999;">0/100</span></label>
         <input type="text" id="title" maxlength="100" placeholder="e.g. 3BHK Flat in City Center">
@@ -161,19 +187,40 @@ let uploadingCount = 0;
 let activeSlot = 0;
 let currentCoords = { lat: null, lng: null };
 
+// ✅ Store verified user data globally
+let currentUserVerified = false;
+let currentUserBizName = "";
+
 const urlParams = new URLSearchParams(window.location.search);
 const editId = urlParams.get('edit');
 
-firebase.auth().onAuthStateChanged(user => {
+firebase.auth().onAuthStateChanged(async user => {
     if (!user) return location.href = 'login.html';
+
+    // ✅ Check if user is a verified dealer
+    try {
+        const userDoc = await db.collection("users").doc(user.uid).get();
+        if (userDoc.exists) {
+            const userData = userDoc.data();
+            if (userData.isVerified === true) {
+                currentUserVerified = true;
+                currentUserBizName = userData.businessName || "";
+                // Show verified dealer banner
+                document.getElementById('verifiedDealerBanner').style.display = 'flex';
+            }
+        }
+    } catch(e) {
+        console.error("User data fetch error:", e);
+    }
+
     if (editId) loadEditData(editId, user.uid);
     
-    // ✅ FIX: Title character counter
+    // Title character counter
     document.getElementById('title').addEventListener('input', function() {
         document.getElementById('titleCount').innerText = this.value.length + '/100';
     });
     
-    // ✅ FIX: Phone number input sanitization
+    // Phone number input sanitization
     document.getElementById('phone').addEventListener('input', function() {
         this.value = this.value.replace(/\D/g, '').slice(0, 10);
     });
@@ -221,7 +268,7 @@ function toggleRentFields() {
     rentFields.style.display = document.getElementById('purpose').value === 'Rent' ? 'block' : 'none';
 }
 
-// ✅ Manual location entry
+// Manual location entry
 function useManualMode() {
     document.getElementById('btnManual').classList.add('active');
     document.getElementById('btnGPS').classList.remove('active');
@@ -230,7 +277,7 @@ function useManualMode() {
     currentCoords = { lat: null, lng: null };
 }
 
-// ✅ FIX: GPS Capture with Manual Address Entry
+// GPS Capture with Manual Address Entry
 function captureGPSLocation() {
     document.getElementById('btnGPS').classList.add('active');
     document.getElementById('btnManual').classList.remove('active');
@@ -250,13 +297,9 @@ function captureGPSLocation() {
                 lng: position.coords.longitude
             };
             
-            // Show GPS info
             showGPSInfo();
-            
-            // Keep location field editable
             document.getElementById('location').placeholder = "Now type your full address here";
             document.getElementById('location').focus();
-            
             alert('✓ GPS Captured! Now please type your full address in the location field.');
         },
         function(error) {
@@ -291,7 +334,7 @@ function handleFile(e) {
     const file = e.target.files[0];
     if(!file) return;
     
-    // ✅ FIX: File size validation (5MB limit)
+    // File size validation (5MB limit)
     if(file.size > 5 * 1024 * 1024) {
         alert("File too large! Maximum 5MB allowed.");
         e.target.value = '';
@@ -357,7 +400,7 @@ async function submitProperty() {
     const location = document.getElementById('location').value.trim();
     const finalImages = uploadedUrls.filter(u => u !== null);
 
-    // ✅ FIX: Phone validation
+    // Phone validation
     if(!/^\d{10}$/.test(phone)) return alert("Enter valid 10-digit phone number");
     if(!title || price <= 0 || !location || finalImages.length === 0) {
         return alert("Please fill all required fields:\n• Title\n• Price\n• Location\n• At least 1 photo");
@@ -365,7 +408,7 @@ async function submitProperty() {
 
     const purpose = document.getElementById('purpose').value;
     
-    // ✅ Property data WITHOUT protected fields (ownerId, createdAt, expiryDate, isExpired)
+    // Property data WITHOUT protected fields (ownerId, createdAt, expiryDate, isExpired)
     const propertyData = {
         title, 
         price, 
@@ -396,12 +439,12 @@ async function submitProperty() {
         document.getElementById('postBtn').innerText = "Processing...";
 
         if (editId) {
-            // ✅ EDIT MODE: Only update editable fields
+            // EDIT MODE: Only update editable fields
             // Protected fields (ownerId, createdAt, expiryDate, isExpired) remain unchanged
             await db.collection("properties").doc(editId).update(propertyData);
             alert("Property Updated Successfully! ✓");
         } else {
-            // ✅ NEW POST: Set all fields including protected ones
+            // NEW POST: Set all fields including protected ones
             propertyData.ownerId = user.uid;
             propertyData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
             propertyData.isExpired = false;
@@ -409,6 +452,14 @@ async function submitProperty() {
             const expiry = new Date();
             expiry.setDate(expiry.getDate() + (purpose === 'Rent' ? 30 : 180));
             propertyData.expiryDate = firebase.firestore.Timestamp.fromDate(expiry);
+
+            // ✅ Auto-set isVerified if user is a verified dealer
+            if (currentUserVerified) {
+                propertyData.isVerified = true;
+                propertyData.dealerName = currentUserBizName;
+            } else {
+                propertyData.isVerified = false;
+            }
             
             await db.collection("properties").add(propertyData);
             alert("Property Posted Successfully! 🎉");
