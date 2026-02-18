@@ -55,7 +55,13 @@
         .received { align-self: flex-start; background: white; border-bottom-left-radius: 2px; }
         .msg-footer { display: flex; align-items: center; justify-content: flex-end; gap: 4px; font-size: 10px; color: #777; margin-top: 2px; }
         .tick-blue { color: #34B7F1; }
-        .msg img { max-width: 100%; border-radius: 8px; cursor: pointer; display: block; margin-bottom: 5px; }
+        .msg img {
+            max-width: 100%; border-radius: 8px; cursor: pointer; display: block; margin-bottom: 5px;
+            min-height: 150px; background: #e0e0e0;  /* placeholder color while loading */
+            object-fit: cover;
+            transition: min-height 0.2s;
+        }
+        .msg img.loaded { min-height: unset; background: none; }
         .msg.deleted .msg-text { color: #aaa; font-style: italic; }
 
         /* Input area fixed at bottom — keyboard push handled by JS transform */
@@ -402,6 +408,8 @@ function renderMessage(doc, chatBox) {
         img.src = m.image;
         img.alt = "Image";
         img.dataset.url = m.image;
+        img.addEventListener('load', () => img.classList.add('loaded'));
+        img.addEventListener('error', () => img.classList.add('loaded'));
         img.addEventListener('click', () => openImagePreview(img.dataset.url));
         msgDiv.appendChild(img);
     } else {
@@ -441,6 +449,19 @@ async function sendMsg(img = null) {
     const sendBtn = document.getElementById('sendBtn');
     const text = input.value.trim();
     if (!text && !img) return;
+
+    // Fix 1: Check if current user is blocked by partner before sending
+    try {
+        const partnerDoc = await db.collection("users").doc(partnerId).get();
+        const blockedUsers = partnerDoc.data()?.blockedUsers || [];
+        if (blockedUsers.includes(currentUserId)) {
+            showToast("⛔ You can't send messages to this user.");
+            return;
+        }
+    } catch (err) {
+        console.warn("Block check failed, proceeding:", err);
+        // If check fails (e.g. offline), allow send — don't block user unnecessarily
+    }
 
     sendBtn.disabled = true;
     input.value = "";
