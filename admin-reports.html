@@ -422,7 +422,6 @@ async function resolveReport(rid) {
 
 // ─── Load All Chats ───────────────────────────────────────────────────────────
 function loadAllChats() {
-    // No orderBy — client-side sort karo, Firestore index error nahi aayega
     db.collection("chats")
         .onSnapshot(async snap => {
             document.getElementById('chatsLoading').style.display = 'none';
@@ -433,7 +432,10 @@ function loadAllChats() {
                 return;
             }
 
-            // Client-side sort — lastUpdate ya lastTime dono handle karo
+            // Loading show karo jab tak user info fetch ho
+            list.innerHTML = `<div class="loading"><i class="fa fa-spinner" style="animation:spin 1s linear infinite;"></i><p style="margin-top:10px;color:#666;">Chats load ho rahi hain...</p></div>`;
+
+            // Client-side sort
             const docs = snap.docs.sort((a, b) => {
                 const aTime = a.data().lastUpdate || a.data().lastTime || null;
                 const bTime = b.data().lastUpdate || b.data().lastTime || null;
@@ -442,30 +444,36 @@ function loadAllChats() {
                 return bTime.toDate() - aTime.toDate();
             });
 
-            // ✅ Saari chats ka data + user info cache mein store karo
-            allChatsData = [];
+            // ✅ Pehle SAARA data fetch karo — phir render karo
+            const newData = [];
             for (const docSnap of docs) {
                 const d = docSnap.data();
                 const chatId = docSnap.id;
                 const users = d.users || [];
                 const infos = await Promise.all(users.map(uid => getUserInfo(uid)));
-
-                allChatsData.push({
+                newData.push({
                     chatId,
                     lastMsg: d.lastMsg || "",
                     lastTime: d.lastUpdate || d.lastTime || null,
                     users,
-                    infos // [{name, epId}, ...]
+                    infos
                 });
             }
 
-            // Render karo (initial — no filter)
-            renderChats(allChatsData);
+            // Sab fetch hone ke baad store + render
+            allChatsData = newData;
+            const searchVal = document.getElementById('chatSearchInput').value.trim();
+            if (searchVal) {
+                filterChats(searchVal);
+            } else {
+                renderChats(allChatsData);
+            }
 
         }, err => {
             document.getElementById('chatsLoading').style.display = 'none';
             document.getElementById('chatsList').innerHTML =
                 `<div class="empty"><i class="fa fa-exclamation-circle"></i><p>Error: ${err.message}</p></div>`;
+            console.error('loadAllChats error:', err);
         });
 }
 
