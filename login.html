@@ -35,6 +35,11 @@
         
         #cooldownTimer { font-size: 12px; color: #d32f2f; margin-top: 10px; display: none; font-weight: 600; }
         .footer-flags { margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px; color: #bbb; font-size: 20px; letter-spacing: 5px; }
+
+        /* Google redirect loading screen */
+        #redirectLoader { display: none; flex-direction: column; align-items: center; justify-content: center; }
+        #redirectLoader .big-spinner { width: 40px; height: 40px; border: 4px solid #e8f5e9; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 15px; }
+        #redirectLoader p { color: #777; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -60,6 +65,13 @@
             </button>
             <div id="cooldownTimer"></div>
         </div>
+
+        <!-- Google redirect ke baad ye loading screen dikhegi -->
+        <div id="redirectLoader">
+            <div class="big-spinner"></div>
+            <p>Signing you in, please wait...</p>
+        </div>
+
         <div class="footer-flags">🇮🇳 🇵🇰 🇦🇪 🇸🇦 🇬🇧 🇺🇸</div>
     </div>
 
@@ -80,11 +92,21 @@
         const BASE_URL = "https://pkgandhi725-crypto.github.io/earth-property";
         const COOLDOWN_MS = 60000;
 
+        // Mobile detect karo
+        function isMobile() {
+            return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+        }
+
         function showToast(msg, isError = false) {
             const t = document.getElementById('toast');
             t.textContent = msg;
             t.className = `toast show ${isError ? 'error' : ''}`;
             setTimeout(() => t.classList.remove('show'), 4000);
+        }
+
+        function showRedirectLoader() {
+            document.getElementById('ui-container').style.display = 'none';
+            document.getElementById('redirectLoader').style.display = 'flex';
         }
 
         // ✅ Naye user ko EP ID assign karo — transaction safe
@@ -120,25 +142,43 @@
             }
         }
 
-        // ✅ Google Login
+        // ✅ Google Login — Mobile pe Redirect, Desktop pe Popup
         async function loginWithGoogle() {
             const btn = document.getElementById('googleBtn');
             const btnText = document.getElementById('googleBtnText');
             btn.disabled = true;
-            btnText.innerHTML = "Logging in...";
+            btnText.innerHTML = "Please wait...";
+
             const provider = new firebase.auth.GoogleAuthProvider();
-            try {
-                const result = await auth.signInWithPopup(provider);
-                await assignEpIdIfNew(result.user);
-                showToast("✓ Welcome " + (result.user.displayName || "User"));
-                window.location.replace(`${BASE_URL}/index.html`);
-            } catch (error) {
-                console.error(error);
-                let msg = "Login Failed";
-                if (error.code === 'auth/popup-closed-by-user') msg = "Login cancelled";
-                showToast(msg, true);
-                btn.disabled = false;
-                btnText.innerHTML = "Continue with Google";
+            provider.addScope('email');
+            provider.addScope('profile');
+
+            if (isMobile()) {
+                // Mobile: redirect method — popup block nahi hoga
+                try {
+                    await auth.signInWithRedirect(provider);
+                    // Yahan tak code nahi aayega, page redirect ho jaayega
+                } catch (error) {
+                    console.error(error);
+                    showToast("Login Failed. Try again.", true);
+                    btn.disabled = false;
+                    btnText.innerHTML = "Continue with Google";
+                }
+            } else {
+                // Desktop: popup method
+                try {
+                    const result = await auth.signInWithPopup(provider);
+                    await assignEpIdIfNew(result.user);
+                    showToast("✓ Welcome " + (result.user.displayName || "User"));
+                    window.location.replace(`${BASE_URL}/index.html`);
+                } catch (error) {
+                    console.error(error);
+                    let msg = "Login Failed";
+                    if (error.code === 'auth/popup-closed-by-user') msg = "Login cancelled";
+                    showToast(msg, true);
+                    btn.disabled = false;
+                    btnText.innerHTML = "Continue with Google";
+                }
             }
         }
 
@@ -193,8 +233,28 @@
         }
 
         // Initialization
-        window.onload = function () {
+        window.onload = async function () {
             if (localStorage.getItem('lastEmailSentTime')) updateCooldownUI();
+
+            // ✅ Google Redirect Result handle karo (Mobile ke baad wapas aane par)
+            try {
+                showRedirectLoader(); // Loader dikhao jab tak result check ho
+                const result = await auth.getRedirectResult();
+                if (result && result.user) {
+                    // Redirect se successfully login hua
+                    await assignEpIdIfNew(result.user);
+                    showToast("✓ Welcome " + (result.user.displayName || "User"));
+                    window.location.replace(`${BASE_URL}/index.html`);
+                    return;
+                }
+            } catch (error) {
+                console.error("Redirect result error:", error);
+                showToast("Google login failed. Try again.", true);
+            }
+
+            // Redirect result nahi tha, normal UI dikhao
+            document.getElementById('ui-container').style.display = 'block';
+            document.getElementById('redirectLoader').style.display = 'none';
 
             // ✅ Email link verify + EP ID assign
             if (auth.isSignInWithEmailLink(window.location.href)) {
