@@ -236,27 +236,7 @@
         window.onload = async function () {
             if (localStorage.getItem('lastEmailSentTime')) updateCooldownUI();
 
-            // ✅ Google Redirect Result handle karo (Mobile ke baad wapas aane par)
-            try {
-                showRedirectLoader(); // Loader dikhao jab tak result check ho
-                const result = await auth.getRedirectResult();
-                if (result && result.user) {
-                    // Redirect se successfully login hua
-                    await assignEpIdIfNew(result.user);
-                    showToast("✓ Welcome " + (result.user.displayName || "User"));
-                    window.location.replace(`${BASE_URL}/index.html`);
-                    return;
-                }
-            } catch (error) {
-                console.error("Redirect result error:", error);
-                showToast("Google login failed. Try again.", true);
-            }
-
-            // Redirect result nahi tha, normal UI dikhao
-            document.getElementById('ui-container').style.display = 'block';
-            document.getElementById('redirectLoader').style.display = 'none';
-
-            // ✅ Email link verify + EP ID assign
+            // ✅ Email link se aa rahe hain? — pehle ye handle karo
             if (auth.isSignInWithEmailLink(window.location.href)) {
                 let email = localStorage.getItem('emailForSignIn') || window.prompt("Confirm your email:");
                 if (email) {
@@ -268,11 +248,33 @@
                         })
                         .catch(() => showToast("Link expired.", true));
                 }
+                return; // Aage mat jao
             }
 
-            // Auto redirect if already logged in
+            // ✅ Mobile Google Redirect se wapas aaye hain? — check karo
+            if (isMobile()) {
+                try {
+                    showRedirectLoader();
+                    const result = await auth.getRedirectResult();
+                    if (result && result.user) {
+                        await assignEpIdIfNew(result.user);
+                        showToast("✓ Welcome " + (result.user.displayName || "User"));
+                        window.location.replace(`${BASE_URL}/index.html`);
+                        return;
+                    }
+                } catch (error) {
+                    console.error("Redirect result error:", error);
+                    showToast("Google login failed. Try again.", true);
+                }
+            }
+
+            // Normal UI dikhao
+            document.getElementById('ui-container').style.display = 'block';
+            document.getElementById('redirectLoader').style.display = 'none';
+
+            // ✅ Pehle se logged in hai to redirect karo
             auth.onAuthStateChanged((user) => {
-                if (user && !auth.isSignInWithEmailLink(window.location.href)) {
+                if (user) {
                     window.location.replace(`${BASE_URL}/index.html`);
                 }
             });
