@@ -119,7 +119,7 @@
                 if (userSnap.exists && userSnap.data().epId) return;
 
                 // ✅ Firestore transaction — 2 users ek saath same ID na paayein
-                const counterRef = db.collection("counters").doc("userCount");
+                const counterRef = db.collection("counters").doc("usercount");
                 const newNumber = await db.runTransaction(async (transaction) => {
                     const counterSnap = await transaction.get(counterRef);
                     const current = counterSnap.exists ? counterSnap.data().count : 1000;
@@ -236,45 +236,44 @@
         window.onload = async function () {
             if (localStorage.getItem('lastEmailSentTime')) updateCooldownUI();
 
-            // ✅ Email link se aa rahe hain? — pehle ye handle karo
+            // 1. Email Link Login — pehle check karo
             if (auth.isSignInWithEmailLink(window.location.href)) {
                 let email = localStorage.getItem('emailForSignIn') || window.prompt("Confirm your email:");
                 if (email) {
-                    auth.signInWithEmailLink(email, window.location.href)
-                        .then(async (result) => {
-                            localStorage.removeItem('emailForSignIn');
-                            await assignEpIdIfNew(result.user);
-                            window.location.replace(`${BASE_URL}/index.html`);
-                        })
-                        .catch(() => showToast("Link expired.", true));
+                    try {
+                        const result = await auth.signInWithEmailLink(email, window.location.href);
+                        localStorage.removeItem('emailForSignIn');
+                        await assignEpIdIfNew(result.user);
+                        window.location.replace(`${BASE_URL}/index.html`);
+                    } catch (e) {
+                        showToast("Link expired.", true);
+                    }
                 }
-                return; // Aage mat jao
+                return;
             }
 
-            // ✅ Mobile Google Redirect se wapas aaye hain? — check karo
+            // 2. Mobile Google Redirect Result check karo
             if (isMobile()) {
                 try {
-                    showRedirectLoader();
                     const result = await auth.getRedirectResult();
                     if (result && result.user) {
+                        showRedirectLoader();
                         await assignEpIdIfNew(result.user);
-                        showToast("✓ Welcome " + (result.user.displayName || "User"));
                         window.location.replace(`${BASE_URL}/index.html`);
                         return;
                     }
                 } catch (error) {
-                    console.error("Redirect result error:", error);
-                    showToast("Google login failed. Try again.", true);
+                    console.error("Redirect error:", error);
                 }
             }
 
-            // Normal UI dikhao
+            // 3. Normal UI dikhao + auth check
             document.getElementById('ui-container').style.display = 'block';
             document.getElementById('redirectLoader').style.display = 'none';
 
-            // ✅ Pehle se logged in hai to redirect karo
-            auth.onAuthStateChanged((user) => {
+            auth.onAuthStateChanged(async (user) => {
                 if (user) {
+                    await assignEpIdIfNew(user);
                     window.location.replace(`${BASE_URL}/index.html`);
                 }
             });
