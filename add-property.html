@@ -170,9 +170,9 @@
     <button class="btn-post" id="postBtn" onclick="submitProperty()">Post Property</button>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
 
 <script>
 const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
@@ -316,8 +316,6 @@ function captureGPSLocation() {
 
 function showGPSInfo() {
     const gpsInfo = document.getElementById('gpsInfo');
-    // GPS coordinates are numbers — safe to display directly
-    gpsInfo.textContent = '';
     gpsInfo.innerHTML = '';
     const icon = document.createElement('i');
     icon.className = 'fa fa-check-circle';
