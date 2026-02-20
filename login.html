@@ -111,7 +111,8 @@
                     epId: `EP-${newNumber}`,
                     email: user.email || "",
                     displayName: user.displayName || "",
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    isVerified: false
                 }, { merge: true });
 
             } catch (e) {
