@@ -316,11 +316,21 @@ function captureGPSLocation() {
 
 function showGPSInfo() {
     const gpsInfo = document.getElementById('gpsInfo');
-    gpsInfo.innerHTML = `
-        <i class="fa fa-check-circle"></i> 
-        GPS Captured: ${currentCoords.lat.toFixed(5)}, ${currentCoords.lng.toFixed(5)}
-        <br><small>Location will be shown on map to buyers</small>
-    `;
+    // GPS coordinates are numbers — safe to display directly
+    gpsInfo.textContent = '';
+    gpsInfo.innerHTML = '';
+    const icon = document.createElement('i');
+    icon.className = 'fa fa-check-circle';
+    const text = document.createTextNode(
+        ' GPS Captured: ' + currentCoords.lat.toFixed(5) + ', ' + currentCoords.lng.toFixed(5)
+    );
+    const br = document.createElement('br');
+    const small = document.createElement('small');
+    small.textContent = 'Location will be shown on map to buyers';
+    gpsInfo.appendChild(icon);
+    gpsInfo.appendChild(text);
+    gpsInfo.appendChild(br);
+    gpsInfo.appendChild(small);
     gpsInfo.style.display = 'block';
 }
 
