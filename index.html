@@ -1094,23 +1094,16 @@ function renderAds(ads, append = false) {
         
         const card = document.createElement('div');
         card.className = 'prop-card';
-        const safeId = sanitize(p.id);
-        const safeTitle = sanitize(p.title) || 'Untitled Property';
-        const safeLocation = sanitize(p.location) || 'Location not specified';
-        const safePhone = sanitize(p.phone);
-        const safeOwnerId = sanitize(p.ownerId);
-        const safeEncodedTitle = encodeURIComponent(p.title || '');
-
         card.innerHTML = `
             <div class="img-box" onclick='openGallery(${JSON.stringify(images)}, 0)'>
                 <img src="${images[0]}" 
-                     alt="${safeTitle}"
+                     alt="${p.title || 'Property'}"
                      onerror="this.src='https://via.placeholder.com/400x210?text=Image+Not+Available'">
                 <div class="card-actions">
-                    <button class="icon-btn share" onclick="event.stopPropagation(); shareProperty('${safeId}', '${safeEncodedTitle}')">
+                    <button class="icon-btn share" onclick="event.stopPropagation(); shareProperty('${p.id}', '${encodeURIComponent(p.title || '')}')">
                         <i class="fa fa-share-alt"></i>
                     </button>
-                    <button class="icon-btn fav" onclick="event.stopPropagation(); toggleFavorite('${safeId}')">
+                    <button class="icon-btn fav" onclick="event.stopPropagation(); toggleFavorite('${p.id}')">
                         <i class="fa${isFavorite(p.id) ? ' fa-solid' : '-regular'} fa-heart"></i>
                     </button>
                 </div>
@@ -1120,20 +1113,20 @@ function renderAds(ads, append = false) {
                 <div class="price">₹${Number(p.price || 0).toLocaleString('en-IN')}</div>
                 <div style="font-weight:700; margin:5px 0; color:#333;">
                     ${p.isVerified ? '<i class="fa fa-check-circle" style="color:#1da1f2; margin-right:3px;"></i>' : ''}
-                    ${safeTitle}
+                    ${p.title || 'Untitled Property'}
                 </div>
                 <div class="location">
-                    <i class="fa-solid fa-location-dot"></i> ${safeLocation}
+                    <i class="fa-solid fa-location-dot"></i> ${p.location || 'Location not specified'}
                 </div>
                 ${distanceHTML}
                 <div class="btn-group">
-                    <button class="btn btn-call" onclick="contact('${safePhone}', 'tel')">
+                    <button class="btn btn-call" onclick="contact('${p.phone}', 'tel')">
                         <i class="fa fa-phone"></i> ${t.call}
                     </button>
-                    <button class="btn btn-wa" onclick="contact('${safePhone}', 'wa', '${safeEncodedTitle}')">
+                    <button class="btn btn-wa" onclick="contact('${p.phone}', 'wa', '${encodeURIComponent(p.title || 'Property')}')">
                         <i class="fa-brands fa-whatsapp"></i> ${t.whatsapp}
                     </button>
-                    <button class="btn btn-chat" onclick="location.href='chat.html?to=${safeOwnerId}'">
+                    <button class="btn btn-chat" onclick="location.href='chat.html?to=${p.ownerId}'">
                         <i class="fa-regular fa-comment"></i> ${t.chat}
                     </button>
                 </div>
@@ -1212,17 +1205,6 @@ function shareProperty(propId, title) {
         document.body.removeChild(tempInput);
         showToast('Link copied to clipboard!');
     }
-}
-
-// ✅ Sanitize function — XSS se bachao
-function sanitize(str) {
-    if (str === null || str === undefined) return "";
-    return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#x27;");
 }
 
 // Initialize Page
