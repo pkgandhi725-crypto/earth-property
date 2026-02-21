@@ -440,6 +440,12 @@ function getChatId() {
 
 function listenMessages() {
     const chatId = getChatId();
+
+    // ✅ Reset unread count jab chat khule
+    db.collection("chats").doc(chatId).set({
+        [`unreadCount_${currentUserId}`]: 0
+    }, { merge: true });
+
     db.collection("chats").doc(chatId).collection("messages")
         .orderBy("timestamp", "asc").limitToLast(50)
         .onSnapshot(snap => {
@@ -561,10 +567,24 @@ async function sendMsg(img = null) {
         await db.collection("chats").doc(chatId).set({
             lastMsg: img ? "📷 Photo" : text,
             lastUpdate: firebase.firestore.FieldValue.serverTimestamp(),
+            lastTime: firebase.firestore.FieldValue.serverTimestamp(),
             lastSenderId: currentUserId,
             isSeen: false,
-            users: [currentUserId, partnerId]
+            users: [currentUserId, partnerId],
+            [`unreadCount_${partnerId}`]: firebase.firestore.FieldValue.increment(1)
         }, { merge: true });
+
+        // ✅ Bell notification create karo recipient ke liye
+        await db.collection("notifications").add({
+            recipientId: partnerId,
+            senderId: currentUserId,
+            senderName: (await db.collection("users").doc(currentUserId).get()).data()?.displayName || "Someone",
+            message: img ? "📷 Sent you a photo" : text,
+            chatId: chatId,
+            type: "message",
+            read: false,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
     } catch (err) {
         console.error("Send error:", err);
         input.value = text;
