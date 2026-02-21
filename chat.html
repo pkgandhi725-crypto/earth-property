@@ -373,6 +373,18 @@ auth.onAuthStateChanged(user => {
     if (!user || !partnerId) { location.href = 'index.html'; return; }
     currentUserId = user.uid;
     db.collection("users").doc(currentUserId).update({ status: "Online" });
+
+    // ✅ Offline set karo jab user chat se bahar jaye
+    window.addEventListener('beforeunload', () => {
+        db.collection("users").doc(currentUserId).update({ status: "Offline" });
+    });
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            db.collection("users").doc(currentUserId).update({ status: "Offline" });
+        } else {
+            db.collection("users").doc(currentUserId).update({ status: "Online" });
+        }
+    });
     applyTranslations();
     loadPartnerInfo();
     listenMessages();
