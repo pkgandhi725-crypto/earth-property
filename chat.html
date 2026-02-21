@@ -398,6 +398,14 @@ auth.onAuthStateChanged(user => {
 
 // ─── Partner Info + Block Status Check ───────────────────────────────────────
 function loadPartnerInfo() {
+    // ✅ Partner online status — RTDB se (outside onSnapshot)
+    const partnerStatusRef = rtdb.ref('/status/' + partnerId);
+    partnerStatusRef.on('value', snap => {
+        const statusData = snap.val();
+        document.getElementById('userStatus').innerText =
+            statusData?.state === 'online' ? t.online : t.offline;
+    });
+
     // ✅ Listen to CURRENT USER's doc — to check if they blocked partner
     db.collection("users").doc(currentUserId).onSnapshot(myDoc => {
         if (!myDoc.exists) return;
@@ -426,14 +434,6 @@ function loadPartnerInfo() {
         partnerName = data.name || "User";
         document.getElementById('chatName').innerText = partnerName;
         document.getElementById('blockTargetName').innerText = partnerName;
-
-        // ✅ Partner status RTDB se listen karo
-        const partnerStatusRef = rtdb.ref('/status/' + partnerId);
-        partnerStatusRef.on('value', snap => {
-            const statusData = snap.val();
-            document.getElementById('userStatus').innerText =
-                statusData?.state === 'online' ? t.online : t.offline;
-        });
 
         // ✅ Check if PARTNER blocked ME
         const theyBlockedMe = (data.blockedUsers || []).includes(currentUserId);
