@@ -326,6 +326,7 @@
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-database-compat.js"></script>
 <script src="translations.js"></script>
 
 <script>
@@ -333,10 +334,12 @@
 const firebaseConfig = {
     apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
     authDomain: "earth-properties-c3c56.firebaseapp.com",
-    projectId: "earth-properties-c3c56"
+    projectId: "earth-properties-c3c56",
+    databaseURL: "https://earth-properties-c3c56-default-rtdb.firebaseio.com"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const rtdb = firebase.database();
 const auth = firebase.auth();
 
 const CLOUD_NAME = "dnkhurnbv", UPLOAD_PRESET = "earth_property";
@@ -372,18 +375,19 @@ function applyTranslations() {
 auth.onAuthStateChanged(user => {
     if (!user || !partnerId) { location.href = 'index.html'; return; }
     currentUserId = user.uid;
-    db.collection("users").doc(currentUserId).update({ status: "Online" });
-
-    // ✅ Offline set karo jab user chat se bahar jaye
-    window.addEventListener('beforeunload', () => {
-        db.collection("users").doc(currentUserId).update({ status: "Offline" });
-    });
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            db.collection("users").doc(currentUserId).update({ status: "Offline" });
-        } else {
-            db.collection("users").doc(currentUserId).update({ status: "Online" });
-        }
+    // ✅ Realtime Database presence system
+    const userStatusRef = rtdb.ref('/status/' + currentUserId);
+    rtdb.ref('.info/connected').on('value', snapshot => {
+        if (snapshot.val() === false) return;
+        userStatusRef.onDisconnect().set({
+            state: 'offline',
+            lastChanged: firebase.database.ServerValue.TIMESTAMP
+        }).then(() => {
+            userStatusRef.set({
+                state: 'online',
+                lastChanged: firebase.database.ServerValue.TIMESTAMP
+            });
+        });
     });
     applyTranslations();
     loadPartnerInfo();
@@ -423,8 +427,13 @@ function loadPartnerInfo() {
         document.getElementById('chatName').innerText = partnerName;
         document.getElementById('blockTargetName').innerText = partnerName;
 
-        const status = data.status || "Offline";
-        document.getElementById('userStatus').innerText = status === "Online" ? t.online : t.offline;
+        // ✅ Partner status RTDB se listen karo
+        const partnerStatusRef = rtdb.ref('/status/' + partnerId);
+        partnerStatusRef.on('value', snap => {
+            const statusData = snap.val();
+            document.getElementById('userStatus').innerText =
+                statusData?.state === 'online' ? t.online : t.offline;
+        });
 
         // ✅ Check if PARTNER blocked ME
         const theyBlockedMe = (data.blockedUsers || []).includes(currentUserId);
