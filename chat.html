@@ -458,6 +458,17 @@ function listenMessages() {
         [`unreadCount_${currentUserId}`]: 0
     }, { merge: true });
 
+    // ✅ Is partner ki notifications read mark karo
+    db.collection("notifications")
+        .where("recipientId", "==", currentUserId)
+        .where("senderId", "==", partnerId)
+        .where("read", "==", false)
+        .get().then(snap => {
+            const batch = db.batch();
+            snap.forEach(doc => batch.update(doc.ref, { read: true }));
+            batch.commit();
+        });
+
     db.collection("chats").doc(chatId).collection("messages")
         .orderBy("timestamp", "asc").limitToLast(50)
         .onSnapshot(snap => {
