@@ -40,9 +40,9 @@
 <div id="newSection" class="chat-list"><div class="empty-state">Loading...</div></div>
 <div id="historySection" class="chat-list hidden"><div class="empty-state">Loading...</div></div>
 
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
 
 <script>
 const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
@@ -53,9 +53,26 @@ const auth = firebase.auth();
 let myUid = "";
 
 auth.onAuthStateChanged(user => {
-    if (user) { myUid = user.uid; loadChats(); } 
-    else { location.href = 'login.html'; }
+    if (user) {
+        myUid = user.uid;
+        loadChats();
+        markAllNotificationsRead(user.uid);
+    } else {
+        location.href = 'login.html';
+    }
 });
+
+async function markAllNotificationsRead(uid) {
+    try {
+        const snap = await db.collection("notifications")
+            .where("recipientId", "==", uid)
+            .where("read", "==", false)
+            .get();
+        const batch = db.batch();
+        snap.forEach(doc => batch.update(doc.ref, { read: true }));
+        await batch.commit();
+    } catch(e) { console.error("Mark read error:", e); }
+}
 
 function switchTab(type) {
     document.getElementById('tabNew').classList.toggle('active', type === 'new');
@@ -86,9 +103,10 @@ async function loadChats() {
 
             const unread = data[`unreadCount_${myUid}`] || 0;
             const userSnap = await db.collection("users").doc(otherUid).get();
-            const uData = userSnap.data() || {};
-            const userName = uData.name || uData.displayName || uData.businessName || 
-                             (uData.email ? uData.email.split('@')[0] : null) || "Earth User";
+            const uData = userSnap.exists ? userSnap.data() : {};
+            const userName = uData.name || uData.displayName || uData.businessName ||
+                             (uData.email ? uData.email.split('@')[0] : null) ||
+                             "User-" + otherUid.slice(0,5);
             
             let time = "";
             if (data.lastTime) {
