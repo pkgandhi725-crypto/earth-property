@@ -435,7 +435,7 @@ function loadPartnerInfo() {
         if (!doc.exists) return;
         const data = doc.data();
 
-        partnerName = data.displayName || data.name || "User";
+        partnerName = data.name || data.displayName || data.email?.split('@')[0] || "User";
         document.getElementById('chatName').innerText = partnerName;
         document.getElementById('blockTargetName').innerText = partnerName;
 
