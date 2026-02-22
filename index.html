@@ -185,6 +185,9 @@
         .img-box { width: 100%; height: 210px; background: #eee; position: relative; cursor: pointer; }
         .img-box img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .img-counter { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 15px; font-size: 11px; font-weight: 700; }
+        .card-dots { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; }
+        .card-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.6); transition: 0.2s; }
+        .card-dot.active { background: white; width: 8px; height: 8px; }
         .card-actions { position: absolute; top: 10px; right: 10px; display: flex; gap: 8px; }
         .icon-btn { background: rgba(255,255,255,0.9); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .icon-btn.fav { color: #ff5252; }
@@ -1102,8 +1105,9 @@ function renderAds(ads, append = false) {
         const safeEncodedTitle = encodeURIComponent(p.title || '');
 
         card.innerHTML = `
-            <div class="img-box" onclick='openGallery(${JSON.stringify(images)}, 0)'>
+            <div class="img-box" id="imgbox-${safeId}" onclick='openGallery(${JSON.stringify(images)}, cardImgIndex_${safeId} || 0)'>
                 <img src="${images[0]}" 
+                     id="cardimg-${safeId}"
                      alt="${safeTitle}"
                      onerror="this.src='https://via.placeholder.com/400x210?text=Image+Not+Available'">
                 <div class="card-actions">
@@ -1114,7 +1118,9 @@ function renderAds(ads, append = false) {
                         <i class="fa${isFavorite(p.id) ? ' fa-solid' : '-regular'} fa-heart"></i>
                     </button>
                 </div>
-                ${images.length > 1 ? `<div class="img-counter">${images.length} <i class="fa fa-images"></i></div>` : ''}
+                ${images.length > 1 ? `<div class="card-dots" id="carddots-${safeId}">
+                    ${images.map((_, i) => `<div class="card-dot${i===0?' active':''}" id="dot-${safeId}-${i}"></div>`).join('')}
+                </div>` : ''}
             </div>
             <div class="info">
                 <div class="price">₹${Number(p.price || 0).toLocaleString('en-IN')}</div>
@@ -1140,6 +1146,60 @@ function renderAds(ads, append = false) {
             </div>
         `;
         list.appendChild(card);
+
+        // ✅ Card swipe setup (only if multiple images)
+        if (images.length > 1) {
+            setupCardSwipe(safeId, images);
+        }
+    });
+}
+
+// ✅ Card swipe function
+const cardImgIndexes = {};
+function setupCardSwipe(id, images) {
+    cardImgIndexes[id] = 0;
+    // Make cardImgIndex accessible globally for openGallery
+    window['cardImgIndex_' + id] = 0;
+
+    const box = document.getElementById('imgbox-' + id);
+    if (!box) return;
+
+    let startX = 0, startY = 0, isDragging = false;
+
+    box.addEventListener('touchstart', e => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        isDragging = false;
+    }, { passive: true });
+
+    box.addEventListener('touchmove', e => {
+        const dx = Math.abs(e.touches[0].clientX - startX);
+        const dy = Math.abs(e.touches[0].clientY - startY);
+        if (dx > dy && dx > 10) isDragging = true;
+    }, { passive: true });
+
+    box.addEventListener('touchend', e => {
+        if (!isDragging) return;
+        e.stopPropagation();
+        const diff = e.changedTouches[0].clientX - startX;
+        if (Math.abs(diff) < 30) return;
+
+        let idx = cardImgIndexes[id];
+        if (diff < 0) idx = Math.min(idx + 1, images.length - 1); // next
+        else idx = Math.max(idx - 1, 0); // prev
+
+        cardImgIndexes[id] = idx;
+        window['cardImgIndex_' + id] = idx;
+
+        // Update image
+        const img = document.getElementById('cardimg-' + id);
+        if (img) img.src = images[idx];
+
+        // Update dots
+        images.forEach((_, i) => {
+            const dot = document.getElementById('dot-' + id + '-' + i);
+            if (dot) dot.className = 'card-dot' + (i === idx ? ' active' : '');
+        });
     });
 }
 
