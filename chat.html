@@ -432,10 +432,12 @@ function loadPartnerInfo() {
 
     // ✅ Listen to PARTNER's doc — for name, status, and if they blocked me
     db.collection("users").doc(partnerId).onSnapshot(doc => {
-        if (!doc.exists) return;
-        const data = doc.data();
+        // ✅ Doc exist na kare tab bhi naam dikhao
+        const data = doc.exists ? doc.data() : {};
 
-        partnerName = data.name || data.displayName || data.email?.split('@')[0] || "User";
+        // ✅ Naam field jo bhi ho — sab try karo
+        partnerName = data.name || data.displayName || data.businessName || 
+                      (data.email ? data.email.split('@')[0] : null) || "Earth User";
         document.getElementById('chatName').innerText = partnerName;
         document.getElementById('blockTargetName').innerText = partnerName;
 
