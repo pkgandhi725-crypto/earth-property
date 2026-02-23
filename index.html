@@ -200,9 +200,6 @@
         .card-dots { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; }
         .card-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.6); transition: 0.2s; }
         .card-dot.active { background: white; width: 8px; height: 8px; }
-        .card-dots { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; }
-        .card-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.6); transition: 0.2s; }
-        .card-dot.active { background: white; width: 8px; height: 8px; }
         .card-actions { position: absolute; top: 10px; right: 10px; display: flex; gap: 8px; }
         .icon-btn { background: rgba(255,255,255,0.9); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .icon-btn.fav { color: #ff5252; }
@@ -476,50 +473,50 @@
 
 <!-- Hero Banner -->
 <div style="background: linear-gradient(135deg, #1b5e20, #2e7d32); color: white; padding: 20px 15px; text-align: center;">
-    <div style="font-size: 21px; font-weight: 800; margin-bottom: 5px; letter-spacing: 0.3px;">Find Your Dream Property</div>
-    <div style="font-size: 13px; opacity: 0.9; margin-bottom: 15px;">Buy &bull; Sell &bull; Rent &mdash; Verified Listings Worldwide</div>
+    <div id="heroTitleEl" style="font-size: 21px; font-weight: 800; margin-bottom: 5px; letter-spacing:0.3px;">Find Your Dream Property</div>
+    <div id="heroSubtitleEl" style="font-size: 13px; opacity: 0.9; margin-bottom: 15px;">Buy &bull; Sell &bull; Rent &mdash; Verified Listings Worldwide</div>
     <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; font-size: 11px; font-weight: 700; opacity: 0.95;">
-        <span><i class="fa fa-check-circle" style="margin-right:4px;"></i>Verified Listings</span>
-        <span><i class="fa fa-shield-alt" style="margin-right:4px;"></i>Secure Platform</span>
-        <span><i class="fa fa-globe" style="margin-right:4px;"></i>Worldwide</span>
+        <span><i class="fa fa-check-circle" style="margin-right:4px;"></i><span id="trustVerifiedEl">Verified Listings</span></span>
+        <span><i class="fa fa-shield-alt" style="margin-right:4px;"></i><span id="trustSecureEl">Secure Platform</span></span>
+        <span><i class="fa fa-globe" style="margin-right:4px;"></i><span id="trustWorldwideEl">Worldwide</span></span>
     </div>
 </div>
 
 <!-- CTA Banner -->
 <div style="background: linear-gradient(135deg, #ffd700, #ffa500); padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;" onclick="location.href='add-property.html'">
     <div>
-        <div style="font-weight: 800; font-size: 14px; color: #000;"><i class="fa fa-home" style="margin-right:6px;"></i>Post Property FREE</div>
+        <div style="font-weight: 800; font-size: 14px; color: #000;"><i class="fa fa-home" style="margin-right:6px;"></i><span id="postFreeEl">Post Property FREE</span></div>
         <div style="font-size: 11px; color: #333; margin-top: 2px;">Reach thousands of buyers instantly</div>
     </div>
-    <div style="background: #000; color: #ffd700; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 800;">POST NOW &rarr;</div>
+    <div style="background: #000; color: #ffd700; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 800;" id="postNowEl">POST NOW &rarr;</div>
 </div>
 
 <!-- Filter Panel -->
 <div style="background: white; padding: 12px 15px; border-bottom: 1px solid #eee; overflow-x: auto;">
     <div style="display: flex; gap: 8px; min-width: max-content;">
         <button onclick="setFilter('all')" id="filter-all"
-            style="padding: 7px 16px; border-radius: 20px; border: 2px solid #2e7d32; background: #2e7d32; color: white; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;">
-            All
+            style="padding:7px 16px; border-radius:20px; border:2px solid #2e7d32; background:#2e7d32; color:white; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;">
+            <span id="filterAllEl">All</span>
         </button>
         <button onclick="setFilter('buy')" id="filter-buy"
-            style="padding: 7px 16px; border-radius: 20px; border: 2px solid #ddd; background: white; color: #555; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;">
-            <i class="fa fa-home" style="margin-right:4px;"></i>Buy
+            style="padding:7px 16px; border-radius:20px; border:2px solid #ddd; background:white; color:#555; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;">
+            <i class="fa fa-home" style="margin-right:4px;"></i><span id="filterBuyEl">Buy</span>
         </button>
         <button onclick="setFilter('rent')" id="filter-rent"
-            style="padding: 7px 16px; border-radius: 20px; border: 2px solid #ddd; background: white; color: #555; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;">
-            <i class="fa fa-key" style="margin-right:4px;"></i>Rent
+            style="padding:7px 16px; border-radius:20px; border:2px solid #ddd; background:white; color:#555; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;">
+            <i class="fa fa-key" style="margin-right:4px;"></i><span id="filterRentEl">Rent</span>
         </button>
         <button onclick="setFilter('plot')" id="filter-plot"
-            style="padding: 7px 16px; border-radius: 20px; border: 2px solid #ddd; background: white; color: #555; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;">
-            <i class="fa fa-map" style="margin-right:4px;"></i>Plot
+            style="padding:7px 16px; border-radius:20px; border:2px solid #ddd; background:white; color:#555; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;">
+            <i class="fa fa-map" style="margin-right:4px;"></i><span id="filterPlotEl">Plot</span>
         </button>
         <button onclick="setFilter('commercial')" id="filter-commercial"
-            style="padding: 7px 16px; border-radius: 20px; border: 2px solid #ddd; background: white; color: #555; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;">
-            <i class="fa fa-building" style="margin-right:4px;"></i>Commercial
+            style="padding:7px 16px; border-radius:20px; border:2px solid #ddd; background:white; color:#555; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;">
+            <i class="fa fa-building" style="margin-right:4px;"></i><span id="filterCommercialEl">Commercial</span>
         </button>
         <button onclick="setFilter('pg')" id="filter-pg"
-            style="padding: 7px 16px; border-radius: 20px; border: 2px solid #ddd; background: white; color: #555; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;">
-            <i class="fa fa-bed" style="margin-right:4px;"></i>PG/Hostel
+            style="padding:7px 16px; border-radius:20px; border:2px solid #ddd; background:white; color:#555; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;">
+            <i class="fa fa-bed" style="margin-right:4px;"></i><span id="filterPGEl">PG/Hostel</span>
         </button>
     </div>
 </div>
@@ -593,8 +590,7 @@ let isLoading = false;
 let hasMoreAds = true;
 const ADS_PER_PAGE = 20;
 
-// Lazy Loading flash fix
-let isInitialLoad = true;
+let isInitialLoad = true; // flash fix
 
 // Search Debouncing
 let searchTimeout;
@@ -896,6 +892,22 @@ function applyLanguage() {
         updateVerificationStatus(currentUserData.isVerified || false);
     }
     
+    // Update hero/filter/CTA text with translations
+    const setT = (id, key, fallback) => { const el = document.getElementById(id); if(el) el.innerText = t[key] || fallback; };
+    setT('heroTitleEl',      'heroTitle',     'Find Your Dream Property');
+    setT('heroSubtitleEl',   'heroSubtitle',  'Buy • Sell • Rent — Verified Listings Worldwide');
+    setT('trustVerifiedEl',  'trustVerified', 'Verified Listings');
+    setT('trustSecureEl',    'trustSecure',   'Secure Platform');
+    setT('trustWorldwideEl', 'trustWorldwide','Worldwide');
+    setT('postFreeEl',       'postFree',      'Post Property FREE');
+    setT('postNowEl',        'postNow',       'POST NOW →');
+    setT('filterAllEl',      'filterAll',     'All');
+    setT('filterBuyEl',      'filterBuy',     'Buy');
+    setT('filterRentEl',     'filterRent',    'Rent');
+    setT('filterPlotEl',     'filterPlot',    'Plot');
+    setT('filterCommercialEl','filterCommercial','Commercial');
+    setT('filterPGEl',       'filterPG',      'PG/Hostel');
+
     // Re-render ads with new language
     renderAds(displayedAds);
 }
@@ -1135,11 +1147,12 @@ function renderAds(ads, append = false) {
     
     if (ads.length === 0 && !append) {
         if (isInitialLoad) return;
+        const t2 = TRANSLATIONS[sessionStorage.getItem('selectedLang') || 'en'] || TRANSLATIONS['en'];
         list.innerHTML = `
-            <div style="text-align:center; padding: 60px 30px; color:#888;">
-                <i class="fa fa-search" style="font-size:55px; opacity:0.2; display:block; margin-bottom:20px;"></i>
-                <div style="font-size:17px; font-weight:700; color:#555; margin-bottom:8px;">No Properties Found</div>
-                <div style="font-size:13px; color:#999; line-height:1.5;">Try different keywords<br>or clear the filters</div>
+            <div style="text-align:center; padding:60px 30px;">
+                <i class="fa fa-search" style="font-size:55px; opacity:0.2; display:block; margin-bottom:20px; color:#888;"></i>
+                <div style="font-size:17px; font-weight:700; color:#555; margin-bottom:8px;">${t2.noPropsFound || 'No Properties Found'}</div>
+                <div style="font-size:13px; color:#999; line-height:1.6;">${t2.tryKeywords || 'Try different keywords or clear the filters'}</div>
             </div>
         `;
         return;
@@ -1193,7 +1206,9 @@ function renderAds(ads, append = false) {
                 </div>` : ''}
             </div>
             <div class="info">
-                <div class="price">₹${Number(p.price || 0).toLocaleString('en-IN')}</div>
+                <div class="price">₹${Number(p.price || 0).toLocaleString('en-IN')}
+                    ${p.purpose ? `<span style="font-size:11px; font-weight:600; padding:2px 7px; border-radius:10px; margin-left:6px; vertical-align:middle; background:${p.purpose==='Sell'?'#e8f5e9':p.purpose==='Rent'?'#e3f2fd':p.purpose==='Plot'?'#fff8e1':p.purpose==='Commercial'?'#fce4ec':'#ede7f6'}; color:${p.purpose==='Sell'?'#2e7d32':p.purpose==='Rent'?'#1565c0':p.purpose==='Plot'?'#f57f17':p.purpose==='Commercial'?'#880e4f':'#4527a0'}">${p.purpose}</span>` : ''}
+                </div>
                 <div style="font-weight:700; margin:5px 0; color:#333;">
                     ${p.isVerified ? '<i class="fa fa-check-circle" style="color:#1da1f2; margin-right:3px;"></i>' : ''}
                     ${safeTitle}
@@ -1271,6 +1286,75 @@ function setupCardSwipe(id, images) {
             if (dot) dot.className = 'card-dot' + (i === idx ? ' active' : '');
         });
     });
+}
+
+// Card Swipe
+const cardImgIndexes = {};
+function setupCardSwipe(id, images) {
+    cardImgIndexes[id] = 0;
+    window['cardImgIndex_' + id] = 0;
+    const box = document.getElementById('imgbox-' + id);
+    if (!box) return;
+    let startX = 0, startY = 0, isDragging = false;
+    box.addEventListener('touchstart', e => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; isDragging = false; }, { passive: true });
+    box.addEventListener('touchmove', e => { const dx = Math.abs(e.touches[0].clientX - startX); const dy = Math.abs(e.touches[0].clientY - startY); if (dx > dy && dx > 10) isDragging = true; }, { passive: true });
+    box.addEventListener('touchend', e => {
+        if (!isDragging) return;
+        e.stopPropagation();
+        const diff = e.changedTouches[0].clientX - startX;
+        if (Math.abs(diff) < 30) return;
+        let idx = cardImgIndexes[id];
+        if (diff < 0) idx = Math.min(idx + 1, images.length - 1);
+        else idx = Math.max(idx - 1, 0);
+        cardImgIndexes[id] = idx;
+        window['cardImgIndex_' + id] = idx;
+        const img = document.getElementById('cardimg-' + id);
+        if (img) img.src = images[idx];
+        images.forEach((_, i) => {
+            const dot = document.getElementById('dot-' + id + '-' + i);
+            if (dot) dot.className = 'card-dot' + (i === idx ? ' active' : '');
+        });
+    });
+}
+
+// Filter System
+let activeFilter = 'all';
+function setFilter(type) {
+    activeFilter = type;
+    ['all','buy','rent','plot','commercial','pg'].forEach(f => {
+        const btn = document.getElementById('filter-' + f);
+        if (!btn) return;
+        if (f === type) { btn.style.background = '#2e7d32'; btn.style.color = 'white'; btn.style.borderColor = '#2e7d32'; }
+        else { btn.style.background = 'white'; btn.style.color = '#555'; btn.style.borderColor = '#ddd'; }
+    });
+    applyFilterAndSearch();
+}
+function applyFilterAndSearch() {
+    const val = document.getElementById('searchInput').value.toLowerCase().trim();
+    let filtered = allAds;
+    if (activeFilter !== 'all') {
+        filtered = filtered.filter(a => {
+            const purpose = (a.purpose || '').toLowerCase();
+            const title   = (a.title || '').toLowerCase();
+            // Exact match on purpose field (stored as: Sell, Rent, Plot, Commercial, PG)
+            if (activeFilter === 'buy')        return purpose === 'sell';
+            if (activeFilter === 'rent')       return purpose === 'rent';
+            if (activeFilter === 'plot')       return purpose === 'plot';
+            if (activeFilter === 'commercial') return purpose === 'commercial';
+            if (activeFilter === 'pg')         return purpose === 'pg';
+            return true;
+        });
+    }
+    if (val) {
+        filtered = filtered.filter(a =>
+            (a.location || '').toLowerCase().includes(val) ||
+            (a.title || '').toLowerCase().includes(val) ||
+            (a.description || '').toLowerCase().includes(val)
+        );
+    }
+    displayedAds = filtered;
+    renderAds(userLocation ? sortByProximity([...displayedAds]) : displayedAds);
+    document.getElementById('loadMoreContainer').style.display = (activeFilter === 'all' && !val && hasMoreAds) ? 'block' : 'none';
 }
 
 // Contact Function with Better Validation
