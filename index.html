@@ -1,17 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KMJTJMHQF0"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-KMJTJMHQF0');
-    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Earth Property Global</title>
+    <title>Buy, Sell & Rent Property Online | Earth Property Global</title>
+    <meta name="description" content="Earth Property Global — Find verified properties to buy, sell or rent across India and worldwide. Trusted real estate platform with secure listings.">
+    <meta name="keywords" content="property, real estate, buy property, sell property, rent property, India property">
+    <meta property="og:title" content="Earth Property Global — Buy, Sell & Rent Property">
+    <meta property="og:description" content="Find verified properties across India and worldwide.">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --primary: #2e7d32; --bg: #f0f2f5; }
@@ -467,6 +463,57 @@
     </div>
 </header>
 
+<!-- ✅ Hero Banner -->
+<div style="background: linear-gradient(135deg, #1b5e20, #2e7d32); color: white; padding: 20px 15px; text-align: center;">
+    <div style="font-size: 22px; font-weight: 800; margin-bottom: 5px;">🌍 Find Your Dream Property</div>
+    <div style="font-size: 13px; opacity: 0.9; margin-bottom: 15px;">Buy • Sell • Rent — Verified Listings Worldwide</div>
+    <!-- Trust Signals -->
+    <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; font-size: 11px; font-weight: 700; opacity: 0.95;">
+        <span>✅ Verified Listings</span>
+        <span>🔒 Secure Platform</span>
+        <span>🌐 Worldwide</span>
+    </div>
+</div>
+
+<!-- ✅ CTA Banner — Post Property Free -->
+<div style="background: linear-gradient(135deg, #ffd700, #ffa500); padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;" onclick="location.href='add-property.html'">
+    <div>
+        <div style="font-weight: 800; font-size: 14px; color: #000;">🏠 Post Property FREE</div>
+        <div style="font-size: 11px; color: #333; margin-top: 2px;">Reach thousands of buyers instantly</div>
+    </div>
+    <div style="background: #000; color: #ffd700; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 800;">POST NOW →</div>
+</div>
+
+<!-- ✅ Filter Panel -->
+<div style="background: white; padding: 12px 15px; border-bottom: 1px solid #eee; overflow-x: auto;">
+    <div style="display: flex; gap: 8px; min-width: max-content;">
+        <button onclick="setFilter('all')" id="filter-all" 
+            style="padding: 7px 16px; border-radius: 20px; border: 2px solid #2e7d32; background: #2e7d32; color: white; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;">
+            🏘️ All
+        </button>
+        <button onclick="setFilter('buy')" id="filter-buy"
+            style="padding: 7px 16px; border-radius: 20px; border: 2px solid #ddd; background: white; color: #555; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;">
+            🏠 Buy
+        </button>
+        <button onclick="setFilter('rent')" id="filter-rent"
+            style="padding: 7px 16px; border-radius: 20px; border: 2px solid #ddd; background: white; color: #555; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;">
+            🔑 Rent
+        </button>
+        <button onclick="setFilter('plot')" id="filter-plot"
+            style="padding: 7px 16px; border-radius: 20px; border: 2px solid #ddd; background: white; color: #555; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;">
+            📐 Plot
+        </button>
+        <button onclick="setFilter('commercial')" id="filter-commercial"
+            style="padding: 7px 16px; border-radius: 20px; border: 2px solid #ddd; background: white; color: #555; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;">
+            🏢 Commercial
+        </button>
+        <button onclick="setFilter('pg')" id="filter-pg"
+            style="padding: 7px 16px; border-radius: 20px; border: 2px solid #ddd; background: white; color: #555; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;">
+            🛏️ PG/Hostel
+        </button>
+    </div>
+</div>
+
 <div id="propertyList">
     <center style="margin-top:50px; color:#888;">Loading properties...</center>
 </div>
@@ -535,6 +582,7 @@ let lastVisible = null;
 let isLoading = false;
 let hasMoreAds = true;
 const ADS_PER_PAGE = 20;
+let isInitialLoad = true; // ✅ Flash fix
 
 // Search Debouncing
 let searchTimeout;
@@ -1038,6 +1086,7 @@ function loadProperties(isLoadMore = false) {
             displayedAds = sortByProximity(displayedAds);
         }
         
+        isInitialLoad = false; // ✅ Flash fix
         renderAds(displayedAds, isLoadMore);
         isLoading = false;
         
@@ -1073,6 +1122,8 @@ function renderAds(ads, append = false) {
     const t = TRANSLATIONS[lang] || TRANSLATIONS['en'];
     
     if (ads.length === 0 && !append) {
+        // ✅ Flash fix — don't show "no properties" on initial load
+        if (isInitialLoad) return;
         list.innerHTML = `
             <center style="margin-top:50px; color:#888;">
                 <i class="fa fa-search" style="font-size:60px; opacity:0.3; margin-bottom:20px;"></i>
@@ -1240,28 +1291,8 @@ function contact(num, type, title) {
 function filterAds() {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
-        const val = document.getElementById('searchInput').value.toLowerCase().trim();
-        
-        if (val === '') {
-            displayedAds = allAds;
-            const sortedAds = userLocation ? sortByProximity(displayedAds) : displayedAds;
-            renderAds(sortedAds);
-            return;
-        }
-        
-        const filtered = allAds.filter(a => 
-            (a.location || '').toLowerCase().includes(val) || 
-            (a.title || '').toLowerCase().includes(val) ||
-            (a.description || '').toLowerCase().includes(val)
-        );
-        
-        displayedAds = filtered;
-        const sortedFiltered = userLocation ? sortByProximity(displayedAds) : displayedAds;
-        renderAds(sortedFiltered);
-        
-        // Hide load more button when searching
-        document.getElementById('loadMoreContainer').style.display = 'none';
-    }, 300); // 300ms debounce delay
+        applyFilterAndSearch();
+    }, 300);
 }
 
 // Share Property Function
@@ -1279,6 +1310,71 @@ function shareProperty(propId, title) {
         document.execCommand('copy');
         document.body.removeChild(tempInput);
         showToast('Link copied to clipboard!');
+    }
+}
+
+// ✅ Filter System
+let activeFilter = 'all';
+
+function setFilter(type) {
+    activeFilter = type;
+
+    // Update button styles
+    ['all','buy','rent','plot','commercial','pg'].forEach(f => {
+        const btn = document.getElementById('filter-' + f);
+        if (!btn) return;
+        if (f === type) {
+            btn.style.background = '#2e7d32';
+            btn.style.color = 'white';
+            btn.style.borderColor = '#2e7d32';
+        } else {
+            btn.style.background = 'white';
+            btn.style.color = '#555';
+            btn.style.borderColor = '#ddd';
+        }
+    });
+
+    applyFilterAndSearch();
+}
+
+function applyFilterAndSearch() {
+    const val = document.getElementById('searchInput').value.toLowerCase().trim();
+
+    let filtered = allAds;
+
+    // Apply category filter
+    if (activeFilter !== 'all') {
+        filtered = filtered.filter(a => {
+            const title = (a.title || '').toLowerCase();
+            const type = (a.type || '').toLowerCase();
+            const desc = (a.description || '').toLowerCase();
+            if (activeFilter === 'buy') return type === 'sale' || title.includes('sale') || title.includes('buy') || desc.includes('for sale');
+            if (activeFilter === 'rent') return type === 'rent' || title.includes('rent') || desc.includes('for rent');
+            if (activeFilter === 'plot') return type === 'plot' || title.includes('plot') || title.includes('land');
+            if (activeFilter === 'commercial') return type === 'commercial' || title.includes('commercial') || title.includes('office') || title.includes('shop');
+            if (activeFilter === 'pg') return type === 'pg' || title.includes('pg') || title.includes('hostel') || title.includes('paying guest');
+            return true;
+        });
+    }
+
+    // Apply search filter
+    if (val !== '') {
+        filtered = filtered.filter(a =>
+            (a.location || '').toLowerCase().includes(val) ||
+            (a.title || '').toLowerCase().includes(val) ||
+            (a.description || '').toLowerCase().includes(val)
+        );
+    }
+
+    displayedAds = filtered;
+    const sorted = userLocation ? sortByProximity([...displayedAds]) : displayedAds;
+    renderAds(sorted);
+
+    // Hide load more when filtering
+    if (activeFilter !== 'all' || val !== '') {
+        document.getElementById('loadMoreContainer').style.display = 'none';
+    } else {
+        if (hasMoreAds) document.getElementById('loadMoreContainer').style.display = 'block';
     }
 }
 
