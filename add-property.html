@@ -35,6 +35,12 @@
         .btn-post:disabled { background: #999; cursor: not-allowed; }
 
         #rentFields { background: var(--accent); padding: 15px; border-radius: 15px; display: none; border: 1px solid #c8e6c9; margin-bottom: 18px; }
+        #plotFields { background: #fff8e1; padding: 15px; border-radius: 15px; display: none; border: 1px solid #ffe082; margin-bottom: 18px; }
+        #commercialFields { background: #fce4ec; padding: 15px; border-radius: 15px; display: none; border: 1px solid #f8bbd0; margin-bottom: 18px; }
+        #pgFields { background: #e8eaf6; padding: 15px; border-radius: 15px; display: none; border: 1px solid #c5cae9; margin-bottom: 18px; }
+        .toggle-row { display: flex; gap: 10px; align-items: center; }
+        .toggle-row label { margin-bottom: 0; flex: 1; }
+        .toggle-row select { flex: 1; }
 
         .gps-info { 
             background: #e8f5e9; 
@@ -90,9 +96,12 @@
         <div style="flex: 1.2;"><label>Price (₹)</label><input type="number" id="price" placeholder="Amount"></div>
         <div style="flex: 1;">
             <label>Purpose</label>
-            <select id="purpose" onchange="toggleRentFields()">
-                <option value="Sell">Sell (180d)</option>
-                <option value="Rent">Rent (30d)</option>
+            <select id="purpose" onchange="togglePurposeFields()">
+                <option value="Sell">🏠 Sell (180d)</option>
+                <option value="Rent">🔑 Rent (30d)</option>
+                <option value="Plot">🗺️ Plot/Land (180d)</option>
+                <option value="Commercial">🏢 Commercial (180d)</option>
+                <option value="PG">🛏️ PG/Hostel (30d)</option>
             </select>
         </div>
     </div>
@@ -118,6 +127,7 @@
     </div>
 
     <div id="rentFields">
+        <div class="section-title">🔑 Rent Details</div>
         <div class="form-group">
             <label>Furnished Status</label>
             <select id="furnished">
@@ -144,6 +154,120 @@
                 <option value="Extra Monthly">Extra Monthly Charge</option>
                 <option value="Not Applicable">Not Applicable</option>
             </select>
+        </div>
+    </div>
+
+    <!-- Plot Fields -->
+    <div id="plotFields">
+        <div class="section-title">🗺️ Plot Details</div>
+        <div class="form-group">
+            <label>Plot Area (sq.ft / gaj / acre)</label>
+            <input type="text" id="plotArea" placeholder="e.g. 200 Gaj / 1800 Sq.Ft / 0.5 Acre">
+        </div>
+        <div class="form-group toggle-row">
+            <label>Road Facing</label>
+            <select id="plotRoadFacing">
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </select>
+        </div>
+        <div class="form-group toggle-row">
+            <label>Corner Plot</label>
+            <select id="plotCorner">
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Commercial Fields -->
+    <div id="commercialFields">
+        <div class="section-title">🏢 Commercial Details</div>
+        <div class="form-group">
+            <label>Property Type</label>
+            <select id="commercialType">
+                <option value="Shop">Shop</option>
+                <option value="Office">Office</option>
+                <option value="Warehouse">Warehouse / Godown</option>
+                <option value="Showroom">Showroom</option>
+                <option value="Restaurant">Restaurant / Cafe Space</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Floor Number</label>
+            <input type="text" id="commercialFloor" placeholder="e.g. Ground Floor / 2nd Floor">
+        </div>
+        <div class="form-group">
+            <label>Furnished Status</label>
+            <select id="commercialFurnished">
+                <option value="Unfurnished">Unfurnished</option>
+                <option value="Semi-Furnished">Semi-Furnished</option>
+                <option value="Fully-Furnished">Fully-Furnished</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Electricity & Water Bills</label>
+            <select id="commercialBills">
+                <option value="Extra">Extra (As per usage)</option>
+                <option value="Included">Included in Rent</option>
+                <option value="Not Applicable">Not Applicable</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- PG / Hostel Fields -->
+    <div id="pgFields">
+        <div class="section-title">🛏️ PG / Hostel Details</div>
+        <div class="form-group">
+            <label>Room Sharing Type</label>
+            <select id="pgSharing">
+                <option value="Single">Single Room</option>
+                <option value="Double">Double Sharing</option>
+                <option value="Triple">Triple Sharing</option>
+                <option value="Dormitory">Dormitory (4+)</option>
+            </select>
+        </div>
+        <div class="form-group toggle-row">
+            <label>Food / Meals Included?</label>
+            <select id="pgFood">
+                <option value="No">No</option>
+                <option value="Yes - All Meals">Yes - All Meals</option>
+                <option value="Yes - Breakfast Only">Yes - Breakfast Only</option>
+                <option value="Yes - Dinner Only">Yes - Dinner Only</option>
+            </select>
+        </div>
+        <div class="form-group toggle-row">
+            <label>Bedding (Mattress + Pillow) Included?</label>
+            <select id="pgBedding">
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+            </select>
+        </div>
+        <div class="form-group toggle-row">
+            <label>AC / Non-AC</label>
+            <select id="pgAC">
+                <option value="Non-AC">Non-AC</option>
+                <option value="AC">AC</option>
+            </select>
+        </div>
+        <div class="form-group toggle-row">
+            <label>Laundry Service</label>
+            <select id="pgLaundry">
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Electricity & Water Bills</label>
+            <select id="pgBills">
+                <option value="Included">Included in Rent</option>
+                <option value="Extra">Extra (As per usage)</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Advance / Security Deposit</label>
+            <input type="text" id="pgAdvance" placeholder="e.g. 1 Month Rent">
         </div>
     </div>
 
@@ -244,12 +368,32 @@ async function loadEditData(id, uid) {
     document.getElementById('size').value = data.size || '';
     document.getElementById('nearby').value = data.nearby || '';
 
-    toggleRentFields();
+    togglePurposeFields();
     if(data.purpose === 'Rent' && data.rentDetails) {
-        document.getElementById('furnished').value = data.rentDetails.furnished;
-        document.getElementById('bills').value = data.rentDetails.bills;
-        document.getElementById('advance').value = data.rentDetails.advance;
-        document.getElementById('maintenance').value = data.rentDetails.maintenance;
+        document.getElementById('furnished').value = data.rentDetails.furnished || 'Unfurnished';
+        document.getElementById('bills').value = data.rentDetails.bills || 'Extra';
+        document.getElementById('advance').value = data.rentDetails.advance || '';
+        document.getElementById('maintenance').value = data.rentDetails.maintenance || 'Not Applicable';
+    }
+    if(data.purpose === 'Plot' && data.plotDetails) {
+        document.getElementById('plotArea').value = data.plotDetails.area || '';
+        document.getElementById('plotRoadFacing').value = data.plotDetails.roadFacing || 'No';
+        document.getElementById('plotCorner').value = data.plotDetails.corner || 'No';
+    }
+    if(data.purpose === 'Commercial' && data.commercialDetails) {
+        document.getElementById('commercialType').value = data.commercialDetails.type || 'Shop';
+        document.getElementById('commercialFloor').value = data.commercialDetails.floor || '';
+        document.getElementById('commercialFurnished').value = data.commercialDetails.furnished || 'Unfurnished';
+        document.getElementById('commercialBills').value = data.commercialDetails.bills || 'Extra';
+    }
+    if(data.purpose === 'PG' && data.pgDetails) {
+        document.getElementById('pgSharing').value = data.pgDetails.sharing || 'Single';
+        document.getElementById('pgFood').value = data.pgDetails.food || 'No';
+        document.getElementById('pgBedding').value = data.pgDetails.bedding || 'No';
+        document.getElementById('pgAC').value = data.pgDetails.ac || 'Non-AC';
+        document.getElementById('pgLaundry').value = data.pgDetails.laundry || 'No';
+        document.getElementById('pgBills').value = data.pgDetails.bills || 'Included';
+        document.getElementById('pgAdvance').value = data.pgDetails.advance || '';
     }
     
     data.images?.forEach((url, i) => {
@@ -263,9 +407,12 @@ async function loadEditData(id, uid) {
     }
 }
 
-function toggleRentFields() {
-    const rentFields = document.getElementById('rentFields');
-    rentFields.style.display = document.getElementById('purpose').value === 'Rent' ? 'block' : 'none';
+function togglePurposeFields() {
+    const purpose = document.getElementById('purpose').value;
+    document.getElementById('rentFields').style.display = purpose === 'Rent' ? 'block' : 'none';
+    document.getElementById('plotFields').style.display = purpose === 'Plot' ? 'block' : 'none';
+    document.getElementById('commercialFields').style.display = purpose === 'Commercial' ? 'block' : 'none';
+    document.getElementById('pgFields').style.display = purpose === 'PG' ? 'block' : 'none';
 }
 
 // Manual location entry
@@ -441,6 +588,32 @@ async function submitProperty() {
             maintenance: document.getElementById('maintenance').value
         };
     }
+    if(purpose === 'Plot') {
+        propertyData.plotDetails = {
+            area: document.getElementById('plotArea').value,
+            roadFacing: document.getElementById('plotRoadFacing').value,
+            corner: document.getElementById('plotCorner').value
+        };
+    }
+    if(purpose === 'Commercial') {
+        propertyData.commercialDetails = {
+            type: document.getElementById('commercialType').value,
+            floor: document.getElementById('commercialFloor').value,
+            furnished: document.getElementById('commercialFurnished').value,
+            bills: document.getElementById('commercialBills').value
+        };
+    }
+    if(purpose === 'PG') {
+        propertyData.pgDetails = {
+            sharing: document.getElementById('pgSharing').value,
+            food: document.getElementById('pgFood').value,
+            bedding: document.getElementById('pgBedding').value,
+            ac: document.getElementById('pgAC').value,
+            laundry: document.getElementById('pgLaundry').value,
+            bills: document.getElementById('pgBills').value,
+            advance: document.getElementById('pgAdvance').value
+        };
+    }
 
     try {
         document.getElementById('postBtn').disabled = true;
@@ -458,7 +631,8 @@ async function submitProperty() {
             propertyData.isExpired = false;
             
             const expiry = new Date();
-            expiry.setDate(expiry.getDate() + (purpose === 'Rent' ? 30 : 180));
+            const is30Days = (purpose === 'Rent' || purpose === 'PG');
+            expiry.setDate(expiry.getDate() + (is30Days ? 30 : 180));
             propertyData.expiryDate = firebase.firestore.Timestamp.fromDate(expiry);
 
             // ✅ Auto-set isVerified if user is a verified dealer
