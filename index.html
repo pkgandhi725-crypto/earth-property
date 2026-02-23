@@ -1,12 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KMJTJMHQF0"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-KMJTJMHQF0');
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Buy, Sell & Rent Property Online | Earth Property Global</title>
+    <title>Buy, Sell &amp; Rent Property Online | Earth Property Global</title>
     <meta name="description" content="Earth Property Global — Find verified properties to buy, sell or rent across India and worldwide. Trusted real estate platform with secure listings.">
     <meta name="keywords" content="property, real estate, buy property, sell property, rent property, India property">
-    <meta property="og:title" content="Earth Property Global — Buy, Sell & Rent Property">
+    <meta property="og:title" content="Earth Property Global — Buy, Sell &amp; Rent Property">
     <meta property="og:description" content="Find verified properties across India and worldwide.">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -14,179 +22,84 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); padding-bottom: 90px; }
 
-        /* Header */
         header { background: var(--primary); padding: 12px 15px; color: white; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
         .header-right { display: flex; align-items: center; gap: 15px; }
         .logo-area { display: flex; align-items: center; gap: 10px; }
         .admin-btn { color: #ffd700; font-size: 20px; cursor: pointer; display: none; }
         .bell-icon { position: relative; font-size: 18px; cursor: pointer; }
-        
-        /* Bell Badge */
-        .bell-badge { 
-            position: absolute; 
-            top: -8px; 
-            right: -8px; 
-            min-width: 18px;
-            height: 18px;
-            background: #ff5252; 
-            border-radius: 10px; 
-            border: 2px solid var(--primary);
-            display: none;
-            font-size: 10px;
-            font-weight: 700;
-            color: white;
-            align-items: center;
-            justify-content: center;
-            padding: 0 4px;
+
+        .bell-badge {
+            position: absolute; top: -8px; right: -8px; min-width: 18px; height: 18px;
+            background: #ff5252; border-radius: 10px; border: 2px solid var(--primary);
+            display: none; font-size: 10px; font-weight: 700; color: white;
+            align-items: center; justify-content: center; padding: 0 4px;
         }
 
-        /* Verified Badge in Header */
         .verified-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: linear-gradient(135deg, #1da1f2, #0d8bd9);
-            color: white;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 9px;
-            font-weight: 700;
-            margin-left: 5px;
-            letter-spacing: 0.3px;
+            display: inline-flex; align-items: center; gap: 4px;
+            background: linear-gradient(135deg, #1da1f2, #0d8bd9); color: white;
+            padding: 3px 8px; border-radius: 12px; font-size: 9px; font-weight: 700;
+            margin-left: 5px; letter-spacing: 0.3px;
         }
+        .verified-badge i { font-size: 10px; }
 
-        .verified-badge i {
-            font-size: 10px;
+        /* ===== SIDEBAR FIX ===== */
+        .drawer {
+            position: fixed; top: 0; left: -285px; width: 280px; height: 100%;
+            background: white; z-index: 5000;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 5px 0 15px rgba(0,0,0,0.2);
+            display: flex; flex-direction: column;
         }
-
-        /* Sidebar */
-        .drawer { position: fixed; top: 0; left: -285px; width: 280px; height: 100%; background: white; z-index: 5000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 5px 0 15px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
         .drawer.open { left: 0; }
-        .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; flex-shrink: 0; position: relative; }
-        
-        /* Profile Photo Circle */
+        .drawer-header { background: var(--primary); color: white; padding: 40px 20px 20px; flex-shrink: 0; }
+
         .profile-photo-circle {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 15px;
-            overflow: hidden;
+            width: 80px; height: 80px; border-radius: 50%;
+            background: rgba(255,255,255,0.2); display: flex; align-items: center;
+            justify-content: center; margin-bottom: 15px; overflow: hidden;
             border: 3px solid rgba(255,255,255,0.3);
         }
-        .profile-photo-circle img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-        .profile-photo-circle i {
-            font-size: 40px;
-            color: rgba(255,255,255,0.8);
-        }
+        .profile-photo-circle img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .profile-photo-circle i { font-size: 40px; color: rgba(255,255,255,0.8); }
 
-        /* Verification Status Box */
         .verification-status {
-            background: #e8f5e9;
-            color: #2e7d32;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 11px;
-            font-weight: 600;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            background: #e8f5e9; color: #2e7d32; padding: 8px 12px; border-radius: 8px;
+            font-size: 11px; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 8px;
         }
-
         .get-verified-btn {
             background: linear-gradient(135deg, #ffd700, #ffa500) !important;
-            color: #000 !important;
-            font-weight: 700;
-            animation: pulse 2s infinite;
+            color: #000 !important; font-weight: 700; animation: pulse 2s infinite;
         }
-
         @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7); }
-            50% { box-shadow: 0 0 0 10px rgba(255, 215, 0, 0); }
-        }
-        
-        /* Language Dropdown Container */
-        .lang-container { 
-            padding: 15px 20px; 
-            border-bottom: 1px solid #eee; 
-            flex-shrink: 0; 
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255,215,0,0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(255,215,0,0); }
         }
 
-        .lang-label {
-            font-weight: 700;
-            font-size: 13px;
-            color: #666;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
+        .lang-container { padding: 15px 20px; border-bottom: 1px solid #eee; flex-shrink: 0; }
+        .lang-label { font-weight: 700; font-size: 13px; color: #666; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
         .lang-dropdown {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            background: white;
-            color: #333;
-            cursor: pointer;
-            outline: none;
-            transition: all 0.2s;
-            appearance: none;
+            width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 10px;
+            font-size: 14px; font-weight: 600; background: white; color: #333; cursor: pointer;
+            outline: none; transition: all 0.2s; appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 15px center;
-            padding-right: 40px;
+            background-repeat: no-repeat; background-position: right 15px center; padding-right: 40px;
         }
+        .lang-dropdown:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(46,125,50,0.1); }
 
-        .lang-dropdown:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
-        }
-
-        .lang-dropdown option {
-            padding: 10px;
-            font-weight: 600;
-        }
-
-        .drawer-footer { 
-            padding: 0; 
-            flex-grow: 1; 
-            overflow-y: auto; 
-            border-top: 1px solid #eee; 
-        }
-
+        .drawer-footer { padding: 0; flex-grow: 1; overflow-y: auto; border-top: 1px solid #eee; }
         .drawer-item {
-            padding: 15px 20px;
-            font-weight: 700;
-            color: #444;
-            cursor: pointer;
-            border-bottom: 1px solid #f0f0f0;
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            padding: 15px 20px; font-weight: 700; color: #444; cursor: pointer;
+            border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 12px;
         }
         .drawer-item i { width: 20px; font-size: 18px; }
 
-        /* Search Bar */
         .search-box { background: white; border-radius: 10px; display: flex; padding: 10px 15px; align-items: center; gap: 10px; }
         .search-box input { border: none; width: 100%; outline: none; font-size: 14px; color: #333; }
 
-        /* Property Card */
         .prop-card { background: white; border-radius: 15px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        .img-box { width: 100%; height: 210px; background: #eee; position: relative; cursor: pointer; }
+        .img-box { width: 100%; height: 210px; background: #eee; position: relative; cursor: pointer; overflow: hidden; }
         .img-box img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .img-counter { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 15px; font-size: 11px; font-weight: 700; }
         .card-dots { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; }
@@ -199,109 +112,50 @@
         .info { padding: 15px; }
         .price { font-size: 22px; font-weight: 800; color: var(--primary); }
         .location { font-size: 12px; color: #666; margin: 5px 0; }
-        .distance-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 11px;
-            color: #2e7d32;
-            margin-top: 3px;
-        }
-        
+        .distance-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: #2e7d32; margin-top: 3px; }
+
         .btn-group { display: flex; gap: 8px; margin-top: 15px; }
         .btn { flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; text-decoration: none; }
         .btn-call { background: #e8f5e9; color: #2e7d32; }
         .btn-wa { background: #25D366; color: white; }
         .btn-chat { background: var(--primary); color: white; }
 
-        /* Load More Button */
-        .load-more-container {
-            text-align: center;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
+        .load-more-container { text-align: center; padding: 20px; margin-bottom: 20px; }
         .load-more-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            border-radius: 25px;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
-            transition: all 0.3s;
+            background: var(--primary); color: white; border: none; padding: 15px 40px;
+            border-radius: 25px; font-size: 14px; font-weight: 700; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(46,125,50,0.3); transition: all 0.3s;
         }
+        .load-more-btn:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; }
+        .load-more-btn:active:not(:disabled) { transform: scale(0.95); }
 
-        .load-more-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            box-shadow: none;
+        .bottom-nav {
+            position: fixed; bottom: 0; width: 100%; background: white;
+            display: flex; align-items: flex-end; padding: 0;
+            border-top: 1px solid #eee; z-index: 1000; height: 65px;
         }
-
-        .load-more-btn:active:not(:disabled) {
-            transform: scale(0.95);
-        }
-
-        /* Bottom Nav */
-        .bottom-nav { 
-            position: fixed; 
-            bottom: 0; 
-            width: 100%; 
-            background: white; 
-            display: flex; 
-            align-items: flex-end;
-            padding: 0;
-            border-top: 1px solid #eee; 
-            z-index: 1000; 
-            height: 65px; 
-        }
-        .nav-item { 
-            flex: 1; 
-            text-align: center; 
-            color: #777; 
-            text-decoration: none; 
-            font-size: 10px; 
-            font-weight: 600; 
-            padding: 10px 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-end;
+        .nav-item {
+            flex: 1; text-align: center; color: #777; text-decoration: none;
+            font-size: 10px; font-weight: 600; padding: 10px 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
         }
         .nav-item i { font-size: 20px; margin-bottom: 3px; }
         .nav-item.active { color: var(--primary); }
-        
-        /* Centered Post Button */
-        .post-btn-wrapper {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-        }
-        .post-btn { 
-            background: var(--primary); 
-            color: white !important; 
-            width: 60px; 
-            height: 60px; 
-            border-radius: 50%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            border: none;
-            box-shadow: 0 4px 15px rgba(46, 125, 50, 0.4); 
-            font-size: 28px;
-            position: absolute;
-            bottom: 5px;
-            text-decoration: none;
-            cursor: pointer;
+
+        .post-btn-wrapper { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; }
+        .post-btn {
+            background: var(--primary); color: white !important; width: 60px; height: 60px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            border: none; box-shadow: 0 4px 15px rgba(46,125,50,0.4); font-size: 28px;
+            position: absolute; bottom: 5px; text-decoration: none; cursor: pointer;
         }
 
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4500; display: none; backdrop-filter: blur(2px); }
+        /* ===== OVERLAY FIX ===== */
+        .overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            z-index: 4500; display: none; backdrop-filter: blur(2px);
+        }
 
-        /* Gallery Modal */
         .gallery-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 6000; display: none; }
         .gallery-modal.active { display: flex; flex-direction: column; }
         .gallery-header { padding: 15px; color: white; display: flex; justify-content: space-between; align-items: center; }
@@ -315,42 +169,29 @@
         .gallery-dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.5); cursor: pointer; transition: 0.2s; }
         .gallery-dot.active { background: white; width: 12px; height: 12px; }
 
-        /* Toast Notification */
         .toast {
-            position: fixed;
-            top: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--primary);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 25px;
-            font-size: 13px;
-            font-weight: 700;
-            z-index: 10000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            opacity: 0;
-            transition: opacity 0.3s;
+            position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+            background: var(--primary); color: white; padding: 12px 24px;
+            border-radius: 25px; font-size: 13px; font-weight: 700; z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3); opacity: 0; transition: opacity 0.3s;
         }
+        .toast.show { opacity: 1; }
 
-        .toast.show {
-            opacity: 1;
-        }
-
-        /* Loading Spinner */
         .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,0.3);
-            border-top: 3px solid white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+            display: inline-block; width: 20px; height: 20px;
+            border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid white;
+            border-radius: 50%; animation: spin 1s linear infinite;
         }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        /* ===== FILTER BUTTONS ===== */
+        .filter-btn {
+            padding: 7px 16px; border-radius: 20px; border: 2px solid #ddd;
+            background: white; color: #555; font-size: 12px; font-weight: 700;
+            cursor: pointer; white-space: nowrap; transition: all 0.2s;
+        }
+        .filter-btn.active-filter {
+            background: #2e7d32; color: white; border-color: #2e7d32;
         }
     </style>
 </head>
@@ -367,54 +208,43 @@
         <div style="font-size:12px; opacity:0.9;" id="userMail"></div>
     </div>
 
-    <!-- Verification Status (dynamic) -->
-    <div id="verificationStatus" style="display: none;"></div>
+    <div id="verificationStatus" style="display:none;"></div>
 
-    <!-- Language Dropdown -->
     <div class="lang-container">
         <div class="lang-label">
             <i class="fa fa-globe"></i>
             <span id="langLabel">Language</span>
         </div>
-        <select id="langDropdown" class="lang-dropdown" onchange="handleLanguageChange()">
-            <!-- Options populated by JavaScript -->
-        </select>
+        <select id="langDropdown" class="lang-dropdown" onchange="handleLanguageChange()"></select>
     </div>
 
-    <!-- Menu Items -->
     <div class="drawer-footer">
         <div class="drawer-item" onclick="location.href='my-ads.html'">
-            <i class="fa fa-layer-group" style="color:var(--primary);"></i> 
+            <i class="fa fa-layer-group" style="color:var(--primary);"></i>
             <span id="myAdsText">My Ads</span>
         </div>
-
         <div class="drawer-item" onclick="location.href='favorites.html'">
-            <i class="fa fa-heart" style="color:#ff5252;"></i> 
+            <i class="fa fa-heart" style="color:#ff5252;"></i>
             <span id="favsText">Favorites</span>
         </div>
-
         <div class="drawer-item" onclick="location.href='feedback.html'">
-            <i class="fa fa-comment-dots" style="color:#9C27B0;"></i> 
+            <i class="fa fa-comment-dots" style="color:#9C27B0;"></i>
             <span id="feedbackText">Feedback</span>
         </div>
-
         <div class="drawer-item" onclick="location.href='help.html'">
-            <i class="fa fa-question-circle" style="color:#2196F3;"></i> 
+            <i class="fa fa-question-circle" style="color:#2196F3;"></i>
             <span id="helpText">Help & Support</span>
         </div>
-
         <div class="drawer-item" onclick="showAboutAlert()">
-            <i class="fa fa-info-circle" style="color:#FF9800;"></i> 
+            <i class="fa fa-info-circle" style="color:#FF9800;"></i>
             <span id="aboutText">About Us</span>
         </div>
-
         <div id="adminSideBtn" class="drawer-item" onclick="location.href='admin.html'" style="display:none; color:#ffd700;">
-            <i class="fa fa-user-shield"></i> 
+            <i class="fa fa-user-shield"></i>
             <span id="adminText">Admin Portal</span>
         </div>
-
         <div id="logoutBtn" class="drawer-item" style="display:none; color:#d32f2f;" onclick="handleLogout()">
-            <i class="fa fa-sign-out-alt"></i> 
+            <i class="fa fa-sign-out-alt"></i>
             <span id="logoutText">Logout</span>
         </div>
     </div>
@@ -423,7 +253,7 @@
 <!-- Gallery Modal -->
 <div class="gallery-modal" id="galleryModal">
     <div class="gallery-header">
-        <div id="galleryCounter" style="font-size: 14px; font-weight: 600;">1 / 1</div>
+        <div id="galleryCounter" style="font-size:14px; font-weight:600;">1 / 1</div>
         <div class="gallery-close" onclick="closeGallery()">&times;</div>
     </div>
     <div class="gallery-content">
@@ -437,12 +267,15 @@
 <header>
     <div class="header-top">
         <div class="logo-area">
-            <i class="fa fa-bars fa-lg" onclick="toggleDrawer()" style="cursor:pointer;"></i>
+            <!-- ===== HAMBURGER FIX: button tag instead of i tag ===== -->
+            <button onclick="toggleDrawer()" style="background:none; border:none; color:white; font-size:22px; cursor:pointer; padding:4px; line-height:1;">
+                <i class="fa fa-bars"></i>
+            </button>
             <div>
                 <div style="font-weight:800; font-size:16px; letter-spacing:0.5px;">EARTH PROPERTY</div>
-                <div style="font-size:9px; opacity:0.85; font-weight:600; display: flex; align-items: center;">
+                <div style="font-size:9px; opacity:0.85; font-weight:600; display:flex; align-items:center;">
                     <span id="headerUserName">Guest</span>
-                    <span id="headerVerifiedBadge" style="display: none;" class="verified-badge">
+                    <span id="headerVerifiedBadge" style="display:none;" class="verified-badge">
                         <i class="fa fa-check-circle"></i> VERIFIED
                     </span>
                 </div>
@@ -463,53 +296,46 @@
     </div>
 </header>
 
-<!-- ✅ Hero Banner -->
-<div style="background: linear-gradient(135deg, #1b5e20, #2e7d32); color: white; padding: 20px 15px; text-align: center;">
-    <div style="font-size: 22px; font-weight: 800; margin-bottom: 5px;">🌍 Find Your Dream Property</div>
-    <div style="font-size: 13px; opacity: 0.9; margin-bottom: 15px;">Buy • Sell • Rent — Verified Listings Worldwide</div>
-    <!-- Trust Signals -->
-    <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; font-size: 11px; font-weight: 700; opacity: 0.95;">
-        <span>✅ Verified Listings</span>
-        <span>🔒 Secure Platform</span>
-        <span>🌐 Worldwide</span>
+<!-- Hero Banner -->
+<div style="background:linear-gradient(135deg,#1b5e20,#2e7d32); color:white; padding:20px 15px; text-align:center;">
+    <div id="heroTitleEl" style="font-size:21px; font-weight:800; margin-bottom:5px; letter-spacing:0.3px;">Find Your Dream Property</div>
+    <div id="heroSubtitleEl" style="font-size:13px; opacity:0.9; margin-bottom:15px;">Buy &bull; Sell &bull; Rent &mdash; Verified Listings Worldwide</div>
+    <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap; font-size:11px; font-weight:700; opacity:0.95;">
+        <span><i class="fa fa-check-circle" style="margin-right:4px;"></i><span id="trustVerifiedEl">Verified Listings</span></span>
+        <span><i class="fa fa-shield-alt" style="margin-right:4px;"></i><span id="trustSecureEl">Secure Platform</span></span>
+        <span><i class="fa fa-globe" style="margin-right:4px;"></i><span id="trustWorldwideEl">Worldwide</span></span>
     </div>
 </div>
 
-<!-- ✅ CTA Banner — Post Property Free -->
-<div style="background: linear-gradient(135deg, #ffd700, #ffa500); padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;" onclick="location.href='add-property.html'">
+<!-- CTA Banner -->
+<div style="background:linear-gradient(135deg,#ffd700,#ffa500); padding:12px 15px; display:flex; align-items:center; justify-content:space-between; cursor:pointer;" onclick="location.href='add-property.html'">
     <div>
-        <div style="font-weight: 800; font-size: 14px; color: #000;">🏠 Post Property FREE</div>
-        <div style="font-size: 11px; color: #333; margin-top: 2px;">Reach thousands of buyers instantly</div>
+        <div style="font-weight:800; font-size:14px; color:#000;"><i class="fa fa-home" style="margin-right:6px;"></i><span id="postFreeEl">Post Property FREE</span></div>
+        <div style="font-size:11px; color:#333; margin-top:2px;">Reach thousands of buyers instantly</div>
     </div>
-    <div style="background: #000; color: #ffd700; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 800;">POST NOW →</div>
+    <div style="background:#000; color:#ffd700; padding:8px 16px; border-radius:20px; font-size:12px; font-weight:800;" id="postNowEl">POST NOW &rarr;</div>
 </div>
 
-<!-- ✅ Filter Panel -->
-<div style="background: white; padding: 12px 15px; border-bottom: 1px solid #eee; overflow-x: auto;">
-    <div style="display: flex; gap: 8px; min-width: max-content;">
-        <button onclick="setFilter('all')" id="filter-all" 
-            style="padding: 7px 16px; border-radius: 20px; border: 2px solid #2e7d32; background: #2e7d32; color: white; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;">
-            🏘️ All
+<!-- ===== FILTER PANEL FIX ===== -->
+<div style="background:white; padding:12px 15px; border-bottom:1px solid #eee; overflow-x:auto; -webkit-overflow-scrolling:touch;">
+    <div style="display:flex; gap:8px; min-width:max-content;">
+        <button class="filter-btn active-filter" id="filter-all" onclick="setFilter('all')">
+            <span id="filterAllEl">All</span>
         </button>
-        <button onclick="setFilter('buy')" id="filter-buy"
-            style="padding: 7px 16px; border-radius: 20px; border: 2px solid #ddd; background: white; color: #555; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;">
-            🏠 Buy
+        <button class="filter-btn" id="filter-buy" onclick="setFilter('buy')">
+            <i class="fa fa-home" style="margin-right:4px;"></i><span id="filterBuyEl">Buy</span>
         </button>
-        <button onclick="setFilter('rent')" id="filter-rent"
-            style="padding: 7px 16px; border-radius: 20px; border: 2px solid #ddd; background: white; color: #555; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;">
-            🔑 Rent
+        <button class="filter-btn" id="filter-rent" onclick="setFilter('rent')">
+            <i class="fa fa-key" style="margin-right:4px;"></i><span id="filterRentEl">Rent</span>
         </button>
-        <button onclick="setFilter('plot')" id="filter-plot"
-            style="padding: 7px 16px; border-radius: 20px; border: 2px solid #ddd; background: white; color: #555; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;">
-            📐 Plot
+        <button class="filter-btn" id="filter-plot" onclick="setFilter('plot')">
+            <i class="fa fa-map" style="margin-right:4px;"></i><span id="filterPlotEl">Plot</span>
         </button>
-        <button onclick="setFilter('commercial')" id="filter-commercial"
-            style="padding: 7px 16px; border-radius: 20px; border: 2px solid #ddd; background: white; color: #555; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;">
-            🏢 Commercial
+        <button class="filter-btn" id="filter-commercial" onclick="setFilter('commercial')">
+            <i class="fa fa-building" style="margin-right:4px;"></i><span id="filterCommercialEl">Commercial</span>
         </button>
-        <button onclick="setFilter('pg')" id="filter-pg"
-            style="padding: 7px 16px; border-radius: 20px; border: 2px solid #ddd; background: white; color: #555; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;">
-            🛏️ PG/Hostel
+        <button class="filter-btn" id="filter-pg" onclick="setFilter('pg')">
+            <i class="fa fa-bed" style="margin-right:4px;"></i><span id="filterPGEl">PG/Hostel</span>
         </button>
     </div>
 </div>
@@ -518,8 +344,7 @@
     <center style="margin-top:50px; color:#888;">Loading properties...</center>
 </div>
 
-<!-- Load More Button -->
-<div id="loadMoreContainer" class="load-more-container" style="display: none;">
+<div id="loadMoreContainer" class="load-more-container" style="display:none;">
     <button id="loadMoreBtn" class="load-more-btn" onclick="loadMoreProperties()">
         <span id="loadMoreText">Load More</span>
     </button>
@@ -549,22 +374,51 @@
     </a>
 </nav>
 
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+<!-- ===== FIREBASE VERSION FIX: 10.x.x ===== -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="translations.js"></script>
 
 <script>
-const firebaseConfig = { 
-    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
-    authDomain: "earth-properties-c3c56.firebaseapp.com", 
-    projectId: "earth-properties-c3c56" 
+// ===== TRANSLATIONS FALLBACK =====
+// Agar translations.js load na ho toh crash na ho
+if (typeof TRANSLATIONS === 'undefined') {
+    window.TRANSLATIONS = {
+        en: {
+            welcome: 'Welcome Guest', login: 'Login', logout: 'Logout',
+            language: 'Language', myAds: 'My Ads', favorites: 'Favorites',
+            feedback: 'Feedback', helpSupport: 'Help & Support', aboutUs: 'About Us',
+            adminPortal: 'Admin Portal', explore: 'Explore', profile: 'Profile',
+            searchPlaceholder: 'Search location, property type...',
+            call: 'Call', whatsapp: 'WhatsApp', chat: 'Chat',
+            heroTitle: 'Find Your Dream Property',
+            heroSubtitle: 'Buy • Sell • Rent — Verified Listings Worldwide',
+            trustVerified: 'Verified Listings', trustSecure: 'Secure Platform',
+            trustWorldwide: 'Worldwide', postFree: 'Post Property FREE',
+            postNow: 'POST NOW →', filterAll: 'All', filterBuy: 'Buy',
+            filterRent: 'Rent', filterPlot: 'Plot', filterCommercial: 'Commercial',
+            filterPG: 'PG/Hostel', loadMore: 'Load More',
+            noPropsFound: 'No Properties Found',
+            tryKeywords: 'Try different keywords or clear the filters',
+            verified: 'Verified Account', getVerified: 'Get Verified'
+        }
+    };
+}
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
+    authDomain: "earth-properties-c3c56.firebaseapp.com",
+    projectId: "earth-properties-c3c56"
 };
-firebase.initializeApp(firebaseConfig);
+
+// Firebase double-init guard
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// Admin UID
 const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
 
 // Global Variables
@@ -577,17 +431,18 @@ let currentUser = null;
 let currentUserData = null;
 let userFavorites = [];
 
-// Lazy Loading Variables
+// Lazy Loading
 let lastVisible = null;
 let isLoading = false;
 let hasMoreAds = true;
 const ADS_PER_PAGE = 20;
-let isInitialLoad = true; // ✅ Flash fix
 
-// Search Debouncing
+// Card swipe tracking — SINGLE declaration (bug fix)
+const cardImgIndexes = {};
+
 let searchTimeout;
 
-// Language Data
+// ===== LANGUAGES =====
 const languages = [
     { code: 'en', name: 'English', flag: '🇬🇧' },
     { code: 'hi', name: 'हिंदी', flag: '🇮🇳' },
@@ -620,61 +475,46 @@ const languages = [
     { code: 'sw', name: 'Swahili', flag: '🇰🇪' }
 ];
 
-// Get user's location for proximity-based sorting
+// ===== GEOLOCATION =====
 if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
-        (position) => {
-            userLocation = {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude
-            };
+        pos => {
+            userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
             if (displayedAds.length > 0) {
                 displayedAds = sortByProximity(displayedAds);
                 renderAds(displayedAds);
             }
         },
-        (error) => {
-            console.log('Location access denied or unavailable');
-        }
+        () => console.log('Location unavailable')
     );
 }
 
-// Calculate distance between two coordinates (Haversine formula)
 function calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371; // Earth's radius in km
+    const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-// Sort ads by proximity to user location
 function sortByProximity(ads) {
     if (!userLocation) return ads;
-    
-    return ads.sort((a, b) => {
-        const distA = a.latitude && a.longitude 
-            ? calculateDistance(userLocation.lat, userLocation.lng, a.latitude, a.longitude)
-            : Infinity;
-        const distB = b.latitude && b.longitude 
-            ? calculateDistance(userLocation.lat, userLocation.lng, b.latitude, b.longitude)
-            : Infinity;
-        return distA - distB;
+    return [...ads].sort((a, b) => {
+        const dA = (a.latitude && a.longitude) ? calculateDistance(userLocation.lat, userLocation.lng, a.latitude, a.longitude) : Infinity;
+        const dB = (b.latitude && b.longitude) ? calculateDistance(userLocation.lat, userLocation.lng, b.latitude, b.longitude) : Infinity;
+        return dA - dB;
     });
 }
 
-// Gallery Functions
-function openGallery(images, index) {
+// ===== GALLERY =====
+function openGallery(images, startIndex) {
     currentImages = images;
-    currentImageIndex = index;
+    currentImageIndex = startIndex || 0;
     document.getElementById('galleryModal').classList.add('active');
     updateGalleryImage();
     updateGalleryDots();
     document.body.style.overflow = 'hidden';
-    window.history.pushState({gallery: true}, null, window.location.href);
+    window.history.pushState({ gallery: true }, null, window.location.href);
 }
 
 function closeGallery() {
@@ -682,10 +522,8 @@ function closeGallery() {
     document.body.style.overflow = '';
 }
 
-function changeImage(direction) {
-    currentImageIndex += direction;
-    if (currentImageIndex < 0) currentImageIndex = currentImages.length - 1;
-    if (currentImageIndex >= currentImages.length) currentImageIndex = 0;
+function changeImage(dir) {
+    currentImageIndex = (currentImageIndex + dir + currentImages.length) % currentImages.length;
     updateGalleryImage();
     updateGalleryDots();
 }
@@ -696,373 +534,277 @@ function updateGalleryImage() {
 }
 
 function updateGalleryDots() {
-    const dotsContainer = document.getElementById('galleryDots');
-    dotsContainer.innerHTML = '';
+    const container = document.getElementById('galleryDots');
+    container.innerHTML = '';
     currentImages.forEach((_, i) => {
         const dot = document.createElement('div');
         dot.className = 'gallery-dot' + (i === currentImageIndex ? ' active' : '');
         dot.onclick = () => { currentImageIndex = i; updateGalleryImage(); updateGalleryDots(); };
-        dotsContainer.appendChild(dot);
+        container.appendChild(dot);
     });
 }
 
-// Gallery Swipe Gestures for Mobile
-let touchStartX = 0;
-let touchEndX = 0;
-
-document.addEventListener('DOMContentLoaded', function() {
+// Gallery swipe
+let touchStartX = 0, touchEndX = 0;
+document.addEventListener('DOMContentLoaded', () => {
     const galleryImg = document.getElementById('galleryImage');
-    
-    galleryImg.addEventListener('touchstart', e => {
-        touchStartX = e.changedTouches[0].screenX;
-    });
-
+    galleryImg.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
     galleryImg.addEventListener('touchend', e => {
         touchEndX = e.changedTouches[0].screenX;
-        handleSwipe();
-    });
+        if (touchEndX < touchStartX - 50) changeImage(1);
+        if (touchEndX > touchStartX + 50) changeImage(-1);
+    }, { passive: true });
 
-    function handleSwipe() {
-        if (touchEndX < touchStartX - 50) changeImage(1);  // Swipe left
-        if (touchEndX > touchStartX + 50) changeImage(-1); // Swipe right
-    }
-
-    // Handle back button for gallery and sidebar
-    window.addEventListener('popstate', function(event) {
-        const galleryModal = document.getElementById('galleryModal');
-        const drawer = document.getElementById('sideDrawer');
-        
-        if (galleryModal.classList.contains('active')) {
-            closeGallery();
-            window.history.pushState(null, null, window.location.href);
-        } else if (drawer.classList.contains('open')) {
-            toggleDrawer();
-        }
+    window.addEventListener('popstate', () => {
+        if (document.getElementById('galleryModal').classList.contains('active')) { closeGallery(); window.history.pushState(null, null, window.location.href); }
+        else if (document.getElementById('sideDrawer').classList.contains('open')) { toggleDrawer(); }
     });
-    
     window.history.pushState(null, null, window.location.href);
 });
 
-// Sidebar Toggle with Back Button Support
+// ===== SIDEBAR (HAMBURGER) =====
 function toggleDrawer() {
     const drawer = document.getElementById('sideDrawer');
     const overlay = document.getElementById('overlay');
     const isOpening = !drawer.classList.contains('open');
-    
     drawer.classList.toggle('open');
     overlay.style.display = drawer.classList.contains('open') ? 'block' : 'none';
-    
-    if (isOpening) {
-        window.history.pushState({drawer: true}, null, window.location.href);
-    }
+    if (isOpening) window.history.pushState({ drawer: true }, null, window.location.href);
 }
 
-// Populate Language Dropdown
+// ===== LANGUAGE DROPDOWN =====
 function loadLanguageDropdown() {
     const dropdown = document.getElementById('langDropdown');
-    const currentLang = sessionStorage.getItem('selectedLang') || 'en';
-    
+    const currentLang = localStorage.getItem('selectedLang') || 'en';
     dropdown.innerHTML = '';
-    
     languages.forEach(lang => {
-        const option = document.createElement('option');
-        option.value = lang.code;
-        option.textContent = `${lang.flag} ${lang.name}`;
-        if (lang.code === currentLang) {
-            option.selected = true;
-        }
-        dropdown.appendChild(option);
+        const opt = document.createElement('option');
+        opt.value = lang.code;
+        opt.textContent = `${lang.flag} ${lang.name}`;
+        if (lang.code === currentLang) opt.selected = true;
+        dropdown.appendChild(opt);
     });
 }
 
-// Handle Language Change with Toast Notification
 function handleLanguageChange() {
-    const selectedLang = document.getElementById('langDropdown').value;
-    sessionStorage.setItem('selectedLang', selectedLang);
+    const lang = document.getElementById('langDropdown').value;
+    // ===== FIXED: localStorage instead of sessionStorage so lang persists =====
+    localStorage.setItem('selectedLang', lang);
     applyLanguage();
-    
-    // Show toast notification
-    const langName = languages.find(l => l.code === selectedLang)?.name || 'Language';
+    const langName = languages.find(l => l.code === lang)?.name || 'Language';
     showToast(`✓ Language changed to ${langName}`);
 }
 
-// Show Toast Notification
+// ===== TOAST =====
 function showToast(message) {
     const toast = document.createElement('div');
     toast.className = 'toast';
     toast.textContent = message;
     document.body.appendChild(toast);
-    
-    setTimeout(() => toast.classList.add('show'), 100);
-    
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300);
-    }, 2000);
+    setTimeout(() => toast.classList.add('show'), 50);
+    setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 2500);
 }
 
-// Get About Text in Current Language
 function showAboutAlert() {
-    const t = TRANSLATIONS[sessionStorage.getItem('selectedLang') || 'en'] || TRANSLATIONS['en'];
-    const aboutText = t.aboutUs || 'About Us';
-    const aboutDesc = 'Earth Property Global - Your trusted real estate partner worldwide.';
-    alert(`${aboutText}\n\n${aboutDesc}`);
+    const t = getT();
+    alert(`${t.aboutUs || 'About Us'}\n\nEarth Property Global - Your trusted real estate partner worldwide.`);
 }
 
-// Update Verification Status in Sidebar
+function getT() {
+    const lang = localStorage.getItem('selectedLang') || 'en';
+    return (TRANSLATIONS[lang] || TRANSLATIONS['en'] || TRANSLATIONS['en']);
+}
+
+// ===== VERIFICATION STATUS =====
 function updateVerificationStatus(isVerified) {
     const statusDiv = document.getElementById('verificationStatus');
-    const t = TRANSLATIONS[sessionStorage.getItem('selectedLang') || 'en'] || TRANSLATIONS['en'];
-    
+    const t = getT();
     if (isVerified) {
-        statusDiv.innerHTML = `
-            <div class="verification-status">
-                <i class="fa fa-check-circle" style="font-size: 16px;"></i>
-                <div>
-                    <div style="font-weight: 700;">✅ ${t.verified || 'Verified Account'}</div>
-                    <div style="font-size: 9px; opacity: 0.8; margin-top: 2px;">
-                        Premium features unlocked
-                    </div>
-                </div>
-            </div>
-        `;
-        statusDiv.style.display = 'block';
+        statusDiv.innerHTML = `<div class="verification-status" style="padding:12px 20px; margin:0; border-radius:0; background:#e8f5e9;">
+            <i class="fa fa-check-circle" style="font-size:16px; color:#2e7d32;"></i>
+            <div><div style="font-weight:700;">✅ ${t.verified || 'Verified Account'}</div>
+            <div style="font-size:9px; opacity:0.8; margin-top:2px;">Premium features unlocked</div></div>
+        </div>`;
     } else {
-        statusDiv.innerHTML = `
-            <div class="drawer-item get-verified-btn" onclick="location.href='verify.html'">
-                <i class="fa fa-certificate" style="color: #000;"></i>
-                <span>⭐ ${t.getVerified || 'Get Verified'}</span>
-            </div>
-        `;
-        statusDiv.style.display = 'block';
+        statusDiv.innerHTML = `<div class="drawer-item get-verified-btn" onclick="location.href='verify.html'">
+            <i class="fa fa-certificate"></i><span>⭐ ${t.getVerified || 'Get Verified'}</span>
+        </div>`;
     }
+    statusDiv.style.display = 'block';
 }
 
-// Apply Language Translations
+// ===== APPLY LANGUAGE =====
 function applyLanguage() {
-    const lang = sessionStorage.getItem('selectedLang') || 'en';
-    const t = TRANSLATIONS[lang] || TRANSLATIONS['en'];
+    const t = getT();
     const user = auth.currentUser;
-    
-    // Update sidebar
+
     if (!user) {
-        document.getElementById('sideUserName').innerText = t.welcome;
-        document.getElementById('authBtn').innerText = t.login;
+        document.getElementById('sideUserName').innerText = t.welcome || 'Welcome Guest';
+        document.getElementById('authBtn').innerText = t.login || 'Login';
+        document.getElementById('authBtn').onclick = () => location.href = 'login.html';
     } else {
-        document.getElementById('authBtn').innerText = t.logout;
+        document.getElementById('authBtn').innerText = t.logout || 'Logout';
+        document.getElementById('authBtn').onclick = handleLogout;
     }
-    
-    // Update language label
+
     document.getElementById('langLabel').innerText = t.language || 'Language';
-    
-    // Update sidebar menu items
-    document.getElementById('myAdsText').innerText = t.myAds;
-    document.getElementById('favsText').innerText = t.favorites;
+    document.getElementById('myAdsText').innerText = t.myAds || 'My Ads';
+    document.getElementById('favsText').innerText = t.favorites || 'Favorites';
     document.getElementById('feedbackText').innerText = t.feedback || 'Feedback';
-    document.getElementById('helpText').innerText = t.helpSupport;
-    document.getElementById('aboutText').innerText = t.aboutUs;
-    document.getElementById('adminText').innerText = t.adminPortal;
-    document.getElementById('logoutText').innerText = t.logout;
-    
-    // Update bottom navigation
-    document.getElementById('navExplore').innerText = t.explore;
-    document.getElementById('navMyAds').innerText = t.myAds;
-    document.getElementById('navFavs').innerText = t.favorites;
-    document.getElementById('navProfile').innerText = t.profile;
-    
-    // Update search placeholder
-    document.getElementById('searchInput').placeholder = t.searchPlaceholder;
-    
-    // Update load more button
-    const loadMoreText = document.getElementById('loadMoreText');
-    if (loadMoreText) {
-        loadMoreText.innerText = t.loadMore || 'Load More';
-    }
-    
-    // Update verification status if user is logged in
-    if (currentUserData) {
-        updateVerificationStatus(currentUserData.isVerified || false);
-    }
-    
-    // Re-render ads with new language
+    document.getElementById('helpText').innerText = t.helpSupport || 'Help & Support';
+    document.getElementById('aboutText').innerText = t.aboutUs || 'About Us';
+    document.getElementById('adminText').innerText = t.adminPortal || 'Admin Portal';
+    document.getElementById('logoutText').innerText = t.logout || 'Logout';
+    document.getElementById('navExplore').innerText = t.explore || 'Explore';
+    document.getElementById('navMyAds').innerText = t.myAds || 'My Ads';
+    document.getElementById('navFavs').innerText = t.favorites || 'Favs';
+    document.getElementById('navProfile').innerText = t.profile || 'Profile';
+    document.getElementById('searchInput').placeholder = t.searchPlaceholder || 'Search location, property type...';
+
+    const lmt = document.getElementById('loadMoreText');
+    if (lmt) lmt.innerText = t.loadMore || 'Load More';
+
+    if (currentUserData) updateVerificationStatus(currentUserData.isVerified || false);
+
+    const setT = (id, key, fb) => { const el = document.getElementById(id); if (el) el.innerText = t[key] || fb; };
+    setT('heroTitleEl', 'heroTitle', 'Find Your Dream Property');
+    setT('heroSubtitleEl', 'heroSubtitle', 'Buy • Sell • Rent — Verified Listings Worldwide');
+    setT('trustVerifiedEl', 'trustVerified', 'Verified Listings');
+    setT('trustSecureEl', 'trustSecure', 'Secure Platform');
+    setT('trustWorldwideEl', 'trustWorldwide', 'Worldwide');
+    setT('postFreeEl', 'postFree', 'Post Property FREE');
+    setT('postNowEl', 'postNow', 'POST NOW →');
+    setT('filterAllEl', 'filterAll', 'All');
+    setT('filterBuyEl', 'filterBuy', 'Buy');
+    setT('filterRentEl', 'filterRent', 'Rent');
+    setT('filterPlotEl', 'filterPlot', 'Plot');
+    setT('filterCommercialEl', 'filterCommercial', 'Commercial');
+    setT('filterPGEl', 'filterPG', 'PG/Hostel');
+
     renderAds(displayedAds);
 }
 
-// Update profile photo
+// ===== PROFILE PHOTO =====
 function updateProfilePhoto(photoURL) {
-    const photoCircle = document.getElementById('profilePhotoCircle');
-    if (photoURL) {
-        photoCircle.innerHTML = `<img src="${photoURL}" alt="Profile">`;
-    } else {
-        photoCircle.innerHTML = '<i class="fa fa-user-circle"></i>';
-    }
+    const circle = document.getElementById('profilePhotoCircle');
+    circle.innerHTML = photoURL ? `<img src="${photoURL}" alt="Profile">` : '<i class="fa fa-user-circle"></i>';
 }
 
-// Load user favorites from Firestore
+// ===== FAVORITES =====
 function loadUserFavorites(uid) {
-    db.collection("favorites")
-        .where("userId", "==", uid)
-        .onSnapshot(snapshot => {
-            userFavorites = snapshot.docs.map(doc => doc.data().propertyId);
-            renderAds(displayedAds);
-        });
+    db.collection("favorites").where("userId", "==", uid).onSnapshot(snap => {
+        userFavorites = snap.docs.map(d => d.data().propertyId);
+        renderAds(displayedAds);
+    });
 }
 
-// Check if property is favorited
-function isFavorite(propId) {
-    return userFavorites.includes(propId);
-}
+function isFavorite(propId) { return userFavorites.includes(propId); }
 
-// Toggle favorite in Firestore
 async function toggleFavorite(propId) {
-    if (!currentUser) {
-        alert('Please login to add favorites');
-        location.href = 'login.html';
-        return;
-    }
-
+    if (!currentUser) { showToast('Please login to add favorites'); setTimeout(() => location.href = 'login.html', 1000); return; }
     try {
-        const favQuery = await db.collection("favorites")
-            .where("userId", "==", currentUser.uid)
-            .where("propertyId", "==", propId)
-            .get();
-
-        if (!favQuery.empty) {
-            // Remove from favorites
-            await favQuery.docs[0].ref.delete();
-            showToast('Removed from favorites');
-        } else {
-            // Add to favorites
-            await db.collection("favorites").add({
-                userId: currentUser.uid,
-                propertyId: propId,
-                addedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            showToast('Added to favorites ❤️');
-        }
-    } catch (error) {
-        console.error('Error toggling favorite:', error);
-        alert('Error updating favorites. Please try again.');
-    }
+        const q = await db.collection("favorites").where("userId", "==", currentUser.uid).where("propertyId", "==", propId).get();
+        if (!q.empty) { await q.docs[0].ref.delete(); showToast('Removed from favorites'); }
+        else { await db.collection("favorites").add({ userId: currentUser.uid, propertyId: propId, addedAt: firebase.firestore.FieldValue.serverTimestamp() }); showToast('Added to favorites ❤️'); }
+    } catch (e) { console.error(e); showToast('Error updating favorites'); }
 }
 
-// Listen for notifications
+// ===== NOTIFICATIONS =====
 function listenForNotifications(uid) {
-    db.collection("notifications")
-        .where("recipientId", "==", uid)
-        .where("read", "==", false)
-        .onSnapshot(snapshot => {
-            const unreadCount = snapshot.size;
-            const badge = document.getElementById('bellBadge');
-            if (unreadCount > 0) {
-                badge.innerText = unreadCount;
-                badge.style.display = 'flex';
-            } else {
-                badge.style.display = 'none';
-            }
-        });
+    db.collection("notifications").where("recipientId", "==", uid).where("read", "==", false).onSnapshot(snap => {
+        const badge = document.getElementById('bellBadge');
+        if (snap.size > 0) { badge.innerText = snap.size; badge.style.display = 'flex'; }
+        else { badge.style.display = 'none'; }
+    });
 }
 
-// Auth State Observer
+// ===== AUTH =====
 auth.onAuthStateChanged(user => {
     currentUser = user;
     const logoutBtn = document.getElementById('logoutBtn');
     const adminIcon = document.getElementById('adminIcon');
     const adminSideBtn = document.getElementById('adminSideBtn');
-    
+
     if (user) {
-        // Fetch user data from Firestore
         db.collection("users").doc(user.uid).get().then(doc => {
             currentUserData = doc.exists ? doc.data() : {};
             const isVerified = currentUserData.isVerified || false;
-            
             const userName = user.displayName || user.email?.split('@')[0] || "Earth User";
+
             document.getElementById('sideUserName').innerText = userName;
             document.getElementById('headerUserName').innerText = userName;
             document.getElementById('userMail').innerText = user.email || '';
             updateProfilePhoto(user.photoURL);
-            
-            // Show/Hide Verified Badge in Header
-            const headerBadge = document.getElementById('headerVerifiedBadge');
-            if (isVerified) {
-                headerBadge.style.display = 'inline-flex';
-            } else {
-                headerBadge.style.display = 'none';
-            }
-            
-            // Update Sidebar Verification Status
+
+            const hBadge = document.getElementById('headerVerifiedBadge');
+            hBadge.style.display = isVerified ? 'inline-flex' : 'none';
             updateVerificationStatus(isVerified);
-            
-            const t = TRANSLATIONS[sessionStorage.getItem('selectedLang') || 'en'] || TRANSLATIONS['en'];
-            document.getElementById('authBtn').innerText = t.logout;
-            document.getElementById('authBtn').onclick = handleLogout;
-            logoutBtn.style.display = 'flex';
-            
+
+            applyLanguage();
+            if (logoutBtn) logoutBtn.style.display = 'flex';
+
             if (user.uid === ADMIN_UID) {
-                if(adminIcon) adminIcon.style.display = 'inline-block';
-                if(adminSideBtn) adminSideBtn.style.display = 'flex';
+                if (adminIcon) adminIcon.style.display = 'inline-block';
+                if (adminSideBtn) adminSideBtn.style.display = 'flex';
             } else {
-                if(adminIcon) adminIcon.style.display = 'none';
-                if(adminSideBtn) adminSideBtn.style.display = 'none';
+                if (adminIcon) adminIcon.style.display = 'none';
+                if (adminSideBtn) adminSideBtn.style.display = 'none';
             }
-            
+
             loadUserFavorites(user.uid);
             listenForNotifications(user.uid);
-        }).catch(err => {
-            console.error("Error fetching user data:", err);
-        });
+        }).catch(err => console.error("User fetch error:", err));
     } else {
         currentUserData = null;
         userFavorites = [];
-        const t = TRANSLATIONS[sessionStorage.getItem('selectedLang') || 'en'] || TRANSLATIONS['en'];
-        document.getElementById('sideUserName').innerText = t.welcome;
+        const t = getT();
+        document.getElementById('sideUserName').innerText = t.welcome || 'Welcome Guest';
         document.getElementById('headerUserName').innerText = "Guest";
-        document.getElementById('userMail').innerText = "";
+        document.getElementById('userMail').innerText = '';
         document.getElementById('headerVerifiedBadge').style.display = 'none';
         document.getElementById('verificationStatus').style.display = 'none';
         updateProfilePhoto(null);
-        document.getElementById('authBtn').innerText = t.login;
-        document.getElementById('authBtn').onclick = () => location.href='login.html';
-        if(logoutBtn) logoutBtn.style.display = 'none';
-        if(adminIcon) adminIcon.style.display = 'none';
-        if(adminSideBtn) adminSideBtn.style.display = 'none';
+        applyLanguage();
+        if (logoutBtn) logoutBtn.style.display = 'none';
+        if (adminIcon) adminIcon.style.display = 'none';
+        if (adminSideBtn) adminSideBtn.style.display = 'none';
     }
-    
-    // Load properties after auth state is determined
+
     loadProperties();
 });
 
 function handleLogout() {
-    if (confirm('Are you sure you want to logout?')) {
-        auth.signOut().then(() => location.reload());
-    }
+    if (confirm('Are you sure you want to logout?')) auth.signOut().then(() => location.reload());
 }
 
-// Load Properties with Lazy Loading and Status Filter
+// ===== LOAD PROPERTIES (FIXED FIRESTORE QUERY) =====
+// NOTE: Firebase console mein ye composite index banana hoga:
+// Collection: properties | Fields: status ASC, isExpired ASC, createdAt DESC
 function loadProperties(isLoadMore = false) {
     if (isLoading) return;
     isLoading = true;
-    
-    // Show loading state
+
     const loadMoreBtn = document.getElementById('loadMoreBtn');
     if (isLoadMore && loadMoreBtn) {
         loadMoreBtn.disabled = true;
         loadMoreBtn.innerHTML = '<span class="loading-spinner"></span>';
     }
-    
+
+    // ===== PROPERTY QUERY =====
+    // Simple query to avoid composite index issues — filter expired client-side
     let query = db.collection("properties")
-    .where("status", "==", "active")
-    .where("isExpired", "==", false)
-    .orderBy("createdAt", "desc")
-    .limit(ADS_PER_PAGE);
-    
-    if (isLoadMore && lastVisible) {
-        query = query.startAfter(lastVisible);
-    }
-    
+        .where("status", "==", "active")
+        .orderBy("createdAt", "desc")
+        .limit(ADS_PER_PAGE);
+
+    if (isLoadMore && lastVisible) query = query.startAfter(lastVisible);
+
     query.get().then(snap => {
-        const newAds = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
-        
+        // Filter isExpired client side to avoid compound index requirement
+        const newAds = snap.docs
+            .map(doc => ({ id: doc.id, ...doc.data() }))
+            .filter(ad => ad.isExpired !== true);
+
         if (isLoadMore) {
             allAds = [...allAds, ...newAds];
             displayedAds = [...displayedAds, ...newAds];
@@ -1070,8 +812,7 @@ function loadProperties(isLoadMore = false) {
             allAds = newAds;
             displayedAds = newAds;
         }
-        
-        // Check if there are more ads to load
+
         if (snap.docs.length < ADS_PER_PAGE) {
             hasMoreAds = false;
             document.getElementById('loadMoreContainer').style.display = 'none';
@@ -1080,149 +821,153 @@ function loadProperties(isLoadMore = false) {
             lastVisible = snap.docs[snap.docs.length - 1];
             document.getElementById('loadMoreContainer').style.display = 'block';
         }
-        
-        // Sort by proximity if location is available
-        if (userLocation) {
-            displayedAds = sortByProximity(displayedAds);
-        }
-        
-        isInitialLoad = false; // ✅ Flash fix
+
+        if (userLocation) displayedAds = sortByProximity(displayedAds);
+
         renderAds(displayedAds, isLoadMore);
         isLoading = false;
-        
-        // Reset load more button
+
         if (loadMoreBtn) {
             loadMoreBtn.disabled = false;
-            const t = TRANSLATIONS[sessionStorage.getItem('selectedLang') || 'en'] || TRANSLATIONS['en'];
-            loadMoreBtn.innerHTML = `<span id="loadMoreText">${t.loadMore || 'Load More'}</span>`;
+            loadMoreBtn.innerHTML = `<span id="loadMoreText">${getT().loadMore || 'Load More'}</span>`;
         }
     }).catch(err => {
-        console.error('Error loading properties:', err);
-        document.getElementById('propertyList').innerHTML = '<center style="margin-top:50px; color:#d32f2f;">Error loading properties. Please refresh.</center>';
+        console.error('Firestore error:', err);
+        document.getElementById('propertyList').innerHTML =
+            '<center style="margin-top:50px; color:#d32f2f; padding:20px;">❌ Error loading properties.<br><small>' + err.message + '</small></center>';
         isLoading = false;
-        
-        if (loadMoreBtn) {
-            loadMoreBtn.disabled = false;
-            loadMoreBtn.innerHTML = '<span>Try Again</span>';
-        }
+        if (loadMoreBtn) { loadMoreBtn.disabled = false; loadMoreBtn.innerHTML = 'Try Again'; }
     });
 }
 
-// Load More Properties Function
 function loadMoreProperties() {
-    if (hasMoreAds && !isLoading) {
-        loadProperties(true);
-    }
+    if (hasMoreAds && !isLoading) loadProperties(true);
 }
 
-// Render Ads with Distance Display and Verified Badge
+// ===== RENDER ADS =====
 function renderAds(ads, append = false) {
     const list = document.getElementById('propertyList');
-    const lang = sessionStorage.getItem('selectedLang') || 'en';
-    const t = TRANSLATIONS[lang] || TRANSLATIONS['en'];
-    
-    if (ads.length === 0 && !append) {
-        // ✅ Flash fix — don't show "no properties" on initial load
-        if (isInitialLoad) return;
+    const t = getT();
+
+    if (!ads || ads.length === 0) {
+        if (append) return;
         list.innerHTML = `
-            <center style="margin-top:50px; color:#888;">
-                <i class="fa fa-search" style="font-size:60px; opacity:0.3; margin-bottom:20px;"></i>
-                <div style="font-size:16px; font-weight:600;">No properties found</div>
-                <div style="font-size:13px; margin-top:5px;">Try different keywords</div>
-            </center>
-        `;
+            <div style="text-align:center; padding:60px 30px;">
+                <i class="fa fa-search" style="font-size:55px; opacity:0.2; display:block; margin-bottom:20px; color:#888;"></i>
+                <div style="font-size:17px; font-weight:700; color:#555; margin-bottom:8px;">${t.noPropsFound || 'No Properties Found'}</div>
+                <div style="font-size:13px; color:#999;">${t.tryKeywords || 'Try different keywords or clear the filters'}</div>
+            </div>`;
         return;
     }
-    
-    if (!append) {
-        list.innerHTML = '';
-    }
-    
+
+    if (!append) list.innerHTML = '';
+
     ads.forEach(p => {
-        const images = p.images && Array.isArray(p.images) && p.images.length > 0 
-            ? p.images 
+        const images = (Array.isArray(p.images) && p.images.length > 0)
+            ? p.images
             : ['https://via.placeholder.com/400x210?text=No+Image'];
-        
-        // Calculate distance if user location is available
+
         let distanceHTML = '';
         if (userLocation && p.latitude && p.longitude) {
             const dist = calculateDistance(userLocation.lat, userLocation.lng, p.latitude, p.longitude);
-            distanceHTML = `
-                <div class="distance-badge">
-                    <i class="fa fa-location-arrow"></i> ${dist.toFixed(1)} km away
-                </div>
-            `;
+            distanceHTML = `<div class="distance-badge"><i class="fa fa-location-arrow"></i> ${dist.toFixed(1)} km away</div>`;
         }
-        
+
         const card = document.createElement('div');
         card.className = 'prop-card';
+
         const safeId = sanitize(p.id);
         const safeTitle = sanitize(p.title) || 'Untitled Property';
         const safeLocation = sanitize(p.location) || 'Location not specified';
-        const safePhone = sanitize(p.phone);
-        const safeOwnerId = sanitize(p.ownerId);
-        const safeEncodedTitle = encodeURIComponent(p.title || '');
+        const safePhone = sanitize(p.phone) || '';
+        const safeOwnerId = sanitize(p.ownerId) || '';
+        // Store images as data attribute to avoid innerHTML injection
+        const imgJson = JSON.stringify(images);
+
+        const purposeColors = {
+            'Sell': { bg: '#e8f5e9', color: '#2e7d32' },
+            'Rent': { bg: '#e3f2fd', color: '#1565c0' },
+            'Plot': { bg: '#fff8e1', color: '#f57f17' },
+            'Commercial': { bg: '#fce4ec', color: '#880e4f' },
+            'PG': { bg: '#ede7f6', color: '#4527a0' }
+        };
+        const pc = purposeColors[p.purpose] || { bg: '#f5f5f5', color: '#555' };
+        const purposeBadge = p.purpose
+            ? `<span style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:10px;margin-left:6px;vertical-align:middle;background:${pc.bg};color:${pc.color}">${p.purpose}</span>`
+            : '';
+
+        const favIcon = isFavorite(p.id) ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
 
         card.innerHTML = `
-            <div class="img-box" id="imgbox-${safeId}" onclick='openGallery(${JSON.stringify(images)}, cardImgIndex_${safeId} || 0)'>
-                <img src="${images[0]}" 
-                     id="cardimg-${safeId}"
-                     alt="${safeTitle}"
-                     onerror="this.src='https://via.placeholder.com/400x210?text=Image+Not+Available'">
+            <div class="img-box" id="imgbox-${safeId}">
+                <img src="${images[0]}" id="cardimg-${safeId}" alt="${safeTitle}"
+                     onerror="this.src='https://via.placeholder.com/400x210?text=No+Image'">
                 <div class="card-actions">
-                    <button class="icon-btn share" onclick="event.stopPropagation(); shareProperty('${safeId}', '${safeEncodedTitle}')">
+                    <button class="icon-btn share" id="share-${safeId}">
                         <i class="fa fa-share-alt"></i>
                     </button>
-                    <button class="icon-btn fav" onclick="event.stopPropagation(); toggleFavorite('${safeId}')">
-                        <i class="fa${isFavorite(p.id) ? ' fa-solid' : '-regular'} fa-heart"></i>
+                    <button class="icon-btn fav" id="fav-${safeId}">
+                        <i class="${favIcon}"></i>
                     </button>
                 </div>
                 ${images.length > 1 ? `<div class="card-dots" id="carddots-${safeId}">
-                    ${images.map((_, i) => `<div class="card-dot${i===0?' active':''}" id="dot-${safeId}-${i}"></div>`).join('')}
+                    ${images.map((_, i) => `<div class="card-dot${i === 0 ? ' active' : ''}" id="dot-${safeId}-${i}"></div>`).join('')}
                 </div>` : ''}
             </div>
             <div class="info">
-                <div class="price">₹${Number(p.price || 0).toLocaleString('en-IN')}</div>
+                <div class="price">₹${Number(p.price || 0).toLocaleString('en-IN')}${purposeBadge}</div>
                 <div style="font-weight:700; margin:5px 0; color:#333;">
                     ${p.isVerified ? '<i class="fa fa-check-circle" style="color:#1da1f2; margin-right:3px;"></i>' : ''}
                     ${safeTitle}
                 </div>
-                <div class="location">
-                    <i class="fa-solid fa-location-dot"></i> ${safeLocation}
-                </div>
+                <div class="location"><i class="fa-solid fa-location-dot"></i> ${safeLocation}</div>
                 ${distanceHTML}
                 <div class="btn-group">
-                    <button class="btn btn-call" onclick="contact('${safePhone}', 'tel')">
-                        <i class="fa fa-phone"></i> ${t.call}
+                    <button class="btn btn-call" id="call-${safeId}">
+                        <i class="fa fa-phone"></i> ${t.call || 'Call'}
                     </button>
-                    <button class="btn btn-wa" onclick="contact('${safePhone}', 'wa', '${safeEncodedTitle}')">
-                        <i class="fa-brands fa-whatsapp"></i> ${t.whatsapp}
+                    <button class="btn btn-wa" id="wa-${safeId}">
+                        <i class="fa-brands fa-whatsapp"></i> ${t.whatsapp || 'WhatsApp'}
                     </button>
-                    <button class="btn btn-chat" onclick="location.href='chat.html?to=${safeOwnerId}'">
-                        <i class="fa-regular fa-comment"></i> ${t.chat}
+                    <button class="btn btn-chat" id="chat-${safeId}">
+                        <i class="fa-regular fa-comment"></i> ${t.chat || 'Chat'}
                     </button>
                 </div>
-            </div>
-        `;
+            </div>`;
+
         list.appendChild(card);
 
-        // ✅ Card swipe setup (only if multiple images)
-        if (images.length > 1) {
-            setupCardSwipe(safeId, images);
-        }
+        // ===== ATTACH EVENTS (no inline onclick with raw data — XSS safe) =====
+        // Image tap → gallery
+        document.getElementById('imgbox-' + safeId).addEventListener('click', e => {
+            if (e.target.closest('.card-actions')) return;
+            openGallery(images, cardImgIndexes[safeId] || 0);
+        });
+
+        document.getElementById('share-' + safeId).addEventListener('click', e => {
+            e.stopPropagation();
+            shareProperty(p.id, p.title || '');
+        });
+
+        document.getElementById('fav-' + safeId).addEventListener('click', e => {
+            e.stopPropagation();
+            toggleFavorite(p.id);
+        });
+
+        document.getElementById('call-' + safeId).addEventListener('click', () => contact(p.phone, 'tel', ''));
+        document.getElementById('wa-' + safeId).addEventListener('click', () => contact(p.phone, 'wa', p.title || ''));
+        document.getElementById('chat-' + safeId).addEventListener('click', () => location.href = 'chat.html?to=' + encodeURIComponent(p.ownerId || ''));
+
+        // Card swipe for multiple images
+        if (images.length > 1) setupCardSwipe(safeId, images);
     });
 }
 
-// ✅ Card swipe function
-const cardImgIndexes = {};
+// ===== CARD SWIPE (single declaration, bug fixed) =====
 function setupCardSwipe(id, images) {
     cardImgIndexes[id] = 0;
-    // Make cardImgIndex accessible globally for openGallery
-    window['cardImgIndex_' + id] = 0;
-
     const box = document.getElementById('imgbox-' + id);
     if (!box) return;
-
     let startX = 0, startY = 0, isDragging = false;
 
     box.addEventListener('touchstart', e => {
@@ -1242,19 +987,12 @@ function setupCardSwipe(id, images) {
         e.stopPropagation();
         const diff = e.changedTouches[0].clientX - startX;
         if (Math.abs(diff) < 30) return;
-
         let idx = cardImgIndexes[id];
-        if (diff < 0) idx = Math.min(idx + 1, images.length - 1); // next
-        else idx = Math.max(idx - 1, 0); // prev
-
+        if (diff < 0) idx = Math.min(idx + 1, images.length - 1);
+        else idx = Math.max(idx - 1, 0);
         cardImgIndexes[id] = idx;
-        window['cardImgIndex_' + id] = idx;
-
-        // Update image
         const img = document.getElementById('cardimg-' + id);
         if (img) img.src = images[idx];
-
-        // Update dots
         images.forEach((_, i) => {
             const dot = document.getElementById('dot-' + id + '-' + i);
             if (dot) dot.className = 'card-dot' + (i === idx ? ' active' : '');
@@ -1262,103 +1000,36 @@ function setupCardSwipe(id, images) {
     });
 }
 
-// Contact Function with Better Validation
-function contact(num, type, title) {
-    if (!num || num === 'undefined' || num === 'null' || num.trim() === '') {
-        alert("Error: Owner has not provided a contact number.");
-        return;
-    }
-    
-    let cleanNum = num.toString().replace(/\D/g, '');
-    
-    // Validate phone number
-    if (cleanNum.length < 10) {
-        alert("Invalid phone number");
-        return;
-    }
-    
-    if (cleanNum.length === 10) cleanNum = "91" + cleanNum;
-    
-    if (type === 'wa') {
-        const message = encodeURIComponent(`Hi, I'm interested in: ${decodeURIComponent(title)}`);
-        window.open(`https://wa.me/${cleanNum}?text=${message}`, '_blank');
-    } else {
-        window.location.href = `tel:+${cleanNum}`;
-    }
-}
-
-// Filter Ads with Debouncing
-function filterAds() {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-        applyFilterAndSearch();
-    }, 300);
-}
-
-// Share Property Function
-function shareProperty(propId, title) {
-    const url = window.location.origin + '/property-detail.html?id=' + propId;
-    const text = decodeURIComponent(title) + ' - Earth Property Global';
-    
-    if (navigator.share) {
-        navigator.share({ title: text, url: url }).catch(err => console.log('Share cancelled'));
-    } else {
-        const tempInput = document.createElement('input');
-        tempInput.value = url;
-        document.body.appendChild(tempInput);
-        tempInput.select();
-        document.execCommand('copy');
-        document.body.removeChild(tempInput);
-        showToast('Link copied to clipboard!');
-    }
-}
-
-// ✅ Filter System
+// ===== FILTER SYSTEM (FIXED) =====
 let activeFilter = 'all';
-
 function setFilter(type) {
     activeFilter = type;
-
-    // Update button styles
     ['all','buy','rent','plot','commercial','pg'].forEach(f => {
         const btn = document.getElementById('filter-' + f);
         if (!btn) return;
-        if (f === type) {
-            btn.style.background = '#2e7d32';
-            btn.style.color = 'white';
-            btn.style.borderColor = '#2e7d32';
-        } else {
-            btn.style.background = 'white';
-            btn.style.color = '#555';
-            btn.style.borderColor = '#ddd';
-        }
+        if (f === type) { btn.classList.add('active-filter'); }
+        else { btn.classList.remove('active-filter'); }
     });
-
     applyFilterAndSearch();
 }
 
 function applyFilterAndSearch() {
     const val = document.getElementById('searchInput').value.toLowerCase().trim();
+    let filtered = [...allAds];
 
-    let filtered = allAds;
-
-    // Apply category filter
     if (activeFilter !== 'all') {
         filtered = filtered.filter(a => {
-            const title = (a.title || '').toLowerCase();
-            const type = (a.type || '').toLowerCase();
-            const desc = (a.description || '').toLowerCase();
-            if (activeFilter === 'buy') return type === 'sale' || title.includes('sale') || title.includes('buy') || desc.includes('for sale');
-            if (activeFilter === 'rent') return type === 'rent' || title.includes('rent') || desc.includes('for rent');
-            if (activeFilter === 'plot') return type === 'plot' || title.includes('plot') || title.includes('land');
-            if (activeFilter === 'commercial') return type === 'commercial' || title.includes('commercial') || title.includes('office') || title.includes('shop');
-            if (activeFilter === 'pg') return type === 'pg' || title.includes('pg') || title.includes('hostel') || title.includes('paying guest');
+            const purpose = (a.purpose || '').toLowerCase();
+            if (activeFilter === 'buy')        return purpose === 'sell';
+            if (activeFilter === 'rent')       return purpose === 'rent';
+            if (activeFilter === 'plot')       return purpose === 'plot';
+            if (activeFilter === 'commercial') return purpose === 'commercial';
+            if (activeFilter === 'pg')         return purpose === 'pg' || purpose === 'pg/hostel';
             return true;
         });
     }
 
-    // Apply search filter
-    if (val !== '') {
+    if (val) {
         filtered = filtered.filter(a =>
             (a.location || '').toLowerCase().includes(val) ||
             (a.title || '').toLowerCase().includes(val) ||
@@ -1367,29 +1038,64 @@ function applyFilterAndSearch() {
     }
 
     displayedAds = filtered;
-    const sorted = userLocation ? sortByProximity([...displayedAds]) : displayedAds;
-    renderAds(sorted);
+    renderAds(userLocation ? sortByProximity([...displayedAds]) : displayedAds);
+    document.getElementById('loadMoreContainer').style.display =
+        (activeFilter === 'all' && !val && hasMoreAds) ? 'block' : 'none';
+}
 
-    // Hide load more when filtering
-    if (activeFilter !== 'all' || val !== '') {
-        document.getElementById('loadMoreContainer').style.display = 'none';
+// ===== SEARCH with debounce =====
+function filterAds() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(applyFilterAndSearch, 300);
+}
+
+// ===== CONTACT =====
+function contact(num, type, title) {
+    if (!num || num === 'undefined' || num === 'null' || String(num).trim() === '') {
+        showToast('No contact number available'); return;
+    }
+    let clean = String(num).replace(/\D/g, '');
+    if (clean.length < 10) { showToast('Invalid phone number'); return; }
+    if (clean.length === 10) clean = '91' + clean;
+    if (type === 'wa') {
+        const msg = encodeURIComponent(`Hi, I'm interested in: ${title}`);
+        window.open(`https://wa.me/${clean}?text=${msg}`, '_blank');
     } else {
-        if (hasMoreAds) document.getElementById('loadMoreContainer').style.display = 'block';
+        window.location.href = `tel:+${clean}`;
     }
 }
 
-// ✅ XSS Protection — User data sanitize karo
-function sanitize(str) {
-    if (str === null || str === undefined) return "";
-    return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#x27;");
+// ===== SHARE =====
+function shareProperty(propId, title) {
+    const url = `${window.location.origin}/property-detail.html?id=${propId}`;
+    const text = title + ' - Earth Property Global';
+    if (navigator.share) {
+        navigator.share({ title: text, url }).catch(() => {});
+    } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => showToast('Link copied! 📋'));
+    } else {
+        const tmp = document.createElement('input');
+        tmp.value = url;
+        document.body.appendChild(tmp);
+        tmp.select();
+        document.execCommand('copy');
+        document.body.removeChild(tmp);
+        showToast('Link copied! 📋');
+    }
 }
 
-// Initialize Page
+// ===== XSS SANITIZE =====
+function sanitize(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;');
+}
+
+// ===== INIT =====
 loadLanguageDropdown();
 applyLanguage();
 </script>
