@@ -488,7 +488,6 @@ if (navigator.geolocation) {
         () => console.log('Location unavailable')
     );
 }
-
 function calculateDistance(lat1, lon1, lat2, lon2) {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -806,4 +805,298 @@ function loadProperties(isLoadMore = false) {
             .filter(ad => ad.isExpired !== true);
 
         if (isLoadMore) {
-            allAds = 
+            allAds = [...allAds, ...newAds];
+            displayedAds = [...displayedAds, ...newAds];
+        } else {
+            allAds = newAds;
+            displayedAds = newAds;
+        }
+
+        if (snap.docs.length < ADS_PER_PAGE) {
+            hasMoreAds = false;
+            document.getElementById('loadMoreContainer').style.display = 'none';
+        } else {
+            hasMoreAds = true;
+            lastVisible = snap.docs[snap.docs.length - 1];
+            document.getElementById('loadMoreContainer').style.display = 'block';
+        }
+
+        if (userLocation) displayedAds = sortByProximity(displayedAds);
+
+        renderAds(displayedAds, isLoadMore);
+        isLoading = false;
+
+        if (loadMoreBtn) {
+            loadMoreBtn.disabled = false;
+            loadMoreBtn.innerHTML = `<span id="loadMoreText">${getT().loadMore || 'Load More'}</span>`;
+        }
+    }).catch(err => {
+        console.error('Firestore error:', err);
+        document.getElementById('propertyList').innerHTML =
+            '<center style="margin-top:50px; color:#d32f2f; padding:20px;">❌ Error loading properties.<br><small>' + err.message + '</small></center>';
+        isLoading = false;
+        if (loadMoreBtn) { loadMoreBtn.disabled = false; loadMoreBtn.innerHTML = 'Try Again'; }
+    });
+}
+
+function loadMoreProperties() {
+    if (hasMoreAds && !isLoading) loadProperties(true);
+}
+
+// ===== RENDER ADS =====
+function renderAds(ads, append = false) {
+    const list = document.getElementById('propertyList');
+    const t = getT();
+
+    if (!ads || ads.length === 0) {
+        if (append) return;
+        list.innerHTML = `
+            <div style="text-align:center; padding:60px 30px;">
+                <i class="fa fa-search" style="font-size:55px; opacity:0.2; display:block; margin-bottom:20px; color:#888;"></i>
+                <div style="font-size:17px; font-weight:700; color:#555; margin-bottom:8px;">${t.noPropsFound || 'No Properties Found'}</div>
+                <div style="font-size:13px; color:#999;">${t.tryKeywords || 'Try different keywords or clear the filters'}</div>
+            </div>`;
+        return;
+    }
+
+    if (!append) list.innerHTML = '';
+
+    ads.forEach(p => {
+        const images = (Array.isArray(p.images) && p.images.length > 0)
+            ? p.images
+            : ['https://via.placeholder.com/400x210?text=No+Image'];
+
+        let distanceHTML = '';
+        if (userLocation && p.latitude && p.longitude) {
+            const dist = calculateDistance(userLocation.lat, userLocation.lng, p.latitude, p.longitude);
+            distanceHTML = `<div class="distance-badge"><i class="fa fa-location-arrow"></i> ${dist.toFixed(1)} km away</div>`;
+        }
+
+        const card = document.createElement('div');
+        card.className = 'prop-card';
+
+        const safeId = sanitize(p.id);
+        const safeTitle = sanitize(p.title) || 'Untitled Property';
+        const safeLocation = sanitize(p.location) || 'Location not specified';
+        const safePhone = sanitize(p.phone) || '';
+        const safeOwnerId = sanitize(p.ownerId) || '';
+        // Store images as data attribute to avoid innerHTML injection
+        const imgJson = JSON.stringify(images);
+
+        const purposeColors = {
+            'Sell': { bg: '#e8f5e9', color: '#2e7d32' },
+            'Rent': { bg: '#e3f2fd', color: '#1565c0' },
+            'Plot': { bg: '#fff8e1', color: '#f57f17' },
+            'Commercial': { bg: '#fce4ec', color: '#880e4f' },
+            'PG': { bg: '#ede7f6', color: '#4527a0' }
+        };
+        const pc = purposeColors[p.purpose] || { bg: '#f5f5f5', color: '#555' };
+        const purposeBadge = p.purpose
+            ? `<span style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:10px;margin-left:6px;vertical-align:middle;background:${pc.bg};color:${pc.color}">${p.purpose}</span>`
+            : '';
+
+        const favIcon = isFavorite(p.id) ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
+
+        card.innerHTML = `
+            <div class="img-box" id="imgbox-${safeId}">
+                <img src="${images[0]}" id="cardimg-${safeId}" alt="${safeTitle}"
+                     onerror="this.src='https://via.placeholder.com/400x210?text=No+Image'">
+                <div class="card-actions">
+                    <button class="icon-btn share" id="share-${safeId}">
+                        <i class="fa fa-share-alt"></i>
+                    </button>
+                    <button class="icon-btn fav" id="fav-${safeId}">
+                        <i class="${favIcon}"></i>
+                    </button>
+                </div>
+                ${images.length > 1 ? `<div class="card-dots" id="carddots-${safeId}">
+                    ${images.map((_, i) => `<div class="card-dot${i === 0 ? ' active' : ''}" id="dot-${safeId}-${i}"></div>`).join('')}
+                </div>` : ''}
+            </div>
+            <div class="info">
+                <div class="price">₹${Number(p.price || 0).toLocaleString('en-IN')}${purposeBadge}</div>
+                <div style="font-weight:700; margin:5px 0; color:#333;">
+                    ${p.isVerified ? '<i class="fa fa-check-circle" style="color:#1da1f2; margin-right:3px;"></i>' : ''}
+                    ${safeTitle}
+                </div>
+                <div class="location"><i class="fa-solid fa-location-dot"></i> ${safeLocation}</div>
+                ${distanceHTML}
+                <div class="btn-group">
+                    <button class="btn btn-call" id="call-${safeId}">
+                        <i class="fa fa-phone"></i> ${t.call || 'Call'}
+                    </button>
+                    <button class="btn btn-wa" id="wa-${safeId}">
+                        <i class="fa-brands fa-whatsapp"></i> ${t.whatsapp || 'WhatsApp'}
+                    </button>
+                    <button class="btn btn-chat" id="chat-${safeId}">
+                        <i class="fa-regular fa-comment"></i> ${t.chat || 'Chat'}
+                    </button>
+                </div>
+            </div>`;
+
+        list.appendChild(card);
+
+        // ===== ATTACH EVENTS (no inline onclick with raw data — XSS safe) =====
+        // Image tap → gallery
+        document.getElementById('imgbox-' + safeId).addEventListener('click', e => {
+            if (e.target.closest('.card-actions')) return;
+            openGallery(images, cardImgIndexes[safeId] || 0);
+        });
+
+        document.getElementById('share-' + safeId).addEventListener('click', e => {
+            e.stopPropagation();
+            shareProperty(p.id, p.title || '');
+        });
+
+        document.getElementById('fav-' + safeId).addEventListener('click', e => {
+            e.stopPropagation();
+            toggleFavorite(p.id);
+        });
+
+        document.getElementById('call-' + safeId).addEventListener('click', () => contact(p.phone, 'tel', ''));
+        document.getElementById('wa-' + safeId).addEventListener('click', () => contact(p.phone, 'wa', p.title || ''));
+        document.getElementById('chat-' + safeId).addEventListener('click', () => location.href = 'chat.html?to=' + encodeURIComponent(p.ownerId || ''));
+
+        // Card swipe for multiple images
+        if (images.length > 1) setupCardSwipe(safeId, images);
+    });
+}
+
+// ===== CARD SWIPE (single declaration, bug fixed) =====
+function setupCardSwipe(id, images) {
+    cardImgIndexes[id] = 0;
+    const box = document.getElementById('imgbox-' + id);
+    if (!box) return;
+    let startX = 0, startY = 0, isDragging = false;
+
+    box.addEventListener('touchstart', e => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        isDragging = false;
+    }, { passive: true });
+
+    box.addEventListener('touchmove', e => {
+        const dx = Math.abs(e.touches[0].clientX - startX);
+        const dy = Math.abs(e.touches[0].clientY - startY);
+        if (dx > dy && dx > 10) isDragging = true;
+    }, { passive: true });
+
+    box.addEventListener('touchend', e => {
+        if (!isDragging) return;
+        e.stopPropagation();
+        const diff = e.changedTouches[0].clientX - startX;
+        if (Math.abs(diff) < 30) return;
+        let idx = cardImgIndexes[id];
+        if (diff < 0) idx = Math.min(idx + 1, images.length - 1);
+        else idx = Math.max(idx - 1, 0);
+        cardImgIndexes[id] = idx;
+        const img = document.getElementById('cardimg-' + id);
+        if (img) img.src = images[idx];
+        images.forEach((_, i) => {
+            const dot = document.getElementById('dot-' + id + '-' + i);
+            if (dot) dot.className = 'card-dot' + (i === idx ? ' active' : '');
+        });
+    });
+}
+
+// ===== FILTER SYSTEM (FIXED) =====
+let activeFilter = 'all';
+function setFilter(type) {
+    activeFilter = type;
+    ['all','buy','rent','plot','commercial','pg'].forEach(f => {
+        const btn = document.getElementById('filter-' + f);
+        if (!btn) return;
+        if (f === type) { btn.classList.add('active-filter'); }
+        else { btn.classList.remove('active-filter'); }
+    });
+    applyFilterAndSearch();
+}
+
+function applyFilterAndSearch() {
+    const val = document.getElementById('searchInput').value.toLowerCase().trim();
+    let filtered = [...allAds];
+
+    if (activeFilter !== 'all') {
+        filtered = filtered.filter(a => {
+            const purpose = (a.purpose || '').toLowerCase();
+            if (activeFilter === 'buy')        return purpose === 'sell';
+            if (activeFilter === 'rent')       return purpose === 'rent';
+            if (activeFilter === 'plot')       return purpose === 'plot';
+            if (activeFilter === 'commercial') return purpose === 'commercial';
+            if (activeFilter === 'pg')         return purpose === 'pg' || purpose === 'pg/hostel';
+            return true;
+        });
+    }
+
+    if (val) {
+        filtered = filtered.filter(a =>
+            (a.location || '').toLowerCase().includes(val) ||
+            (a.title || '').toLowerCase().includes(val) ||
+            (a.description || '').toLowerCase().includes(val)
+        );
+    }
+
+    displayedAds = filtered;
+    renderAds(userLocation ? sortByProximity([...displayedAds]) : displayedAds);
+    document.getElementById('loadMoreContainer').style.display =
+        (activeFilter === 'all' && !val && hasMoreAds) ? 'block' : 'none';
+}
+
+// ===== SEARCH with debounce =====
+function filterAds() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(applyFilterAndSearch, 300);
+}
+
+// ===== CONTACT =====
+function contact(num, type, title) {
+    if (!num || num === 'undefined' || num === 'null' || String(num).trim() === '') {
+        showToast('No contact number available'); return;
+    }
+    let clean = String(num).replace(/\D/g, '');
+    if (clean.length < 10) { showToast('Invalid phone number'); return; }
+    if (clean.length === 10) clean = '91' + clean;
+    if (type === 'wa') {
+        const msg = encodeURIComponent(`Hi, I'm interested in: ${title}`);
+        window.open(`https://wa.me/${clean}?text=${msg}`, '_blank');
+    } else {
+        window.location.href = `tel:+${clean}`;
+    }
+}
+
+// ===== SHARE =====
+function shareProperty(propId, title) {
+    const url = `${window.location.origin}/property-detail.html?id=${propId}`;
+    const text = title + ' - Earth Property Global';
+    if (navigator.share) {
+        navigator.share({ title: text, url }).catch(() => {});
+    } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => showToast('Link copied! 📋'));
+    } else {
+        const tmp = document.createElement('input');
+        tmp.value = url;
+        document.body.appendChild(tmp);
+        tmp.select();
+        document.execCommand('copy');
+        document.body.removeChild(tmp);
+        showToast('Link copied! 📋');
+    }
+}
+
+// ===== XSS SANITIZE =====
+function sanitize(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;');
+}
+
+// ===== INIT =====
+loadLanguageDropdown();
+applyLanguage();
+</script>
+</body>
+</html>
