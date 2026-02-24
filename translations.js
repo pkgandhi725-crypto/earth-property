@@ -641,7 +641,7 @@ const TRANSLATIONS = Object.freeze({
     pgAC: "AC / Non-AC",
     noPropsFound: "சொத்துகள் எதுவும் இல்லை",
     noPropsHint: "வேறு வார்த்தைகளை முயற்சிக்கவும் அல்லது வடிப்பான்களை நீக்கவும்",
-  }
+  },
 
   te: {
     welcome: "స్వాగతం అతిథి",
@@ -740,7 +740,7 @@ const TRANSLATIONS = Object.freeze({
     pgAC: "AC / Non-AC",
     noPropsFound: "ఆస్తులు ఏవీ కనుగొనబడలేదు",
     noPropsHint: "వేరే కీవర్డ్లు ప్రయత్నించండి లేదా ఫిల్టర్లు క్లియర్ చేయండి",
-  }
+  },
 
   mr: {
     welcome: "स्वागत अतिथी",
@@ -839,7 +839,7 @@ const TRANSLATIONS = Object.freeze({
     pgAC: "AC / Non-AC",
     noPropsFound: "कोणतीही मालमत्ता आढळली नाही",
     noPropsHint: "वेगळे कीवर्ड वापरा किंवा फिल्टर साफ करा",
-  }
+  },
 
   kn: {
     welcome: "ಸ್ವಾಗತ ಅತಿಥಿ",
@@ -938,7 +938,7 @@ const TRANSLATIONS = Object.freeze({
     pgAC: "AC / Non-AC",
     noPropsFound: "ಯಾವುದೇ ಆಸ್ತಿ ಕಂಡುಬಂದಿಲ್ಲ",
     noPropsHint: "ವಿಭಿನ್ನ ಕೀವರ್ಡ್ ಪ್ರಯತ್ನಿಸಿ ಅಥವಾ ಫಿಲ್ಟರ್ ತೆರವುಗೊಳಿಸಿ",
-  }
+  },
 
   gu: {
     welcome: "સ્વાગત અતિથિ",
@@ -1037,7 +1037,7 @@ const TRANSLATIONS = Object.freeze({
     pgAC: "AC / Non-AC",
     noPropsFound: "કોઈ મિલકત મળી નથી",
     noPropsHint: "અલગ કીવર્ડ અજમાવો અથવા ફિલ્ટર સાફ કરો",
-  }
+  },
 
   ml: {
     welcome: "സ്വാഗതം അതിഥി",
@@ -1136,7 +1136,7 @@ const TRANSLATIONS = Object.freeze({
     pgAC: "AC / Non-AC",
     noPropsFound: "സ്വത്തുക്കൾ കണ്ടെത്തിയില്ല",
     noPropsHint: "വ്യത്യസ്ത കീവേഡുകൾ പരീക്ഷിക്കൂ അല്ലെങ്കിൽ ഫിൽട്ടർ മായ്ക്കൂ",
-  }
+  },
 
   pa: {
     welcome: "ਸੁਆਗਤ ਮਹਿਮਾਨ",
@@ -1235,7 +1235,7 @@ const TRANSLATIONS = Object.freeze({
     pgAC: "AC / Non-AC",
     noPropsFound: "ਕੋਈ ਜਾਇਦਾਦ ਨਹੀਂ ਮਿਲੀ",
     noPropsHint: "ਵੱਖਰੇ ਕੀਵਰਡ ਅਜ਼ਮਾਓ ਜਾਂ ਫਿਲਟਰ ਸਾਫ਼ ਕਰੋ",
-  }
+  },
 
   or: {
     welcome: "ସ୍ଵାଗତ ଅତିଥି",
