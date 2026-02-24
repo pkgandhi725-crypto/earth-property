@@ -1077,7 +1077,6 @@ function loadProperties(isLoadMore = false) {
     
     let query = db.collection("properties")
     .where("status", "==", "active")
-    .where("isExpired", "==", false)
     .orderBy("createdAt", "desc")
     .limit(ADS_PER_PAGE);
     
@@ -1086,7 +1085,15 @@ function loadProperties(isLoadMore = false) {
     }
     
     query.get().then(snap => {
-        const newAds = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+        // Filter out expired properties client-side
+        const now = new Date();
+        const newAds = snap.docs
+            .map(doc => ({id: doc.id, ...doc.data()}))
+            .filter(p => {
+                if (p.isExpired === true) return false;
+                if (p.expiryDate && p.expiryDate.toDate && p.expiryDate.toDate() < now) return false;
+                return true;
+            });
         
         if (isLoadMore) {
             allAds = [...allAds, ...newAds];
