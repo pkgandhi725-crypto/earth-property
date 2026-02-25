@@ -71,8 +71,29 @@
             font-size: 18px;
         }
     </style>
+    <script src="translations.js"></script>
+    <script src="lang.js"></script>
+
+<style>
+@keyframes fadeIn { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+</style>
 </head>
 <body>
+<!-- Toast Container -->
+<div id="toastContainer" style="position:fixed;top:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:8px;"></div>
+
+<!-- GPS Confirmation Modal -->
+<div id="gpsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:24px;max-width:320px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+    <div id="gpsModalIcon" style="font-size:40px;margin-bottom:12px;">📍</div>
+    <h3 id="gpsModalTitle" style="margin:0 0 10px;color:#2e7d32;font-size:17px;"></h3>
+    <p id="gpsModalDesc" style="font-size:13px;color:#555;margin:0 0 20px;line-height:1.5;"></p>
+    <button id="gpsYesBtn" onclick="confirmGPSCapture()" style="width:100%;padding:12px;background:#2e7d32;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:10px;"></button>
+    <button id="gpsSettingsBtn" onclick="openLocationSettings()" style="display:none;width:100%;padding:12px;background:#1565c0;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:10px;"></button>
+    <button onclick="closeGPSModal()" id="gpsManualBtn" style="width:100%;padding:10px;background:#f5f5f5;color:#333;border:none;border-radius:10px;font-size:14px;cursor:pointer;"></button>
+  </div>
+</div>
+
 
 <header>
     <div onclick="history.back()" style="cursor:pointer; padding:5px;"><i class="fa fa-arrow-left"></i></div>
@@ -115,9 +136,10 @@
         <label>Location</label>
         <div style="display: flex; gap: 10px; margin-bottom: 10px;">
             <button type="button" class="btn-small active" id="btnManual" onclick="useManualMode()">✍️ Manual Entry</button>
-            <button type="button" class="btn-small" id="btnGPS" onclick="captureGPSLocation()">📍 Use GPS</button>
+            <button type="button" class="btn-small" id="btnGPS" onclick="showGPSConfirmModal()">📍 Use GPS</button>
         </div>
         <input type="text" id="location" placeholder="Area, City, State">
+        <p id="gpsHintText" style="font-size:11px;color:#666;margin:4px 0 0;text-align:center;"></p>
         <div id="gpsInfo" class="gps-info"></div>
     </div>
 
@@ -294,9 +316,9 @@
     <button class="btn-post" id="postBtn" onclick="submitProperty()">Post Property</button>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 
 <script>
 const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
@@ -430,7 +452,7 @@ function captureGPSLocation() {
     document.getElementById('btnManual').classList.remove('active');
     
     if (!navigator.geolocation) {
-        alert('GPS not supported on your device. Please enter address manually.');
+        showToast('GPS not supported. Please enter address manually.', 'error');
         useManualMode();
         return;
     }
@@ -447,10 +469,10 @@ function captureGPSLocation() {
             showGPSInfo();
             document.getElementById('location').placeholder = "Now type your full address here";
             document.getElementById('location').focus();
-            alert('✓ GPS Captured! Now please type your full address in the location field.');
+            showToast('✓ GPS Captured! Now type your full address.', 'success');
         },
         function(error) {
-            alert('GPS failed: ' + error.message + '\nPlease enter address manually.');
+            showToast('GPS failed. Please enter address manually.', 'error');
             useManualMode();
         },
         {
@@ -491,7 +513,7 @@ function handleFile(e) {
     
     // File size validation (5MB limit)
     if(file.size > 5 * 1024 * 1024) {
-        alert("File too large! Maximum 5MB allowed.");
+        showToast('File too large! Maximum 5MB allowed.', 'error');
         e.target.value = '';
         return;
     }
@@ -556,9 +578,9 @@ async function submitProperty() {
     const finalImages = uploadedUrls.filter(u => u !== null);
 
     // Phone validation
-    if(!/^\d{10}$/.test(phone)) return alert("Enter valid 10-digit phone number");
+    if(!/^\d{10}$/.test(phone)) return showToast("Enter valid 10-digit phone number", "error");
     if(!title || price <= 0 || !location || finalImages.length === 0) {
-        return alert("Please fill all required fields:\n• Title\n• Price\n• Location\n• At least 1 photo");
+        return showToast("Please fill all required fields: Title, Price, Location, Images", "error")//t 1 photo");
     }
 
     const purpose = document.getElementById('purpose').value;
@@ -623,7 +645,7 @@ async function submitProperty() {
             // EDIT MODE: Only update editable fields
             // Protected fields (ownerId, createdAt, expiryDate, isExpired) remain unchanged
             await db.collection("properties").doc(editId).update(propertyData);
-            alert("Property Updated Successfully! ✓");
+            showToast('Property Updated Successfully! ✓', 'success');
         } else {
             // NEW POST: Set all fields including protected ones
             propertyData.ownerId = user.uid;
@@ -644,15 +666,134 @@ async function submitProperty() {
             }
             
             await db.collection("properties").add(propertyData);
-            alert("Property Posted Successfully! 🎉");
+            showToast('Property Posted Successfully! 🎉', 'success');
         }
         window.location.href = "my-ads.html";
     } catch(e) { 
-        alert("Error: " + e.message); 
+        showToast('Error: ' + e.message, 'error'); 
         document.getElementById('postBtn').disabled = false;
         document.getElementById('postBtn').innerText = editId ? "Update Property" : "Post Property";
     }
 }
+
+// ===== TOAST SYSTEM =====
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    const toast = document.createElement('div');
+    const colors = { success: '#2e7d32', error: '#c62828', info: '#1565c0' };
+    toast.style.cssText = `background:${colors[type]||colors.info};color:#fff;padding:12px 18px;border-radius:10px;font-size:14px;font-weight:500;box-shadow:0 4px 12px rgba(0,0,0,0.2);max-width:280px;animation:fadeIn 0.3s ease;`;
+    toast.textContent = message;
+    container.appendChild(toast);
+    const duration = type === 'error' ? 4000 : 2500;
+    setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, duration);
+}
+
+// ===== GPS MODAL SYSTEM =====
+function getT(key) {
+    const lang = localStorage.getItem('selectedLanguage') || 'en';
+    return (window.TRANSLATIONS && TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) 
+        ? TRANSLATIONS[lang][key] 
+        : (TRANSLATIONS && TRANSLATIONS['en'] && TRANSLATIONS['en'][key]) || key;
+}
+
+function showGPSConfirmModal() {
+    const modal = document.getElementById('gpsModal');
+    const title = document.getElementById('gpsModalTitle');
+    const desc = document.getElementById('gpsModalDesc');
+    const yesBtn = document.getElementById('gpsYesBtn');
+    const manualBtn = document.getElementById('gpsManualBtn');
+    const settingsBtn = document.getElementById('gpsSettingsBtn');
+    const icon = document.getElementById('gpsModalIcon');
+
+    // Check permission first
+    if (navigator.permissions) {
+        navigator.permissions.query({ name: 'geolocation' }).then(function(result) {
+            if (result.state === 'denied') {
+                icon.textContent = '🚫';
+                title.textContent = getT('gpsModalTitle') || 'Location Permission Denied';
+                desc.textContent = 'Please enable location permission from your browser/phone settings to use GPS.';
+                yesBtn.style.display = 'none';
+                settingsBtn.style.display = 'block';
+                settingsBtn.textContent = '⚙️ Open Settings Guide';
+            } else {
+                showNormalGPSModal(icon, title, desc, yesBtn, settingsBtn, manualBtn);
+            }
+            modal.style.display = 'flex';
+        }).catch(function() {
+            showNormalGPSModal(icon, title, desc, yesBtn, settingsBtn, manualBtn);
+            modal.style.display = 'flex';
+        });
+    } else {
+        showNormalGPSModal(icon, title, desc, yesBtn, settingsBtn, manualBtn);
+        modal.style.display = 'flex';
+    }
+}
+
+function showNormalGPSModal(icon, title, desc, yesBtn, settingsBtn, manualBtn) {
+    icon.textContent = '📍';
+    title.textContent = getT('gpsModalTitle') || 'Are you at the property?';
+    desc.textContent = getT('gpsModalDesc') || 'GPS captures YOUR current location. Use only if standing at the property.';
+    yesBtn.style.display = 'block';
+    yesBtn.textContent = getT('gpsYesBtn') || "Yes, I'm at the property";
+    settingsBtn.style.display = 'none';
+    manualBtn.textContent = getT('gpsManualBtn') || 'Enter Address Manually';
+}
+
+function closeGPSModal() {
+    document.getElementById('gpsModal').style.display = 'none';
+}
+
+function openLocationSettings() {
+    closeGPSModal();
+    showToast('Go to Settings → Privacy → Location → Enable for your browser', 'info');
+}
+
+function confirmGPSCapture() {
+    closeGPSModal();
+    document.getElementById('btnGPS').classList.add('active');
+    document.getElementById('btnManual').classList.remove('active');
+    if (!navigator.geolocation) {
+        showToast('GPS not supported. Please enter address manually.', 'error');
+        useManualMode();
+        return;
+    }
+    document.getElementById('location').placeholder = "📍 Capturing GPS location...";
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            currentCoords = { lat: position.coords.latitude, lng: position.coords.longitude };
+            showGPSInfo();
+            document.getElementById('location').placeholder = "Now type your full address here";
+            document.getElementById('location').focus();
+            showToast('✓ GPS Captured! Now type your full address.', 'success');
+        },
+        function(error) {
+            if (error.code === 1) {
+                showToast('Location permission denied. Please enable in settings.', 'error');
+            } else {
+                showToast('GPS failed. Please enter address manually.', 'error');
+            }
+            useManualMode();
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+}
+
+// Set GPS hint text based on language
+function setGPSHint() {
+    const el = document.getElementById('gpsHintText');
+    if (el) el.textContent = getT('gpsHint') || 'Use GPS only if you are standing at the property location right now';
+}
+
+// Init GPS hint on page load
+document.addEventListener('DOMContentLoaded', function() {
+    setGPSHint();
+    // Re-set hint if language changes
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'selectedLanguage') setGPSHint();
+    });
+});
+
 </script>
 </body>
 </html>
