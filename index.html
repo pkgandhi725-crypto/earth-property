@@ -44,7 +44,6 @@
         }
         .verified-badge i { font-size: 10px; }
 
-        /* ===== SIDEBAR FIX ===== */
         .drawer {
             position: fixed; top: 0; left: -285px; width: 280px; height: 100%;
             background: white; z-index: 5000;
@@ -150,7 +149,6 @@
             position: absolute; bottom: 5px; text-decoration: none; cursor: pointer;
         }
 
-        /* ===== OVERLAY FIX ===== */
         .overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.5);
             z-index: 4500; display: none; backdrop-filter: blur(2px);
@@ -184,7 +182,32 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* ===== FILTER BUTTONS ===== */
+        /* ===== SKELETON LOADING (Flash Fix) ===== */
+        .skeleton-card {
+            background: white; border-radius: 15px; margin: 15px 12px;
+            overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .skeleton-img {
+            width: 100%; height: 210px;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        .skeleton-info { padding: 15px; }
+        .skeleton-line {
+            height: 14px; border-radius: 7px; margin-bottom: 10px;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        .skeleton-line.short { width: 60%; }
+        .skeleton-line.medium { width: 80%; }
+        .skeleton-line.tall { height: 40px; border-radius: 10px; margin-top: 15px; }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
         .filter-btn {
             padding: 7px 16px; border-radius: 20px; border: 2px solid #ddd;
             background: white; color: #555; font-size: 12px; font-weight: 700;
@@ -267,7 +290,6 @@
 <header>
     <div class="header-top">
         <div class="logo-area">
-            <!-- ===== HAMBURGER FIX: button tag instead of i tag ===== -->
             <button onclick="toggleDrawer()" style="background:none; border:none; color:white; font-size:22px; cursor:pointer; padding:4px; line-height:1;">
                 <i class="fa fa-bars"></i>
             </button>
@@ -316,7 +338,7 @@
     <div style="background:#000; color:#ffd700; padding:8px 16px; border-radius:20px; font-size:12px; font-weight:800;" id="postNowEl">POST NOW &rarr;</div>
 </div>
 
-<!-- ===== FILTER PANEL FIX ===== -->
+<!-- Filter Panel -->
 <div style="background:white; padding:12px 15px; border-bottom:1px solid #eee; overflow-x:auto; -webkit-overflow-scrolling:touch;">
     <div style="display:flex; gap:8px; min-width:max-content;">
         <button class="filter-btn active-filter" id="filter-all" onclick="setFilter('all')">
@@ -340,8 +362,35 @@
     </div>
 </div>
 
+<!-- FIX: Skeleton shown by default, replaced when data loads -->
 <div id="propertyList">
-    <center style="margin-top:50px; color:#888;">Loading properties...</center>
+    <div class="skeleton-card">
+        <div class="skeleton-img"></div>
+        <div class="skeleton-info">
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line tall"></div>
+        </div>
+    </div>
+    <div class="skeleton-card">
+        <div class="skeleton-img"></div>
+        <div class="skeleton-info">
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line tall"></div>
+        </div>
+    </div>
+    <div class="skeleton-card">
+        <div class="skeleton-img"></div>
+        <div class="skeleton-info">
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line medium"></div>
+            <div class="skeleton-line short"></div>
+            <div class="skeleton-line tall"></div>
+        </div>
+    </div>
 </div>
 
 <div id="loadMoreContainer" class="load-more-container" style="display:none;">
@@ -374,7 +423,6 @@
     </a>
 </nav>
 
-<!-- ===== FIREBASE VERSION FIX: 10.x.x ===== -->
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -382,7 +430,6 @@
 
 <script>
 // ===== TRANSLATIONS FALLBACK =====
-// Agar translations.js load na ho toh crash na ho
 if (typeof TRANSLATIONS === 'undefined') {
     window.TRANSLATIONS = {
         en: {
@@ -412,7 +459,6 @@ const firebaseConfig = {
     projectId: "earth-properties-c3c56"
 };
 
-// Firebase double-init guard
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
@@ -421,7 +467,6 @@ const auth = firebase.auth();
 
 const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
 
-// Global Variables
 let allAds = [];
 let displayedAds = [];
 let currentImages = [];
@@ -431,18 +476,17 @@ let currentUser = null;
 let currentUserData = null;
 let userFavorites = [];
 
-// Lazy Loading
 let lastVisible = null;
 let isLoading = false;
 let hasMoreAds = true;
 const ADS_PER_PAGE = 20;
 
-// Card swipe tracking — SINGLE declaration (bug fix)
-const cardImgIndexes = {};
+// ===== FIX 1: isDataLoaded flag — "No Properties Found" tab tak nahi dikhega jab tak data load na ho =====
+let isDataLoaded = false;
 
+const cardImgIndexes = {};
 let searchTimeout;
 
-// ===== LANGUAGES =====
 const languages = [
     { code: 'en', name: 'English', flag: '🇬🇧' },
     { code: 'hi', name: 'हिंदी', flag: '🇮🇳' },
@@ -475,7 +519,6 @@ const languages = [
     { code: 'sw', name: 'Swahili', flag: '🇰🇪' }
 ];
 
-// ===== GEOLOCATION =====
 if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
         pos => {
@@ -488,6 +531,7 @@ if (navigator.geolocation) {
         () => console.log('Location unavailable')
     );
 }
+
 function calculateDistance(lat1, lon1, lat2, lon2) {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -498,6 +542,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 
 function sortByProximity(ads) {
     if (!userLocation) return ads;
+    // FIX 2: [...ads] spread so original array mutate na ho
     return [...ads].sort((a, b) => {
         const dA = (a.latitude && a.longitude) ? calculateDistance(userLocation.lat, userLocation.lng, a.latitude, a.longitude) : Infinity;
         const dB = (b.latitude && b.longitude) ? calculateDistance(userLocation.lat, userLocation.lng, b.latitude, b.longitude) : Infinity;
@@ -505,7 +550,6 @@ function sortByProximity(ads) {
     });
 }
 
-// ===== GALLERY =====
 function openGallery(images, startIndex) {
     currentImages = images;
     currentImageIndex = startIndex || 0;
@@ -543,7 +587,6 @@ function updateGalleryDots() {
     });
 }
 
-// Gallery swipe
 let touchStartX = 0, touchEndX = 0;
 document.addEventListener('DOMContentLoaded', () => {
     const galleryImg = document.getElementById('galleryImage');
@@ -555,13 +598,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: true });
 
     window.addEventListener('popstate', () => {
-        if (document.getElementById('galleryModal').classList.contains('active')) { closeGallery(); window.history.pushState(null, null, window.location.href); }
-        else if (document.getElementById('sideDrawer').classList.contains('open')) { toggleDrawer(); }
+        if (document.getElementById('galleryModal').classList.contains('active')) {
+            closeGallery();
+            window.history.pushState(null, null, window.location.href);
+        } else if (document.getElementById('sideDrawer').classList.contains('open')) {
+            toggleDrawer();
+        }
     });
     window.history.pushState(null, null, window.location.href);
 });
 
-// ===== SIDEBAR (HAMBURGER) =====
 function toggleDrawer() {
     const drawer = document.getElementById('sideDrawer');
     const overlay = document.getElementById('overlay');
@@ -571,7 +617,6 @@ function toggleDrawer() {
     if (isOpening) window.history.pushState({ drawer: true }, null, window.location.href);
 }
 
-// ===== LANGUAGE DROPDOWN =====
 function loadLanguageDropdown() {
     const dropdown = document.getElementById('langDropdown');
     const currentLang = localStorage.getItem('selectedLang') || 'en';
@@ -587,14 +632,12 @@ function loadLanguageDropdown() {
 
 function handleLanguageChange() {
     const lang = document.getElementById('langDropdown').value;
-    // ===== FIXED: localStorage instead of sessionStorage so lang persists =====
     localStorage.setItem('selectedLang', lang);
     applyLanguage();
     const langName = languages.find(l => l.code === lang)?.name || 'Language';
     showToast(`✓ Language changed to ${langName}`);
 }
 
-// ===== TOAST =====
 function showToast(message) {
     const toast = document.createElement('div');
     toast.className = 'toast';
@@ -611,10 +654,9 @@ function showAboutAlert() {
 
 function getT() {
     const lang = localStorage.getItem('selectedLang') || 'en';
-    return (TRANSLATIONS[lang] || TRANSLATIONS['en'] || TRANSLATIONS['en']);
+    return (TRANSLATIONS[lang] || TRANSLATIONS['en']);
 }
 
-// ===== VERIFICATION STATUS =====
 function updateVerificationStatus(isVerified) {
     const statusDiv = document.getElementById('verificationStatus');
     const t = getT();
@@ -632,7 +674,6 @@ function updateVerificationStatus(isVerified) {
     statusDiv.style.display = 'block';
 }
 
-// ===== APPLY LANGUAGE =====
 function applyLanguage() {
     const t = getT();
     const user = auth.currentUser;
@@ -680,20 +721,19 @@ function applyLanguage() {
     setT('filterCommercialEl', 'filterCommercial', 'Commercial');
     setT('filterPGEl', 'filterPG', 'PG/Hostel');
 
-    renderAds(displayedAds);
+    // FIX 3: applyLanguage mein renderAds sirf tabhi call karo jab data load ho chuka ho
+    if (isDataLoaded) renderAds(displayedAds);
 }
 
-// ===== PROFILE PHOTO =====
 function updateProfilePhoto(photoURL) {
     const circle = document.getElementById('profilePhotoCircle');
     circle.innerHTML = photoURL ? `<img src="${photoURL}" alt="Profile">` : '<i class="fa fa-user-circle"></i>';
 }
 
-// ===== FAVORITES =====
 function loadUserFavorites(uid) {
     db.collection("favorites").where("userId", "==", uid).onSnapshot(snap => {
         userFavorites = snap.docs.map(d => d.data().propertyId);
-        renderAds(displayedAds);
+        if (isDataLoaded) renderAds(displayedAds);
     });
 }
 
@@ -704,11 +744,13 @@ async function toggleFavorite(propId) {
     try {
         const q = await db.collection("favorites").where("userId", "==", currentUser.uid).where("propertyId", "==", propId).get();
         if (!q.empty) { await q.docs[0].ref.delete(); showToast('Removed from favorites'); }
-        else { await db.collection("favorites").add({ userId: currentUser.uid, propertyId: propId, addedAt: firebase.firestore.FieldValue.serverTimestamp() }); showToast('Added to favorites ❤️'); }
+        else {
+            await db.collection("favorites").add({ userId: currentUser.uid, propertyId: propId, addedAt: firebase.firestore.FieldValue.serverTimestamp() });
+            showToast('Added to favorites ❤️');
+        }
     } catch (e) { console.error(e); showToast('Error updating favorites'); }
 }
 
-// ===== NOTIFICATIONS =====
 function listenForNotifications(uid) {
     db.collection("notifications").where("recipientId", "==", uid).where("read", "==", false).onSnapshot(snap => {
         const badge = document.getElementById('bellBadge');
@@ -717,7 +759,6 @@ function listenForNotifications(uid) {
     });
 }
 
-// ===== AUTH =====
 auth.onAuthStateChanged(user => {
     currentUser = user;
     const logoutBtn = document.getElementById('logoutBtn');
@@ -776,9 +817,6 @@ function handleLogout() {
     if (confirm('Are you sure you want to logout?')) auth.signOut().then(() => location.reload());
 }
 
-// ===== LOAD PROPERTIES (FIXED FIRESTORE QUERY) =====
-// NOTE: Firebase console mein ye composite index banana hoga:
-// Collection: properties | Fields: status ASC, isExpired ASC, createdAt DESC
 function loadProperties(isLoadMore = false) {
     if (isLoading) return;
     isLoading = true;
@@ -789,8 +827,6 @@ function loadProperties(isLoadMore = false) {
         loadMoreBtn.innerHTML = '<span class="loading-spinner"></span>';
     }
 
-    // ===== PROPERTY QUERY =====
-    // Simple query to avoid composite index issues — filter expired client-side
     let query = db.collection("properties")
         .where("status", "==", "active")
         .orderBy("createdAt", "desc")
@@ -799,7 +835,6 @@ function loadProperties(isLoadMore = false) {
     if (isLoadMore && lastVisible) query = query.startAfter(lastVisible);
 
     query.get().then(snap => {
-        // Filter isExpired client side to avoid compound index requirement
         const newAds = snap.docs
             .map(doc => ({ id: doc.id, ...doc.data() }))
             .filter(ad => ad.isExpired !== true);
@@ -823,6 +858,8 @@ function loadProperties(isLoadMore = false) {
 
         if (userLocation) displayedAds = sortByProximity(displayedAds);
 
+        // FIX 1: Data load ho gaya, ab render karo
+        isDataLoaded = true;
         renderAds(displayedAds, isLoadMore);
         isLoading = false;
 
@@ -832,6 +869,7 @@ function loadProperties(isLoadMore = false) {
         }
     }).catch(err => {
         console.error('Firestore error:', err);
+        isDataLoaded = true; // Error pe bhi flag set karo
         document.getElementById('propertyList').innerHTML =
             '<center style="margin-top:50px; color:#d32f2f; padding:20px;">❌ Error loading properties.<br><small>' + err.message + '</small></center>';
         isLoading = false;
@@ -843,10 +881,12 @@ function loadMoreProperties() {
     if (hasMoreAds && !isLoading) loadProperties(true);
 }
 
-// ===== RENDER ADS =====
 function renderAds(ads, append = false) {
     const list = document.getElementById('propertyList');
     const t = getT();
+
+    // FIX 1: Jab tak data load nahi hua, skeleton dikhao — "No Properties Found" mat dikhao
+    if (!isDataLoaded) return;
 
     if (!ads || ads.length === 0) {
         if (append) return;
@@ -878,10 +918,6 @@ function renderAds(ads, append = false) {
         const safeId = sanitize(p.id);
         const safeTitle = sanitize(p.title) || 'Untitled Property';
         const safeLocation = sanitize(p.location) || 'Location not specified';
-        const safePhone = sanitize(p.phone) || '';
-        const safeOwnerId = sanitize(p.ownerId) || '';
-        // Store images as data attribute to avoid innerHTML injection
-        const imgJson = JSON.stringify(images);
 
         const purposeColors = {
             'Sell': { bg: '#e8f5e9', color: '#2e7d32' },
@@ -936,8 +972,6 @@ function renderAds(ads, append = false) {
 
         list.appendChild(card);
 
-        // ===== ATTACH EVENTS (no inline onclick with raw data — XSS safe) =====
-        // Image tap → gallery
         document.getElementById('imgbox-' + safeId).addEventListener('click', e => {
             if (e.target.closest('.card-actions')) return;
             openGallery(images, cardImgIndexes[safeId] || 0);
@@ -957,12 +991,10 @@ function renderAds(ads, append = false) {
         document.getElementById('wa-' + safeId).addEventListener('click', () => contact(p.phone, 'wa', p.title || ''));
         document.getElementById('chat-' + safeId).addEventListener('click', () => location.href = 'chat.html?to=' + encodeURIComponent(p.ownerId || ''));
 
-        // Card swipe for multiple images
         if (images.length > 1) setupCardSwipe(safeId, images);
     });
 }
 
-// ===== CARD SWIPE (single declaration, bug fixed) =====
 function setupCardSwipe(id, images) {
     cardImgIndexes[id] = 0;
     const box = document.getElementById('imgbox-' + id);
@@ -999,15 +1031,14 @@ function setupCardSwipe(id, images) {
     });
 }
 
-// ===== FILTER SYSTEM (FIXED) =====
 let activeFilter = 'all';
 function setFilter(type) {
     activeFilter = type;
     ['all','buy','rent','plot','commercial','pg'].forEach(f => {
         const btn = document.getElementById('filter-' + f);
         if (!btn) return;
-        if (f === type) { btn.classList.add('active-filter'); }
-        else { btn.classList.remove('active-filter'); }
+        if (f === type) btn.classList.add('active-filter');
+        else btn.classList.remove('active-filter');
     });
     applyFilterAndSearch();
 }
@@ -1042,13 +1073,11 @@ function applyFilterAndSearch() {
         (activeFilter === 'all' && !val && hasMoreAds) ? 'block' : 'none';
 }
 
-// ===== SEARCH with debounce =====
 function filterAds() {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(applyFilterAndSearch, 300);
 }
 
-// ===== CONTACT =====
 function contact(num, type, title) {
     if (!num || num === 'undefined' || num === 'null' || String(num).trim() === '') {
         showToast('No contact number available'); return;
@@ -1064,7 +1093,6 @@ function contact(num, type, title) {
     }
 }
 
-// ===== SHARE =====
 function shareProperty(propId, title) {
     const url = `${window.location.origin}/property-detail.html?id=${propId}`;
     const text = title + ' - Earth Property Global';
@@ -1083,7 +1111,6 @@ function shareProperty(propId, title) {
     }
 }
 
-// ===== XSS SANITIZE =====
 function sanitize(str) {
     if (str == null) return '';
     return String(str)
@@ -1094,7 +1121,6 @@ function sanitize(str) {
         .replace(/'/g, '&#x27;');
 }
 
-// ===== INIT =====
 loadLanguageDropdown();
 applyLanguage();
 </script>
