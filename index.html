@@ -647,10 +647,20 @@ function showToast(message) {
     setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 2500);
 }
 
-function showAboutAlert() {
-    const t = getT();
-    alert(`${t.aboutUs || 'About Us'}\n\nEarth Property Global - Your trusted real estate partner worldwide.`);
+function showAboutAlert(){
+  document.getElementById("aboutModal").style.display="flex";
 }
+
+function closeAboutModal(){
+  document.getElementById("aboutModal").style.display="none";
+}
+
+document.addEventListener("click",function(e){
+  const modal=document.getElementById("aboutModal");
+  if(modal && e.target===modal){
+    closeAboutModal();
+  }
+});
 
 function getT() {
     const lang = localStorage.getItem('selectedLang') || 'en';
@@ -1124,5 +1134,94 @@ function sanitize(str) {
 loadLanguageDropdown();
 applyLanguage();
 </script>
+    <div id="aboutModal" style="
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.55);
+backdrop-filter:blur(4px);
+display:none;
+justify-content:center;
+align-items:center;
+z-index:9999;
+">
+
+  <div style="
+  background:#fff;
+  width:92%;
+  max-width:420px;
+  border-radius:16px;
+  padding:22px;
+  box-shadow:0 12px 40px rgba(0,0,0,0.25);
+  animation:aboutSlideUp 0.35s ease;
+  ">
+
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+
+      <div style="
+      font-size:19px;
+      font-weight:800;
+      color:#2e7d32;
+      ">
+        Earth Property Global
+      </div>
+
+      <div onclick="closeAboutModal()" style="
+      font-size:26px;
+      cursor:pointer;
+      color:#666;
+      ">
+        &times;
+      </div>
+
+    </div>
+
+    <div style="
+    margin-top:15px;
+    font-size:14px;
+    color:#333;
+    line-height:1.6;
+    ">
+
+      Earth Property Global is your trusted real estate platform to buy,
+      sell, and rent properties worldwide.
+
+      <br><br>
+
+      Our mission is to make property transactions simple, secure, and accessible.
+
+      <div style="
+      margin-top:18px;
+      padding:12px;
+      background:#f1f3f4;
+      border-radius:10px;
+      font-weight:700;
+      ">
+
+        📧 Contact:
+        <a href="mailto:contact@theearthproperty.com"
+        style="color:#2e7d32;text-decoration:none;">
+        contact@theearthproperty.com
+        </a>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<style>
+@keyframes aboutSlideUp{
+from{
+transform:translateY(40px);
+opacity:0;
+}
+to{
+transform:translateY(0);
+opacity:1;
+}
+}
+</style>
 </body>
 </html>
