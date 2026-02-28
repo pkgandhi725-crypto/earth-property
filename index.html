@@ -22,6 +22,10 @@
     <meta name="googlebot" content="index, follow, max-image-preview:large">
     <meta name="author" content="Earth Property Global">
 
+    <!-- PWA Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
     <!-- hreflang for global users -->
     <link rel="alternate" hreflang="x-default" href="https://theearthproperty.com/">
     <link rel="alternate" hreflang="en" href="https://theearthproperty.com/">
@@ -86,6 +90,17 @@
         "contactType": "customer support"
       },
       "sameAs": []
+    }
+    </script>
+
+    <!-- Organization Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Earth Property Global",
+      "url": "https://theearthproperty.com",
+      "logo": "https://theearthproperty.com/logo.png"
     }
     </script>
 
@@ -460,7 +475,7 @@ opacity:1;
     </div>
 </div>
 
-<!-- FIX: Skeleton shown by default, replaced when data loads -->
+<!-- Skeleton shown by default, replaced when data loads -->
 <div id="propertyList">
     <div class="skeleton-card">
         <div class="skeleton-img"></div>
