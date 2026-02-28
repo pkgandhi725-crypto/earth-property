@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin.html
+Disallow: /profile.html
+Disallow: /favorites.html
+Disallow: /chat.html
+Disallow: /notifications.html
+Disallow: /my-ads.html
+
+Sitemap: https://theearthproperty.com/sitemap.xml
