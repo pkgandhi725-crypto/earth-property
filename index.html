@@ -19,7 +19,16 @@
     <meta name="description" content="Earth Property Global is an international real estate platform to buy, sell and rent properties worldwide. Post free listings and connect with buyers and sellers globally.">
     <meta name="keywords" content="buy property, sell property, rent property, real estate, property worldwide, earth property global, India property">
     <meta name="robots" content="index, follow">
+    <meta name="googlebot" content="max-image-preview:large">
     <meta name="author" content="Earth Property Global">
+
+    <!-- hreflang for global users -->
+    <link rel="alternate" hreflang="x-default" href="https://theearthproperty.com/">
+    <link rel="alternate" hreflang="en" href="https://theearthproperty.com/">
+    <link rel="alternate" hreflang="hi" href="https://theearthproperty.com/">
+    <link rel="alternate" hreflang="ar" href="https://theearthproperty.com/">
+    <link rel="alternate" hreflang="es" href="https://theearthproperty.com/">
+    <link rel="alternate" hreflang="fr" href="https://theearthproperty.com/">
 
     <!-- Canonical URL -->
     <link rel="canonical" href="https://theearthproperty.com/">
@@ -41,10 +50,22 @@
     <meta name="twitter:description" content="International real estate platform for buying, selling and renting properties worldwide. Post free listings today.">
     <meta name="twitter:image" content="https://theearthproperty.com/logo.png">
 
-    <!-- Favicon -->
-    <link rel="icon" href="https://theearthproperty.com/favicon.ico" type="image/x-icon">
+    <!-- Theme Color (mobile browser bar green hogi) -->
+    <meta name="theme-color" content="#2e7d32">
+
+    <!-- Preload logo for faster loading -->
+    <link rel="preload" as="image" href="/logo.png">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- Favicon (Correct Version) -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
-    <link rel="apple-touch-icon" href="/favicon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/logo.png">
+
+    <!-- Logo meta (Google logo boost) -->
+    <link rel="image_src" href="https://theearthproperty.com/logo.png">
 
     <!-- Schema Markup - Real Estate -->
     <script type="application/ld+json">
@@ -67,6 +88,19 @@
       "sameAs": []
     }
     </script>
+
+    <!-- Preconnect for faster loading -->
+    <link rel="preconnect" href="https://www.googletagmanager.com">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://www.gstatic.com">
+
+    <!-- Noscript SEO fallback (Google sahi description dikhayega) -->
+    <noscript>
+        <style>body { font-family: sans-serif; padding: 20px; }</style>
+        <h1>Earth Property Global – Buy, Sell &amp; Rent Properties Worldwide</h1>
+        <p>Earth Property Global is an international real estate platform to buy, sell and rent properties worldwide. Post free listings and connect with buyers and sellers globally.</p>
+        <p>Find verified properties to buy, sell or rent. Trusted real estate platform with secure listings worldwide.</p>
+    </noscript>
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -1258,5 +1292,27 @@ z-index:9999;
       ">
 
         📧 Contact:
-        <a href="/cdn-cgi/l/email-protection#9ffcf0f1ebfefcebdfebf7fafafeedebf7efedf0effaedebe6b1fcf0f2" style="color:#2e7d32;text-decoration:none;">
-        <span class="__cf_email__" data-cfemail="f3909c9d87929087b38
+        <span id="contactEmailLink"></span>
+        <script>
+          document.getElementById('contactEmailLink').innerHTML =
+            '<a href="mailto:contact@theearthproperty.com" style="color:#2e7d32;text-decoration:none;">contact@theearthproperty.com</a>';
+        </script>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Service Worker Registration (PWA) -->
+<script>
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/sw.js").then(() => {
+        console.log("SW registered");
+    }).catch(() => {});
+}
+</script>
+
+</body>
+</html>
