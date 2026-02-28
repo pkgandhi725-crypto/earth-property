@@ -9,14 +9,68 @@
         gtag('js', new Date());
         gtag('config', 'G-KMJTJMHQF0');
     </script>
+
+    <!-- Basic SEO -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Buy, Sell &amp; Rent Property Online | Earth Property Global</title>
-    <meta name="description" content="Earth Property Global — Find verified properties to buy, sell or rent across India and worldwide. Trusted real estate platform with secure listings.">
-    <meta name="keywords" content="property, real estate, buy property, sell property, rent property, India property">
-    <meta property="og:title" content="Earth Property Global — Buy, Sell &amp; Rent Property">
-    <meta property="og:description" content="Find verified properties across India and worldwide.">
+
+    <title>Earth Property Global – Buy, Sell &amp; Rent Properties Worldwide</title>
+
+    <meta name="description" content="Earth Property Global is an international real estate platform to buy, sell and rent properties worldwide. Post free listings and connect with buyers and sellers globally.">
+    <meta name="keywords" content="buy property, sell property, rent property, real estate, property worldwide, earth property global, India property">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Earth Property Global">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://theearthproperty.com/">
+
+    <!-- Open Graph (Facebook, WhatsApp, LinkedIn) -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://theearthproperty.com/">
+    <meta property="og:title" content="Earth Property Global – Buy, Sell &amp; Rent Properties Worldwide">
+    <meta property="og:description" content="Find verified properties worldwide. Buy, sell or rent easily with Earth Property Global. Post free listings and connect globally.">
+    <meta property="og:image" content="https://theearthproperty.com/logo.png">
+    <meta property="og:image:width" content="512">
+    <meta property="og:image:height" content="512">
+    <meta property="og:site_name" content="Earth Property Global">
+
+    <!-- Twitter SEO -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@theearthproperty">
+    <meta name="twitter:title" content="Earth Property Global – Buy, Sell &amp; Rent Properties Worldwide">
+    <meta name="twitter:description" content="International real estate platform for buying, selling and renting properties worldwide. Post free listings today.">
+    <meta name="twitter:image" content="https://theearthproperty.com/logo.png">
+
+    <!-- Favicon -->
+    <link rel="icon" href="https://theearthproperty.com/favicon.ico" type="image/x-icon">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/favicon.png">
+
+    <!-- Schema Markup - Real Estate -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "RealEstateAgent",
+      "name": "Earth Property Global",
+      "url": "https://theearthproperty.com/",
+      "logo": "https://theearthproperty.com/logo.png",
+      "description": "Earth Property Global is an international real estate platform to buy, sell and rent properties worldwide.",
+      "areaServed": {
+        "@type": "Place",
+        "name": "Worldwide"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "contact@theearthproperty.com",
+        "contactType": "customer support"
+      },
+      "sameAs": []
+    }
+    </script>
+
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
         :root { --primary: #2e7d32; --bg: #f0f2f5; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -491,7 +545,6 @@ let isLoading = false;
 let hasMoreAds = true;
 const ADS_PER_PAGE = 20;
 
-// ===== FIX 1: isDataLoaded flag — "No Properties Found" tab tak nahi dikhega jab tak data load na ho =====
 let isDataLoaded = false;
 
 const cardImgIndexes = {};
@@ -552,7 +605,6 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 
 function sortByProximity(ads) {
     if (!userLocation) return ads;
-    // FIX 2: [...ads] spread so original array mutate na ho
     return [...ads].sort((a, b) => {
         const dA = (a.latitude && a.longitude) ? calculateDistance(userLocation.lat, userLocation.lng, a.latitude, a.longitude) : Infinity;
         const dB = (b.latitude && b.longitude) ? calculateDistance(userLocation.lat, userLocation.lng, b.latitude, b.longitude) : Infinity;
@@ -741,7 +793,6 @@ function applyLanguage() {
     setT('filterCommercialEl', 'filterCommercial', 'Commercial');
     setT('filterPGEl', 'filterPG', 'PG/Hostel');
 
-    // FIX 3: applyLanguage mein renderAds sirf tabhi call karo jab data load ho chuka ho
     if (isDataLoaded) renderAds(displayedAds);
 }
 
@@ -878,7 +929,6 @@ function loadProperties(isLoadMore = false) {
 
         if (userLocation) displayedAds = sortByProximity(displayedAds);
 
-        // FIX 1: Data load ho gaya, ab render karo
         isDataLoaded = true;
         renderAds(displayedAds, isLoadMore);
         isLoading = false;
@@ -889,7 +939,7 @@ function loadProperties(isLoadMore = false) {
         }
     }).catch(err => {
         console.error('Firestore error:', err);
-        isDataLoaded = true; // Error pe bhi flag set karo
+        isDataLoaded = true;
         document.getElementById('propertyList').innerHTML =
             '<center style="margin-top:50px; color:#d32f2f; padding:20px;">❌ Error loading properties.<br><small>' + err.message + '</small></center>';
         isLoading = false;
@@ -905,7 +955,6 @@ function renderAds(ads, append = false) {
     const list = document.getElementById('propertyList');
     const t = getT();
 
-    // FIX 1: Jab tak data load nahi hua, skeleton dikhao — "No Properties Found" mat dikhao
     if (!isDataLoaded) return;
 
     if (!ads || ads.length === 0) {
@@ -1144,7 +1193,8 @@ function sanitize(str) {
 loadLanguageDropdown();
 applyLanguage();
 </script>
-    <div id="aboutModal" style="
+
+<div id="aboutModal" style="
 position:fixed;
 inset:0;
 background:rgba(0,0,0,0.55);
@@ -1208,19 +1258,5 @@ z-index:9999;
       ">
 
         📧 Contact:
-        <a href="mailto:contact@theearthproperty.com"
-        style="color:#2e7d32;text-decoration:none;">
-        contact@theearthproperty.com
-        </a>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
-
-
-</body>
-</html>
+        <a href="/cdn-cgi/l/email-protection#9ffcf0f1ebfefcebdfebf7fafafeedebf7efedf0effaedebe6b1fcf0f2" style="color:#2e7d32;text-decoration:none;">
+        <span class="__cf_email__" data-cfemail="f3909c9d87929087b38
