@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en">
 <head>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-KMJTJMHQF0"></script>
@@ -790,16 +790,6 @@ function updateVerificationStatus(isVerified) {
 }
 
 function applyLanguage() {
-    // ✅ RTL Fix: Arabic & Urdu ke liye RTL direction set karo
-    const lang = localStorage.getItem('selectedLang') || 'en';
-    if (lang === 'ar' || lang === 'ur') {
-        document.documentElement.dir = 'rtl';
-        document.documentElement.lang = lang;
-    } else {
-        document.documentElement.dir = 'ltr';
-        document.documentElement.lang = lang;
-    }
-
     const t = getT();
     const user = auth.currentUser;
 
@@ -1275,11 +1265,20 @@ applyLanguage();
       Our mission is to make property transactions simple, secure, and accessible.
       <div style="margin-top:18px;padding:12px;background:#f1f3f4;border-radius:10px;font-weight:700;">
         📧 Contact:
-        <a href="/cdn-cgi/l/email-protection#cdaea2a3b9acaeb98db9a5a8a8acbfb9a5bdbfa2bda8bfb9b4e3aea2a0" style="color:#2e7d32;text-decoration:none;"><span class="__cf_email__" data-cfemail="0c6f6362786d6f784c786469696d7e78647c7e637c697e7875226f6361">[email&#160;protected]</span></a>
+        <a href="mailto:contact@theearthproperty.com" style="color:#2e7d32;text-decoration:none;">contact@theearthproperty.com</a>
       </div>
     </div>
   </div>
 </div>
 
 <!-- Service Worker Registration (PWA) -->
-<script data-cfasync="false" src="/cdn-cgi/
+<script>
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/sw.js").then(() => {
+        console.log("SW registered");
+    }).catch(() => {});
+}
+</script>
+
+</body>
+</html>
