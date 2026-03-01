@@ -319,16 +319,10 @@
         .filter-btn.active-filter {
             background: #2e7d32; color: white; border-color: #2e7d32;
         }
-@keyframes aboutSlideUp{
-from{
-transform:translateY(40px);
-opacity:0;
-}
-to{
-transform:translateY(0);
-opacity:1;
-}
-}
+        @keyframes aboutSlideUp {
+            from { transform: translateY(40px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -434,7 +428,8 @@ opacity:1;
 <!-- Hero Banner -->
 <div style="background:linear-gradient(135deg,#1b5e20,#2e7d32); color:white; padding:20px 15px; text-align:center;">
     <div id="heroTitleEl" style="font-size:21px; font-weight:800; margin-bottom:5px; letter-spacing:0.3px;">Find Your Dream Property</div>
-    <div id="heroSubtitleEl" style="font-size:13px; opacity:0.9; margin-bottom:15px;">International real estate platform to buy, sell & rent properties worldwide. Post free listings, connect with buyers and sellers globally</div>
+    <!-- ✅ FIX 1: heroSubtitleEl ab heroBuyRent key se translate hoga -->
+    <div id="heroSubtitleEl" style="font-size:13px; opacity:0.9; margin-bottom:15px;">Buy • Sell • Rent — Verified Listings Worldwide</div>
     <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap; font-size:11px; font-weight:700; opacity:0.95;">
         <span><i class="fa fa-check-circle" style="margin-right:4px;"></i><span id="trustVerifiedEl">Verified Listings</span></span>
         <span><i class="fa fa-shield-alt" style="margin-right:4px;"></i><span id="trustSecureEl">Secure Platform</span></span>
@@ -446,7 +441,7 @@ opacity:1;
 <div style="background:linear-gradient(135deg,#ffd700,#ffa500); padding:12px 15px; display:flex; align-items:center; justify-content:space-between; cursor:pointer;" onclick="location.href='add-property.html'">
     <div>
         <div style="font-weight:800; font-size:14px; color:#000;"><i class="fa fa-home" style="margin-right:6px;"></i><span id="postFreeEl">Post Property FREE</span></div>
-        <div style="font-size:11px; color:#333; margin-top:2px;">Reach thousands of buyers instantly</div>
+        <div style="font-size:11px; color:#333; margin-top:2px;" id="ctaDescEl">Reach thousands of buyers instantly</div>
     </div>
     <div style="background:#000; color:#ffd700; padding:8px 16px; border-radius:20px; font-size:12px; font-weight:800;" id="postNowEl">POST NOW &rarr;</div>
 </div>
@@ -553,14 +548,15 @@ if (typeof TRANSLATIONS === 'undefined') {
             searchPlaceholder: 'Search location, property type...',
             call: 'Call', whatsapp: 'WhatsApp', chat: 'Chat',
             heroTitle: 'Find Your Dream Property',
-            heroSubtitle: 'Buy • Sell • Rent — Verified Listings Worldwide',
+            heroBuyRent: 'Buy • Sell • Rent — Verified Listings Worldwide',
             trustVerified: 'Verified Listings', trustSecure: 'Secure Platform',
             trustWorldwide: 'Worldwide', postFree: 'Post Property FREE',
+            ctaDesc: 'Reach thousands of buyers instantly',
             postNow: 'POST NOW →', filterAll: 'All', filterBuy: 'Buy',
             filterRent: 'Rent', filterPlot: 'Plot', filterCommercial: 'Commercial',
             filterPG: 'PG/Hostel', loadMore: 'Load More',
             noPropsFound: 'No Properties Found',
-            tryKeywords: 'Try different keywords or clear the filters',
+            noPropsHint: 'Try different keywords or clear the filters',
             verified: 'Verified Account', getVerified: 'Get Verified'
         }
     };
@@ -758,19 +754,17 @@ function showToast(message) {
     setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 2500);
 }
 
-function showAboutAlert(){
-  document.getElementById("aboutModal").style.display="flex";
+function showAboutAlert() {
+    document.getElementById("aboutModal").style.display = "flex";
 }
 
-function closeAboutModal(){
-  document.getElementById("aboutModal").style.display="none";
+function closeAboutModal() {
+    document.getElementById("aboutModal").style.display = "none";
 }
 
-document.addEventListener("click",function(e){
-  const modal=document.getElementById("aboutModal");
-  if(modal && e.target===modal){
-    closeAboutModal();
-  }
+document.addEventListener("click", function(e) {
+    const modal = document.getElementById("aboutModal");
+    if (modal && e.target === modal) closeAboutModal();
 });
 
 function getT() {
@@ -785,7 +779,7 @@ function updateVerificationStatus(isVerified) {
         statusDiv.innerHTML = `<div class="verification-status" style="padding:12px 20px; margin:0; border-radius:0; background:#e8f5e9;">
             <i class="fa fa-check-circle" style="font-size:16px; color:#2e7d32;"></i>
             <div><div style="font-weight:700;">✅ ${t.verified || 'Verified Account'}</div>
-            <div style="font-size:9px; opacity:0.8; margin-top:2px;">Premium features unlocked</div></div>
+            <div style="font-size:9px; opacity:0.8; margin-top:2px;">${t.verifiedDesc || 'Premium features unlocked'}</div></div>
         </div>`;
     } else {
         statusDiv.innerHTML = `<div class="drawer-item get-verified-btn" onclick="location.href='verify.html'">
@@ -828,19 +822,22 @@ function applyLanguage() {
     if (currentUserData) updateVerificationStatus(currentUserData.isVerified || false);
 
     const setT = (id, key, fb) => { const el = document.getElementById(id); if (el) el.innerText = t[key] || fb; };
-    setT('heroTitleEl', 'heroTitle', 'Find Your Dream Property');
-    setT('heroSubtitleEl', 'heroSubtitle', 'Buy • Sell • Rent — Verified Listings Worldwide');
-    setT('trustVerifiedEl', 'trustVerified', 'Verified Listings');
-    setT('trustSecureEl', 'trustSecure', 'Secure Platform');
-    setT('trustWorldwideEl', 'trustWorldwide', 'Worldwide');
-    setT('postFreeEl', 'postFree', 'Post Property FREE');
-    setT('postNowEl', 'postNow', 'POST NOW →');
-    setT('filterAllEl', 'filterAll', 'All');
-    setT('filterBuyEl', 'filterBuy', 'Buy');
-    setT('filterRentEl', 'filterRent', 'Rent');
-    setT('filterPlotEl', 'filterPlot', 'Plot');
-    setT('filterCommercialEl', 'filterCommercial', 'Commercial');
-    setT('filterPGEl', 'filterPG', 'PG/Hostel');
+
+    setT('heroTitleEl',       'heroTitle',    'Find Your Dream Property');
+    // ✅ FIX 1: 'heroSubtitle' → 'heroBuyRent' — ab saari languages mein translate hoga
+    setT('heroSubtitleEl',    'heroBuyRent',  'Buy • Sell • Rent — Verified Listings Worldwide');
+    setT('trustVerifiedEl',   'heroVerified', 'Verified Listings');
+    setT('trustSecureEl',     'heroSecure',   'Secure Platform');
+    setT('trustWorldwideEl',  'heroWorldwide','Worldwide');
+    setT('postFreeEl',        'ctaTitle',     'Post Property FREE');
+    setT('ctaDescEl',         'ctaDesc',      'Reach thousands of buyers instantly');
+    setT('postNowEl',         'ctaBtn',       'POST NOW →');
+    setT('filterAllEl',       'filterAll',    'All');
+    setT('filterBuyEl',       'filterBuy',    'Buy');
+    setT('filterRentEl',      'filterRent',   'Rent');
+    setT('filterPlotEl',      'filterPlot',   'Plot');
+    setT('filterCommercialEl','filterCommercial','Commercial');
+    setT('filterPGEl',        'filterPG',     'PG/Hostel');
 
     if (isDataLoaded) renderAds(displayedAds);
 }
@@ -1012,7 +1009,7 @@ function renderAds(ads, append = false) {
             <div style="text-align:center; padding:60px 30px;">
                 <i class="fa fa-search" style="font-size:55px; opacity:0.2; display:block; margin-bottom:20px; color:#888;"></i>
                 <div style="font-size:17px; font-weight:700; color:#555; margin-bottom:8px;">${t.noPropsFound || 'No Properties Found'}</div>
-                <div style="font-size:13px; color:#999;">${t.tryKeywords || 'Try different keywords or clear the filters'}</div>
+                <div style="font-size:13px; color:#999;">${t.noPropsHint || 'Try different keywords or clear the filters'}</div>
             </div>`;
         return;
     }
@@ -1038,15 +1035,27 @@ function renderAds(ads, append = false) {
         const safeLocation = sanitize(p.location) || 'Location not specified';
 
         const purposeColors = {
-            'Sell': { bg: '#e8f5e9', color: '#2e7d32' },
-            'Rent': { bg: '#e3f2fd', color: '#1565c0' },
-            'Plot': { bg: '#fff8e1', color: '#f57f17' },
+            'Sell':       { bg: '#e8f5e9', color: '#2e7d32' },
+            'Rent':       { bg: '#e3f2fd', color: '#1565c0' },
+            'Plot':       { bg: '#fff8e1', color: '#f57f17' },
             'Commercial': { bg: '#fce4ec', color: '#880e4f' },
-            'PG': { bg: '#ede7f6', color: '#4527a0' }
+            'PG':         { bg: '#ede7f6', color: '#4527a0' }
         };
+
+        // ✅ FIX 2: Purpose badge ab selected language mein translate hoga
+        const purposeTranslations = {
+            'Sell':       t.filterBuy        || 'Sell',
+            'Rent':       t.filterRent       || 'Rent',
+            'Plot':       t.filterPlot       || 'Plot',
+            'Commercial': t.filterCommercial || 'Commercial',
+            'PG':         t.filterPG         || 'PG/Hostel',
+            'pg/hostel':  t.filterPG         || 'PG/Hostel'
+        };
+
         const pc = purposeColors[p.purpose] || { bg: '#f5f5f5', color: '#555' };
+        const translatedPurpose = purposeTranslations[p.purpose] || p.purpose;
         const purposeBadge = p.purpose
-            ? `<span style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:10px;margin-left:6px;vertical-align:middle;background:${pc.bg};color:${pc.color}">${p.purpose}</span>`
+            ? `<span style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:10px;margin-left:6px;vertical-align:middle;background:${pc.bg};color:${pc.color}">${translatedPurpose}</span>`
             : '';
 
         const favIcon = isFavorite(p.id) ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
@@ -1243,81 +1252,23 @@ loadLanguageDropdown();
 applyLanguage();
 </script>
 
-<div id="aboutModal" style="
-position:fixed;
-inset:0;
-background:rgba(0,0,0,0.55);
-backdrop-filter:blur(4px);
-display:none;
-justify-content:center;
-align-items:center;
-z-index:9999;
-">
-
-  <div style="
-  background:#fff;
-  width:92%;
-  max-width:420px;
-  border-radius:16px;
-  padding:22px;
-  box-shadow:0 12px 40px rgba(0,0,0,0.25);
-  animation:aboutSlideUp 0.35s ease;
-  ">
-
+<!-- About Modal -->
+<div id="aboutModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);display:none;justify-content:center;align-items:center;z-index:9999;">
+  <div style="background:#fff;width:92%;max-width:420px;border-radius:16px;padding:22px;box-shadow:0 12px 40px rgba(0,0,0,0.25);animation:aboutSlideUp 0.35s ease;">
     <div style="display:flex;justify-content:space-between;align-items:center;">
-
-      <div style="
-      font-size:19px;
-      font-weight:800;
-      color:#2e7d32;
-      ">
-        Earth Property Global
-      </div>
-
-      <div onclick="closeAboutModal()" style="
-      font-size:26px;
-      cursor:pointer;
-      color:#666;
-      ">
-        &times;
-      </div>
-
+      <div style="font-size:19px;font-weight:800;color:#2e7d32;">Earth Property Global</div>
+      <div onclick="closeAboutModal()" style="font-size:26px;cursor:pointer;color:#666;">&times;</div>
     </div>
-
-    <div style="
-    margin-top:15px;
-    font-size:14px;
-    color:#333;
-    line-height:1.6;
-    ">
-
-      Earth Property Global is your trusted real estate platform to buy,
-      sell, and rent properties worldwide.
-
+    <div style="margin-top:15px;font-size:14px;color:#333;line-height:1.6;">
+      Earth Property Global is your trusted real estate platform to buy, sell, and rent properties worldwide.
       <br><br>
-
       Our mission is to make property transactions simple, secure, and accessible.
-
-      <div style="
-      margin-top:18px;
-      padding:12px;
-      background:#f1f3f4;
-      border-radius:10px;
-      font-weight:700;
-      ">
-
+      <div style="margin-top:18px;padding:12px;background:#f1f3f4;border-radius:10px;font-weight:700;">
         📧 Contact:
-        <span id="contactEmailLink"></span>
-        <script>
-          document.getElementById('contactEmailLink').innerHTML =
-            '<a href="mailto:contact@theearthproperty.com" style="color:#2e7d32;text-decoration:none;">contact@theearthproperty.com</a>';
-        </script>
+        <a href="mailto:contact@theearthproperty.com" style="color:#2e7d32;text-decoration:none;">contact@theearthproperty.com</a>
       </div>
-
     </div>
-
   </div>
-
 </div>
 
 <!-- Service Worker Registration (PWA) -->
