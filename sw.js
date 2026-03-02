@@ -14,14 +14,14 @@ const messaging = firebase.messaging();
 // 🔔 Background push handler
 messaging.onBackgroundMessage(function(payload) {
   const { title, body } = payload.notification || {};
-  self.registration.showNotification(title || "Earth Property", {
+  self.registration.showNotification(title || "The Earth Property", {
     body: body || "New update!",
-    icon: "icon-192.png"
+    icon: "/icon-192.png"
   });
 });
 
 // 📦 PWA cache
-const CACHE_NAME = "earth-property-v1";
+const CACHE_NAME = "the-earth-property-v2";
 const urlsToCache = [
   "/",
   "/index.html",
