@@ -72,7 +72,9 @@
             authDomain: "earth-properties-c3c56.firebaseapp.com",
             projectId: "earth-properties-c3c56"
         };
-        firebase.initializeApp(firebaseConfig);
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const auth = firebase.auth();
         const db = firebase.firestore();
 
