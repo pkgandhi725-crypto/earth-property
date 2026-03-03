@@ -52,7 +52,7 @@
             display: none; 
         }
 
-        /* ✅ Verified dealer banner */
+        /* Verified dealer banner */
         .verified-dealer-banner {
             display: none;
             background: linear-gradient(135deg, #e3f2fd, #bbdefb);
@@ -102,7 +102,7 @@
 
 <div class="container">
 
-    <!-- ✅ Verified Dealer Banner -->
+    <!-- Verified Dealer Banner -->
     <div class="verified-dealer-banner" id="verifiedDealerBanner">
         <i class="fa fa-certificate"></i>
         <span>Your ad will be posted as <strong>Verified ✅</strong> automatically!</span>
@@ -114,7 +114,27 @@
     </div>
 
     <div class="form-group" style="display: flex; gap: 10px;">
-        <div style="flex: 1.2;"><label>Price (₹)</label><input type="number" id="price" placeholder="Amount"></div>
+        <div style="flex: 1.2;">
+            <label>Price / Amount</label>
+            <div style="display:flex; gap:6px;">
+                <!-- Currency Dropdown — International support -->
+                <select id="currency" style="width:90px; padding:12px 6px; border:1px solid #ddd; border-radius:10px; font-size:13px; font-weight:600; background:#fff; outline:none;">
+                    <option value="INR">🇮🇳 ₹</option>
+                    <option value="USD">🇺🇸 $</option>
+                    <option value="AED">🇦🇪 AED</option>
+                    <option value="SAR">🇸🇦 SAR</option>
+                    <option value="GBP">🇬🇧 £</option>
+                    <option value="EUR">🇪🇺 €</option>
+                    <option value="PKR">🇵🇰 ₨</option>
+                    <option value="BDT">🇧🇩 ৳</option>
+                    <option value="SGD">🇸🇬 S$</option>
+                    <option value="MYR">🇲🇾 RM</option>
+                    <option value="CAD">🇨🇦 C$</option>
+                    <option value="AUD">🇦🇺 A$</option>
+                </select>
+                <input type="number" id="price" placeholder="Amount" min="1" step="1" style="flex:1;">
+            </div>
+        </div>
         <div style="flex: 1;">
             <label>Purpose</label>
             <select id="purpose" onchange="togglePurposeFields()">
@@ -322,7 +342,11 @@
 
 <script>
 const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
-firebase.initializeApp(firebaseConfig);
+
+// Firebase guard — duplicate init prevent
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 const db = firebase.firestore();
 
 const CLOUD_NAME = "dnkhurnbv"; 
@@ -333,9 +357,10 @@ let uploadingCount = 0;
 let activeSlot = 0;
 let currentCoords = { lat: null, lng: null };
 
-// ✅ Store verified user data globally
+// Store verified user data globally
 let currentUserVerified = false;
 let currentUserBizName = "";
+let currentUserEpId = ""; // TEP ID store karo
 
 const urlParams = new URLSearchParams(window.location.search);
 const editId = urlParams.get('edit');
@@ -343,7 +368,7 @@ const editId = urlParams.get('edit');
 firebase.auth().onAuthStateChanged(async user => {
     if (!user) return location.href = 'login.html';
 
-    // ✅ Check if user is a verified dealer
+    // Check if user is a verified dealer
     try {
         const userDoc = await db.collection("users").doc(user.uid).get();
         if (userDoc.exists) {
@@ -354,6 +379,8 @@ firebase.auth().onAuthStateChanged(async user => {
                 // Show verified dealer banner
                 document.getElementById('verifiedDealerBanner').style.display = 'flex';
             }
+            // TEP ID store karo — property ke saath save hoga
+            currentUserEpId = userData.epId || "";
         }
     } catch(e) {
         console.error("User data fetch error:", e);
@@ -384,6 +411,8 @@ async function loadEditData(id, uid) {
     document.getElementById('titleCount').innerText = (data.title || '').length + '/100';
     document.getElementById('price').value = data.price || '';
     document.getElementById('purpose').value = data.purpose || 'Sell';
+    // Currency restore in edit mode
+    if (data.currency) document.getElementById('currency').value = data.currency;
     document.getElementById('location').value = data.location || '';
     document.getElementById('desc').value = data.description || '';
     document.getElementById('phone').value = data.phone || '';
@@ -571,6 +600,14 @@ function removeImage(slot) {
 
 async function submitProperty() {
     const user = firebase.auth().currentUser;
+
+    // Session expire safety check
+    if (!user) {
+        showToast("Session expired. Please login again.", "error");
+        setTimeout(() => location.href = 'login.html', 1500);
+        return;
+    }
+
     const title = document.getElementById('title').value.trim();
     const price = Number(document.getElementById('price').value);
     const phone = document.getElementById('phone').value.trim();
@@ -579,8 +616,13 @@ async function submitProperty() {
 
     // Phone validation
     if(!/^\d{10}$/.test(phone)) return showToast("Enter valid 10-digit phone number", "error");
-    if(!title || price <= 0 || !location || finalImages.length === 0) {
-        return showToast("Please fill all required fields: Title, Price, Location, Images", "error")//t 1 photo");
+
+    // Max price limit — DB integrity
+    if (price > 1000000000000) return showToast("Price too large. Please enter a valid amount.", "error");
+
+    // Integer + positive price validation
+    if(!title || !Number.isInteger(price) || price <= 0 || !location || finalImages.length === 0) {
+        return showToast("Please fill all required fields: Title, Price, Location, Images", "error");
     }
 
     const purpose = document.getElementById('purpose').value;
@@ -591,6 +633,7 @@ async function submitProperty() {
         price, 
         phone, 
         purpose,
+        currency: document.getElementById('currency').value, // Currency saved
         size: document.getElementById('size').value,
         location: location,
         description: document.getElementById('desc').value.trim(),
@@ -649,6 +692,7 @@ async function submitProperty() {
         } else {
             // NEW POST: Set all fields including protected ones
             propertyData.ownerId = user.uid;
+            propertyData.ownerEpId = currentUserEpId; // TEP ID property ke saath save
             propertyData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
             propertyData.isExpired = false;
             
@@ -657,7 +701,7 @@ async function submitProperty() {
             expiry.setDate(expiry.getDate() + (is30Days ? 30 : 180));
             propertyData.expiryDate = firebase.firestore.Timestamp.fromDate(expiry);
 
-            // ✅ Auto-set isVerified if user is a verified dealer
+            // Auto-set isVerified if user is a verified dealer
             if (currentUserVerified) {
                 propertyData.isVerified = true;
                 propertyData.dealerName = currentUserBizName;
