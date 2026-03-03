@@ -147,6 +147,20 @@
         }
         .verified-badge i { font-size: 10px; }
 
+        /* ✅ TEP ID badge style */
+        .tep-id-badge {
+            display: inline-flex; align-items: center; gap: 3px;
+            background: rgba(255,255,255,0.18); color: #fff;
+            padding: 2px 7px; border-radius: 10px; font-size: 9px; font-weight: 700;
+            margin-left: 5px; letter-spacing: 0.4px; border: 1px solid rgba(255,255,255,0.3);
+        }
+        .tep-id-badge-drawer {
+            display: inline-block;
+            background: rgba(255,255,255,0.18); color: #fff;
+            padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700;
+            margin-top: 4px; letter-spacing: 0.4px; border: 1px solid rgba(255,255,255,0.3);
+        }
+
         .drawer {
             position: fixed; top: 0; left: -285px; width: 280px; height: 100%;
             background: white; z-index: 5000;
@@ -336,6 +350,8 @@
         </div>
         <div style="font-weight:700; font-size:18px; margin-bottom:3px;" id="sideUserName">Welcome Guest</div>
         <div style="font-size:12px; opacity:0.9;" id="userMail"></div>
+        <!-- ✅ TEP ID in Drawer (naam ke neeche) -->
+        <div id="sideEpId" style="display:none;" class="tep-id-badge-drawer"></div>
     </div>
 
     <div id="verificationStatus" style="display:none;"></div>
@@ -402,8 +418,10 @@
             </button>
             <div>
                 <div style="font-weight:800; font-size:16px; letter-spacing:0.5px;">The Earth Property</div>
-                <div style="font-size:9px; opacity:0.85; font-weight:600; display:flex; align-items:center;">
+                <!-- ✅ Header me naam + TEP ID ek line mein -->
+                <div style="font-size:9px; opacity:0.85; font-weight:600; display:flex; align-items:center; flex-wrap:wrap; gap:2px;">
                     <span id="headerUserName">Guest</span>
+                    <span id="headerEpId" style="display:none;" class="tep-id-badge"></span>
                     <span id="headerVerifiedBadge" style="display:none;" class="verified-badge">
                         <i class="fa fa-check-circle"></i> VERIFIED
                     </span>
@@ -428,7 +446,6 @@
 <!-- Hero Banner -->
 <div style="background:linear-gradient(135deg,#1b5e20,#2e7d32); color:white; padding:20px 15px; text-align:center;">
     <div id="heroTitleEl" style="font-size:21px; font-weight:800; margin-bottom:5px; letter-spacing:0.3px;">Find Your Dream Property</div>
-    <!-- ✅ FIX 1: heroSubtitleEl ab heroBuyRent key se translate hoga -->
     <div id="heroSubtitleEl" style="font-size:13px; opacity:0.9; margin-bottom:15px;">Buy • Sell • Rent — Verified Listings Worldwide</div>
     <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap; font-size:11px; font-weight:700; opacity:0.95;">
         <span><i class="fa fa-check-circle" style="margin-right:4px;"></i><span id="trustVerifiedEl">Verified Listings</span></span>
@@ -824,7 +841,6 @@ function applyLanguage() {
     const setT = (id, key, fb) => { const el = document.getElementById(id); if (el) el.innerText = t[key] || fb; };
 
     setT('heroTitleEl',       'heroTitle',    'Find Your Dream Property');
-    // ✅ FIX 1: 'heroSubtitle' → 'heroBuyRent' — ab saari languages mein translate hoga
     setT('heroSubtitleEl',    'heroBuyRent',  'Buy • Sell • Rent — Verified Listings Worldwide');
     setT('trustVerifiedEl',   'heroVerified', 'Verified Listings');
     setT('trustSecureEl',     'heroSecure',   'Secure Platform');
@@ -876,6 +892,29 @@ function listenForNotifications(uid) {
     });
 }
 
+// ✅ TEP ID display helper
+function showEpId(epId) {
+    // Header me
+    const headerEpId = document.getElementById('headerEpId');
+    if (headerEpId) {
+        headerEpId.innerText = epId;
+        headerEpId.style.display = 'inline-flex';
+    }
+    // Drawer me
+    const sideEpId = document.getElementById('sideEpId');
+    if (sideEpId) {
+        sideEpId.innerText = '🪪 ' + epId;
+        sideEpId.style.display = 'inline-block';
+    }
+}
+
+function hideEpId() {
+    const headerEpId = document.getElementById('headerEpId');
+    if (headerEpId) headerEpId.style.display = 'none';
+    const sideEpId = document.getElementById('sideEpId');
+    if (sideEpId) sideEpId.style.display = 'none';
+}
+
 auth.onAuthStateChanged(user => {
     currentUser = user;
     const logoutBtn = document.getElementById('logoutBtn');
@@ -892,6 +931,13 @@ auth.onAuthStateChanged(user => {
             document.getElementById('headerUserName').innerText = userName;
             document.getElementById('userMail').innerText = user.email || '';
             updateProfilePhoto(user.photoURL);
+
+            // ✅ TEP ID show karo agar hai
+            if (currentUserData.epId) {
+                showEpId(currentUserData.epId);
+            } else {
+                hideEpId();
+            }
 
             const hBadge = document.getElementById('headerVerifiedBadge');
             hBadge.style.display = isVerified ? 'inline-flex' : 'none';
@@ -921,6 +967,7 @@ auth.onAuthStateChanged(user => {
         document.getElementById('headerVerifiedBadge').style.display = 'none';
         document.getElementById('verificationStatus').style.display = 'none';
         updateProfilePhoto(null);
+        hideEpId();
         applyLanguage();
         if (logoutBtn) logoutBtn.style.display = 'none';
         if (adminIcon) adminIcon.style.display = 'none';
@@ -1042,7 +1089,6 @@ function renderAds(ads, append = false) {
             'PG':         { bg: '#ede7f6', color: '#4527a0' }
         };
 
-        // ✅ FIX 2: Purpose badge ab selected language mein translate hoga
         const purposeTranslations = {
             'Sell':       t.filterBuy        || 'Sell',
             'Rent':       t.filterRent       || 'Rent',
