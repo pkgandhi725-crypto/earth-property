@@ -892,6 +892,40 @@ function listenForNotifications(uid) {
     });
 }
 
+// ✅ Safety net — agar kisi user ke paas epId nahi hai to assign karo
+async function assignEpIdIfNew(user) {
+    try {
+        const userRef = db.collection("users").doc(user.uid);
+        const userSnap = await userRef.get();
+
+        // Pehle se epId hai to kuch mat karo
+        if (userSnap.exists && userSnap.data().epId) return;
+
+        // Firestore transaction — 2 users ek saath same ID na paayein
+        const counterRef = db.collection("counters").doc("userCount");
+        const newNumber = await db.runTransaction(async (transaction) => {
+            const counterSnap = await transaction.get(counterRef);
+            const current = counterSnap.exists ? counterSnap.data().count : 1000;
+            const next = current + 1;
+            transaction.set(counterRef, { count: next }, { merge: true });
+            return next;
+        });
+
+        // User doc mein TEP ID save karo
+        await userRef.set({
+            epId: `TEP${newNumber}`,
+            email: user.email || "",
+            displayName: user.displayName || "",
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        console.log("TEP ID assigned:", `TEP${newNumber}`);
+    } catch (e) {
+        // ID assign fail ho to bhi page block mat karo
+        console.error("EP ID assign error:", e);
+    }
+}
+
 // ✅ TEP ID display helper
 function showEpId(epId) {
     // Header me
@@ -922,7 +956,7 @@ auth.onAuthStateChanged(user => {
     const adminSideBtn = document.getElementById('adminSideBtn');
 
     if (user) {
-        db.collection("users").doc(user.uid).get().then(doc => {
+        db.collection("users").doc(user.uid).get().then(async doc => {
             currentUserData = doc.exists ? doc.data() : {};
             const isVerified = currentUserData.isVerified || false;
             const userName = user.displayName || user.email?.split('@')[0] || "Earth User";
@@ -932,11 +966,21 @@ auth.onAuthStateChanged(user => {
             document.getElementById('userMail').innerText = user.email || '';
             updateProfilePhoto(user.photoURL);
 
-            // ✅ TEP ID show karo agar hai
+            // ✅ TEP ID — agar nahi hai to assign karo, phir show karo
             if (currentUserData.epId) {
                 showEpId(currentUserData.epId);
             } else {
-                hideEpId();
+                // Safety net: missing epId assign karo
+                await assignEpIdIfNew(user);
+                // Assign ke baad fresh data lo aur show karo
+                const updatedSnap = await db.collection("users").doc(user.uid).get();
+                const updatedEpId = updatedSnap.exists ? updatedSnap.data().epId : null;
+                if (updatedEpId) {
+                    showEpId(updatedEpId);
+                    currentUserData.epId = updatedEpId;
+                } else {
+                    hideEpId();
+                }
             }
 
             const hBadge = document.getElementById('headerVerifiedBadge');
@@ -1311,13 +1355,14 @@ applyLanguage();
       Our mission is to make property transactions simple, secure, and accessible.
       <div style="margin-top:18px;padding:12px;background:#f1f3f4;border-radius:10px;font-weight:700;">
         📧 Contact:
-        <a href="mailto:contact@theearthproperty.com" style="color:#2e7d32;text-decoration:none;">contact@theearthproperty.com</a>
+        <a href="/cdn-cgi/l/email-protection#ed8e8283998c8e99ad998588888c9f99859d9f829d889f9994c38e8280" style="color:#2e7d32;text-decoration:none;"><span class="__cf_email__" data-cfemail="83e0ecedf7e2e0f7c3f7ebe6e6e2f1f7ebf3f1ecf3e6f1f7faade0ecee">[email&#160;protected]</span></a>
       </div>
     </div>
   </div>
 </div>
 
 <!-- Service Worker Registration (PWA) -->
+<script data-cfasync="false" src="/cdn-cgi/email-protection#..."></script>
 <script>
 if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("/sw.js").then(() => {
