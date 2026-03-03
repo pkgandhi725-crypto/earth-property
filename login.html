@@ -107,7 +107,7 @@
 
                 // ✅ User doc mein EP ID + basic info save karo
                 await userRef.set({
-                    epId: `EP-${newNumber}`,
+                    epId: `TEP${newNumber}`,
                     email: user.email || "",
                     displayName: user.displayName || "",
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
