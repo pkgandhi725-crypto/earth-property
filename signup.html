@@ -33,8 +33,11 @@ button{background:#2e7d32;color:white;border:none;padding:10px;border-radius:20p
 a{color:#2e7d32;text-decoration:none;}
 </style>
 
+<!-- Firebase App + Auth -->
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+<!-- ✅ STEP 1: Firestore load karo -->
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
 </head>
 
 <body>
@@ -64,6 +67,8 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
+// ✅ STEP 2: Firestore init
+const db = firebase.firestore();
 
 // 👁️ Show / Hide Password
 function togglePass(){
@@ -71,17 +76,48 @@ function togglePass(){
   p.type = (p.type === "password") ? "text" : "password";
 }
 
-// Signup
+// ✅ STEP 3: TEP ID assign function
+async function assignEpIdIfNew(user) {
+  try {
+    const userRef = db.collection("users").doc(user.uid);
+    const userSnap = await userRef.get();
+
+    // Already has ID? Return karo
+    if (userSnap.exists && userSnap.data().epId) return;
+
+    const counterRef = db.collection("counters").doc("userCount");
+
+    const newNumber = await db.runTransaction(async (transaction) => {
+      const counterSnap = await transaction.get(counterRef);
+      const current = counterSnap.exists ? counterSnap.data().count : 1000;
+      const next = current + 1;
+      transaction.set(counterRef, { count: next }, { merge: true });
+      return next;
+    });
+
+    await userRef.set({
+      epId: `TEP${newNumber}`,
+      email: user.email || "",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+  } catch (e) {
+    console.error("EP ID assign error:", e);
+  }
+}
+
+// ✅ STEP 4: Signup + ID assign
 document.getElementById("signupBtn").onclick = function(){
   const email = document.getElementById("email").value;
   const pass = document.getElementById("password").value;
 
   auth.createUserWithEmailAndPassword(email, pass)
-    .then(()=>{
+    .then(async (userCredential) => {
+      await assignEpIdIfNew(userCredential.user);
       alert("Account Created ✅");
       window.location.href = "login.html";
     })
-    .catch(e=>{
+    .catch(e => {
       alert("Error: " + e.message);
     });
 };
