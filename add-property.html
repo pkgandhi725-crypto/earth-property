@@ -720,7 +720,7 @@ function handleVideoFile(e, slot) {
             preview.style.display = 'block';
             showToast('✓ Video uploaded!', 'success');
         } else {
-            showToast('Video upload failed. Try again.', 'error');
+            try { const errRes = JSON.parse(xhr.responseText); showToast('Err ' + xhr.status + ': ' + (errRes.error ? errRes.error.message : 'failed'), 'error'); } catch(ex) { showToast('Error ' + xhr.status + ': failed', 'error'); }
         }
         uploadingCount--;
         if (uploadingCount === 0) document.getElementById('postBtn').disabled = false;
