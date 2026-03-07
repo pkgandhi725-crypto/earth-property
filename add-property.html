@@ -14,14 +14,47 @@
         .form-group { margin-bottom: 18px; position: relative; }
         label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; color: #444; }
         input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 15px; outline: none; transition: 0.3s; }
-        input:focus { border-color: var(--primary); box-shadow: 0 0 5px rgba(46,125,50,0.2); }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 5px rgba(46,125,50,0.2); }
         
         .section-title { font-size: 16px; font-weight: 700; color: var(--primary); margin: 25px 0 15px; border-bottom: 2px solid var(--accent); padding-bottom: 5px; }
 
+        /* ===== COUNTRY SEARCH ===== */
+        .country-search-wrap { position: relative; }
+        .country-search-wrap input { padding-right: 36px; }
+        .country-search-wrap .clear-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #999; font-size: 16px; cursor: pointer; padding: 0; display: none; }
+        .country-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid #ddd; border-radius: 10px; max-height: 200px; overflow-y: auto; z-index: 500; box-shadow: 0 4px 16px rgba(0,0,0,0.12); display: none; }
+        .country-dropdown .c-item { padding: 10px 14px; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #f0f0f0; }
+        .country-dropdown .c-item:last-child { border-bottom: none; }
+        .country-dropdown .c-item:hover, .country-dropdown .c-item.active { background: var(--accent); color: var(--primary); font-weight: 600; }
+        .country-dropdown .c-item .flag { font-size: 18px; }
+
+        /* ===== LOCATION SECTION ===== */
+        .location-section { background: #fff; border: 1px solid #e0e0e0; border-radius: 14px; padding: 16px; margin-bottom: 18px; }
+        .location-section-title { font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+        .gps-divider { text-align: center; margin: 14px 0 10px; position: relative; }
+        .gps-divider::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #e0e0e0; }
+        .gps-divider span { position: relative; background: #fff; padding: 0 10px; font-size: 12px; color: #999; }
+        .gps-hint-text { font-size: 12px; color: #777; text-align: center; margin-top: 6px; line-height: 1.4; font-style: italic; }
+
+        /* ===== MEDIA GRID ===== */
         .img-upload-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
-        .img-box { aspect-ratio: 1/1; border: 2px dashed #ccc; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #fff; cursor: pointer; }
-        .img-box img { width: 100%; height: 100%; object-fit: cover; position: absolute; z-index: 2; }
+        .img-box { aspect-ratio: 1/1; border: 2px dashed #ccc; border-radius: 12px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; background: #fff; cursor: pointer; flex-direction: column; gap: 4px; }
+        .img-box img { width: 100%; height: 100%; object-fit: cover; position: absolute; z-index: 2; top: 0; left: 0; }
+        .img-box .slot-label { font-size: 10px; color: #aaa; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
         
+        /* Video slot styling */
+        .media-slot-wrap { position: relative; }
+        .media-toggle { display: flex; border-radius: 8px; overflow: hidden; border: 1px solid #ddd; margin-bottom: 6px; }
+        .media-toggle button { flex: 1; padding: 7px 4px; border: none; background: #f5f5f5; font-size: 11px; font-weight: 600; cursor: pointer; color: #666; transition: 0.2s; }
+        .media-toggle button.active { background: var(--primary); color: #fff; }
+        .video-input-wrap { display: none; }
+        .video-input-wrap input { font-size: 13px; padding: 10px; border-radius: 10px; border: 1px solid #ddd; width: 100%; box-sizing: border-box; }
+        .video-preview-box { aspect-ratio: 16/9; border: 2px dashed #ccc; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: #111; position: relative; overflow: hidden; display: none; }
+        .video-preview-box iframe { width: 100%; height: 100%; border: none; border-radius: 10px; }
+        .video-thumb { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+        .video-play-badge { position: absolute; bottom: 6px; left: 6px; background: rgba(0,0,0,0.7); color: #fff; font-size: 10px; padding: 3px 7px; border-radius: 6px; font-weight: 600; z-index: 5; }
+        .remove-video-btn { position: absolute; top: 5px; right: 5px; background: var(--danger); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; z-index: 10; border: none; cursor: pointer; }
+
         .remove-btn { position: absolute; top: 5px; right: 5px; background: var(--danger); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; z-index: 10; border: none; cursor: pointer; }
 
         .prog-container { width: 80%; height: 6px; background: #eee; border-radius: 10px; overflow: hidden; display: none; z-index: 5; }
@@ -65,12 +98,23 @@
             color: #0d47a1;
         }
         .verified-dealer-banner i { color: #1da1f2; font-size: 18px; }
+
+        /* Media section label */
+        .media-section-label { font-size: 16px; font-weight: 700; color: var(--primary); margin: 25px 0 5px; border-bottom: 2px solid var(--accent); padding-bottom: 5px; }
+        .media-section-sub { font-size: 12px; color: #666; margin-bottom: 12px; }
+
+        /* Flexible slot 4 & 5 wrapper */
+        .flex-slots-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .flex-slot { background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 10px; }
+        .flex-slot-title { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
     </style>
     <script src="translations.js"></script>
     <script src="lang.js"></script>
 
 <style>
 @keyframes fadeIn { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-spinner { width: 16px; height: 16px; border: 2px solid #c8e6c9; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; margin-right: 6px; vertical-align: middle; }
 </style>
 </head>
 <body>
@@ -143,15 +187,46 @@
         <input type="text" inputmode="numeric" maxlength="10" id="phone" placeholder="10 digit mobile number">
     </div>
 
-    <div class="form-group">
-        <label>Location</label>
-        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-            <button type="button" class="btn-small active" id="btnManual" onclick="useManualMode()">✍️ Manual Entry</button>
-            <button type="button" class="btn-small" id="btnGPS" onclick="showGPSConfirmModal()">📍 Use GPS</button>
+    <!-- ===== LOCATION SECTION ===== -->
+    <div class="location-section">
+        <div class="location-section-title">
+            <i class="fa fa-map-marker-alt" style="color:var(--primary);"></i>
+            Location
         </div>
-        <input type="text" id="location" placeholder="Area, City, State">
-        <p id="gpsHintText" style="font-size:11px;color:#666;margin:4px 0 0;text-align:center;"></p>
-        <div id="gpsInfo" class="gps-info"></div>
+
+        <!-- Add Full Address -->
+        <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:10px;">📋 Add Full Address</div>
+
+        <!-- Country Search -->
+        <div class="form-group" style="margin-bottom:12px;">
+            <label style="font-size:13px;">Country</label>
+            <div class="country-search-wrap">
+                <input type="text" id="countrySearch" placeholder="🔍 Search country..." autocomplete="off" oninput="filterCountries()" onfocus="showCountryDropdown()" onblur="hideCountryDropdown()">
+                <button class="clear-btn" id="countryClearBtn" onclick="clearCountry()" type="button">×</button>
+                <div class="country-dropdown" id="countryDropdown"></div>
+            </div>
+            <input type="hidden" id="selectedCountry" value="">
+        </div>
+
+        <!-- Address -->
+        <div class="form-group" style="margin-bottom:0;">
+            <label style="font-size:13px;">Address</label>
+            <input type="text" id="location" placeholder="Area, City, State">
+        </div>
+
+        <!-- GPS Divider -->
+        <div class="gps-divider"><span>OR</span></div>
+
+        <!-- GPS Button -->
+        <button type="button" id="btnGPS" onclick="showGPSConfirmModal()" style="width:100%;padding:11px;background:#fff;border:1.5px solid var(--primary);color:var(--primary);border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+            <span id="gpsButtonIcon">📍</span> <span id="gpsButtonText">Use GPS</span>
+        </button>
+
+        <!-- GPS Info -->
+        <div id="gpsInfo" class="gps-info" style="margin-top:10px;"></div>
+
+        <!-- GPS Hint -->
+        <p class="gps-hint-text">If you are now on property site then use GPS also</p>
     </div>
 
     <div class="form-group">
@@ -311,13 +386,106 @@
         <textarea id="desc" rows="3" placeholder="Features, facilities, etc."></textarea>
     </div>
 
-    <label>Photos (Max 5)</label>
+    <!-- ===== MEDIA SECTION ===== -->
+    <div class="media-section-label">📸 Photos (Max 5)</div>
+    <div class="media-section-sub">Slot 1–3: Photos only &nbsp;|&nbsp; Slot 4–5: Photo or Video</div>
+
+    <!-- Photo slots 1-3 (fixed photo only) -->
     <div class="img-upload-grid">
-        <div class="img-box" id="box0" onclick="triggerUpload(0)"><i class="fa fa-camera" id="icon0"></i><img id="prev0" style="display:none;"><div class="prog-container" id="cont0"><div class="prog-bar" id="bar0"></div></div></div>
-        <div class="img-box" id="box1" onclick="triggerUpload(1)"><i class="fa fa-camera" id="icon1"></i><img id="prev1" style="display:none;"><div class="prog-container" id="cont1"><div class="prog-bar" id="bar1"></div></div></div>
-        <div class="img-box" id="box2" onclick="triggerUpload(2)"><i class="fa fa-camera" id="icon2"></i><img id="prev2" style="display:none;"><div class="prog-container" id="cont2"><div class="prog-bar" id="bar2"></div></div></div>
-        <div class="img-box" id="box3" onclick="triggerUpload(3)"><i class="fa fa-camera" id="icon3"></i><img id="prev3" style="display:none;"><div class="prog-container" id="cont3"><div class="prog-bar" id="bar3"></div></div></div>
-        <div class="img-box" id="box4" onclick="triggerUpload(4)"><i class="fa fa-camera" id="icon4"></i><img id="prev4" style="display:none;"><div class="prog-container" id="cont4"><div class="prog-bar" id="bar4"></div></div></div>
+        <div class="img-box" id="box0" onclick="triggerUpload(0)">
+            <i class="fa fa-camera" id="icon0"></i>
+            <img id="prev0" style="display:none;">
+            <div class="prog-container" id="cont0"><div class="prog-bar" id="bar0"></div></div>
+        </div>
+        <div class="img-box" id="box1" onclick="triggerUpload(1)">
+            <i class="fa fa-camera" id="icon1"></i>
+            <img id="prev1" style="display:none;">
+            <div class="prog-container" id="cont1"><div class="prog-bar" id="bar1"></div></div>
+        </div>
+        <div class="img-box" id="box2" onclick="triggerUpload(2)">
+            <i class="fa fa-camera" id="icon2"></i>
+            <img id="prev2" style="display:none;">
+            <div class="prog-container" id="cont2"><div class="prog-bar" id="bar2"></div></div>
+        </div>
+    </div>
+
+    <!-- Flexible slots 4-5 (photo or video) -->
+    <div class="flex-slots-wrap" style="margin-top:10px;">
+        <!-- Slot 4 -->
+        <div class="flex-slot">
+            <div class="flex-slot-title">Slot 4 (Optional)</div>
+            <div class="media-toggle" id="toggle3">
+                <button class="active" id="togglePhoto3" onclick="switchSlotMode(3,'photo')" type="button">📷 Photo</button>
+                <button id="toggleVideo3" onclick="switchSlotMode(3,'video')" type="button">🎥 Video</button>
+            </div>
+            <!-- Photo mode -->
+            <div id="photoMode3">
+                <div class="img-box" id="box3" onclick="triggerUpload(3)" style="aspect-ratio:1/1;">
+                    <i class="fa fa-camera" id="icon3"></i>
+                    <img id="prev3" style="display:none;">
+                    <div class="prog-container" id="cont3"><div class="prog-bar" id="bar3"></div></div>
+                </div>
+            </div>
+            <!-- Video mode -->
+            <div class="video-input-wrap" id="videoMode3">
+                <input type="text" id="videoUrl3" placeholder="Paste YouTube/Vimeo URL" oninput="previewVideo(3)" style="margin-bottom:6px;">
+                <div id="videoPreview3" style="display:none;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden;position:relative;">
+                    <img id="videoThumb3" style="width:100%;height:100%;object-fit:cover;display:none;">
+                    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+                        <div style="background:rgba(255,255,255,0.9);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
+                            <i class="fa fa-play" style="color:#d32f2f;font-size:14px;margin-left:2px;"></i>
+                        </div>
+                    </div>
+                    <div class="video-play-badge">🎥 Video</div>
+                    <button class="remove-video-btn" onclick="removeVideo(3)" type="button">×</button>
+                </div>
+                <div id="videoProgress3" style="display:none;text-align:center;font-size:12px;color:var(--primary);padding:10px;">
+                    <span class="loading-spinner"></span> Uploading video...
+                </div>
+                <input type="file" id="videoFileInput3" hidden accept="video/*" onchange="handleVideoFile(event,3)">
+                <button type="button" onclick="document.getElementById('videoFileInput3').click()" style="width:100%;padding:8px;margin-top:4px;background:#f5f5f5;border:1px dashed #bbb;border-radius:8px;font-size:12px;color:#666;cursor:pointer;">
+                    📁 Or upload from device
+                </button>
+            </div>
+        </div>
+
+        <!-- Slot 5 -->
+        <div class="flex-slot">
+            <div class="flex-slot-title">Slot 5 (Optional)</div>
+            <div class="media-toggle" id="toggle4">
+                <button class="active" id="togglePhoto4" onclick="switchSlotMode(4,'photo')" type="button">📷 Photo</button>
+                <button id="toggleVideo4" onclick="switchSlotMode(4,'video')" type="button">🎥 Video</button>
+            </div>
+            <!-- Photo mode -->
+            <div id="photoMode4">
+                <div class="img-box" id="box4" onclick="triggerUpload(4)" style="aspect-ratio:1/1;">
+                    <i class="fa fa-camera" id="icon4"></i>
+                    <img id="prev4" style="display:none;">
+                    <div class="prog-container" id="cont4"><div class="prog-bar" id="bar4"></div></div>
+                </div>
+            </div>
+            <!-- Video mode -->
+            <div class="video-input-wrap" id="videoMode4">
+                <input type="text" id="videoUrl4" placeholder="Paste YouTube/Vimeo URL" oninput="previewVideo(4)" style="margin-bottom:6px;">
+                <div id="videoPreview4" style="display:none;aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden;position:relative;">
+                    <img id="videoThumb4" style="width:100%;height:100%;object-fit:cover;display:none;">
+                    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+                        <div style="background:rgba(255,255,255,0.9);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
+                            <i class="fa fa-play" style="color:#d32f2f;font-size:14px;margin-left:2px;"></i>
+                        </div>
+                    </div>
+                    <div class="video-play-badge">🎥 Video</div>
+                    <button class="remove-video-btn" onclick="removeVideo(4)" type="button">×</button>
+                </div>
+                <div id="videoProgress4" style="display:none;text-align:center;font-size:12px;color:var(--primary);padding:10px;">
+                    <span class="loading-spinner"></span> Uploading video...
+                </div>
+                <input type="file" id="videoFileInput4" hidden accept="video/*" onchange="handleVideoFile(event,4)">
+                <button type="button" onclick="document.getElementById('videoFileInput4').click()" style="width:100%;padding:8px;margin-top:4px;background:#f5f5f5;border:1px dashed #bbb;border-radius:8px;font-size:12px;color:#666;cursor:pointer;">
+                    📁 Or upload from device
+                </button>
+            </div>
+        </div>
     </div>
     
     <input type="file" id="fileInput" hidden accept="image/*" onchange="handleFile(event)">
@@ -337,11 +505,11 @@ const db = firebase.firestore();
 const CLOUD_NAME = "dnkhurnbv"; 
 const UPLOAD_PRESET = "earth_property"; 
 
-// ✅ FIX: Ab sirf URL nahi, {url, public_id} object store hoga
-let uploadedImages = [null, null, null, null, null]; // { url, public_id }
+let uploadedImages = [null, null, null, null, null]; // { url, public_id } or { type:'video', url, public_id, videoUrl }
 let uploadingCount = 0;
 let activeSlot = 0;
 let currentCoords = { lat: null, lng: null };
+let slotMode = [null, null, null, 'photo', 'photo']; // slot 0-2 = photo only, 3-4 = toggleable
 
 let currentUserVerified = false;
 let currentUserBizName = "";
@@ -350,6 +518,226 @@ let currentUserEpId = "";
 const urlParams = new URLSearchParams(window.location.search);
 const editId = urlParams.get('edit');
 
+// ===== COUNTRIES LIST =====
+const COUNTRIES = [
+  {name:"Afghanistan",flag:"🇦🇫"},{name:"Albania",flag:"🇦🇱"},{name:"Algeria",flag:"🇩🇿"},
+  {name:"Argentina",flag:"🇦🇷"},{name:"Australia",flag:"🇦🇺"},{name:"Austria",flag:"🇦🇹"},
+  {name:"Bahrain",flag:"🇧🇭"},{name:"Bangladesh",flag:"🇧🇩"},{name:"Belgium",flag:"🇧🇪"},
+  {name:"Brazil",flag:"🇧🇷"},{name:"Canada",flag:"🇨🇦"},{name:"Chile",flag:"🇨🇱"},
+  {name:"China",flag:"🇨🇳"},{name:"Colombia",flag:"🇨🇴"},{name:"Croatia",flag:"🇭🇷"},
+  {name:"Czech Republic",flag:"🇨🇿"},{name:"Denmark",flag:"🇩🇰"},{name:"Egypt",flag:"🇪🇬"},
+  {name:"Ethiopia",flag:"🇪🇹"},{name:"Finland",flag:"🇫🇮"},{name:"France",flag:"🇫🇷"},
+  {name:"Germany",flag:"🇩🇪"},{name:"Ghana",flag:"🇬🇭"},{name:"Greece",flag:"🇬🇷"},
+  {name:"Hungary",flag:"🇭🇺"},{name:"India",flag:"🇮🇳"},{name:"Indonesia",flag:"🇮🇩"},
+  {name:"Iran",flag:"🇮🇷"},{name:"Iraq",flag:"🇮🇶"},{name:"Ireland",flag:"🇮🇪"},
+  {name:"Israel",flag:"🇮🇱"},{name:"Italy",flag:"🇮🇹"},{name:"Japan",flag:"🇯🇵"},
+  {name:"Jordan",flag:"🇯🇴"},{name:"Kazakhstan",flag:"🇰🇿"},{name:"Kenya",flag:"🇰🇪"},
+  {name:"Kuwait",flag:"🇰🇼"},{name:"Lebanon",flag:"🇱🇧"},{name:"Libya",flag:"🇱🇾"},
+  {name:"Malaysia",flag:"🇲🇾"},{name:"Mexico",flag:"🇲🇽"},{name:"Morocco",flag:"🇲🇦"},
+  {name:"Myanmar",flag:"🇲🇲"},{name:"Nepal",flag:"🇳🇵"},{name:"Netherlands",flag:"🇳🇱"},
+  {name:"New Zealand",flag:"🇳🇿"},{name:"Nigeria",flag:"🇳🇬"},{name:"Norway",flag:"🇳🇴"},
+  {name:"Oman",flag:"🇴🇲"},{name:"Pakistan",flag:"🇵🇰"},{name:"Palestine",flag:"🇵🇸"},
+  {name:"Philippines",flag:"🇵🇭"},{name:"Poland",flag:"🇵🇱"},{name:"Portugal",flag:"🇵🇹"},
+  {name:"Qatar",flag:"🇶🇦"},{name:"Romania",flag:"🇷🇴"},{name:"Russia",flag:"🇷🇺"},
+  {name:"Saudi Arabia",flag:"🇸🇦"},{name:"Singapore",flag:"🇸🇬"},{name:"South Africa",flag:"🇿🇦"},
+  {name:"South Korea",flag:"🇰🇷"},{name:"Spain",flag:"🇪🇸"},{name:"Sri Lanka",flag:"🇱🇰"},
+  {name:"Sudan",flag:"🇸🇩"},{name:"Sweden",flag:"🇸🇪"},{name:"Switzerland",flag:"🇨🇭"},
+  {name:"Syria",flag:"🇸🇾"},{name:"Taiwan",flag:"🇹🇼"},{name:"Tanzania",flag:"🇹🇿"},
+  {name:"Thailand",flag:"🇹🇭"},{name:"Tunisia",flag:"🇹🇳"},{name:"Turkey",flag:"🇹🇷"},
+  {name:"UAE",flag:"🇦🇪"},{name:"Uganda",flag:"🇺🇬"},{name:"Ukraine",flag:"🇺🇦"},
+  {name:"United Kingdom",flag:"🇬🇧"},{name:"United States",flag:"🇺🇸"},{name:"Uzbekistan",flag:"🇺🇿"},
+  {name:"Venezuela",flag:"🇻🇪"},{name:"Vietnam",flag:"🇻🇳"},{name:"Yemen",flag:"🇾🇪"},
+  {name:"Zambia",flag:"🇿🇲"},{name:"Zimbabwe",flag:"🇿🇼"}
+];
+
+// ===== COUNTRY SEARCH =====
+function filterCountries() {
+    const q = document.getElementById('countrySearch').value.toLowerCase().trim();
+    const dd = document.getElementById('countryDropdown');
+    const clearBtn = document.getElementById('countryClearBtn');
+    clearBtn.style.display = q ? 'block' : 'none';
+    
+    const filtered = q ? COUNTRIES.filter(c => c.name.toLowerCase().includes(q)) : COUNTRIES;
+    renderDropdown(filtered);
+    dd.style.display = 'block';
+}
+
+function showCountryDropdown() {
+    const q = document.getElementById('countrySearch').value.toLowerCase().trim();
+    const filtered = q ? COUNTRIES.filter(c => c.name.toLowerCase().includes(q)) : COUNTRIES;
+    renderDropdown(filtered);
+    document.getElementById('countryDropdown').style.display = 'block';
+}
+
+function hideCountryDropdown() {
+    setTimeout(() => {
+        document.getElementById('countryDropdown').style.display = 'none';
+    }, 200);
+}
+
+function renderDropdown(list) {
+    const dd = document.getElementById('countryDropdown');
+    const selected = document.getElementById('selectedCountry').value;
+    if (list.length === 0) {
+        dd.innerHTML = '<div style="padding:12px;text-align:center;color:#999;font-size:13px;">No country found</div>';
+        return;
+    }
+    dd.innerHTML = list.map(c => 
+        `<div class="c-item ${selected === c.name ? 'active' : ''}" onmousedown="selectCountry('${c.name}','${c.flag}')">
+            <span class="flag">${c.flag}</span> ${c.name}
+        </div>`
+    ).join('');
+}
+
+function selectCountry(name, flag) {
+    document.getElementById('countrySearch').value = flag + ' ' + name;
+    document.getElementById('selectedCountry').value = name;
+    document.getElementById('countryClearBtn').style.display = 'block';
+    document.getElementById('countryDropdown').style.display = 'none';
+}
+
+function clearCountry() {
+    document.getElementById('countrySearch').value = '';
+    document.getElementById('selectedCountry').value = '';
+    document.getElementById('countryClearBtn').style.display = 'none';
+    document.getElementById('countrySearch').focus();
+}
+
+// ===== SLOT MODE SWITCH =====
+function switchSlotMode(slot, mode) {
+    slotMode[slot] = mode;
+    const photoBtn = document.getElementById(`togglePhoto${slot}`);
+    const videoBtn = document.getElementById(`toggleVideo${slot}`);
+    const photoDiv = document.getElementById(`photoMode${slot}`);
+    const videoDiv = document.getElementById(`videoMode${slot}`);
+
+    if (mode === 'photo') {
+        photoBtn.classList.add('active');
+        videoBtn.classList.remove('active');
+        photoDiv.style.display = 'block';
+        videoDiv.style.display = 'none';
+        // Clear video data if switching away
+        if (uploadedImages[slot] && uploadedImages[slot].type === 'video') {
+            uploadedImages[slot] = null;
+        }
+    } else {
+        videoBtn.classList.add('active');
+        photoBtn.classList.remove('active');
+        photoDiv.style.display = 'none';
+        videoDiv.style.display = 'block';
+        // Clear photo data if switching away
+        if (uploadedImages[slot] && uploadedImages[slot].type !== 'video') {
+            removeImage(slot);
+        }
+    }
+}
+
+// ===== VIDEO PREVIEW (YouTube/Vimeo URL) =====
+function getYouTubeId(url) {
+    const match = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    return match ? match[1] : null;
+}
+
+function getVimeoId(url) {
+    const match = url.match(/vimeo\.com\/(\d+)/);
+    return match ? match[1] : null;
+}
+
+function previewVideo(slot) {
+    const url = document.getElementById(`videoUrl${slot}`).value.trim();
+    const preview = document.getElementById(`videoPreview${slot}`);
+    const thumb = document.getElementById(`videoThumb${slot}`);
+    
+    if (!url) {
+        preview.style.display = 'none';
+        uploadedImages[slot] = null;
+        return;
+    }
+
+    const ytId = getYouTubeId(url);
+    const viId = getVimeoId(url);
+
+    if (ytId) {
+        thumb.src = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
+        thumb.style.display = 'block';
+        preview.style.display = 'block';
+        uploadedImages[slot] = { type: 'video', videoUrl: url, url: null, public_id: null };
+    } else if (viId) {
+        thumb.style.display = 'none';
+        preview.style.display = 'block';
+        uploadedImages[slot] = { type: 'video', videoUrl: url, url: null, public_id: null };
+    } else {
+        preview.style.display = 'none';
+        uploadedImages[slot] = null;
+    }
+}
+
+function removeVideo(slot) {
+    document.getElementById(`videoUrl${slot}`).value = '';
+    document.getElementById(`videoPreview${slot}`).style.display = 'none';
+    uploadedImages[slot] = null;
+}
+
+// ===== VIDEO FILE UPLOAD (Cloudinary) =====
+function handleVideoFile(e, slot) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (file.size > 100 * 1024 * 1024) {
+        showToast('Video too large! Max 100MB allowed.', 'error');
+        e.target.value = '';
+        return;
+    }
+
+    const progress = document.getElementById(`videoProgress${slot}`);
+    const preview = document.getElementById(`videoPreview${slot}`);
+    progress.style.display = 'block';
+    preview.style.display = 'none';
+    uploadingCount++;
+    document.getElementById('postBtn').disabled = true;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', UPLOAD_PRESET);
+    formData.append('resource_type', 'video');
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`);
+    xhr.onload = () => {
+        progress.style.display = 'none';
+        if (xhr.status === 200) {
+            const res = JSON.parse(xhr.responseText);
+            uploadedImages[slot] = {
+                type: 'video',
+                url: res.secure_url,
+                public_id: res.public_id,
+                videoUrl: res.secure_url
+            };
+            const thumb = document.getElementById(`videoThumb${slot}`);
+            // Generate Cloudinary thumbnail
+            const thumbUrl = res.secure_url.replace('/video/upload/', '/video/upload/so_0/').replace(/\.[^.]+$/, '.jpg');
+            thumb.src = thumbUrl;
+            thumb.style.display = 'block';
+            preview.style.display = 'block';
+            showToast('✓ Video uploaded!', 'success');
+        } else {
+            showToast('Video upload failed. Try again.', 'error');
+        }
+        uploadingCount--;
+        if (uploadingCount === 0) document.getElementById('postBtn').disabled = false;
+        e.target.value = '';
+    };
+    xhr.onerror = () => {
+        progress.style.display = 'none';
+        showToast('Upload error. Check internet.', 'error');
+        uploadingCount--;
+        if (uploadingCount === 0) document.getElementById('postBtn').disabled = false;
+        e.target.value = '';
+    };
+    xhr.send(formData);
+}
+
+// ===== AUTH =====
 firebase.auth().onAuthStateChanged(async user => {
     if (!user) return location.href = 'login.html';
 
@@ -397,6 +785,17 @@ async function loadEditData(id, uid) {
     document.getElementById('size').value = data.size || '';
     document.getElementById('nearby').value = data.nearby || '';
 
+    // Load country
+    if (data.country) {
+        const c = COUNTRIES.find(x => x.name === data.country);
+        if (c) {
+            selectCountry(c.name, c.flag);
+        } else {
+            document.getElementById('countrySearch').value = data.country;
+            document.getElementById('selectedCountry').value = data.country;
+        }
+    }
+
     togglePurposeFields();
 
     if(data.purpose === 'Rent' && data.rentDetails) {
@@ -426,16 +825,26 @@ async function loadEditData(id, uid) {
         document.getElementById('pgAdvance').value = data.pgDetails.advance || '';
     }
 
-    // ✅ Edit mode: images array (supports both old {url} format and new {url, public_id} format)
+    // Load media (images + videos)
     if (Array.isArray(data.images)) {
         data.images.forEach((img, i) => {
             if (i >= 5) return;
-            if (typeof img === 'string') {
-                // Old format — just URL string
+            if (!img) return;
+
+            if (img.type === 'video') {
+                // Video slot
+                if (i >= 3) {
+                    switchSlotMode(i, 'video');
+                    uploadedImages[i] = img;
+                    if (img.videoUrl) {
+                        document.getElementById(`videoUrl${i}`).value = img.videoUrl;
+                        previewVideo(i);
+                    }
+                }
+            } else if (typeof img === 'string') {
                 uploadedImages[i] = { url: img, public_id: null };
                 showImage(i, img);
             } else if (img && img.url) {
-                // New format — {url, public_id}
                 uploadedImages[i] = { url: img.url, public_id: img.public_id || null };
                 showImage(i, img.url);
             }
@@ -454,14 +863,6 @@ function togglePurposeFields() {
     document.getElementById('plotFields').style.display = purpose === 'Plot' ? 'block' : 'none';
     document.getElementById('commercialFields').style.display = purpose === 'Commercial' ? 'block' : 'none';
     document.getElementById('pgFields').style.display = purpose === 'PG' ? 'block' : 'none';
-}
-
-function useManualMode() {
-    document.getElementById('btnManual').classList.add('active');
-    document.getElementById('btnGPS').classList.remove('active');
-    document.getElementById('location').placeholder = "Area, City, State";
-    document.getElementById('gpsInfo').style.display = 'none';
-    currentCoords = { lat: null, lng: null };
 }
 
 function showGPSInfo() {
@@ -517,7 +918,6 @@ function handleFile(e) {
     xhr.onload = () => {
         if (xhr.status === 200) {
             const res = JSON.parse(xhr.responseText);
-            // ✅ FIX: url aur public_id dono save karo
             uploadedImages[activeSlot] = {
                 url: res.secure_url,
                 public_id: res.public_id
@@ -577,10 +977,11 @@ async function submitProperty() {
     const price = Number(document.getElementById('price').value);
     const phone = document.getElementById('phone').value.trim();
     const location = document.getElementById('location').value.trim();
+    const country = document.getElementById('selectedCountry').value.trim();
 
-    // ✅ Filter non-null images
     const finalImages = uploadedImages.filter(img => img !== null);
 
+    if (!country) return showToast("Please select a country", "error");
     if (!/^\d{10}$/.test(phone)) return showToast("Enter valid 10-digit phone number", "error");
     if (price > 1000000000000) return showToast("Price too large. Please enter a valid amount.", "error");
     if (!title || !Number.isInteger(price) || price <= 0 || !location || finalImages.length === 0) {
@@ -597,9 +998,9 @@ async function submitProperty() {
         currency: document.getElementById('currency').value,
         size: document.getElementById('size').value,
         location: location,
+        country: country,
         description: document.getElementById('desc').value.trim(),
         nearby: document.getElementById('nearby').value,
-        // ✅ images array ab {url, public_id} objects store karega
         images: finalImages,
         latitude: currentCoords.lat,
         longitude: currentCoords.lng,
@@ -660,7 +1061,6 @@ async function submitProperty() {
             expiry.setDate(expiry.getDate() + (is30Days ? 30 : 180));
             propertyData.expiryDate = firebase.firestore.Timestamp.fromDate(expiry);
 
-            // ✅ deletionDate = expiryDate + 30 days grace period
             const deletion = new Date(expiry);
             deletion.setDate(deletion.getDate() + 30);
             propertyData.deletionDate = firebase.firestore.Timestamp.fromDate(deletion);
@@ -757,43 +1157,84 @@ function openLocationSettings() {
 
 function confirmGPSCapture() {
     closeGPSModal();
-    document.getElementById('btnGPS').classList.add('active');
-    document.getElementById('btnManual').classList.remove('active');
     if (!navigator.geolocation) {
         showToast('GPS not supported. Please enter address manually.', 'error');
-        useManualMode();
         return;
     }
-    document.getElementById('location').placeholder = "📍 Capturing GPS location...";
+
+    const btn = document.getElementById('btnGPS');
+    const btnText = document.getElementById('gpsButtonText');
+    const btnIcon = document.getElementById('gpsButtonIcon');
+    btnText.textContent = 'Getting location...';
+    btnIcon.textContent = '⏳';
+    btn.disabled = true;
+
     navigator.geolocation.getCurrentPosition(
-        function(position) {
+        async function(position) {
             currentCoords = { lat: position.coords.latitude, lng: position.coords.longitude };
             showGPSInfo();
-            document.getElementById('location').placeholder = "Now type your full address here";
-            document.getElementById('location').focus();
-            showToast('✓ GPS Captured! Now type your full address.', 'success');
+            btn.disabled = false;
+            btnIcon.textContent = '✅';
+            btnText.textContent = 'GPS Captured';
+
+            // ===== REVERSE GEOCODING (OpenStreetMap Nominatim) =====
+            try {
+                btnText.textContent = 'Fetching address...';
+                const resp = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?lat=${currentCoords.lat}&lon=${currentCoords.lng}&format=json`,
+                    { headers: { 'Accept-Language': 'en' } }
+                );
+                const geo = await resp.json();
+                if (geo && geo.address) {
+                    const a = geo.address;
+                    // Auto-fill country
+                    const countryName = a.country || '';
+                    if (countryName) {
+                        const found = COUNTRIES.find(c => c.name.toLowerCase() === countryName.toLowerCase());
+                        if (found) {
+                            selectCountry(found.name, found.flag);
+                        } else {
+                            document.getElementById('countrySearch').value = countryName;
+                            document.getElementById('selectedCountry').value = countryName;
+                            document.getElementById('countryClearBtn').style.display = 'block';
+                        }
+                    }
+                    // Auto-fill address
+                    const parts = [
+                        a.suburb || a.neighbourhood || a.village || a.hamlet || '',
+                        a.city || a.town || a.county || '',
+                        a.state || ''
+                    ].filter(Boolean);
+                    if (parts.length > 0) {
+                        document.getElementById('location').value = parts.join(', ');
+                    }
+                    showToast('✓ Address auto-filled from GPS!', 'success');
+                }
+            } catch(err) {
+                showToast('✓ GPS Captured! Please type your address.', 'success');
+            }
+            btnText.textContent = 'GPS Captured ✓';
         },
         function(error) {
+            btn.disabled = false;
+            btnIcon.textContent = '📍';
+            btnText.textContent = 'Use GPS';
             if (error.code === 1) {
                 showToast('Location permission denied. Please enable in settings.', 'error');
             } else {
                 showToast('GPS failed. Please enter address manually.', 'error');
             }
-            useManualMode();
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
 }
 
-function setGPSHint() {
-    const el = document.getElementById('gpsHintText');
-    if (el) el.textContent = getT('gpsHint') || 'Use GPS only if you are standing at the property location right now';
-}
-
 document.addEventListener('DOMContentLoaded', function() {
-    setGPSHint();
-    window.addEventListener('storage', function(e) {
-        if (e.key === 'selectedLanguage') setGPSHint();
+    // Close dropdown on outside click
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.country-search-wrap')) {
+            document.getElementById('countryDropdown').style.display = 'none';
+        }
     });
 });
 </script>
