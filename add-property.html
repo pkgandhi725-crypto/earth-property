@@ -702,7 +702,7 @@ function handleVideoFile(e, slot) {
     formData.append('resource_type', 'video');
 
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`);
+    xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`);
     xhr.onload = () => {
         progress.style.display = 'none';
         if (xhr.status === 200) {
