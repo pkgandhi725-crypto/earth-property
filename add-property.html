@@ -1006,7 +1006,7 @@ async function submitProperty() {
     const location = document.getElementById('location').value.trim();
     const country = document.getElementById('selectedCountry').value.trim();
 
-    const finalImages = uploadedImages.filter(img => img !== null);
+    const finalImages = uploadedImages.map(img => img || null);
 
     if (!country) return showToast("Please select a country", "error");
     if (!/^\d{10}$/.test(phone)) return showToast("Enter valid 10-digit phone number", "error");
@@ -1078,6 +1078,7 @@ async function submitProperty() {
             await db.collection("properties").doc(editId).update(propertyData);
             showToast('Property Updated Successfully! ✓', 'success');
         } else {
+            propertyData.coverImage = (uploadedImages[0] && uploadedImages[0].url) ? uploadedImages[0].url : null;
             propertyData.ownerId = user.uid;
             propertyData.ownerEpId = currentUserEpId;
             propertyData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
@@ -1099,8 +1100,10 @@ async function submitProperty() {
                 propertyData.isVerified = false;
             }
             
-            await db.collection("properties").add(propertyData);
+            const docRef = await db.collection("properties").add(propertyData);
             showToast('Property Posted Successfully! 🎉', 'success');
+            window.location.href = "property-success.html?id=" + docRef.id;
+            return;
         }
         window.location.href = "my-ads.html";
     } catch(e) { 
