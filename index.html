@@ -149,7 +149,7 @@
         @keyframes postPulse { 0% { box-shadow: 0 0 0 0 rgba(46,125,50,0.6); } 70% { box-shadow: 0 0 0 12px rgba(46,125,50,0); } 100% { box-shadow: 0 0 0 0 rgba(46,125,50,0); } }
 
         /* Guest hidden nav items — hidden by default, shown after login */
-        .guest-hidden { display: none !important; }
+        .guest-hidden { display: none; }
 
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4500; display: none; backdrop-filter: blur(2px); }
         .gallery-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 6000; display: none; }
@@ -679,7 +679,7 @@ function hideEpId() {
 
 // Show/hide guest-hidden nav items
 function showNavForLoggedIn() {
-    document.querySelectorAll('.guest-hidden').forEach(el => el.style.removeProperty('display'));
+    document.querySelectorAll('.guest-hidden').forEach(el => el.style.display = 'flex');
 }
 function hideNavForGuest() {
     document.querySelectorAll('.guest-hidden').forEach(el => el.style.display = 'none');
@@ -924,11 +924,4 @@ applyLanguage();
       <br><br>
       Our mission is to make property transactions simple, secure, and accessible.
       <div style="margin-top:18px;padding:12px;background:#f1f3f4;border-radius:10px;font-weight:700;">
-        📧 Contact: <a href="mailto:contact@theearthproperty.com" style="color:#2e7d32;text-decoration:none;">contact@theearthproperty.com</a>
-      </div>
-    </div>
-  </div>
-</div>
-
-</body>
-</html>
+        📧 Contact: <a href="/cdn-cgi/l/email-protection#680b07061c090b1c281c000d0d091a1c00181a07180d1a1c11460b0705" style="color:#2e7d32;text-decoration:none;"><span class="__cf_email__" data-cfemail
