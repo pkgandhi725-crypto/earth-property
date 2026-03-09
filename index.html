@@ -114,7 +114,6 @@
         .search-box { background: white; border-radius: 10px; display: flex; padding: 10px 15px; align-items: center; gap: 10px; }
         .search-box input { border: none; width: 100%; outline: none; font-size: 14px; color: #333; }
 
-        /* ✅ CHANGE 3: Property Card Touch Animation */
         .prop-card { background: white; border-radius: 15px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: 0.25s; }
         .prop-card:active { transform: scale(0.98); }
 
@@ -126,9 +125,7 @@
         .card-actions { position: absolute; top: 10px; right: 10px; display: flex; gap: 8px; }
         .icon-btn { background: rgba(255,255,255,0.9); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .icon-btn.fav { color: #ff5252; }
-
-        /* ✅ CHANGE 4: Share Button Highlight */
-        .icon-btn.share { background: #1976d2; color:white; }
+        .icon-btn.share { background: #1976d2; color: white; }
 
         .info { padding: 15px; }
         .price { font-size: 22px; font-weight: 800; color: var(--primary); }
@@ -148,10 +145,11 @@
         .nav-item i { font-size: 20px; margin-bottom: 3px; }
         .nav-item.active { color: var(--primary); }
         .post-btn-wrapper { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; }
-
-        /* ✅ CHANGE 5: Post Button Pulse Animation */
         .post-btn { background: var(--primary); color: white !important; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; font-size: 28px; position: absolute; bottom: 5px; text-decoration: none; cursor: pointer; animation: postPulse 2s infinite; }
         @keyframes postPulse { 0% { box-shadow: 0 0 0 0 rgba(46,125,50,0.6); } 70% { box-shadow: 0 0 0 12px rgba(46,125,50,0); } 100% { box-shadow: 0 0 0 0 rgba(46,125,50,0); } }
+
+        /* Guest hidden nav items — hidden by default, shown after login */
+        .guest-hidden { display: none !important; }
 
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4500; display: none; backdrop-filter: blur(2px); }
         .gallery-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 6000; display: none; }
@@ -272,7 +270,7 @@
     </div>
 </div>
 
-<!-- ✅ CHANGE 1+2: CTA Banner — Premium Blue Card + Sticky -->
+<!-- CTA Banner -->
 <div style="background:linear-gradient(135deg,#1976d2,#1565c0); padding:14px 16px; margin:12px; border-radius:14px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; box-shadow:0 6px 18px rgba(0,0,0,0.18); position:sticky; top:70px; z-index:999;" onclick="location.href='add-property.html'">
     <div>
         <div style="font-weight:800; font-size:14px; color:#fff;"><i class="fa fa-home" style="margin-right:6px;"></i><span id="postFreeEl">Post Property FREE</span></div>
@@ -306,12 +304,13 @@
     </button>
 </div>
 
+<!-- Bottom Nav: My Ads, Post, Favs, Profile hidden for guests -->
 <nav class="bottom-nav">
     <a href="index.html" class="nav-item active"><i class="fa fa-home"></i><div id="navExplore">Explore</div></a>
-    <a href="my-ads.html" class="nav-item"><i class="fa fa-layer-group"></i><div id="navMyAds">My Ads</div></a>
-    <div class="post-btn-wrapper"><a href="add-property.html" class="post-btn"><i class="fa fa-plus"></i></a></div>
-    <a href="favorites.html" class="nav-item"><i class="fa-regular fa-heart"></i><div id="navFavs">Favs</div></a>
-    <a href="profile.html" class="nav-item"><i class="fa-regular fa-user"></i><div id="navProfile">Profile</div></a>
+    <a href="my-ads.html" class="nav-item guest-hidden" id="navMyAdsBtn"><i class="fa fa-layer-group"></i><div id="navMyAds">My Ads</div></a>
+    <div class="post-btn-wrapper guest-hidden" id="navPostBtn"><a href="add-property.html" class="post-btn"><i class="fa fa-plus"></i></a></div>
+    <a href="favorites.html" class="nav-item guest-hidden" id="navFavsBtn"><i class="fa-regular fa-heart"></i><div id="navFavs">Favs</div></a>
+    <a href="profile.html" class="nav-item guest-hidden" id="navProfileBtn"><i class="fa-regular fa-user"></i><div id="navProfile">Profile</div></a>
 </nav>
 
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -678,6 +677,14 @@ function hideEpId() {
     const s=document.getElementById('sideEpId'); if(s) s.style.display='none';
 }
 
+// Show/hide guest-hidden nav items
+function showNavForLoggedIn() {
+    document.querySelectorAll('.guest-hidden').forEach(el => el.style.removeProperty('display'));
+}
+function hideNavForGuest() {
+    document.querySelectorAll('.guest-hidden').forEach(el => el.style.display = 'none');
+}
+
 auth.onAuthStateChanged(user=>{
     currentUser=user;
     const logoutBtn=document.getElementById('logoutBtn');
@@ -685,6 +692,7 @@ auth.onAuthStateChanged(user=>{
     const adminSideBtn=document.getElementById('adminSideBtn');
 
     if(user){
+        showNavForLoggedIn();
         db.collection("users").doc(user.uid).get().then(async doc=>{
             currentUserData=doc.exists?doc.data():{};
             const isVerified=currentUserData.isVerified||false;
@@ -710,6 +718,7 @@ auth.onAuthStateChanged(user=>{
             listenForNotifications(user.uid);
         }).catch(e=>console.error("User fetch error:",e));
     } else {
+        hideNavForGuest();
         currentUserData=null; userFavorites=[];
         const t=getT();
         document.getElementById('sideUserName').innerText=t.welcome||'Welcome Guest';
@@ -800,24 +809,23 @@ function renderAds(ads, append=false) {
         card.innerHTML=`
 <div class="img-box" id="imgbox-${sid}">
     <img src="${images[0]}" id="cardimg-${sid}" alt="${stitle}" onerror="this.src='https://via.placeholder.com/400x210?text=No+Image'">
-
     <div class="card-actions">
         <button class="icon-btn share" id="share-${sid}"><i class="fa fa-share-alt"></i></button>
         <button class="icon-btn fav" id="fav-${sid}"><i class="${favIcon}"></i></button>
     </div>
-                ${images.length>1?`<div class="card-dots" id="carddots-${sid}">${images.map((_,i)=>`<div class="card-dot${i===0?' active':''}" id="dot-${sid}-${i}"></div>`).join('')}</div>`:''}
-            </div>
-            <div class="info">
-                <div class="price">₹${Number(p.price||0).toLocaleString('en-IN')}${badge}</div>
-                <div style="font-weight:700;margin:5px 0;color:#333;">${p.isVerified?'<i class="fa fa-check-circle" style="color:#1da1f2;margin-right:3px;"></i>':''}${stitle}</div>
-                <div class="location"><i class="fa-solid fa-location-dot"></i> ${sloc}</div>
-                ${distHTML}
-                <div class="btn-group">
-                    <button class="btn btn-call" id="call-${sid}"><i class="fa fa-phone"></i> ${t.call||'Call'}</button>
-                    <button class="btn btn-wa" id="wa-${sid}"><i class="fa-brands fa-whatsapp"></i> ${t.whatsapp||'WhatsApp'}</button>
-                    <button class="btn btn-chat" id="chat-${sid}"><i class="fa-regular fa-comment"></i> ${t.chat||'Chat'}</button>
-                </div>
-            </div>`;
+    ${images.length>1?`<div class="card-dots" id="carddots-${sid}">${images.map((_,i)=>`<div class="card-dot${i===0?' active':''}" id="dot-${sid}-${i}"></div>`).join('')}</div>`:''}
+</div>
+<div class="info">
+    <div class="price">₹${Number(p.price||0).toLocaleString('en-IN')}${badge}</div>
+    <div style="font-weight:700;margin:5px 0;color:#333;">${p.isVerified?'<i class="fa fa-check-circle" style="color:#1da1f2;margin-right:3px;"></i>':''}${stitle}</div>
+    <div class="location"><i class="fa-solid fa-location-dot"></i> ${sloc}</div>
+    ${distHTML}
+    <div class="btn-group">
+        <button class="btn btn-call" id="call-${sid}"><i class="fa fa-phone"></i> ${t.call||'Call'}</button>
+        <button class="btn btn-wa" id="wa-${sid}"><i class="fa-brands fa-whatsapp"></i> ${t.whatsapp||'WhatsApp'}</button>
+        <button class="btn btn-chat" id="chat-${sid}"><i class="fa-regular fa-comment"></i> ${t.chat||'Chat'}</button>
+    </div>
+</div>`;
 
         list.appendChild(card);
         document.getElementById('imgbox-'+sid).addEventListener('click',e=>{if(e.target.closest('.card-actions'))return;openGallery(images,cardImgIndexes[sid]||0);});
@@ -916,10 +924,11 @@ applyLanguage();
       <br><br>
       Our mission is to make property transactions simple, secure, and accessible.
       <div style="margin-top:18px;padding:12px;background:#f1f3f4;border-radius:10px;font-weight:700;">
-        📧 Contact: <a href="/cdn-cgi/l/email-protection#660509081207051226120e03030714120e161409160314121f4805090b" style="color:#2e7d32;text-decoration:none;"><span class="__cf_email__" data-cfemail="6e0d01001a0f0d1a2e1a060b0b0f1c1a061e1c011e0b1c1a17400d0103">[email&#160;protected]</span></a>
+        📧 Contact: <a href="mailto:contact@theearthproperty.com" style="color:#2e7d32;text-decoration:none;">contact@theearthproperty.com</a>
       </div>
     </div>
   </div>
 </div>
 
-<script data-cfasyn
+</body>
+</html>
