@@ -139,74 +139,83 @@
 
         /* ── Card ── */
         .card {
-            background: white;
-            width: 100%;
-            max-width: 390px;
-            border-radius: 24px;
-            padding: 32px 24px 28px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.1), 0 4px 16px rgba(0,0,0,0.06);
+            width: 100%; max-width: 390px;
+            border-radius: 24px; overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.13), 0 4px 16px rgba(0,0,0,0.07);
             animation: fadeUp 0.6s 0.2s ease both;
         }
-
-        .card-title {
+        .card-header {
+            background: linear-gradient(135deg, #1b5e20, #2e7d32);
+            padding: 28px 24px 24px;
+            text-align: center;
+            position: relative; overflow: hidden;
+        }
+        .card-header::before {
+            content: ''; position: absolute;
+            top: -40px; right: -40px;
+            width: 120px; height: 120px;
+            background: rgba(255,255,255,0.07); border-radius: 50%;
+        }
+        .card-header::after {
+            content: ''; position: absolute;
+            bottom: -30px; left: -30px;
+            width: 100px; height: 100px;
+            background: rgba(255,255,255,0.05); border-radius: 50%;
+        }
+        .card-header-title {
             font-family: 'Playfair Display', serif;
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--text);
-            margin-bottom: 4px;
-        }
-        .card-sub {
-            font-size: 12px;
-            color: var(--muted);
-            margin-bottom: 24px;
-        }
-
-        /* ── Google button ── */
-        .google-btn {
-            width: 100%;
-            padding: 15px 20px;
-            border-radius: 14px;
-            border: 2px solid var(--border);
-            background: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--text);
-            cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-        .google-btn::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: var(--primary);
-            opacity: 0;
-            transition: opacity 0.2s;
-            border-radius: 12px;
-        }
-        .google-btn:hover::before { opacity: 0.04; }
-        .google-btn:active { transform: scale(0.98); }
-        .google-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .google-btn img {
-            width: 22px; height: 22px;
-            flex-shrink: 0;
+            font-size: 22px; font-weight: 800;
+            color: white; margin-bottom: 6px;
             position: relative; z-index: 1;
         }
+        .card-header-sub {
+            font-size: 12px; color: rgba(255,255,255,0.75);
+            font-weight: 500; position: relative; z-index: 1;
+        }
+        .card-body {
+            background: white;
+            padding: 24px 24px 20px;
+        }
+
+        /* ── Google button — prominent green ── */
+        .google-btn {
+            width: 100%; padding: 16px 20px;
+            border-radius: 14px; border: none;
+            background: linear-gradient(135deg, #2e7d32, #43a047);
+            display: flex; align-items: center; justify-content: center; gap: 12px;
+            font-size: 15px; font-weight: 700; color: white;
+            cursor: pointer; transition: all 0.2s;
+            box-shadow: 0 6px 20px rgba(46,125,50,0.35);
+            position: relative; overflow: hidden;
+        }
+        .google-btn::after {
+            content: ''; position: absolute; inset: 0;
+            background: white; opacity: 0; transition: opacity 0.2s;
+        }
+        .google-btn:hover::after { opacity: 0.08; }
+        .google-btn:active { transform: scale(0.97); box-shadow: 0 3px 10px rgba(46,125,50,0.3); }
+        .google-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+        .google-icon-wrap {
+            background: white; width: 28px; height: 28px;
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; position: relative; z-index: 1;
+        }
+        .google-icon-wrap img { width: 18px; height: 18px; }
         .google-btn span { position: relative; z-index: 1; }
+        .new-user-hint {
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            margin-top: 14px; font-size: 11px; color: var(--muted); font-weight: 500;
+        }
+        .new-user-hint i { color: var(--primary); font-size: 11px; }
 
         /* Google spinner */
-        .google-btn .g-spinner {
+        .g-spinner {
             width: 20px; height: 20px;
-            border: 2.5px solid #ddd;
-            border-top-color: var(--primary);
+            border: 2.5px solid rgba(255,255,255,0.4);
+            border-top-color: white;
             border-radius: 50%;
             animation: spin 0.7s linear infinite;
-            display: none;
+            display: none; position: relative; z-index: 1;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -334,24 +343,36 @@
 
     <!-- Card -->
     <div class="card">
-        <div class="card-title">Login / Sign Up</div>
-        <div class="card-sub">New here? Your account is created automatically.</div>
+        <!-- Green header -->
+        <div class="card-header">
+            <div class="card-header-title">Login / Sign Up</div>
+            <div class="card-header-sub">New? Your account is created automatically 🎉</div>
+        </div>
+        <!-- White body -->
+        <div class="card-body">
+            <button class="google-btn" id="googleBtn" onclick="loginWithGoogle()">
+                <div class="g-spinner" id="gSpinner"></div>
+                <div class="google-icon-wrap" id="gIconWrap">
+                    <img src="google.png" alt="Google">
+                </div>
+                <span id="googleBtnText">Continue with Google</span>
+            </button>
 
-        <button class="google-btn" id="googleBtn" onclick="loginWithGoogle()">
-            <div class="g-spinner" id="gSpinner"></div>
-            <img src="google.png" alt="Google" id="gIcon">
-            <span id="googleBtnText">Continue with Google</span>
-        </button>
+            <div class="new-user-hint">
+                <i class="fa fa-info-circle"></i>
+                First time? Just tap above — no password needed!
+            </div>
 
-        <!-- Trust row -->
-        <div class="trust-row">
-            <span class="trust-label">Trusted in</span>
-            <span class="flag">🇮🇳</span>
-            <span class="flag">🇵🇰</span>
-            <span class="flag">🇦🇪</span>
-            <span class="flag">🇸🇦</span>
-            <span class="flag">🇬🇧</span>
-            <span class="flag">🇺🇸</span>
+            <!-- Trust row -->
+            <div class="trust-row">
+                <span class="trust-label">Trusted in</span>
+                <span class="flag">🇮🇳</span>
+                <span class="flag">🇵🇰</span>
+                <span class="flag">🇦🇪</span>
+                <span class="flag">🇸🇦</span>
+                <span class="flag">🇬🇧</span>
+                <span class="flag">🇺🇸</span>
+            </div>
         </div>
     </div>
 
@@ -430,12 +451,12 @@
     async function loginWithGoogle() {
         const btn = document.getElementById('googleBtn');
         const spinner = document.getElementById('gSpinner');
-        const icon = document.getElementById('gIcon');
         const text = document.getElementById('googleBtnText');
 
         btn.disabled = true;
         spinner.style.display = 'block';
-        icon.style.display = 'none';
+        const iconWrap = document.getElementById('gIconWrap');
+        iconWrap.style.display = 'none';
         text.textContent = 'Signing in...';
 
         const provider = new firebase.auth.GoogleAuthProvider();
@@ -451,7 +472,7 @@
             showToast(msg, 'error');
             btn.disabled = false;
             spinner.style.display = 'none';
-            icon.style.display = 'block';
+            document.getElementById('gIconWrap').style.display = 'flex';
             text.textContent = 'Continue with Google';
         }
     }
