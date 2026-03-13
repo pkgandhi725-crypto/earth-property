@@ -590,7 +590,7 @@ function updateVerificationStatus(isVerified) {
 
 function applyLanguage() {
     const t=getT(), user=auth.currentUser;
-    if(!user){document.getElementById('sideUserName').innerText=t.welcome||'Welcome Guest';document.getElementById('authBtn').innerText=t.login||'Login/Signup';document.getElementById('authBtn').onclick=()=>location.href='login.html';}
+    if(!user){document.getElementById('sideUserName').innerText=t.welcome||'Welcome Guest';document.getElementById('authBtn').innerText='Login / Sign Up';document.getElementById('authBtn').onclick=()=>location.href='login.html';}
     else{document.getElementById('authBtn').innerText=t.logout||'Logout';document.getElementById('authBtn').onclick=handleLogout;}
     document.getElementById('langLabel').innerText=t.language||'Language';
     document.getElementById('myAdsText').innerText=t.myAds||'My Ads';
