@@ -2,227 +2,464 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Earth Property | Secure Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Earth Property – Login / Sign Up</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
-        :root { --primary: #2e7d32; --bg: #f8f9fa; }
-        body { margin: 0; height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #e8f5e9, #f0f2f5); font-family: system-ui, sans-serif; overflow: hidden; }
-        
-        .toast { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); background: #323232; color: #fff; padding: 14px 28px; border-radius: 12px; font-size: 14px; transition: 0.5s; z-index: 1000; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-        .toast.show { top: 20px; }
-        .toast.error { background: #d32f2f; }
+        :root {
+            --primary: #2e7d32;
+            --primary-dark: #1b5e20;
+            --primary-light: #43a047;
+            --accent: #a5d6a7;
+            --text: #1a1a1a;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --white: #ffffff;
+        }
 
-        .card { background: #fff; width: 90%; max-width: 360px; padding: 40px 25px; border-radius: 28px; box-shadow: 0 15px 40px rgba(0,0,0,0.1); text-align: center; }
-        .logo { font-size: 26px; font-weight: 800; color: var(--primary); margin-bottom: 5px; }
-        
-        input { width: 100%; padding: 16px; border-radius: 14px; border: 1.5px solid #eee; font-size: 16px; outline: none; box-sizing: border-box; transition: 0.3s; margin-bottom: 18px; }
-        input:focus { border-color: var(--primary); background: #f9fff9; }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-        button, .google-btn { width: 100%; padding: 16px; border: none; border-radius: 14px; background-color: var(--primary) !important; color: #ffffff !important; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.2s; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; box-sizing: border-box; }
-        button:hover:not(:disabled), .google-btn:hover:not(:disabled) { background-color: #1b5e20 !important; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        button:disabled, .google-btn:disabled { background-color: #ccc !important; cursor: not-allowed; opacity: 0.7; }
-        .google-btn img { width: 20px; height: 20px; margin-right: 12px; background: #fff; border-radius: 50%; padding: 3px; }
-        
-        .divider { margin: 20px 0; color: #bbb; font-size: 12px; position: relative; }
-        .divider::before, .divider::after { content: ""; position: absolute; top: 50%; width: 40%; height: 1px; background: #eee; }
-        .divider::before { left: 0; } .divider::after { right: 0; }
-        
-        .spinner { width: 20px; height: 20px; border: 3px solid #ffffff55; border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; display: none; margin-right: 10px; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #f0f4f0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* ── Background decorative blobs ── */
+        .bg-blobs {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .bg-blobs::before {
+            content: '';
+            position: absolute;
+            top: -120px; right: -80px;
+            width: 380px; height: 380px;
+            background: radial-gradient(circle, #c8e6c9 0%, transparent 70%);
+            border-radius: 50%;
+            animation: blobFloat 8s ease-in-out infinite alternate;
+        }
+        .bg-blobs::after {
+            content: '';
+            position: absolute;
+            bottom: -100px; left: -60px;
+            width: 320px; height: 320px;
+            background: radial-gradient(circle, #dcedc8 0%, transparent 70%);
+            border-radius: 50%;
+            animation: blobFloat 10s ease-in-out infinite alternate-reverse;
+        }
+        @keyframes blobFloat {
+            from { transform: translateY(0px) scale(1); }
+            to   { transform: translateY(30px) scale(1.05); }
+        }
+
+        /* ── Top bar ── */
+        .topbar {
+            position: relative; z-index: 10;
+            padding: 18px 24px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .topbar-logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--primary-dark);
+            letter-spacing: 0.3px;
+        }
+        .topbar-globe { font-size: 22px; }
+
+        /* ── Main wrapper ── */
+        .page-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px 40px;
+            position: relative; z-index: 5;
+        }
+
+        /* ── Hero text ── */
+        .hero-section {
+            text-align: center;
+            margin-bottom: 28px;
+            animation: fadeUp 0.6s ease both;
+        }
+        .hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 30px;
+            font-weight: 800;
+            color: var(--primary-dark);
+            line-height: 1.2;
+            margin-bottom: 10px;
+        }
+        .hero-title span {
+            color: var(--primary);
+        }
+        .hero-sub {
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        /* ── Value pills ── */
+        .value-pills {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin: 16px 0 0;
+            animation: fadeUp 0.6s 0.1s ease both;
+        }
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: white;
+            border: 1.5px solid #d1fae5;
+            color: var(--primary-dark);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 5px 12px;
+            border-radius: 30px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .pill i { font-size: 11px; color: var(--primary); }
+
+        /* ── Card ── */
+        .card {
+            background: white;
+            width: 100%;
+            max-width: 390px;
+            border-radius: 24px;
+            padding: 32px 24px 28px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1), 0 4px 16px rgba(0,0,0,0.06);
+            animation: fadeUp 0.6s 0.2s ease both;
+        }
+
+        .card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+        .card-sub {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 24px;
+        }
+
+        /* ── Google button ── */
+        .google-btn {
+            width: 100%;
+            padding: 15px 20px;
+            border-radius: 14px;
+            border: 2px solid var(--border);
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .google-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--primary);
+            opacity: 0;
+            transition: opacity 0.2s;
+            border-radius: 12px;
+        }
+        .google-btn:hover::before { opacity: 0.04; }
+        .google-btn:active { transform: scale(0.98); }
+        .google-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .google-btn img {
+            width: 22px; height: 22px;
+            flex-shrink: 0;
+            position: relative; z-index: 1;
+        }
+        .google-btn span { position: relative; z-index: 1; }
+
+        /* Google spinner */
+        .google-btn .g-spinner {
+            width: 20px; height: 20px;
+            border: 2.5px solid #ddd;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            display: none;
+        }
         @keyframes spin { to { transform: rotate(360deg); } }
-        
-        #cooldownTimer { font-size: 12px; color: #d32f2f; margin-top: 10px; display: none; font-weight: 600; }
-        .footer-flags { margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px; color: #bbb; font-size: 20px; letter-spacing: 5px; }
+
+        /* ── Divider ── */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 20px 0;
+            color: var(--border);
+            font-size: 11px;
+            font-weight: 700;
+            color: #bbb;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .divider::before, .divider::after {
+            content: ''; flex: 1; height: 1px; background: var(--border);
+        }
+
+        /* ── Trust row (flags) ── */
+        .trust-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 22px;
+            padding-top: 18px;
+            border-top: 1px solid var(--border);
+        }
+        .trust-label {
+            font-size: 10px;
+            color: #bbb;
+            font-weight: 600;
+            margin-right: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .flag { font-size: 20px; }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed;
+            top: -80px; left: 50%;
+            transform: translateX(-50%);
+            background: #1a1a1a;
+            color: white;
+            padding: 13px 24px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 9999;
+            transition: top 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+            white-space: nowrap;
+            max-width: 90vw;
+        }
+        .toast.show { top: 20px; }
+        .toast.error { background: #c62828; }
+        .toast.success { background: var(--primary); }
+
+        /* ── Animations ── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Features list below card ── */
+        .features-list {
+            width: 100%;
+            max-width: 390px;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            animation: fadeUp 0.6s 0.35s ease both;
+        }
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: white;
+            border-radius: 14px;
+            padding: 14px 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .feature-icon {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .feature-icon.green { background: #e8f5e9; }
+        .feature-icon.blue  { background: #e3f2fd; }
+        .feature-icon.orange{ background: #fff3e0; }
+        .feature-title { font-size: 13px; font-weight: 700; color: var(--text); }
+        .feature-desc  { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
     </style>
 </head>
 <body>
 
-    <div id="toast" class="toast"></div>
+<div class="bg-blobs"></div>
 
-    <div class="card">
-        <div class="logo">🌍 Earth Property</div>
-        <div id="ui-container">
-            <p style="font-size: 13px; color: #777; margin-bottom: 25px;">International Property Portal</p>
-            
-            <button class="google-btn" id="googleBtn" onclick="loginWithGoogle()">
-                <img src="google.png" alt="Google">
-                <span id="googleBtnText">Continue with Google</span>
-            </button>
+<div class="topbar">
+    <span class="topbar-globe">🌍</span>
+    <span class="topbar-logo">The Earth Property</span>
+</div>
 
-            <div class="divider">OR</div>
+<div id="toast" class="toast"></div>
 
-            <input type="email" id="email" placeholder="Enter email address" required>
-            <button id="loginBtn" onclick="login()">
-                <div class="spinner" id="loader"></div>
-                <span id="btnText">Get Secure Link</span>
-            </button>
-            <div id="cooldownTimer"></div>
+<div class="page-wrap">
+
+    <!-- Hero -->
+    <div class="hero-section">
+        <div class="hero-title">Your Property.<br><span>Your World.</span></div>
+        <div class="hero-sub">Join thousands of buyers, sellers & renters<br>across the globe — for free.</div>
+        <div class="value-pills">
+            <div class="pill"><i class="fa fa-home"></i> PG, Plots, Flats</div>
+            <div class="pill"><i class="fa fa-check-circle"></i> Free Listings</div>
+            <div class="pill"><i class="fa fa-globe"></i> Worldwide</div>
+            <div class="pill"><i class="fa fa-ban"></i> No Brokers</div>
         </div>
-        <div class="footer-flags">🇮🇳 🇵🇰 🇦🇪 🇸🇦 🇬🇧 🇺🇸</div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+    <!-- Card -->
+    <div class="card">
+        <div class="card-title">Login / Sign Up</div>
+        <div class="card-sub">New here? Your account is created automatically.</div>
 
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
-            authDomain: "earth-properties-c3c56.firebaseapp.com",
-            projectId: "earth-properties-c3c56"
-        };
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+        <button class="google-btn" id="googleBtn" onclick="loginWithGoogle()">
+            <div class="g-spinner" id="gSpinner"></div>
+            <img src="google.png" alt="Google" id="gIcon">
+            <span id="googleBtnText">Continue with Google</span>
+        </button>
 
-        const BASE_URL = "https://theearthproperty.com";
-        const COOLDOWN_MS = 60000;
+        <!-- Trust row -->
+        <div class="trust-row">
+            <span class="trust-label">Trusted in</span>
+            <span class="flag">🇮🇳</span>
+            <span class="flag">🇵🇰</span>
+            <span class="flag">🇦🇪</span>
+            <span class="flag">🇸🇦</span>
+            <span class="flag">🇬🇧</span>
+            <span class="flag">🇺🇸</span>
+        </div>
+    </div>
 
-        function showToast(msg, isError = false) {
-            const t = document.getElementById('toast');
-            t.textContent = msg;
-            t.className = `toast show ${isError ? 'error' : ''}`;
-            setTimeout(() => t.classList.remove('show'), 4000);
-        }
+    <!-- Features -->
+    <div class="features-list">
+        <div class="feature-item">
+            <div class="feature-icon green"><i class="fa fa-tag" style="color:#2e7d32;"></i></div>
+            <div>
+                <div class="feature-title">Post Property for FREE</div>
+                <div class="feature-desc">List your house, flat, plot, PG or commercial property at zero cost.</div>
+            </div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon blue"><i class="fa fa-users" style="color:#1565c0;"></i></div>
+            <div>
+                <div class="feature-title">Connect Worldwide</div>
+                <div class="feature-desc">Reach buyers & sellers globally. Direct contact — no middleman, no commission.</div>
+            </div>
+        </div>
+        <div class="feature-item">
+            <div class="feature-icon orange"><i class="fa fa-shield-alt" style="color:#e65100;"></i></div>
+            <div>
+                <div class="feature-title">Verified & Secure</div>
+                <div class="feature-desc">Every listing is reviewed. Your data is protected. 100% safe platform.</div>
+            </div>
+        </div>
+    </div>
 
-        // ✅ Naye user ko EP ID assign karo — transaction safe
-        async function assignEpIdIfNew(user) {
-            try {
-                const userRef = db.collection("users").doc(user.uid);
-                const userSnap = await userRef.get();
+</div>
 
-                // Pehle se EP ID hai to kuch mat karo
-                if (userSnap.exists && userSnap.data().epId) return;
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
 
-                // ✅ Firestore transaction — 2 users ek saath same ID na paayein
-                const counterRef = db.collection("counters").doc("userCount");
-                const newNumber = await db.runTransaction(async (transaction) => {
-                    const counterSnap = await transaction.get(counterRef);
-                    const current = counterSnap.exists ? counterSnap.data().count : 1000;
-                    const next = current + 1;
-                    transaction.set(counterRef, { count: next }, { merge: true });
-                    return next;
-                });
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
+        authDomain: "earth-properties-c3c56.firebaseapp.com",
+        projectId: "earth-properties-c3c56"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const BASE_URL = "https://theearthproperty.com";
 
-                // ✅ User doc mein EP ID + basic info save karo
-                await userRef.set({
-                    epId: `TEP${newNumber}`,
-                    email: user.email || "",
-                    displayName: user.displayName || "",
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
+    function showToast(msg, type = '') {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = `toast show ${type}`;
+        setTimeout(() => t.classList.remove('show'), 3500);
+    }
 
-            } catch (e) {
-                // ID assign fail ho to bhi login block mat karo
-                console.error("EP ID assign error:", e);
-            }
-        }
-
-        // ✅ Google Login
-        async function loginWithGoogle() {
-            const btn = document.getElementById('googleBtn');
-            const btnText = document.getElementById('googleBtnText');
-            btn.disabled = true;
-            btnText.innerHTML = "Logging in...";
-            const provider = new firebase.auth.GoogleAuthProvider();
-            try {
-                const result = await auth.signInWithPopup(provider);
-                await assignEpIdIfNew(result.user);
-                showToast("✓ Welcome " + (result.user.displayName || "User"));
-                window.location.replace(`${BASE_URL}/index.html`);
-            } catch (error) {
-                console.error(error);
-                let msg = "Login Failed";
-                if (error.code === 'auth/popup-closed-by-user') msg = "Login cancelled";
-                showToast(msg, true);
-                btn.disabled = false;
-                btnText.innerHTML = "Continue with Google";
-            }
-        }
-
-        // Cooldown timer
-        function updateCooldownUI() {
-            const timer = document.getElementById('cooldownTimer');
-            const btn = document.getElementById('loginBtn');
-            const lastSent = parseInt(localStorage.getItem('lastEmailSentTime') || '0');
-            const remaining = Math.ceil((lastSent + COOLDOWN_MS - Date.now()) / 1000);
-            if (remaining > 0) {
-                btn.disabled = true;
-                timer.style.display = 'block';
-                timer.textContent = `⏱ Wait ${remaining}s`;
-                setTimeout(updateCooldownUI, 1000);
-            } else {
-                btn.disabled = false;
-                timer.style.display = 'none';
-            }
-        }
-
-        // Email Link Login
-        async function login() {
-            const email = document.getElementById('email').value.trim();
-            const btn = document.getElementById('loginBtn');
-            const loader = document.getElementById('loader');
-            const btnText = document.getElementById('btnText');
-
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                return showToast("Invalid email format", true);
-            }
-
-            btn.disabled = true;
-            loader.style.display = "block";
-            btnText.style.display = "none";
-
-            try {
-                await auth.sendSignInLinkToEmail(email, {
-                    url: `${BASE_URL}/login.html`,
-                    handleCodeInApp: true
-                });
-                localStorage.setItem('emailForSignIn', email);
-                localStorage.setItem('lastEmailSentTime', Date.now().toString());
-                showToast("✓ Link sent to your email!");
-                updateCooldownUI();
-            } catch (error) {
-                showToast(error.message, true);
-                btn.disabled = false;
-            } finally {
-                loader.style.display = "none";
-                btnText.style.display = "block";
-            }
-        }
-
-        // Initialization
-        window.onload = function () {
-            if (localStorage.getItem('lastEmailSentTime')) updateCooldownUI();
-
-            // ✅ Email link verify + EP ID assign
-            if (auth.isSignInWithEmailLink(window.location.href)) {
-                let email = localStorage.getItem('emailForSignIn') || window.prompt("Confirm your email:");
-                if (email) {
-                    auth.signInWithEmailLink(email, window.location.href)
-                        .then(async (result) => {
-                            localStorage.removeItem('emailForSignIn');
-                            await assignEpIdIfNew(result.user);
-                            window.location.replace(`${BASE_URL}/index.html`);
-                        })
-                        .catch(() => showToast("Link expired.", true));
-                }
-            }
-
-            // Auto redirect if already logged in
-            auth.onAuthStateChanged((user) => {
-                if (user && !auth.isSignInWithEmailLink(window.location.href)) {
-                    window.location.replace(`${BASE_URL}/index.html`);
-                }
+    async function assignEpIdIfNew(user) {
+        try {
+            const userRef = db.collection("users").doc(user.uid);
+            const userSnap = await userRef.get();
+            if (userSnap.exists && userSnap.data().epId) return;
+            const counterRef = db.collection("counters").doc("userCount");
+            const newNumber = await db.runTransaction(async (tx) => {
+                const cs = await tx.get(counterRef);
+                const n = (cs.exists ? cs.data().count : 1000) + 1;
+                tx.set(counterRef, { count: n }, { merge: true });
+                return n;
             });
+            await userRef.set({
+                epId: `TEP${newNumber}`,
+                email: user.email || "",
+                displayName: user.displayName || "",
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        } catch (e) {
+            console.error("EP ID error:", e);
+        }
+    }
 
-            // Enter key support
-            document.getElementById('email').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') login();
-            });
-        };
-    </script>
+    async function loginWithGoogle() {
+        const btn = document.getElementById('googleBtn');
+        const spinner = document.getElementById('gSpinner');
+        const icon = document.getElementById('gIcon');
+        const text = document.getElementById('googleBtnText');
+
+        btn.disabled = true;
+        spinner.style.display = 'block';
+        icon.style.display = 'none';
+        text.textContent = 'Signing in...';
+
+        const provider = new firebase.auth.GoogleAuthProvider();
+        try {
+            const result = await auth.signInWithPopup(provider);
+            await assignEpIdIfNew(result.user);
+            showToast('✓ Welcome ' + (result.user.displayName || 'User'), 'success');
+            setTimeout(() => window.location.replace(`${BASE_URL}/index.html`), 800);
+        } catch (error) {
+            let msg = 'Login failed. Please try again.';
+            if (error.code === 'auth/popup-closed-by-user') msg = 'Login cancelled';
+            if (error.code === 'auth/network-request-failed') msg = 'No internet connection';
+            showToast(msg, 'error');
+            btn.disabled = false;
+            spinner.style.display = 'none';
+            icon.style.display = 'block';
+            text.textContent = 'Continue with Google';
+        }
+    }
+
+    // Auto-redirect if already logged in
+    auth.onAuthStateChanged((user) => {
+        if (user) window.location.replace(`${BASE_URL}/index.html`);
+    });
+</script>
 </body>
 </html>
