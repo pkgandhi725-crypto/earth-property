@@ -116,7 +116,6 @@
 
         .prop-card { background: white; border-radius: 15px; margin: 15px 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: 0.25s; }
         .prop-card:active { transform: scale(0.98); }
-
         .img-box { width: 100%; height: 210px; background: #eee; position: relative; cursor: pointer; overflow: hidden; }
         .img-box img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .card-dots { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; }
@@ -126,9 +125,21 @@
         .icon-btn { background: rgba(255,255,255,0.9); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .icon-btn.fav { color: #ff5252; }
         .icon-btn.share { background: #1976d2; color: white; }
-
         .info { padding: 15px; }
         .price { font-size: 22px; font-weight: 800; color: var(--primary); }
+
+        /* ── Currency converter badge ── */
+        .converted-price {
+            font-size: 11px;
+            color: #888;
+            font-weight: 600;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .converted-price i { font-size: 10px; color: #aaa; }
+
         .location { font-size: 12px; color: #666; margin: 5px 0; }
         .distance-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: #2e7d32; margin-top: 3px; }
         .btn-group { display: flex; gap: 8px; margin-top: 15px; }
@@ -147,10 +158,7 @@
         .post-btn-wrapper { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; }
         .post-btn { background: var(--primary); color: white !important; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; font-size: 28px; position: absolute; bottom: 5px; text-decoration: none; cursor: pointer; animation: postPulse 2s infinite; }
         @keyframes postPulse { 0% { box-shadow: 0 0 0 0 rgba(46,125,50,0.6); } 70% { box-shadow: 0 0 0 12px rgba(46,125,50,0); } 100% { box-shadow: 0 0 0 0 rgba(46,125,50,0); } }
-
-        /* Guest hidden nav items — hidden by default, shown after login */
         .guest-hidden { display: none; }
-
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4500; display: none; backdrop-filter: blur(2px); }
         .gallery-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 6000; display: none; }
         .gallery-modal.active { display: flex; flex-direction: column; }
@@ -250,7 +258,7 @@
                 <i class="fa-regular fa-bell"></i>
                 <div id="bellBadge" class="bell-badge">0</div>
             </div>
-            <button id="authBtn" onclick="location.href='login.html'" style="background:rgba(255,255,255,0.2); border:none; color:white; padding:8px 15px; border-radius:25px; cursor:pointer; font-weight:700; font-size:12px;">Login</button>
+            <button id="authBtn" onclick="location.href='login.html'" style="background:rgba(255,255,255,0.2); border:none; color:white; padding:8px 15px; border-radius:25px; cursor:pointer; font-weight:700; font-size:12px;">Login / Sign Up</button>
         </div>
     </div>
     <div class="search-box">
@@ -304,7 +312,6 @@
     </button>
 </div>
 
-<!-- Bottom Nav: My Ads, Post, Favs, Profile hidden for guests -->
 <nav class="bottom-nav">
     <a href="index.html" class="nav-item active"><i class="fa fa-home"></i><div id="navExplore">Explore</div></a>
     <a href="my-ads.html" class="nav-item guest-hidden" id="navMyAdsBtn"><i class="fa fa-layer-group"></i><div id="navMyAds">My Ads</div></a>
@@ -357,31 +364,163 @@ const CLOUD_NAME = "dnkhurnbv";
 const CLOUDINARY_DELETE_ENDPOINT = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/destroy`;
 const CLEANUP_KEY = 'ep_last_cleanup';
 
+// =============================================
+// ===== CURRENCY CONVERTER (CACHED) =====
+// =============================================
+const RATES_CACHE_KEY = 'tep_exchange_rates';
+const RATES_CACHE_TIME_KEY = 'tep_exchange_rates_time';
+const RATES_CACHE_HOURS = 24;
+
+let exchangeRates = null;
+let userCurrency = 'INR'; // default
+let userCurrencySymbol = '₹';
+
+// Currency symbols map
+const CURRENCY_SYMBOLS = {
+    INR:'₹', USD:'$', GBP:'£', EUR:'€', AED:'AED', SAR:'SAR',
+    PKR:'Rs', BDT:'৳', SGD:'S$', MYR:'RM', CAD:'C$', AUD:'A$',
+    NGN:'₦', GHS:'₵', KES:'KSh', UGX:'USh', RWF:'Fr', NPR:'Rs',
+    LKR:'Rs', ZAR:'R', TZS:'TSh', PHP:'₱', IDR:'Rp', THB:'฿',
+    VND:'₫', TRY:'₺', BRL:'R$', MXN:'$', KWD:'KD', QAR:'QR',
+    OMR:'OMR', BHD:'BD', JOD:'JD', EGP:'£', MAD:'MAD', CNY:'¥',
+    JPY:'¥', KRW:'₩', RUB:'₽', CHF:'CHF', SEK:'kr', NOK:'kr',
+    DKK:'kr', PLN:'zł'
+};
+
+// Detect user currency from browser language/timezone
+function detectUserCurrency() {
+    try {
+        const lang = navigator.language || navigator.languages?.[0] || 'en-US';
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+
+        // Timezone based detection (more accurate)
+        if (tz.includes('Kolkata') || tz.includes('Calcutta')) return { code: 'INR', symbol: '₹' };
+        if (tz.includes('Karachi') || tz.includes('Pakistan')) return { code: 'PKR', symbol: 'Rs' };
+        if (tz.includes('Dubai') || tz.includes('Abu_Dhabi')) return { code: 'AED', symbol: 'AED' };
+        if (tz.includes('Riyadh') || tz.includes('Saudi')) return { code: 'SAR', symbol: 'SAR' };
+        if (tz.includes('London')) return { code: 'GBP', symbol: '£' };
+        if (tz.includes('Dhaka')) return { code: 'BDT', symbol: '৳' };
+        if (tz.includes('Kathmandu')) return { code: 'NPR', symbol: 'Rs' };
+        if (tz.includes('Colombo')) return { code: 'LKR', symbol: 'Rs' };
+        if (tz.includes('Lagos') || tz.includes('Africa/Lagos')) return { code: 'NGN', symbol: '₦' };
+        if (tz.includes('Accra') || tz.includes('Africa/Accra')) return { code: 'GHS', symbol: '₵' };
+        if (tz.includes('Nairobi')) return { code: 'KES', symbol: 'KSh' };
+        if (tz.includes('Kampala')) return { code: 'UGX', symbol: 'USh' };
+        if (tz.includes('Kigali')) return { code: 'RWF', symbol: 'Fr' };
+        if (tz.includes('Johannesburg')) return { code: 'ZAR', symbol: 'R' };
+        if (tz.includes('Dar_es_Salaam')) return { code: 'TZS', symbol: 'TSh' };
+        if (tz.includes('Singapore')) return { code: 'SGD', symbol: 'S$' };
+        if (tz.includes('Kuala_Lumpur')) return { code: 'MYR', symbol: 'RM' };
+        if (tz.includes('Manila') || tz.includes('Philippines')) return { code: 'PHP', symbol: '₱' };
+        if (tz.includes('Jakarta') || tz.includes('Indonesia')) return { code: 'IDR', symbol: 'Rp' };
+        if (tz.includes('Bangkok') || tz.includes('Thailand')) return { code: 'THB', symbol: '฿' };
+        if (tz.includes('Ho_Chi_Minh') || tz.includes('Hanoi')) return { code: 'VND', symbol: '₫' };
+        if (tz.includes('Kuwait')) return { code: 'KWD', symbol: 'KD' };
+        if (tz.includes('Qatar')) return { code: 'QAR', symbol: 'QR' };
+        if (tz.includes('Muscat')) return { code: 'OMR', symbol: 'OMR' };
+        if (tz.includes('Bahrain')) return { code: 'BHD', symbol: 'BD' };
+        if (tz.includes('Amman')) return { code: 'JOD', symbol: 'JD' };
+        if (tz.includes('Cairo')) return { code: 'EGP', symbol: '£' };
+        if (tz.includes('Casablanca')) return { code: 'MAD', symbol: 'MAD' };
+        if (tz.includes('Istanbul')) return { code: 'TRY', symbol: '₺' };
+        if (tz.includes('Shanghai') || tz.includes('Beijing')) return { code: 'CNY', symbol: '¥' };
+        if (tz.includes('Tokyo')) return { code: 'JPY', symbol: '¥' };
+        if (tz.includes('Seoul')) return { code: 'KRW', symbol: '₩' };
+        if (tz.includes('Moscow')) return { code: 'RUB', symbol: '₽' };
+        if (tz.includes('Zurich') || tz.includes('Bern')) return { code: 'CHF', symbol: 'CHF' };
+        if (tz.includes('Toronto') || tz.includes('Vancouver')) return { code: 'CAD', symbol: 'C$' };
+        if (tz.includes('Sydney') || tz.includes('Melbourne')) return { code: 'AUD', symbol: 'A$' };
+        if (tz.includes('Sao_Paulo') || tz.includes('Brazil')) return { code: 'BRL', symbol: 'R$' };
+        if (tz.includes('Mexico')) return { code: 'MXN', symbol: '$' };
+
+        // Language based fallback
+        if (lang.startsWith('en-US') || lang === 'en') return { code: 'USD', symbol: '$' };
+        if (lang.startsWith('en-GB')) return { code: 'GBP', symbol: '£' };
+        if (lang.startsWith('de') || lang.startsWith('fr') || lang.startsWith('it') || lang.startsWith('es') || lang.startsWith('nl') || lang.startsWith('pl')) return { code: 'EUR', symbol: '€' };
+
+        return { code: 'USD', symbol: '$' };
+    } catch(e) {
+        return { code: 'USD', symbol: '$' };
+    }
+}
+
+async function loadExchangeRates() {
+    try {
+        // Check cache first
+        const cachedTime = localStorage.getItem(RATES_CACHE_TIME_KEY);
+        const cachedRates = localStorage.getItem(RATES_CACHE_KEY);
+        const now = Date.now();
+
+        if (cachedTime && cachedRates && (now - parseInt(cachedTime)) < RATES_CACHE_HOURS * 3600 * 1000) {
+            exchangeRates = JSON.parse(cachedRates);
+            return;
+        }
+
+        // Fetch fresh rates (base: INR)
+        const res = await fetch('https://api.exchangerate-api.com/v4/latest/INR');
+        if (!res.ok) throw new Error('API failed');
+        const data = await res.json();
+        exchangeRates = data.rates;
+
+        // Save to cache
+        localStorage.setItem(RATES_CACHE_KEY, JSON.stringify(exchangeRates));
+        localStorage.setItem(RATES_CACHE_TIME_KEY, now.toString());
+    } catch(e) {
+        // If API fails, use approximate fallback rates (INR base)
+        exchangeRates = {
+            USD: 0.012, GBP: 0.0095, EUR: 0.011, AED: 0.044, SAR: 0.045,
+            PKR: 3.35, BDT: 1.31, SGD: 0.016, MYR: 0.056, CAD: 0.016,
+            AUD: 0.018, NGN: 19.5, GHS: 0.18, KES: 1.55, UGX: 44.5,
+            RWF: 16.8, NPR: 1.6, LKR: 3.7, ZAR: 0.22, PHP: 0.67,
+            IDR: 190, THB: 0.43, VND: 295, TRY: 0.39, BRL: 0.062,
+            KWD: 0.0037, QAR: 0.044, OMR: 0.0046, CNY: 0.086,
+            JPY: 1.8, KRW: 16.2, RUB: 1.09, CHF: 0.011, INR: 1
+        };
+    }
+}
+
+function convertPrice(amount, fromCurrency) {
+    if (!exchangeRates) return null;
+    if (fromCurrency === userCurrency) return null; // same currency, no need to show
+    try {
+        // Convert to INR first, then to user currency
+        const inINR = fromCurrency === 'INR' ? amount : amount / (exchangeRates[fromCurrency] || 1);
+        const converted = inINR * (exchangeRates[userCurrency] || 1);
+
+        // Format nicely
+        if (converted >= 10000000) return `${userCurrencySymbol}${(converted/10000000).toFixed(1)}Cr`;
+        if (converted >= 100000) return `${userCurrencySymbol}${(converted/100000).toFixed(1)}L`;
+        if (converted >= 1000) return `${userCurrencySymbol}${Math.round(converted).toLocaleString()}`;
+        return `${userCurrencySymbol}${converted.toFixed(0)}`;
+    } catch(e) { return null; }
+}
+
+// Init converter
+(async () => {
+    const detected = detectUserCurrency();
+    userCurrency = detected.code;
+    userCurrencySymbol = detected.symbol;
+    await loadExchangeRates();
+})();
+
+// =============================================
+
 async function runCleanupIfNeeded() {
     try {
         const lastRun = localStorage.getItem(CLEANUP_KEY);
         const todayStr = new Date().toISOString().split('T')[0];
         if (lastRun === todayStr) return;
-
         const now = new Date();
         const snapshot = await db.collection("properties")
             .where("deletionDate", "<=", firebase.firestore.Timestamp.fromDate(now))
             .get();
-
-        if (snapshot.empty) {
-            localStorage.setItem(CLEANUP_KEY, todayStr);
-            console.log('[Cleanup] No ads to delete today.');
-            return;
-        }
-
+        if (snapshot.empty) { localStorage.setItem(CLEANUP_KEY, todayStr); return; }
         const batch = db.batch();
         for (const doc of snapshot.docs) {
             const data = doc.data();
             if (Array.isArray(data.images)) {
                 for (const img of data.images) {
-                    const pid = (typeof img === 'object' && img.public_id)
-                        ? img.public_id
-                        : extractPublicIdFromUrl(img);
+                    const pid = (typeof img === 'object' && img.public_id) ? img.public_id : extractPublicIdFromUrl(img);
                     if (pid) await deleteCloudinaryImage(pid);
                 }
             }
@@ -389,17 +528,11 @@ async function runCleanupIfNeeded() {
         }
         await batch.commit();
         localStorage.setItem(CLEANUP_KEY, todayStr);
-        console.log(`[Cleanup] Done. ${snapshot.size} ads deleted.`);
-    } catch (err) {
-        console.warn('[Cleanup] Error (non-blocking):', err.message);
-    }
+    } catch (err) { console.warn('[Cleanup] Error:', err.message); }
 }
 
 function extractPublicIdFromUrl(url) {
-    try {
-        const match = url.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.\w+)?$/);
-        return match ? match[1] : null;
-    } catch { return null; }
+    try { const match = url.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.\w+)?$/); return match ? match[1] : null; } catch { return null; }
 }
 
 async function deleteCloudinaryImage(publicId) {
@@ -407,13 +540,8 @@ async function deleteCloudinaryImage(publicId) {
         const formData = new FormData();
         formData.append('public_id', publicId);
         formData.append('upload_preset', 'earth_property');
-        const res = await fetch(CLOUDINARY_DELETE_ENDPOINT, { method: 'POST', body: formData });
-        const result = await res.json();
-        if (result.result === 'ok') console.log(`[Cleanup] Cloudinary deleted: ${publicId}`);
-        else console.warn(`[Cleanup] Cloudinary skip: ${publicId}`, result);
-    } catch (err) {
-        console.warn('[Cleanup] Cloudinary error (non-blocking):', err.message);
-    }
+        await fetch(CLOUDINARY_DELETE_ENDPOINT, { method: 'POST', body: formData });
+    } catch (err) { console.warn('[Cleanup] Cloudinary error:', err.message); }
 }
 
 let allAds = [], displayedAds = [], currentImages = [], currentImageIndex = 0;
@@ -456,27 +584,19 @@ const languages = [
     { code: 'sw', name: 'Swahili', flag: '🇰🇪' }
 ];
 
-// Silent location — no popup forced. Only works if user already allowed location.
 if (navigator.permissions) {
     navigator.permissions.query({ name: 'geolocation' }).then(result => {
         if (result.state === 'granted') {
             navigator.geolocation.getCurrentPosition(
-                pos => {
-                    userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                    if (displayedAds.length > 0) { displayedAds = sortByProximity(displayedAds); renderAds(displayedAds); }
-                },
+                pos => { userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }; if (displayedAds.length > 0) { displayedAds = sortByProximity(displayedAds); renderAds(displayedAds); } },
                 () => {}
             );
         }
     }).catch(() => {});
 } else if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
-        pos => {
-            userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-            if (displayedAds.length > 0) { displayedAds = sortByProximity(displayedAds); renderAds(displayedAds); }
-        },
-        () => {},
-        { timeout: 1 }
+        pos => { userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }; if (displayedAds.length > 0) { displayedAds = sortByProximity(displayedAds); renderAds(displayedAds); } },
+        () => {}, { timeout: 1 }
     );
 }
 
@@ -677,20 +797,14 @@ function hideEpId() {
     const s=document.getElementById('sideEpId'); if(s) s.style.display='none';
 }
 
-// Show/hide guest-hidden nav items
-function showNavForLoggedIn() {
-    document.querySelectorAll('.guest-hidden').forEach(el => el.style.display = 'flex');
-}
-function hideNavForGuest() {
-    document.querySelectorAll('.guest-hidden').forEach(el => el.style.display = 'none');
-}
+function showNavForLoggedIn() { document.querySelectorAll('.guest-hidden').forEach(el => el.style.display = 'flex'); }
+function hideNavForGuest() { document.querySelectorAll('.guest-hidden').forEach(el => el.style.display = 'none'); }
 
 auth.onAuthStateChanged(user=>{
     currentUser=user;
     const logoutBtn=document.getElementById('logoutBtn');
     const adminIcon=document.getElementById('adminIcon');
     const adminSideBtn=document.getElementById('adminSideBtn');
-
     if(user){
         showNavForLoggedIn();
         db.collection("users").doc(user.uid).get().then(async doc=>{
@@ -731,7 +845,6 @@ auth.onAuthStateChanged(user=>{
         if(adminIcon) adminIcon.style.display='none';
         if(adminSideBtn) adminSideBtn.style.display='none';
     }
-
     runCleanupIfNeeded();
     loadProperties();
 });
@@ -745,23 +858,18 @@ function loadProperties(isLoadMore=false) {
     isLoading=true;
     const btn=document.getElementById('loadMoreBtn');
     if(isLoadMore&&btn){btn.disabled=true;btn.innerHTML='<span class="loading-spinner"></span>';}
-
     let q=db.collection("properties").where("status","==","active").orderBy("createdAt","desc").limit(ADS_PER_PAGE);
     if(isLoadMore&&lastVisible) q=q.startAfter(lastVisible);
-
     q.get().then(snap=>{
         const newAds=snap.docs.map(doc=>({id:doc.id,...doc.data()})).filter(ad=>{
             if(ad.isExpired===true) return false;
             if(ad.expiryDate&&ad.expiryDate.toDate()<new Date()) return false;
             return true;
         });
-
         if(isLoadMore){allAds=[...allAds,...newAds];displayedAds=[...displayedAds,...newAds];}
         else{allAds=newAds;displayedAds=newAds;}
-
         if(snap.docs.length<ADS_PER_PAGE){hasMoreAds=false;document.getElementById('loadMoreContainer').style.display='none';}
         else{hasMoreAds=true;lastVisible=snap.docs[snap.docs.length-1];document.getElementById('loadMoreContainer').style.display='block';}
-
         if(userLocation) displayedAds=sortByProximity(displayedAds);
         isDataLoaded=true;
         renderAds(displayedAds,isLoadMore);
@@ -777,6 +885,19 @@ function loadProperties(isLoadMore=false) {
 }
 
 function loadMoreProperties() { if(hasMoreAds&&!isLoading) loadProperties(true); }
+
+function formatPrice(price, currency) {
+    const sym = CURRENCY_SYMBOLS[currency] || currency || '₹';
+    const num = Number(price || 0);
+    if (currency === 'INR') {
+        if (num >= 10000000) return `${sym}${(num/10000000).toFixed(1)}Cr`;
+        if (num >= 100000) return `${sym}${(num/100000).toFixed(1)}L`;
+        return `${sym}${num.toLocaleString('en-IN')}`;
+    }
+    if (num >= 1000000) return `${sym}${(num/1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${sym}${num.toLocaleString()}`;
+    return `${sym}${num}`;
+}
 
 function renderAds(ads, append=false) {
     const list=document.getElementById('propertyList'), t=getT();
@@ -798,6 +919,14 @@ function renderAds(ads, append=false) {
             distHTML=`<div class="distance-badge"><i class="fa fa-location-arrow"></i> ${d.toFixed(1)} km away</div>`;
         }
 
+        // ── Currency conversion ──
+        const propCurrency = p.currency || 'INR';
+        const priceDisplay = formatPrice(p.price, propCurrency);
+        const converted = convertPrice(Number(p.price || 0), propCurrency);
+        const convertedHTML = (converted && exchangeRates)
+            ? `<div class="converted-price"><i class="fa fa-exchange-alt"></i> ≈ ${converted}</div>`
+            : '';
+
         const card=document.createElement('div'); card.className='prop-card';
         const sid=sanitize(p.id), stitle=sanitize(p.title)||'Untitled Property', sloc=sanitize(p.location)||'Location not specified';
         const pColors={'Sell':{bg:'#e8f5e9',color:'#2e7d32'},'Rent':{bg:'#e3f2fd',color:'#1565c0'},'Plot':{bg:'#fff8e1',color:'#f57f17'},'Commercial':{bg:'#fce4ec',color:'#880e4f'},'PG':{bg:'#ede7f6',color:'#4527a0'}};
@@ -816,7 +945,8 @@ function renderAds(ads, append=false) {
     ${images.length>1?`<div class="card-dots" id="carddots-${sid}">${images.map((_,i)=>`<div class="card-dot${i===0?' active':''}" id="dot-${sid}-${i}"></div>`).join('')}</div>`:''}
 </div>
 <div class="info">
-    <div class="price">₹${Number(p.price||0).toLocaleString('en-IN')}${badge}</div>
+    <div class="price">${priceDisplay}${badge}</div>
+    ${convertedHTML}
     <div style="font-weight:700;margin:5px 0;color:#333;">${p.isVerified?'<i class="fa fa-check-circle" style="color:#1da1f2;margin-right:3px;"></i>':''}${stitle}</div>
     <div class="location"><i class="fa-solid fa-location-dot"></i> ${sloc}</div>
     ${distHTML}
