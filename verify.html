@@ -10,29 +10,56 @@
         .container { max-width: 500px; width: 100%; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .header { text-align: center; margin-bottom: 25px; }
         .header i { color: #2e7d32; font-size: 50px; margin-bottom: 10px; }
+
+        /* Free badge */
+        .free-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #2e7d32, #43a047);
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 4px 14px;
+            border-radius: 20px;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Trust points */
+        .trust-points {
+            background: #f1f8e9;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 22px;
+            border-left: 4px solid #2e7d32;
+        }
+        .trust-points .tp { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #333; margin-bottom: 6px; }
+        .trust-points .tp:last-child { margin-bottom: 0; }
+        .trust-points .tp i { color: #2e7d32; font-size: 13px; width: 16px; }
+
         .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; color: #444; }
-        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #444; font-size: 14px; }
+
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 15px; outline: none; transition: 0.3s; }
+        input:focus, select:focus { border-color: #2e7d32; box-shadow: 0 0 5px rgba(46,125,50,0.2); }
+
         .upload-btn { background: #e8f5e9; color: #2e7d32; padding: 15px; border-radius: 10px; text-align: center; border: 2px dashed #2e7d32; cursor: pointer; margin-bottom: 10px; transition: 0.3s; }
         .upload-btn:active { transform: scale(0.98); background: #c8e6c9; }
         .btn-submit { background: #2e7d32; color: white; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
         .btn-submit:disabled { background: #ccc; cursor: not-allowed; }
         .file-name { font-size: 12px; color: #666; margin-top: 5px; font-weight: normal; }
 
-        /* Status Boxes */
-        #successBox, #pendingBox, #approvedBox, #rejectedBox { 
-            display: none; text-align: center; color: #2e7d32; 
-        }
+        /* Expiry note */
+        .expiry-note { text-align: center; font-size: 11px; color: #999; margin-top: 10px; }
+        .expiry-note span { color: #2e7d32; font-weight: 600; }
 
-        /* Rejected Box */
-        .rejected-reason {
-            background: #ffebee;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 15px 0;
-            text-align: left;
-            border-left: 4px solid #d32f2f;
-        }
+        /* ===== PAYMENT SECTION — HIDDEN (enable when needed) ===== */
+        .payment-section { display: none; }
+        /* To enable: change display:none to display:block */
+
+        /* Status Boxes */
+        #successBox, #pendingBox, #approvedBox, #rejectedBox { display: none; text-align: center; color: #2e7d32; }
+
+        .rejected-reason { background: #ffebee; border-radius: 10px; padding: 15px; margin: 15px 0; text-align: left; border-left: 4px solid #d32f2f; }
         .rejected-reason p { margin: 5px 0; font-size: 14px; color: #333; }
         .rejected-reason strong { color: #d32f2f; }
     </style>
@@ -45,67 +72,283 @@
     <div id="verifyForm">
         <div class="header">
             <i class="fa fa-shield-halved"></i>
-            <h2>Verification Portal</h2>
-            <p style="color: #666;">Become a Premium Verified Dealer</p>
+            <div class="free-badge">🎉 FREE for 1 Year</div>
+            <h2 style="margin:8px 0 5px;">Get Verified</h2>
+            <p style="color:#666; font-size:14px;">Build trust with buyers worldwide</p>
         </div>
 
+        <!-- Trust Points -->
+        <div class="trust-points">
+            <div class="tp"><i class="fa fa-check-circle"></i> Verified badge on all your listings</div>
+            <div class="tp"><i class="fa fa-chart-line"></i> Get 3x more responses from buyers</div>
+            <div class="tp"><i class="fa fa-globe"></i> Stand out from unverified sellers worldwide</div>
+            <div class="tp"><i class="fa fa-shield-alt"></i> Buyers trust verified sellers more</div>
+            <div class="tp"><i class="fa fa-gift"></i> Completely FREE — valid for 1 year</div>
+        </div>
+
+        <!-- Business Name -->
         <div class="form-group">
-            <label>Business Name / Dealer Name</label>
+            <label><i class="fa fa-building" style="color:#2e7d32;margin-right:6px;"></i>Business Name / Dealer Name</label>
             <input type="text" id="bizName" placeholder="e.g. Earth Real Estate">
         </div>
 
-        <label>Upload ID Proof (Aadhar/PAN)</label>
-        <div class="upload-btn" onclick="document.getElementById('idInput').click()">
-            <i class="fa fa-id-card"></i> <br> <span id="idLabel">Select ID Image</span>
-            <div id="idName" class="file-name"></div>
-        </div>
-        <input type="file" id="idInput" hidden accept="image/*">
+        <!-- ID Type Dropdown -->
+        <div class="form-group">
+            <label><i class="fa fa-id-card" style="color:#2e7d32;margin-right:6px;"></i>Select ID Type</label>
+            <select id="idType">
+                <option value="">-- Select your ID type --</option>
 
-        <label>Upload Payment Screenshot (₹199)</label>
-        <div class="upload-btn" onclick="document.getElementById('payInput').click()">
-            <i class="fa fa-receipt"></i> <br> <span id="payLabel">Select Screenshot</span>
-            <div id="payName" class="file-name"></div>
-        </div>
-        <input type="file" id="payInput" hidden accept="image/*">
+                <optgroup label="🇮🇳 India">
+                    <option value="Aadhar Card (India)">Aadhar Card</option>
+                    <option value="PAN Card (India)">PAN Card</option>
+                    <option value="Voter ID (India)">Voter ID</option>
+                    <option value="Driving License (India)">Driving License</option>
+                    <option value="Passport (India)">Passport</option>
+                </optgroup>
 
-        <button class="btn-submit" id="submitBtn">Submit for Review</button>
+                <optgroup label="🇵🇰 Pakistan">
+                    <option value="CNIC (Pakistan)">CNIC — National ID</option>
+                    <option value="Passport (Pakistan)">Passport</option>
+                    <option value="Driving License (Pakistan)">Driving License</option>
+                </optgroup>
+
+                <optgroup label="🇦🇪 UAE / Dubai">
+                    <option value="Emirates ID (UAE)">Emirates ID</option>
+                    <option value="Passport (UAE)">Passport</option>
+                    <option value="Residence Visa (UAE)">Residence Visa</option>
+                </optgroup>
+
+                <optgroup label="🇸🇦 Saudi Arabia">
+                    <option value="Iqama (Saudi Arabia)">Iqama — Residency Card</option>
+                    <option value="National ID (Saudi Arabia)">National ID</option>
+                    <option value="Passport (Saudi Arabia)">Passport</option>
+                </optgroup>
+
+                <optgroup label="🇬🇧 United Kingdom">
+                    <option value="Passport (UK)">Passport</option>
+                    <option value="Driving License (UK)">Driving License</option>
+                    <option value="National Insurance (UK)">National Insurance Card</option>
+                </optgroup>
+
+                <optgroup label="🇺🇸 United States">
+                    <option value="Passport (USA)">Passport</option>
+                    <option value="Driver's License (USA)">Driver's License</option>
+                    <option value="State ID (USA)">State ID</option>
+                    <option value="SSN Card (USA)">SSN Card</option>
+                </optgroup>
+
+                <optgroup label="🇬🇭 Ghana">
+                    <option value="Ghana Card">Ghana Card</option>
+                    <option value="Passport (Ghana)">Passport</option>
+                    <option value="Voter ID (Ghana)">Voter ID</option>
+                </optgroup>
+
+                <optgroup label="🇳🇬 Nigeria">
+                    <option value="NIN Card (Nigeria)">NIN — National ID</option>
+                    <option value="Passport (Nigeria)">Passport</option>
+                    <option value="Voter Card (Nigeria)">Voter Card</option>
+                    <option value="Driving License (Nigeria)">Driving License</option>
+                </optgroup>
+
+                <optgroup label="🇰🇪 Kenya">
+                    <option value="National ID (Kenya)">National ID</option>
+                    <option value="Passport (Kenya)">Passport</option>
+                </optgroup>
+
+                <optgroup label="🇺🇬 Uganda">
+                    <option value="National ID (Uganda)">National ID</option>
+                    <option value="Passport (Uganda)">Passport</option>
+                </optgroup>
+
+                <optgroup label="🇷🇼 Rwanda">
+                    <option value="National ID (Rwanda)">National ID</option>
+                    <option value="Passport (Rwanda)">Passport</option>
+                </optgroup>
+
+                <optgroup label="🇹🇿 Tanzania">
+                    <option value="National ID (Tanzania)">National ID</option>
+                    <option value="Passport (Tanzania)">Passport</option>
+                </optgroup>
+
+                <optgroup label="🇿🇦 South Africa">
+                    <option value="SA ID Card (South Africa)">SA ID Card</option>
+                    <option value="Passport (South Africa)">Passport</option>
+                    <option value="Driving License (South Africa)">Driving License</option>
+                </optgroup>
+
+                <optgroup label="🇪🇬 Egypt">
+                    <option value="National ID (Egypt)">National ID</option>
+                    <option value="Passport (Egypt)">Passport</option>
+                </optgroup>
+
+                <optgroup label="🇲🇦 Morocco">
+                    <option value="CIN Card (Morocco)">CIN Card</option>
+                    <option value="Passport (Morocco)">Passport</option>
+                </optgroup>
+
+                <optgroup label="🇧🇩 Bangladesh">
+                    <option value="NID Card (Bangladesh)">NID Card</option>
+                    <option value="Passport (Bangladesh)">Passport</option>
+                    <option value="Driving License (Bangladesh)">Driving License</option>
+                </optgroup>
+
+                <optgroup label="🇳🇵 Nepal">
+                    <option value="Citizenship Card (Nepal)">Citizenship Card</option>
+                    <option value="Passport (Nepal)">Passport</option>
+                </optgroup>
+
+                <optgroup label="🇱🇰 Sri Lanka">
+                    <option value="NIC Card (Sri Lanka)">NIC Card</option>
+                    <option value="Passport (Sri Lanka)">Passport</option>
+                </optgroup>
+
+                <optgroup label="🇵🇭 Philippines">
+                    <option value="PhilSys ID (Philippines)">PhilSys ID</option>
+                    <option value="Passport (Philippines)">Passport</option>
+                    <option value="Driving License (Philippines)">Driving License</option>
+                </optgroup>
+
+                <optgroup label="🇮🇩 Indonesia">
+                    <option value="KTP Card (Indonesia)">KTP Card</option>
+                    <option value="Passport (Indonesia)">Passport</option>
+                </optgroup>
+
+                <optgroup label="🇲🇾 Malaysia">
+                    <option value="MyKad (Malaysia)">MyKad</option>
+                    <option value="Passport (Malaysia)">Passport</option>
+                </optgroup>
+
+                <optgroup label="🇸🇬 Singapore">
+                    <option value="NRIC (Singapore)">NRIC</option>
+                    <option value="Passport (Singapore)">Passport</option>
+                </optgroup>
+
+                <optgroup label="🇹🇷 Turkey">
+                    <option value="TC Kimlik (Turkey)">TC Kimlik Card</option>
+                    <option value="Passport (Turkey)">Passport</option>
+                </optgroup>
+
+                <optgroup label="🇨🇳 China">
+                    <option value="Resident ID (China)">Resident ID Card</option>
+                    <option value="Passport (China)">Passport</option>
+                </optgroup>
+
+                <optgroup label="🇯🇵 Japan">
+                    <option value="My Number Card (Japan)">My Number Card</option>
+                    <option value="Passport (Japan)">Passport</option>
+                </optgroup>
+
+                <optgroup label="🇰🇷 South Korea">
+                    <option value="RRN Card (South Korea)">RRN Card</option>
+                    <option value="Passport (South Korea)">Passport</option>
+                </optgroup>
+
+                <optgroup label="🇷🇺 Russia">
+                    <option value="Passport (Russia)">Passport</option>
+                    <option value="Internal Passport (Russia)">Internal Passport</option>
+                </optgroup>
+
+                <optgroup label="🇩🇪 Germany">
+                    <option value="Personalausweis (Germany)">Personalausweis — National ID</option>
+                    <option value="Passport (Germany)">Passport</option>
+                </optgroup>
+
+                <optgroup label="🇫🇷 France">
+                    <option value="Carte Nationale (France)">Carte Nationale d'Identité</option>
+                    <option value="Passport (France)">Passport</option>
+                </optgroup>
+
+                <optgroup label="🇧🇷 Brazil">
+                    <option value="CPF Card (Brazil)">CPF Card</option>
+                    <option value="RG Card (Brazil)">RG Card</option>
+                    <option value="Passport (Brazil)">Passport</option>
+                </optgroup>
+
+                <optgroup label="🇨🇦 Canada">
+                    <option value="Passport (Canada)">Passport</option>
+                    <option value="Driver's License (Canada)">Driver's License</option>
+                    <option value="Provincial ID (Canada)">Provincial ID</option>
+                </optgroup>
+
+                <optgroup label="🇦🇺 Australia">
+                    <option value="Passport (Australia)">Passport</option>
+                    <option value="Driver's License (Australia)">Driver's License</option>
+                </optgroup>
+
+                <optgroup label="🌍 Other">
+                    <option value="Other Government ID">Other Government ID</option>
+                    <option value="International Passport">International Passport</option>
+                </optgroup>
+            </select>
+        </div>
+
+        <!-- ID Upload -->
+        <div class="form-group">
+            <label><i class="fa fa-upload" style="color:#2e7d32;margin-right:6px;"></i>Upload ID Photo</label>
+            <div class="upload-btn" onclick="document.getElementById('idInput').click()">
+                <i class="fa fa-id-card"></i> <br>
+                <span id="idLabel">Select ID Image</span>
+                <div id="idName" class="file-name"></div>
+            </div>
+            <input type="file" id="idInput" hidden accept="image/*">
+        </div>
+
+        <!-- ===== PAYMENT SECTION — HIDDEN ===== -->
+        <!-- To re-enable: remove "payment-section" class OR change CSS display:none to display:block -->
+        <div class="payment-section">
+            <label>Upload Payment Screenshot (₹199)</label>
+            <div class="upload-btn" onclick="document.getElementById('payInput').click()">
+                <i class="fa fa-receipt"></i> <br>
+                <span id="payLabel">Select Screenshot</span>
+                <div id="payName" class="file-name"></div>
+            </div>
+            <input type="file" id="payInput" hidden accept="image/*">
+        </div>
+
+        <button class="btn-submit" id="submitBtn">
+            <i class="fa fa-paper-plane" style="margin-right:6px;"></i>Submit for Review
+        </button>
+
+        <div class="expiry-note">
+            🎁 Free verification valid for <span>1 year</span> from approval date
+        </div>
     </div>
 
-    <!-- PENDING: Request Under Review -->
+    <!-- PENDING -->
     <div id="pendingBox">
-        <i class="fa fa-clock fa-4x" style="color: orange;"></i>
+        <i class="fa fa-clock fa-4x" style="color:orange;"></i>
         <h3>Under Review</h3>
         <p>Your documents have been submitted. Please wait 24 hours for Admin approval.</p>
         <button class="btn-submit" onclick="location.href='index.html'">Back to Home</button>
     </div>
 
-    <!-- SUCCESS: Just Submitted -->
+    <!-- SUCCESS -->
     <div id="successBox">
         <i class="fa fa-circle-check fa-4x"></i>
-        <h3>Request Sent!</h3>
-        <p>Your verification request has been submitted successfully.</p>
+        <h3>Request Sent! ✅</h3>
+        <p>Your verification request has been submitted successfully. We'll review within 24 hours.</p>
         <button class="btn-submit" onclick="location.href='index.html'">Back to Home</button>
     </div>
 
-    <!-- APPROVED: Already Verified -->
+    <!-- APPROVED -->
     <div id="approvedBox">
-        <i class="fa fa-certificate fa-4x" style="color: #1da1f2;"></i>
-        <h3 style="color: #1da1f2;">Already Verified! ✅</h3>
-        <p style="color: #666;">You are already a Verified Premium Dealer. No need to apply again.</p>
+        <i class="fa fa-certificate fa-4x" style="color:#1da1f2;"></i>
+        <h3 style="color:#1da1f2;">Already Verified! ✅</h3>
+        <p style="color:#666;">You are already a Verified Premium Dealer. No need to apply again.</p>
         <button class="btn-submit" onclick="location.href='index.html'">Back to Home</button>
     </div>
 
-    <!-- REJECTED: Show Reason + Allow Reapply -->
+    <!-- REJECTED -->
     <div id="rejectedBox">
-        <i class="fa fa-circle-xmark fa-4x" style="color: #d32f2f;"></i>
-        <h3 style="color: #d32f2f;">Request Rejected</h3>
+        <i class="fa fa-circle-xmark fa-4x" style="color:#d32f2f;"></i>
+        <h3 style="color:#d32f2f;">Request Rejected</h3>
         <div class="rejected-reason">
             <strong>Rejection Reason:</strong>
             <p id="rejectionReasonText">—</p>
         </div>
-        <p style="color: #666; font-size: 14px;">You can submit a new request with correct documents.</p>
+        <p style="color:#666;font-size:14px;">You can submit a new request with correct documents.</p>
         <button class="btn-submit" onclick="showFormAgain()">Apply Again</button>
-        <button class="btn-submit" style="background:#f0f2f5; color:#444; margin-top:8px;" onclick="location.href='index.html'">Back to Home</button>
+        <button class="btn-submit" style="background:#f0f2f5;color:#444;margin-top:8px;" onclick="location.href='index.html'">Back to Home</button>
     </div>
 
 </div>
@@ -115,29 +358,26 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebas
 import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 
-const firebaseConfig = { 
-    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
-    authDomain: "earth-properties-c3c56.firebaseapp.com", 
-    projectId: "earth-properties-c3c56" 
+const firebaseConfig = {
+    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
+    authDomain: "earth-properties-c3c56.firebaseapp.com",
+    projectId: "earth-properties-c3c56"
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// ✅ Cloudinary config — verify_docs folder for organized storage
-const CLOUD_NAME = "dnkhurnbv"; 
+const CLOUD_NAME = "dnkhurnbv";
 const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
 const CLOUDINARY_PRESET = "earth_property";
 
-let idFile, payFile;
+let idFile;
 
-// ✅ Helper to hide all boxes
 function hideAll() {
     ['verifyForm','pendingBox','successBox','approvedBox','rejectedBox']
         .forEach(id => document.getElementById(id).style.display = 'none');
 }
 
-// ✅ Show form again (for rejected users reapplying)
 window.showFormAgain = () => {
     hideAll();
     document.getElementById('verifyForm').style.display = 'block';
@@ -145,104 +385,93 @@ window.showFormAgain = () => {
 
 onAuthStateChanged(auth, async (user) => {
     if (!user) return location.href = 'login.html';
-
     try {
-        // ✅ Check user's isVerified status first
         const userSnap = await getDoc(doc(db, "users", user.uid));
         if (userSnap.exists() && userSnap.data().isVerified === true) {
             hideAll();
             document.getElementById('approvedBox').style.display = 'block';
             return;
         }
-
-        // ✅ Check verification_requests status
         const reqSnap = await getDoc(doc(db, "verification_requests", user.uid));
         if (reqSnap.exists()) {
             const status = reqSnap.data().status;
-
             if (status === "pending") {
                 hideAll();
                 document.getElementById('pendingBox').style.display = 'block';
-
             } else if (status === "rejected") {
                 hideAll();
                 const reason = reqSnap.data().rejectionReason || "No reason provided.";
                 document.getElementById('rejectionReasonText').innerText = reason;
                 document.getElementById('rejectedBox').style.display = 'block';
-            }
-            // If status is "approved" but isVerified not set yet — show approved box
-            else if (status === "approved") {
+            } else if (status === "approved") {
                 hideAll();
                 document.getElementById('approvedBox').style.display = 'block';
             }
         }
-        // else: show form normally (new user)
     } catch(e) {
         console.error("Auth check error:", e);
     }
 });
 
-// File UI Handling
-document.getElementById('idInput').onchange = (e) => { 
-    idFile = e.target.files[0]; 
-    if(idFile) document.getElementById('idName').innerText = "Selected: " + idFile.name;
-};
-document.getElementById('payInput').onchange = (e) => { 
-    payFile = e.target.files[0]; 
-    if(payFile) document.getElementById('payName').innerText = "Selected: " + payFile.name;
+document.getElementById('idInput').onchange = (e) => {
+    idFile = e.target.files[0];
+    if (idFile) document.getElementById('idName').innerText = "Selected: " + idFile.name;
 };
 
-// ✅ Upload to Cloudinary — verify_docs folder via preset
+// Payment file listener — kept for future use
+const payInput = document.getElementById('payInput');
+if (payInput) {
+    payInput.onchange = (e) => {
+        const payFile = e.target.files[0];
+        const payName = document.getElementById('payName');
+        if (payFile && payName) payName.innerText = "Selected: " + payFile.name;
+    };
+}
+
 async function uploadToCloudinary(file) {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', CLOUDINARY_PRESET);
-    formData.append('folder', 'verify_docs'); // ✅ Organized in separate folder
-
+    formData.append('folder', 'verify_docs');
     const res = await fetch(CLOUDINARY_URL, { method: 'POST', body: formData });
     const data = await res.json();
-
-    if(!data.secure_url) {
-        throw new Error(data.error?.message || "Upload Failed");
-    }
+    if (!data.secure_url) throw new Error(data.error?.message || "Upload Failed");
     return data.secure_url;
 }
 
 document.getElementById('submitBtn').onclick = async () => {
     const user = auth.currentUser;
     const bizName = document.getElementById('bizName').value.trim();
-    
-    if(!bizName || !idFile || !payFile) return alert("Please fill Business Name and select both files!");
+    const idType = document.getElementById('idType').value;
+
+    if (!bizName) return alert("Please enter your Business / Dealer Name!");
+    if (!idType) return alert("Please select your ID type!");
+    if (!idFile) return alert("Please upload your ID photo!");
 
     const btn = document.getElementById('submitBtn');
-    btn.disabled = true; 
-    btn.innerText = "Uploading Documents...";
+    btn.disabled = true;
+    btn.innerText = "Uploading... Please wait";
 
     try {
-        // 1. Parallel Uploads to Cloudinary (verify_docs folder)
-        btn.innerText = "Uploading... Please wait";
-        const [idUrl, payUrl] = await Promise.all([
-            uploadToCloudinary(idFile),
-            uploadToCloudinary(payFile)
-        ]);
+        const idUrl = await uploadToCloudinary(idFile);
 
-        // 2. Save to Firestore
         await setDoc(doc(db, "verification_requests", user.uid), {
             userId: user.uid,
             businessName: bizName,
+            idType: idType,
             idProofUrl: idUrl,
-            paymentUrl: payUrl,
+            // paymentUrl: null — hidden for now, will be added when payment re-enabled
             status: "pending",
+            freeVerification: true,
             submittedAt: serverTimestamp()
         });
 
         hideAll();
         document.getElementById('successBox').style.display = 'block';
-
-    } catch(e) { 
+    } catch(e) {
         console.error("Submit Error:", e);
-        alert("Error: " + e.message); 
-        btn.disabled = false; 
+        alert("Error: " + e.message);
+        btn.disabled = false;
         btn.innerText = "Submit for Review";
     }
 };
