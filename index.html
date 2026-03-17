@@ -297,6 +297,13 @@
     </div>
 </div>
 
+<!-- Sort Toggle -->
+<div style="background:white; padding:8px 15px; border-bottom:1px solid #eee; display:flex; align-items:center; justify-content:flex-end; gap:8px;">
+    <span style="font-size:12px; color:#888; font-weight:600;">Sort:</span>
+    <button id="sort-latest" onclick="setSort('latest')" style="padding:5px 12px; border-radius:20px; border:1.5px solid #2e7d32; background:#2e7d32; color:white; font-size:11px; font-weight:700; cursor:pointer;">🕐 Latest</button>
+    <button id="sort-nearest" onclick="setSort('nearest')" style="padding:5px 12px; border-radius:20px; border:1.5px solid #ddd; background:white; color:#555; font-size:11px; font-weight:700; cursor:pointer;">📍 Nearest</button>
+</div>
+
 <!-- Location Permission Card -->
 <div id="locationCard" style="display:none; margin:12px; background:white; border-radius:14px; padding:14px 16px; box-shadow:0 4px 12px rgba(0,0,0,0.08); border-left:4px solid #2e7d32;">
     <div style="display:flex; align-items:center; justify-content:space-between;">
@@ -1064,6 +1071,35 @@ function shareProperty(propId,title) {
 function sanitize(str) {
     if(str==null) return '';
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+}
+
+// ── Sort Toggle ──
+let activeSort = 'latest';
+function setSort(type) {
+    activeSort = type;
+    document.getElementById('sort-latest').style.background = type === 'latest' ? '#2e7d32' : 'white';
+    document.getElementById('sort-latest').style.color = type === 'latest' ? 'white' : '#555';
+    document.getElementById('sort-latest').style.borderColor = type === 'latest' ? '#2e7d32' : '#ddd';
+    document.getElementById('sort-nearest').style.background = type === 'nearest' ? '#2e7d32' : 'white';
+    document.getElementById('sort-nearest').style.color = type === 'nearest' ? 'white' : '#555';
+    document.getElementById('sort-nearest').style.borderColor = type === 'nearest' ? '#2e7d32' : '#ddd';
+
+    if (type === 'nearest') {
+        if (!userLocation) {
+            showToast('📍 Location not available. Please allow location first.');
+            setSort('latest');
+            return;
+        }
+        displayedAds = sortByProximity([...displayedAds]);
+    } else {
+        // Sort by latest (createdAt desc)
+        displayedAds = [...displayedAds].sort((a, b) => {
+            const tA = a.createdAt?.seconds || 0;
+            const tB = b.createdAt?.seconds || 0;
+            return tB - tA;
+        });
+    }
+    renderAds(displayedAds);
 }
 
 // ── Location Permission Card ──
