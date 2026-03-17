@@ -1092,8 +1092,29 @@ function setSort(type) {
 
     if (type === 'nearest') {
         if (!userLocation) {
-            showToast('📍 Location not available. Please allow location first.');
-            setSort('latest');
+            if (!navigator.geolocation) {
+                showToast('📍 GPS not supported on this device.');
+                setSort('latest');
+                return;
+            }
+            showToast('📍 Fetching your location...');
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                    applyFilterAndSearch();
+                    showToast('✅ Showing nearest properties!');
+                },
+                () => {
+                    showToast('📍 Location access denied. Please allow from browser settings.');
+                    activeSort = 'latest';
+                    document.getElementById('sort-latest').style.background = '#2e7d32';
+                    document.getElementById('sort-latest').style.color = 'white';
+                    document.getElementById('sort-latest').style.borderColor = '#2e7d32';
+                    document.getElementById('sort-nearest').style.background = 'white';
+                    document.getElementById('sort-nearest').style.color = '#555';
+                    document.getElementById('sort-nearest').style.borderColor = '#ddd';
+                }
+            );
             return;
         }
     }
