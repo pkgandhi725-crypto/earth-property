@@ -1045,8 +1045,14 @@ function applyFilterAndSearch() {
         });
     }
     if(val) filtered=filtered.filter(a=>(a.location||'').toLowerCase().includes(val)||(a.title||'').toLowerCase().includes(val)||(a.description||'').toLowerCase().includes(val));
+    // Apply sort based on activeSort
+    if(activeSort==='nearest'&&userLocation){
+        filtered=sortByProximity(filtered);
+    } else {
+        filtered=filtered.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+    }
     displayedAds=filtered;
-    renderAds(userLocation?sortByProximity([...displayedAds]):displayedAds);
+    renderAds(displayedAds);
     document.getElementById('loadMoreContainer').style.display=(activeFilter==='all'&&!val&&hasMoreAds)?'block':'none';
 }
 
@@ -1090,16 +1096,8 @@ function setSort(type) {
             setSort('latest');
             return;
         }
-        displayedAds = sortByProximity([...displayedAds]);
-    } else {
-        // Sort by latest (createdAt desc)
-        displayedAds = [...displayedAds].sort((a, b) => {
-            const tA = a.createdAt?.seconds || 0;
-            const tB = b.createdAt?.seconds || 0;
-            return tB - tA;
-        });
     }
-    renderAds(displayedAds);
+    applyFilterAndSearch();
 }
 
 // ── Location Permission Card ──
