@@ -1044,7 +1044,7 @@ function applyFilterAndSearch() {
             return true;
         });
     }
-    if(val) filtered=filtered.filter(a=>(a.location||'').toLowerCase().includes(val)||(a.title||'').toLowerCase().includes(val)||(a.description||'').toLowerCase().includes(val));
+    if(val) filtered=filtered.filter(a=>(a.location||'').toLowerCase().includes(val)||(a.title||'').toLowerCase().includes(val)||(a.description||'').toLowerCase().includes(val)||(a.country||'').toLowerCase().includes(val));
     // Apply sort based on activeSort
     if(activeSort==='nearest'&&userLocation){
         filtered=sortByProximity(filtered);
