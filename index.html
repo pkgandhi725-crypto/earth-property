@@ -1091,6 +1091,7 @@ function setSort(type) {
     document.getElementById('sort-nearest').style.borderColor = type === 'nearest' ? '#2e7d32' : '#ddd';
 
     if (type === 'nearest') {
+        showToast('DEBUG: loc=' + (userLocation ? userLocation.lat+','+userLocation.lng : 'NULL'));
         if (!userLocation) {
             if (!navigator.geolocation) {
                 showToast('📍 GPS not supported on this device.');
