@@ -127,19 +127,13 @@
         .icon-btn.share { background: #1976d2; color: white; }
         .info { padding: 15px; }
         .price { font-size: 22px; font-weight: 800; color: var(--primary); }
-
-        /* ── Currency converter badge ── */
         .converted-price { font-size: 11px; color: #888; font-weight: 600; margin-top: 2px; display: flex; align-items: center; gap: 4px; }
         .converted-price i { font-size: 10px; color: #aaa; }
-
         .location { font-size: 12px; color: #666; margin: 5px 0; }
         .distance-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: #2e7d32; margin-top: 3px; }
-
-        /* ── Description More/Less ── */
         .desc-text { font-size: 12px; color: #666; margin-top: 5px; line-height: 1.4; }
         .desc-text.collapsed { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .desc-more-btn { font-size: 11px; color: var(--primary); font-weight: 700; background: none; border: none; padding: 2px 0; cursor: pointer; margin-top: 2px; display: inline-block; }
-
         .btn-group { display: flex; gap: 8px; margin-top: 15px; }
         .btn { flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; text-decoration: none; }
         .btn-call { background: #e8f5e9; color: #2e7d32; }
@@ -185,6 +179,10 @@
         .filter-btn { padding: 7px 16px; border-radius: 20px; border: 2px solid #ddd; background: white; color: #555; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
         .filter-btn.active-filter { background: #2e7d32; color: white; border-color: #2e7d32; }
         @keyframes aboutSlideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* ✅ NEW: Property title clickable */
+        .prop-title-link { cursor: pointer; }
+        .prop-title-link:hover { color: var(--primary); }
     </style>
 </head>
 <body>
@@ -193,19 +191,14 @@
 
 <div class="drawer" id="sideDrawer">
     <div class="drawer-header">
-        <div class="profile-photo-circle" id="profilePhotoCircle">
-            <i class="fa fa-user-circle"></i>
-        </div>
+        <div class="profile-photo-circle" id="profilePhotoCircle"><i class="fa fa-user-circle"></i></div>
         <div style="font-weight:700; font-size:18px; margin-bottom:3px;" id="sideUserName">Welcome Guest</div>
         <div style="font-size:12px; opacity:0.9;" id="userMail"></div>
         <div id="sideEpId" style="display:none;" class="tep-id-badge-drawer"></div>
     </div>
     <div id="verificationStatus" style="display:none;"></div>
     <div class="lang-container">
-        <div class="lang-label">
-            <i class="fa fa-globe"></i>
-            <span id="langLabel">Language</span>
-        </div>
+        <div class="lang-label"><i class="fa fa-globe"></i><span id="langLabel">Language</span></div>
         <select id="langDropdown" class="lang-dropdown" onchange="handleLanguageChange()"></select>
     </div>
     <div class="drawer-footer">
@@ -236,17 +229,13 @@
 <header>
     <div class="header-top">
         <div class="logo-area">
-            <button onclick="toggleDrawer()" style="background:none; border:none; color:white; font-size:22px; cursor:pointer; padding:4px; line-height:1;">
-                <i class="fa fa-bars"></i>
-            </button>
+            <button onclick="toggleDrawer()" style="background:none; border:none; color:white; font-size:22px; cursor:pointer; padding:4px; line-height:1;"><i class="fa fa-bars"></i></button>
             <div>
                 <div style="font-weight:800; font-size:16px; letter-spacing:0.5px;">The Earth Property</div>
                 <div style="font-size:9px; opacity:0.85; font-weight:600; display:flex; align-items:center; flex-wrap:wrap; gap:2px;">
                     <span id="headerUserName">Guest</span>
                     <span id="headerEpId" style="display:none;" class="tep-id-badge"></span>
-                    <span id="headerVerifiedBadge" style="display:none;" class="verified-badge">
-                        <i class="fa fa-check-circle"></i> VERIFIED
-                    </span>
+                    <span id="headerVerifiedBadge" style="display:none;" class="verified-badge"><i class="fa fa-check-circle"></i> VERIFIED</span>
                 </div>
             </div>
         </div>
@@ -285,12 +274,13 @@
     <div style="background:white; color:#1565c0; padding:8px 16px; border-radius:20px; font-size:12px; font-weight:800; box-shadow:0 3px 8px rgba(0,0,0,0.25);" id="postNowEl">POST NOW →</div>
 </div>
 
-<!-- Filter Panel -->
+<!-- ✅ Filter Panel — RentSell added -->
 <div style="background:white; padding:12px 15px; border-bottom:1px solid #eee; overflow-x:auto; -webkit-overflow-scrolling:touch;">
     <div style="display:flex; gap:8px; min-width:max-content;">
         <button class="filter-btn active-filter" id="filter-all" onclick="setFilter('all')"><span id="filterAllEl">All</span></button>
         <button class="filter-btn" id="filter-buy" onclick="setFilter('buy')"><i class="fa fa-home" style="margin-right:4px;"></i><span id="filterBuyEl">Buy</span></button>
         <button class="filter-btn" id="filter-rent" onclick="setFilter('rent')"><i class="fa fa-key" style="margin-right:4px;"></i><span id="filterRentEl">Rent</span></button>
+        <button class="filter-btn" id="filter-rentsell" onclick="setFilter('rentsell')"><i class="fa fa-home" style="margin-right:2px;"></i><i class="fa fa-key" style="margin-right:4px;"></i><span id="filterRentSellEl">Rent+Sell</span></button>
         <button class="filter-btn" id="filter-plot" onclick="setFilter('plot')"><i class="fa fa-map" style="margin-right:4px;"></i><span id="filterPlotEl">Plot</span></button>
         <button class="filter-btn" id="filter-commercial" onclick="setFilter('commercial')"><i class="fa fa-building" style="margin-right:4px;"></i><span id="filterCommercialEl">Commercial</span></button>
         <button class="filter-btn" id="filter-pg" onclick="setFilter('pg')"><i class="fa fa-bed" style="margin-right:4px;"></i><span id="filterPGEl">PG/Hostel</span></button>
@@ -364,8 +354,8 @@ if (typeof TRANSLATIONS === 'undefined') {
             trustWorldwide: 'Worldwide', postFree: 'Post Property FREE',
             ctaDesc: 'Reach thousands of buyers instantly',
             postNow: 'POST NOW →', filterAll: 'All', filterBuy: 'Buy',
-            filterRent: 'Rent', filterPlot: 'Plot', filterCommercial: 'Commercial',
-            filterPG: 'PG/Hostel', loadMore: 'Load More',
+            filterRent: 'Rent', filterRentSell: 'Rent+Sell', filterPlot: 'Plot',
+            filterCommercial: 'Commercial', filterPG: 'PG/Hostel', loadMore: 'Load More',
             noPropsFound: 'No Properties Found',
             noPropsHint: 'Try different keywords or clear the filters',
             verified: 'Verified Account', getVerified: 'Get Verified'
@@ -386,7 +376,6 @@ const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
 const CLOUD_NAME = "dnkhurnbv";
 const CLOUDINARY_DELETE_ENDPOINT = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/destroy`;
 const CLEANUP_KEY = 'ep_last_cleanup';
-
 const RATES_CACHE_KEY = 'tep_exchange_rates';
 const RATES_CACHE_TIME_KEY = 'tep_exchange_rates_time';
 const RATES_CACHE_HOURS = 24;
@@ -736,6 +725,7 @@ function applyLanguage() {
     s('filterAllEl','filterAll','All');
     s('filterBuyEl','filterBuy','Buy');
     s('filterRentEl','filterRent','Rent');
+    s('filterRentSellEl','filterRentSell','Rent+Sell');
     s('filterPlotEl','filterPlot','Plot');
     s('filterCommercialEl','filterCommercial','Commercial');
     s('filterPGEl','filterPG','PG/Hostel');
@@ -896,19 +886,13 @@ function formatPrice(price, currency) {
     return `${sym}${num}`;
 }
 
-// ── Description More/Less toggle ──
 function toggleDesc(sid) {
     const el = document.getElementById('desc-'+sid);
     const btn = document.getElementById('descbtn-'+sid);
     if (!el || !btn) return;
     const isCollapsed = el.classList.contains('collapsed');
-    if (isCollapsed) {
-        el.classList.remove('collapsed');
-        btn.textContent = 'Less ▲';
-    } else {
-        el.classList.add('collapsed');
-        btn.textContent = 'More ▼';
-    }
+    if (isCollapsed) { el.classList.remove('collapsed'); btn.textContent = 'Less ▲'; }
+    else { el.classList.add('collapsed'); btn.textContent = 'More ▼'; }
 }
 
 function renderAds(ads, append=false) {
@@ -922,7 +906,6 @@ function renderAds(ads, append=false) {
     if(!append) list.innerHTML='';
 
     ads.forEach(p=>{
-        // Filter out invalid images
         const rawImgs=Array.isArray(p.images)&&p.images.length>0
             ? p.images.filter(img => img && (typeof img === 'string' ? img.trim() !== '' : img.url))
             : [];
@@ -943,13 +926,29 @@ function renderAds(ads, append=false) {
 
         const card=document.createElement('div'); card.className='prop-card';
         const sid=sanitize(p.id), stitle=sanitize(p.title)||'Untitled Property', sloc=sanitize(p.location)||'Location not specified';
-        const pColors={'Sell':{bg:'#e8f5e9',color:'#2e7d32'},'Rent':{bg:'#e3f2fd',color:'#1565c0'},'Plot':{bg:'#fff8e1',color:'#f57f17'},'Commercial':{bg:'#fce4ec',color:'#880e4f'},'PG':{bg:'#ede7f6',color:'#4527a0'}};
-        const pTrans={'Sell':t.filterBuy||'Sell','Rent':t.filterRent||'Rent','Plot':t.filterPlot||'Plot','Commercial':t.filterCommercial||'Commercial','PG':t.filterPG||'PG/Hostel','pg/hostel':t.filterPG||'PG/Hostel'};
+
+        // ✅ RentSell badge color added
+        const pColors={
+            'Sell':{bg:'#e8f5e9',color:'#2e7d32'},
+            'Rent':{bg:'#e3f2fd',color:'#1565c0'},
+            'RentSell':{bg:'linear-gradient(135deg,#e3f2fd,#e8f5e9)',color:'#1565c0'},
+            'Plot':{bg:'#fff8e1',color:'#f57f17'},
+            'Commercial':{bg:'#fce4ec',color:'#880e4f'},
+            'PG':{bg:'#ede7f6',color:'#4527a0'}
+        };
+        const pTrans={
+            'Sell':t.filterBuy||'Sell',
+            'Rent':t.filterRent||'Rent',
+            'RentSell':t.filterRentSell||'Rent+Sell',
+            'Plot':t.filterPlot||'Plot',
+            'Commercial':t.filterCommercial||'Commercial',
+            'PG':t.filterPG||'PG/Hostel',
+            'pg/hostel':t.filterPG||'PG/Hostel'
+        };
         const pc=pColors[p.purpose]||{bg:'#f5f5f5',color:'#555'};
         const badge=p.purpose?`<span style="font-size:11px;font-weight:600;padding:2px 7px;border-radius:10px;margin-left:6px;vertical-align:middle;background:${pc.bg};color:${pc.color}">${pTrans[p.purpose]||p.purpose}</span>`:'';
         const favIcon=isFavorite(p.id)?'fa-solid fa-heart':'fa-regular fa-heart';
 
-        // Description with More/Less button
         const descHTML = p.description
             ? `<div class="desc-text collapsed" id="desc-${sid}">${sanitize(p.description)}</div>
                <button class="desc-more-btn" id="descbtn-${sid}" onclick="toggleDesc('${sid}')">More ▼</button>`
@@ -967,7 +966,9 @@ function renderAds(ads, append=false) {
 <div class="info">
     <div class="price">${priceDisplay}${badge}</div>
     ${convertedHTML}
-    <div style="font-weight:700;margin:5px 0;color:#333;">${p.isVerified?'<i class="fa fa-check-circle" style="color:#1da1f2;margin-right:3px;"></i>':''}${stitle}</div>
+    <div class="prop-title-link" style="font-weight:700;margin:5px 0;color:#333;" id="ptitle-${sid}">
+        ${p.isVerified?'<i class="fa fa-check-circle" style="color:#1da1f2;margin-right:3px;"></i>':''}${stitle}
+    </div>
     <div class="location"><i class="fa-solid fa-location-dot"></i> ${sloc}</div>
     ${distHTML}
     ${p.size ? `<div style="font-size:12px;color:#555;margin-top:4px;"><i class="fa fa-ruler-combined" style="color:#2e7d32;margin-right:4px;"></i>${sanitize(String(p.size))}</div>` : ''}
@@ -981,7 +982,6 @@ function renderAds(ads, append=false) {
 
         list.appendChild(card);
 
-        // Auto-hide More button if description fits in 2 lines (no overflow)
         if (p.description) {
             requestAnimationFrame(() => {
                 const descEl = document.getElementById('desc-'+sid);
@@ -993,7 +993,17 @@ function renderAds(ads, append=false) {
             });
         }
 
-        document.getElementById('imgbox-'+sid).addEventListener('click',e=>{if(e.target.closest('.card-actions'))return;openGallery(images,cardImgIndexes[sid]||0);});
+        // ✅ CHANGE 1: Image click → property-detail.html
+        document.getElementById('imgbox-'+sid).addEventListener('click',e=>{
+            if(e.target.closest('.card-actions')) return;
+            location.href='property-detail.html?id='+p.id;
+        });
+
+        // ✅ CHANGE 2: Title click → property-detail.html
+        document.getElementById('ptitle-'+sid).addEventListener('click',()=>{
+            location.href='property-detail.html?id='+p.id;
+        });
+
         document.getElementById('share-'+sid).addEventListener('click',e=>{e.stopPropagation();shareProperty(p.id,p.title||'');});
         document.getElementById('fav-'+sid).addEventListener('click',e=>{e.stopPropagation();toggleFavorite(p.id);});
         document.getElementById('call-'+sid).addEventListener('click',()=>contact(p.phone,'tel',''));
@@ -1020,10 +1030,11 @@ function setupCardSwipe(id,images) {
     });
 }
 
+// ✅ CHANGE 3: RentSell filter added
 let activeFilter='all';
 function setFilter(type) {
     activeFilter=type;
-    ['all','buy','rent','plot','commercial','pg'].forEach(f=>{
+    ['all','buy','rent','rentsell','plot','commercial','pg'].forEach(f=>{
         const b=document.getElementById('filter-'+f); if(!b) return;
         if(f===type) b.classList.add('active-filter'); else b.classList.remove('active-filter');
     });
@@ -1038,6 +1049,7 @@ function applyFilterAndSearch() {
             const p=(a.purpose||'').toLowerCase();
             if(activeFilter==='buy') return p==='sell';
             if(activeFilter==='rent') return p==='rent';
+            if(activeFilter==='rentsell') return p==='rentsell';
             if(activeFilter==='plot') return p==='plot';
             if(activeFilter==='commercial') return p==='commercial';
             if(activeFilter==='pg') return p==='pg'||p==='pg/hostel';
@@ -1045,7 +1057,6 @@ function applyFilterAndSearch() {
         });
     }
     if(val) filtered=filtered.filter(a=>(a.location||'').toLowerCase().includes(val)||(a.title||'').toLowerCase().includes(val)||(a.description||'').toLowerCase().includes(val)||(a.country||'').toLowerCase().includes(val));
-    // Apply sort based on activeSort
     if(activeSort==='nearest'&&userLocation){
         filtered=sortByProximity(filtered);
     } else {
@@ -1079,7 +1090,6 @@ function sanitize(str) {
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
 }
 
-// ── Sort Toggle ──
 let activeSort = 'latest';
 function setSort(type) {
     activeSort = type;
@@ -1089,21 +1099,12 @@ function setSort(type) {
     document.getElementById('sort-nearest').style.background = type === 'nearest' ? '#2e7d32' : 'white';
     document.getElementById('sort-nearest').style.color = type === 'nearest' ? 'white' : '#555';
     document.getElementById('sort-nearest').style.borderColor = type === 'nearest' ? '#2e7d32' : '#ddd';
-
     if (type === 'nearest') {
         if (!userLocation) {
-            if (!navigator.geolocation) {
-                showToast('📍 GPS not supported on this device.');
-                setSort('latest');
-                return;
-            }
+            if (!navigator.geolocation) { showToast('📍 GPS not supported on this device.'); setSort('latest'); return; }
             showToast('📍 Fetching your location...');
             navigator.geolocation.getCurrentPosition(
-                pos => {
-                    userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                    applyFilterAndSearch();
-                    showToast('✅ Showing nearest properties!');
-                },
+                pos => { userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }; applyFilterAndSearch(); showToast('✅ Showing nearest properties!'); },
                 () => {
                     showToast('📍 Location access denied. Please allow from browser settings.');
                     activeSort = 'latest';
@@ -1121,28 +1122,18 @@ function setSort(type) {
     applyFilterAndSearch();
 }
 
-// ── Location Permission Card ──
 function initLocationCard() {
     if (localStorage.getItem('locationCardDismissed')) return;
     if (!navigator.geolocation) return;
     navigator.permissions.query({ name: 'geolocation' }).then(result => {
-        if (result.state === 'prompt') {
-            document.getElementById('locationCard').style.display = 'block';
-        }
-    }).catch(() => {
-        // If permissions API not supported, show card anyway
-        if (!userLocation) document.getElementById('locationCard').style.display = 'block';
-    });
+        if (result.state === 'prompt') document.getElementById('locationCard').style.display = 'block';
+    }).catch(() => { if (!userLocation) document.getElementById('locationCard').style.display = 'block'; });
 }
 
 function requestLocationPermission() {
     document.getElementById('locationCard').style.display = 'none';
     navigator.geolocation.getCurrentPosition(
-        pos => {
-            userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-            if (displayedAds.length > 0) { displayedAds = sortByProximity(displayedAds); renderAds(displayedAds); }
-            showToast('📍 Location allowed! Showing nearest properties first.');
-        },
+        pos => { userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }; if (displayedAds.length > 0) { displayedAds = sortByProximity(displayedAds); renderAds(displayedAds); } showToast('📍 Location allowed! Showing nearest properties first.'); },
         () => { showToast('Location access denied.'); }
     );
 }
@@ -1169,4 +1160,12 @@ setTimeout(initLocationCard, 2000);
       <br><br>
       Our mission is to make property transactions simple, secure, and accessible.
       <div style="margin-top:18px;padding:12px;background:#f1f3f4;border-radius:10px;font-weight:700;">
-        📧 Contact: <a href="/cdn-cgi/l/email-protection#c4a7abaab0a5a7b084b0aca1a1a5b6b0acb4b6abb4a1b6b0bdeaa7aba9" style="color:#2e7d32;text-decoration:none;"><span class="__cf_email__" data-cfemail
+        📧 Contact: <a href="mailto:contact@theearthproperty.com" style="color:#2e7d32;text-decoration:none;">contact@theearthproperty.com</a>
+      </div>
+    </div>
+    <button onclick="closeAboutModal()" style="width:100%;margin-top:18px;padding:12px;background:#2e7d32;color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;">Close</button>
+  </div>
+</div>
+
+</body>
+</html>
