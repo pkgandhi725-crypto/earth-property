@@ -48,6 +48,10 @@
         #plotFields { background: #fff8e1; padding: 15px; border-radius: 15px; display: none; border: 1px solid #ffe082; margin-bottom: 18px; }
         #commercialFields { background: #fce4ec; padding: 15px; border-radius: 15px; display: none; border: 1px solid #f8bbd0; margin-bottom: 18px; }
         #pgFields { background: #e8eaf6; padding: 15px; border-radius: 15px; display: none; border: 1px solid #c5cae9; margin-bottom: 18px; }
+
+        /* ✅ NEW: Rent & Sell Both fields */
+        #rentSellFields { background: linear-gradient(135deg, #f3e5f5, #e8f5e9); padding: 15px; border-radius: 15px; display: none; border: 1px solid #ce93d8; margin-bottom: 18px; }
+
         .toggle-row { display: flex; gap: 10px; align-items: center; }
         .toggle-row label { margin-bottom: 0; flex: 1; }
         .toggle-row select { flex: 1; }
@@ -61,6 +65,15 @@
         .flex-slot-title { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
         .phone-hint { font-size: 11px; color: #888; margin-top: 5px; line-height: 1.6; }
         .phone-hint span { color: var(--primary); font-weight: 600; }
+
+        /* ✅ NEW: Area fields row */
+        .area-row { display: flex; gap: 10px; }
+        .area-row .form-group { flex: 1; margin-bottom: 0; }
+        .area-row-wrap { margin-bottom: 18px; }
+
+        /* ✅ NEW: Dual price box styling */
+        .dual-price-box { background: #fff; border: 1.5px solid #ce93d8; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+        .dual-price-label { font-size: 12px; font-weight: 700; color: #7b1fa2; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
     </style>
     <script src="translations.js"></script>
     <script src="lang.js"></script>
@@ -100,68 +113,149 @@
         <input type="text" id="title" maxlength="100" placeholder="e.g. 3BHK Flat in City Center">
     </div>
 
-    <div class="form-group" style="display: flex; gap: 10px;">
-        <div style="flex: 1.2;">
-            <label>Price / Amount</label>
+    <!-- ✅ PURPOSE DROPDOWN — now includes Rent & Sell Both -->
+    <div class="form-group">
+        <label>Purpose</label>
+        <select id="purpose" onchange="togglePurposeFields()">
+            <option value="Sell">🏠 Sell (180d)</option>
+            <option value="Rent">🔑 Rent (30d)</option>
+            <option value="RentSell">🏠🔑 Rent &amp; Sell Both (180d)</option>
+            <option value="Plot">🗺️ Plot/Land (180d)</option>
+            <option value="Commercial">🏢 Commercial (180d)</option>
+            <option value="PG">🛏️ PG/Hostel (30d)</option>
+        </select>
+    </div>
+
+    <!-- ✅ SELL PRICE — shown for Sell, Plot, Commercial (hidden for Rent, PG, RentSell) -->
+    <div class="form-group" id="singlePriceWrap">
+        <label>Price / Amount</label>
+        <div style="display:flex; gap:6px;">
+            <select id="currency" style="width:90px; padding:12px 6px; border:1px solid #ddd; border-radius:10px; font-size:13px; font-weight:600; background:#fff; outline:none;">
+                <option value="INR">🇮🇳 ₹</option>
+                <option value="USD">🇺🇸 $</option>
+                <option value="AED">🇦🇪 AED</option>
+                <option value="SAR">🇸🇦 SAR</option>
+                <option value="GBP">🇬🇧 £</option>
+                <option value="EUR">🇪🇺 €</option>
+                <option value="PKR">🇵🇰 ₨</option>
+                <option value="BDT">🇧🇩 ৳</option>
+                <option value="SGD">🇸🇬 S$</option>
+                <option value="MYR">🇲🇾 RM</option>
+                <option value="CAD">🇨🇦 C$</option>
+                <option value="AUD">🇦🇺 A$</option>
+                <option value="NGN">🇳🇬 ₦</option>
+                <option value="GHS">🇬🇭 ₵</option>
+                <option value="KES">🇰🇪 KSh</option>
+                <option value="UGX">🇺🇬 USh</option>
+                <option value="RWF">🇷🇼 Fr</option>
+                <option value="NPR">🇳🇵 Rs</option>
+                <option value="LKR">🇱🇰 Rs</option>
+                <option value="ZAR">🇿🇦 R</option>
+                <option value="TZS">🇹🇿 TSh</option>
+                <option value="PHP">🇵🇭 ₱</option>
+                <option value="IDR">🇮🇩 Rp</option>
+                <option value="THB">🇹🇭 ฿</option>
+                <option value="VND">🇻🇳 ₫</option>
+                <option value="TRY">🇹🇷 ₺</option>
+                <option value="BRL">🇧🇷 R$</option>
+                <option value="MXN">🇲🇽 $</option>
+                <option value="KWD">🇰🇼 KD</option>
+                <option value="QAR">🇶🇦 QR</option>
+                <option value="OMR">🇴🇲 OMR</option>
+                <option value="BHD">🇧🇭 BD</option>
+                <option value="JOD">🇯🇴 JD</option>
+                <option value="EGP">🇪🇬 £</option>
+                <option value="MAD">🇲🇦 MAD</option>
+                <option value="CNY">🇨🇳 ¥</option>
+                <option value="JPY">🇯🇵 ¥</option>
+                <option value="KRW">🇰🇷 ₩</option>
+                <option value="RUB">🇷🇺 ₽</option>
+                <option value="CHF">🇨🇭 CHF</option>
+                <option value="SEK">🇸🇪 kr</option>
+                <option value="NOK">🇳🇴 kr</option>
+                <option value="DKK">🇩🇰 kr</option>
+                <option value="PLN">🇵🇱 zł</option>
+            </select>
+            <input type="number" id="price" placeholder="Amount" min="1" step="1" style="flex:1;">
+        </div>
+    </div>
+
+    <!-- ✅ RENT PRICE — shown for Rent, PG (hidden for others) -->
+    <div class="form-group" id="rentPriceWrap" style="display:none;">
+        <label>Rent Price / Month</label>
+        <div style="display:flex; gap:6px;">
+            <select id="rentCurrency" style="width:90px; padding:12px 6px; border:1px solid #ddd; border-radius:10px; font-size:13px; font-weight:600; background:#fff; outline:none;">
+                <option value="INR">🇮🇳 ₹</option>
+                <option value="USD">🇺🇸 $</option>
+                <option value="AED">🇦🇪 AED</option>
+                <option value="SAR">🇸🇦 SAR</option>
+                <option value="GBP">🇬🇧 £</option>
+                <option value="EUR">🇪🇺 €</option>
+                <option value="PKR">🇵🇰 ₨</option>
+                <option value="BDT">🇧🇩 ৳</option>
+                <option value="SGD">🇸🇬 S$</option>
+                <option value="MYR">🇲🇾 RM</option>
+                <option value="CAD">🇨🇦 C$</option>
+                <option value="AUD">🇦🇺 A$</option>
+                <option value="NGN">🇳🇬 ₦</option>
+                <option value="GHS">🇬🇭 ₵</option>
+                <option value="KES">🇰🇪 KSh</option>
+                <option value="UGX">🇺🇬 USh</option>
+                <option value="RWF">🇷🇼 Fr</option>
+                <option value="NPR">🇳🇵 Rs</option>
+                <option value="LKR">🇱🇰 Rs</option>
+                <option value="ZAR">🇿🇦 R</option>
+                <option value="TZS">🇹🇿 TSh</option>
+                <option value="PHP">🇵🇭 ₱</option>
+                <option value="IDR">🇮🇩 Rp</option>
+                <option value="THB">🇹🇭 ฿</option>
+                <option value="VND">🇻🇳 ₫</option>
+                <option value="TRY">🇹🇷 ₺</option>
+                <option value="BRL">🇧🇷 R$</option>
+                <option value="MXN">🇲🇽 $</option>
+                <option value="KWD">🇰🇼 KD</option>
+                <option value="QAR">🇶🇦 QR</option>
+                <option value="OMR">🇴🇲 OMR</option>
+                <option value="BHD">🇧🇭 BD</option>
+                <option value="JOD">🇯🇴 JD</option>
+                <option value="EGP">🇪🇬 £</option>
+                <option value="MAD">🇲🇦 MAD</option>
+                <option value="CNY">🇨🇳 ¥</option>
+                <option value="JPY">🇯🇵 ¥</option>
+                <option value="KRW">🇰🇷 ₩</option>
+                <option value="RUB">🇷🇺 ₽</option>
+                <option value="CHF">🇨🇭 CHF</option>
+                <option value="SEK">🇸🇪 kr</option>
+                <option value="NOK">🇳🇴 kr</option>
+                <option value="DKK">🇩🇰 kr</option>
+                <option value="PLN">🇵🇱 zł</option>
+            </select>
+            <input type="number" id="rentPrice" placeholder="Monthly Rent" min="1" step="1" style="flex:1;">
+        </div>
+    </div>
+
+    <!-- ✅ NEW: RENT & SELL BOTH — dual price fields -->
+    <div id="rentSellFields">
+        <div class="section-title">🏠🔑 Rent &amp; Sell Prices</div>
+
+        <div class="dual-price-box">
+            <div class="dual-price-label">🏠 Sell Price</div>
             <div style="display:flex; gap:6px;">
-                <select id="currency" style="width:90px; padding:12px 6px; border:1px solid #ddd; border-radius:10px; font-size:13px; font-weight:600; background:#fff; outline:none;">
-                    <option value="INR">🇮🇳 ₹</option>
-                    <option value="USD">🇺🇸 $</option>
-                    <option value="AED">🇦🇪 AED</option>
-                    <option value="SAR">🇸🇦 SAR</option>
-                    <option value="GBP">🇬🇧 £</option>
-                    <option value="EUR">🇪🇺 €</option>
-                    <option value="PKR">🇵🇰 ₨</option>
-                    <option value="BDT">🇧🇩 ৳</option>
-                    <option value="SGD">🇸🇬 S$</option>
-                    <option value="MYR">🇲🇾 RM</option>
-                    <option value="CAD">🇨🇦 C$</option>
-                    <option value="AUD">🇦🇺 A$</option>
-                    <option value="NGN">🇳🇬 ₦</option>
-                    <option value="GHS">🇬🇭 ₵</option>
-                    <option value="KES">🇰🇪 KSh</option>
-                    <option value="UGX">🇺🇬 USh</option>
-                    <option value="RWF">🇷🇼 Fr</option>
-                    <option value="NPR">🇳🇵 Rs</option>
-                    <option value="LKR">🇱🇰 Rs</option>
-                    <option value="ZAR">🇿🇦 R</option>
-                    <option value="TZS">🇹🇿 TSh</option>
-                    <option value="PHP">🇵🇭 ₱</option>
-                    <option value="IDR">🇮🇩 Rp</option>
-                    <option value="THB">🇹🇭 ฿</option>
-                    <option value="VND">🇻🇳 ₫</option>
-                    <option value="TRY">🇹🇷 ₺</option>
-                    <option value="BRL">🇧🇷 R$</option>
-                    <option value="MXN">🇲🇽 $</option>
-                    <option value="KWD">🇰🇼 KD</option>
-                    <option value="QAR">🇶🇦 QR</option>
-                    <option value="OMR">🇴🇲 OMR</option>
-                    <option value="BHD">🇧🇭 BD</option>
-                    <option value="JOD">🇯🇴 JD</option>
-                    <option value="EGP">🇪🇬 £</option>
-                    <option value="MAD">🇲🇦 MAD</option>
-                    <option value="CNY">🇨🇳 ¥</option>
-                    <option value="JPY">🇯🇵 ¥</option>
-                    <option value="KRW">🇰🇷 ₩</option>
-                    <option value="RUB">🇷🇺 ₽</option>
-                    <option value="CHF">🇨🇭 CHF</option>
-                    <option value="SEK">🇸🇪 kr</option>
-                    <option value="NOK">🇳🇴 kr</option>
-                    <option value="DKK">🇩🇰 kr</option>
-                    <option value="PLN">🇵🇱 zł</option>
+                <select id="rsSelCurrency" style="width:90px; padding:12px 6px; border:1px solid #ddd; border-radius:10px; font-size:13px; font-weight:600; background:#fff; outline:none;">
+                    <option value="INR">🇮🇳 ₹</option><option value="USD">🇺🇸 $</option><option value="AED">🇦🇪 AED</option><option value="SAR">🇸🇦 SAR</option><option value="GBP">🇬🇧 £</option><option value="EUR">🇪🇺 €</option><option value="PKR">🇵🇰 ₨</option><option value="BDT">🇧🇩 ৳</option><option value="SGD">🇸🇬 S$</option><option value="MYR">🇲🇾 RM</option><option value="CAD">🇨🇦 C$</option><option value="AUD">🇦🇺 A$</option><option value="NGN">🇳🇬 ₦</option><option value="GHS">🇬🇭 ₵</option><option value="KES">🇰🇪 KSh</option><option value="UGX">🇺🇬 USh</option><option value="RWF">🇷🇼 Fr</option><option value="NPR">🇳🇵 Rs</option><option value="LKR">🇱🇰 Rs</option><option value="ZAR">🇿🇦 R</option><option value="TZS">🇹🇿 TSh</option><option value="PHP">🇵🇭 ₱</option><option value="IDR">🇮🇩 Rp</option><option value="THB">🇹🇭 ฿</option><option value="VND">🇻🇳 ₫</option><option value="TRY">🇹🇷 ₺</option><option value="BRL">🇧🇷 R$</option><option value="MXN">🇲🇽 $</option><option value="KWD">🇰🇼 KD</option><option value="QAR">🇶🇦 QR</option><option value="OMR">🇴🇲 OMR</option><option value="BHD">🇧🇭 BD</option><option value="JOD">🇯🇴 JD</option><option value="EGP">🇪🇬 £</option><option value="MAD">🇲🇦 MAD</option><option value="CNY">🇨🇳 ¥</option><option value="JPY">🇯🇵 ¥</option><option value="KRW">🇰🇷 ₩</option><option value="RUB">🇷🇺 ₽</option><option value="CHF">🇨🇭 CHF</option><option value="SEK">🇸🇪 kr</option><option value="NOK">🇳🇴 kr</option><option value="DKK">🇩🇰 kr</option><option value="PLN">🇵🇱 zł</option>
                 </select>
-                <input type="number" id="price" placeholder="Amount" min="1" step="1" style="flex:1;">
+                <input type="number" id="rsSellPrice" placeholder="Sell Amount" min="1" step="1" style="flex:1;">
             </div>
         </div>
-        <div style="flex: 1;">
-            <label>Purpose</label>
-            <select id="purpose" onchange="togglePurposeFields()">
-                <option value="Sell">🏠 Sell (180d)</option>
-                <option value="Rent">🔑 Rent (30d)</option>
-                <option value="Plot">🗺️ Plot/Land (180d)</option>
-                <option value="Commercial">🏢 Commercial (180d)</option>
-                <option value="PG">🛏️ PG/Hostel (30d)</option>
-            </select>
+
+        <div class="dual-price-box">
+            <div class="dual-price-label">🔑 Rent Price / Month</div>
+            <div style="display:flex; gap:6px;">
+                <select id="rsRentCurrency" style="width:90px; padding:12px 6px; border:1px solid #ddd; border-radius:10px; font-size:13px; font-weight:600; background:#fff; outline:none;">
+                    <option value="INR">🇮🇳 ₹</option><option value="USD">🇺🇸 $</option><option value="AED">🇦🇪 AED</option><option value="SAR">🇸🇦 SAR</option><option value="GBP">🇬🇧 £</option><option value="EUR">🇪🇺 €</option><option value="PKR">🇵🇰 ₨</option><option value="BDT">🇧🇩 ৳</option><option value="SGD">🇸🇬 S$</option><option value="MYR">🇲🇾 RM</option><option value="CAD">🇨🇦 C$</option><option value="AUD">🇦🇺 A$</option><option value="NGN">🇳🇬 ₦</option><option value="GHS">🇬🇭 ₵</option><option value="KES">🇰🇪 KSh</option><option value="UGX">🇺🇬 USh</option><option value="RWF">🇷🇼 Fr</option><option value="NPR">🇳🇵 Rs</option><option value="LKR">🇱🇰 Rs</option><option value="ZAR">🇿🇦 R</option><option value="TZS">🇹🇿 TSh</option><option value="PHP">🇵🇭 ₱</option><option value="IDR">🇮🇩 Rp</option><option value="THB">🇹🇭 ฿</option><option value="VND">🇻🇳 ₫</option><option value="TRY">🇹🇷 ₺</option><option value="BRL">🇧🇷 R$</option><option value="MXN">🇲🇽 $</option><option value="KWD">🇰🇼 KD</option><option value="QAR">🇶🇦 QR</option><option value="OMR">🇴🇲 OMR</option><option value="BHD">🇧🇭 BD</option><option value="JOD">🇯🇴 JD</option><option value="EGP">🇪🇬 £</option><option value="MAD">🇲🇦 MAD</option><option value="CNY">🇨🇳 ¥</option><option value="JPY">🇯🇵 ¥</option><option value="KRW">🇰🇷 ₩</option><option value="RUB">🇷🇺 ₽</option><option value="CHF">🇨🇭 CHF</option><option value="SEK">🇸🇪 kr</option><option value="NOK">🇳🇴 kr</option><option value="DKK">🇩🇰 kr</option><option value="PLN">🇵🇱 zł</option>
+                </select>
+                <input type="number" id="rsRentPrice" placeholder="Monthly Rent" min="1" step="1" style="flex:1;">
+            </div>
         </div>
     </div>
 
@@ -207,6 +301,21 @@
     <div class="form-group">
         <label>Property Size</label>
         <input type="text" id="size" placeholder="e.g. 1200 Sq.Ft / 100 Gaj">
+    </div>
+
+    <!-- ✅ NEW: Lot Area & Floor Area fields -->
+    <div class="area-row-wrap">
+        <div class="area-row">
+            <div class="form-group">
+                <label>Lot Area <span style="font-size:11px;color:#999;font-weight:400;">(Optional)</span></label>
+                <input type="text" id="lotArea" placeholder="e.g. 252 sqm">
+            </div>
+            <div class="form-group">
+                <label>Floor Area <span style="font-size:11px;color:#999;font-weight:400;">(Optional)</span></label>
+                <input type="text" id="floorArea" placeholder="e.g. 290 sqm">
+            </div>
+        </div>
+        <div style="font-size:11px;color:#888;margin-top:5px;">📐 Lot = total plot size &nbsp;|&nbsp; Floor = built-up area inside</div>
     </div>
 
     <div id="rentFields">
@@ -323,13 +432,83 @@ firebase.auth().onAuthStateChanged(async user=>{
     try{const ud=await db.collection("users").doc(user.uid).get();if(ud.exists){const d=ud.data();if(d.isVerified===true){currentUserVerified=true;currentUserBizName=d.businessName||"";document.getElementById('verifiedDealerBanner').style.display='flex';}currentUserEpId=d.epId||"";}}catch(e){console.error(e);}
     if(editId)loadEditData(editId,user.uid);
     document.getElementById('title').addEventListener('input',function(){document.getElementById('titleCount').innerText=this.value.length+'/100';});
-    // ✅ FIXED: 15 digits for international
     document.getElementById('phone').addEventListener('input',function(){this.value=this.value.replace(/\D/g,'').slice(0,15);});
+    // Init price visibility
+    togglePurposeFields();
 });
 
-async function loadEditData(id,uid){const doc=await db.collection("properties").doc(id).get();if(!doc.exists||doc.data().ownerId!==uid)return history.back();const data=doc.data();document.getElementById('pageTitle').innerText="Edit Property";document.getElementById('postBtn').innerText="Update Property";document.getElementById('title').value=data.title||'';document.getElementById('titleCount').innerText=(data.title||'').length+'/100';document.getElementById('price').value=data.price||'';document.getElementById('purpose').value=data.purpose||'Sell';if(data.currency)document.getElementById('currency').value=data.currency;document.getElementById('location').value=data.location||'';document.getElementById('desc').value=data.description||'';document.getElementById('phone').value=data.phone||'';document.getElementById('size').value=data.size||'';document.getElementById('nearby').value=data.nearby||'';if(data.country){const c=COUNTRIES.find(x=>x.name===data.country);if(c)selectCountry(c.name,c.flag);else{document.getElementById('countrySearch').value=data.country;document.getElementById('selectedCountry').value=data.country;}}togglePurposeFields();if(data.purpose==='Rent'&&data.rentDetails){document.getElementById('furnished').value=data.rentDetails.furnished||'Unfurnished';document.getElementById('bills').value=data.rentDetails.bills||'Extra';document.getElementById('advance').value=data.rentDetails.advance||'';document.getElementById('maintenance').value=data.rentDetails.maintenance||'Not Applicable';}if(data.purpose==='Plot'&&data.plotDetails){document.getElementById('plotArea').value=data.plotDetails.area||'';document.getElementById('plotRoadFacing').value=data.plotDetails.roadFacing||'No';document.getElementById('plotCorner').value=data.plotDetails.corner||'No';}if(data.purpose==='Commercial'&&data.commercialDetails){document.getElementById('commercialType').value=data.commercialDetails.type||'Shop';document.getElementById('commercialFloor').value=data.commercialDetails.floor||'';document.getElementById('commercialFurnished').value=data.commercialDetails.furnished||'Unfurnished';document.getElementById('commercialBills').value=data.commercialDetails.bills||'Extra';}if(data.purpose==='PG'&&data.pgDetails){document.getElementById('pgSharing').value=data.pgDetails.sharing||'Single';document.getElementById('pgFood').value=data.pgDetails.food||'No';document.getElementById('pgBedding').value=data.pgDetails.bedding||'No';document.getElementById('pgAC').value=data.pgDetails.ac||'Non-AC';document.getElementById('pgLaundry').value=data.pgDetails.laundry||'No';document.getElementById('pgBills').value=data.pgDetails.bills||'Included';document.getElementById('pgAdvance').value=data.pgDetails.advance||'';}if(Array.isArray(data.images)){data.images.forEach((img,i)=>{if(i>=5||!img)return;if(img.type==='video'){if(i>=3){switchSlotMode(i,'video');uploadedImages[i]=img;if(img.videoUrl){document.getElementById(`videoUrl${i}`).value=img.videoUrl;previewVideo(i);}}}else if(typeof img==='string'){uploadedImages[i]={url:img,public_id:null};showImage(i,img);}else if(img&&img.url){uploadedImages[i]={url:img.url,public_id:img.public_id||null};showImage(i,img.url);}});}if(data.latitude&&data.longitude){currentCoords={lat:data.latitude,lng:data.longitude};showGPSInfo();}}
+async function loadEditData(id,uid){
+    const doc=await db.collection("properties").doc(id).get();
+    if(!doc.exists||doc.data().ownerId!==uid)return history.back();
+    const data=doc.data();
+    document.getElementById('pageTitle').innerText="Edit Property";
+    document.getElementById('postBtn').innerText="Update Property";
+    document.getElementById('title').value=data.title||'';
+    document.getElementById('titleCount').innerText=(data.title||'').length+'/100';
+    document.getElementById('purpose').value=data.purpose||'Sell';
+    togglePurposeFields();
 
-function togglePurposeFields(){const p=document.getElementById('purpose').value;document.getElementById('rentFields').style.display=p==='Rent'?'block':'none';document.getElementById('plotFields').style.display=p==='Plot'?'block':'none';document.getElementById('commercialFields').style.display=p==='Commercial'?'block':'none';document.getElementById('pgFields').style.display=p==='PG'?'block':'none';}
+    // ✅ Load prices based on purpose
+    const p=data.purpose||'Sell';
+    if(p==='RentSell'){
+        if(data.sellPrice)document.getElementById('rsSellPrice').value=data.sellPrice;
+        if(data.sellCurrency)document.getElementById('rsSelCurrency').value=data.sellCurrency;
+        if(data.rentPrice)document.getElementById('rsRentPrice').value=data.rentPrice;
+        if(data.rentCurrency)document.getElementById('rsRentCurrency').value=data.rentCurrency;
+    } else if(p==='Rent'||p==='PG'){
+        if(data.price)document.getElementById('rentPrice').value=data.price;
+        if(data.currency)document.getElementById('rentCurrency').value=data.currency;
+    } else {
+        if(data.price)document.getElementById('price').value=data.price;
+        if(data.currency)document.getElementById('currency').value=data.currency;
+    }
+
+    document.getElementById('location').value=data.location||'';
+    document.getElementById('desc').value=data.description||'';
+    document.getElementById('phone').value=data.phone||'';
+    document.getElementById('size').value=data.size||'';
+    document.getElementById('nearby').value=data.nearby||'';
+    document.getElementById('lotArea').value=data.lotArea||'';
+    document.getElementById('floorArea').value=data.floorArea||'';
+
+    if(data.country){const c=COUNTRIES.find(x=>x.name===data.country);if(c)selectCountry(c.name,c.flag);else{document.getElementById('countrySearch').value=data.country;document.getElementById('selectedCountry').value=data.country;document.getElementById('countryClearBtn').style.display='block';}}
+    if(p==='Rent'&&data.rentDetails){document.getElementById('furnished').value=data.rentDetails.furnished||'Unfurnished';document.getElementById('bills').value=data.rentDetails.bills||'Extra';document.getElementById('advance').value=data.rentDetails.advance||'';document.getElementById('maintenance').value=data.rentDetails.maintenance||'Not Applicable';}
+    if(p==='Plot'&&data.plotDetails){document.getElementById('plotArea').value=data.plotDetails.area||'';document.getElementById('plotRoadFacing').value=data.plotDetails.roadFacing||'No';document.getElementById('plotCorner').value=data.plotDetails.corner||'No';}
+    if(p==='Commercial'&&data.commercialDetails){document.getElementById('commercialType').value=data.commercialDetails.type||'Shop';document.getElementById('commercialFloor').value=data.commercialDetails.floor||'';document.getElementById('commercialFurnished').value=data.commercialDetails.furnished||'Unfurnished';document.getElementById('commercialBills').value=data.commercialDetails.bills||'Extra';}
+    if(p==='PG'&&data.pgDetails){document.getElementById('pgSharing').value=data.pgDetails.sharing||'Single';document.getElementById('pgFood').value=data.pgDetails.food||'No';document.getElementById('pgBedding').value=data.pgDetails.bedding||'No';document.getElementById('pgAC').value=data.pgDetails.ac||'Non-AC';document.getElementById('pgLaundry').value=data.pgDetails.laundry||'No';document.getElementById('pgBills').value=data.pgDetails.bills||'Included';document.getElementById('pgAdvance').value=data.pgDetails.advance||'';}
+    if(Array.isArray(data.images)){data.images.forEach((img,i)=>{if(i>=5||!img)return;if(img.type==='video'){if(i>=3){switchSlotMode(i,'video');uploadedImages[i]=img;if(img.videoUrl){document.getElementById(`videoUrl${i}`).value=img.videoUrl;previewVideo(i);}}}else if(typeof img==='string'){uploadedImages[i]={url:img,public_id:null};showImage(i,img);}else if(img&&img.url){uploadedImages[i]={url:img.url,public_id:img.public_id||null};showImage(i,img.url);}});}
+    if(data.latitude&&data.longitude){currentCoords={lat:data.latitude,lng:data.longitude};showGPSInfo();}
+}
+
+// ✅ UPDATED: togglePurposeFields now handles price visibility + RentSell
+function togglePurposeFields(){
+    const p=document.getElementById('purpose').value;
+
+    // Show/hide purpose-specific detail sections
+    document.getElementById('rentFields').style.display=p==='Rent'?'block':'none';
+    document.getElementById('plotFields').style.display=p==='Plot'?'block':'none';
+    document.getElementById('commercialFields').style.display=p==='Commercial'?'block':'none';
+    document.getElementById('pgFields').style.display=p==='PG'?'block':'none';
+    document.getElementById('rentSellFields').style.display=p==='RentSell'?'block':'none';
+
+    // ✅ Price field visibility logic
+    const singlePriceWrap = document.getElementById('singlePriceWrap');
+    const rentPriceWrap = document.getElementById('rentPriceWrap');
+
+    if(p==='RentSell'){
+        // Dual price fields shown inside rentSellFields, hide both single price fields
+        singlePriceWrap.style.display='none';
+        rentPriceWrap.style.display='none';
+    } else if(p==='Rent'||p==='PG'){
+        // Show rent price field only
+        singlePriceWrap.style.display='none';
+        rentPriceWrap.style.display='block';
+    } else {
+        // Sell, Plot, Commercial — show sell price field only
+        singlePriceWrap.style.display='block';
+        rentPriceWrap.style.display='none';
+    }
+}
 
 function showGPSInfo(){const gi=document.getElementById('gpsInfo');gi.innerHTML='';const icon=document.createElement('i');icon.className='fa fa-check-circle';const text=document.createTextNode(' GPS Captured: '+currentCoords.lat.toFixed(5)+', '+currentCoords.lng.toFixed(5));const br=document.createElement('br');const small=document.createElement('small');small.textContent='Location will be shown on map to buyers';gi.appendChild(icon);gi.appendChild(text);gi.appendChild(br);gi.appendChild(small);gi.style.display='block';}
 
@@ -344,23 +523,106 @@ async function submitProperty(){
     const user=firebase.auth().currentUser;
     if(!user){showToast("Session expired. Please login again.","error");setTimeout(()=>location.href='login.html',1500);return;}
     const title=document.getElementById('title').value.trim();
-    const price=Number(document.getElementById('price').value);
     const phone=document.getElementById('phone').value.trim();
     const location=document.getElementById('location').value.trim();
     const country=document.getElementById('selectedCountry').value.trim();
-    const finalImages=uploadedImages.map(img=>img||null);
-    if(!country)return showToast("Please select a country","error");
-    // ✅ FIXED: International phone validation 7-15 digits
-    if(!/^\d{7,15}$/.test(phone))return showToast("Enter valid phone number with country code (e.g. 919876543210)","error");
-    if(price>1000000000000)return showToast("Price too large.","error");
-    if(!title||price<=0||!location)return showToast("Please fill all required fields: Title, Price, Location","error");
     const purpose=document.getElementById('purpose').value;
-    const propertyData={title,price,phone,purpose,currency:document.getElementById('currency').value,size:document.getElementById('size').value,location,country,description:document.getElementById('desc').value.trim(),nearby:document.getElementById('nearby').value,images:finalImages,latitude:currentCoords.lat,longitude:currentCoords.lng,status:"active",updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+    const finalImages=uploadedImages.map(img=>img||null);
+
+    if(!country)return showToast("Please select a country","error");
+    if(!/^\d{7,15}$/.test(phone))return showToast("Enter valid phone number with country code (e.g. 919876543210)","error");
+    if(!title||!location)return showToast("Please fill all required fields: Title, Location","error");
+
+    // ✅ Price validation based on purpose
+    let priceValue=0, currencyValue='INR';
+    let rentPriceValue=0, rentCurrencyValue='INR';
+
+    if(purpose==='RentSell'){
+        priceValue=Number(document.getElementById('rsSellPrice').value);
+        currencyValue=document.getElementById('rsSelCurrency').value;
+        rentPriceValue=Number(document.getElementById('rsRentPrice').value);
+        rentCurrencyValue=document.getElementById('rsRentCurrency').value;
+        if(priceValue<=0||rentPriceValue<=0)return showToast("Please enter both Sell Price and Rent Price","error");
+        if(priceValue>1000000000000||rentPriceValue>1000000000000)return showToast("Price too large.","error");
+    } else if(purpose==='Rent'||purpose==='PG'){
+        priceValue=Number(document.getElementById('rentPrice').value);
+        currencyValue=document.getElementById('rentCurrency').value;
+        if(priceValue<=0)return showToast("Please enter a valid price","error");
+        if(priceValue>1000000000000)return showToast("Price too large.","error");
+    } else {
+        priceValue=Number(document.getElementById('price').value);
+        currencyValue=document.getElementById('currency').value;
+        if(priceValue<=0)return showToast("Please enter a valid price","error");
+        if(priceValue>1000000000000)return showToast("Price too large.","error");
+    }
+
+    const propertyData={
+        title,
+        price: purpose==='RentSell' ? priceValue : priceValue, // primary price = sell price
+        currency: currencyValue,
+        phone,
+        purpose,
+        size:document.getElementById('size').value,
+        lotArea:document.getElementById('lotArea').value.trim(),
+        floorArea:document.getElementById('floorArea').value.trim(),
+        location,
+        country,
+        description:document.getElementById('desc').value.trim(),
+        nearby:document.getElementById('nearby').value,
+        images:finalImages,
+        latitude:currentCoords.lat,
+        longitude:currentCoords.lng,
+        status:"active",
+        updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    // ✅ Save dual prices for RentSell
+    if(purpose==='RentSell'){
+        propertyData.sellPrice=priceValue;
+        propertyData.sellCurrency=currencyValue;
+        propertyData.rentPrice=rentPriceValue;
+        propertyData.rentCurrency=rentCurrencyValue;
+    }
+
     if(purpose==='Rent')propertyData.rentDetails={furnished:document.getElementById('furnished').value,bills:document.getElementById('bills').value,advance:document.getElementById('advance').value,maintenance:document.getElementById('maintenance').value};
     if(purpose==='Plot')propertyData.plotDetails={area:document.getElementById('plotArea').value,roadFacing:document.getElementById('plotRoadFacing').value,corner:document.getElementById('plotCorner').value};
     if(purpose==='Commercial')propertyData.commercialDetails={type:document.getElementById('commercialType').value,floor:document.getElementById('commercialFloor').value,furnished:document.getElementById('commercialFurnished').value,bills:document.getElementById('commercialBills').value};
     if(purpose==='PG')propertyData.pgDetails={sharing:document.getElementById('pgSharing').value,food:document.getElementById('pgFood').value,bedding:document.getElementById('pgBedding').value,ac:document.getElementById('pgAC').value,laundry:document.getElementById('pgLaundry').value,bills:document.getElementById('pgBills').value,advance:document.getElementById('pgAdvance').value};
-    try{document.getElementById('postBtn').disabled=true;document.getElementById('postBtn').innerText="Processing...";if(editId){await db.collection("properties").doc(editId).update(propertyData);showToast('Property Updated Successfully! ✓','success');}else{propertyData.coverImage=(uploadedImages[0]&&uploadedImages[0].url)?uploadedImages[0].url:null;propertyData.ownerId=user.uid;propertyData.ownerEpId=currentUserEpId;propertyData.createdAt=firebase.firestore.FieldValue.serverTimestamp();propertyData.isExpired=false;const expiry=new Date();const is30Days=(purpose==='Rent'||purpose==='PG');expiry.setDate(expiry.getDate()+(is30Days?30:180));propertyData.expiryDate=firebase.firestore.Timestamp.fromDate(expiry);const deletion=new Date(expiry);deletion.setDate(deletion.getDate()+30);propertyData.deletionDate=firebase.firestore.Timestamp.fromDate(deletion);if(currentUserVerified){propertyData.isVerified=true;propertyData.dealerName=currentUserBizName;}else{propertyData.isVerified=false;}const docRef=await db.collection("properties").add(propertyData);showToast('Property Posted Successfully! 🎉','success');window.location.href="property-success.html?id="+docRef.id;return;}window.location.href="my-ads.html";}catch(e){showToast('Error: '+e.message,'error');document.getElementById('postBtn').disabled=false;document.getElementById('postBtn').innerText=editId?"Update Property":"Post Property";}
+
+    try{
+        document.getElementById('postBtn').disabled=true;
+        document.getElementById('postBtn').innerText="Processing...";
+        if(editId){
+            await db.collection("properties").doc(editId).update(propertyData);
+            showToast('Property Updated Successfully! ✓','success');
+        } else {
+            propertyData.coverImage=(uploadedImages[0]&&uploadedImages[0].url)?uploadedImages[0].url:null;
+            propertyData.ownerId=user.uid;
+            propertyData.ownerEpId=currentUserEpId;
+            propertyData.createdAt=firebase.firestore.FieldValue.serverTimestamp();
+            propertyData.isExpired=false;
+
+            // ✅ Expiry logic — RentSell = 180 days (same as Sell)
+            const expiry=new Date();
+            const is30Days=(purpose==='Rent'||purpose==='PG');
+            expiry.setDate(expiry.getDate()+(is30Days?30:180));
+            propertyData.expiryDate=firebase.firestore.Timestamp.fromDate(expiry);
+            const deletion=new Date(expiry);
+            deletion.setDate(deletion.getDate()+30);
+            propertyData.deletionDate=firebase.firestore.Timestamp.fromDate(deletion);
+
+            if(currentUserVerified){propertyData.isVerified=true;propertyData.dealerName=currentUserBizName;}else{propertyData.isVerified=false;}
+            const docRef=await db.collection("properties").add(propertyData);
+            showToast('Property Posted Successfully! 🎉','success');
+            window.location.href="property-success.html?id="+docRef.id;
+            return;
+        }
+        window.location.href="my-ads.html";
+    } catch(e){
+        showToast('Error: '+e.message,'error');
+        document.getElementById('postBtn').disabled=false;
+        document.getElementById('postBtn').innerText=editId?"Update Property":"Post Property";
+    }
 }
 
 function showToast(message,type='info'){const container=document.getElementById('toastContainer');if(!container)return;const toast=document.createElement('div');const colors={success:'#2e7d32',error:'#c62828',info:'#1565c0'};toast.style.cssText=`background:${colors[type]||colors.info};color:#fff;padding:12px 18px;border-radius:10px;font-size:14px;font-weight:500;box-shadow:0 4px 12px rgba(0,0,0,0.2);max-width:280px;animation:fadeIn 0.3s ease;`;toast.textContent=message;container.appendChild(toast);const duration=type==='error'?4000:2500;setTimeout(()=>{toast.style.opacity='0';toast.style.transition='opacity 0.3s';setTimeout(()=>toast.remove(),300);},duration);}
