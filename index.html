@@ -180,7 +180,6 @@
         .filter-btn.active-filter { background: #2e7d32; color: white; border-color: #2e7d32; }
         @keyframes aboutSlideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-        /* ✅ NEW: Property title clickable */
         .prop-title-link { cursor: pointer; }
         .prop-title-link:hover { color: var(--primary); }
     </style>
@@ -266,7 +265,7 @@
 </div>
 
 <!-- CTA Banner -->
-<div style="background:linear-gradient(135deg,#1976d2,#1565c0); padding:14px 16px; margin:12px; border-radius:14px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; box-shadow:0 6px 18px rgba(0,0,0,0.18); position:sticky; top:70px; z-index:999;" onclick="location.href='add-property.html'">
+<div style="background:linear-gradient(135deg,#1976d2,#1565c0); padding:14px 16px; margin:12px; border-radius:14px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; box-shadow:0 6px 18px rgba(0,0,0,0.18); position:sticky; top:70px; z-index:999;" onclick="trackPostClick()">
     <div>
         <div style="font-weight:800; font-size:14px; color:#fff;"><i class="fa fa-home" style="margin-right:6px;"></i><span id="postFreeEl">Post Property FREE</span></div>
         <div style="font-size:11px; color:rgba(255,255,255,0.85); margin-top:2px;" id="ctaDescEl">Reach thousands of buyers instantly</div>
@@ -274,7 +273,7 @@
     <div style="background:white; color:#1565c0; padding:8px 16px; border-radius:20px; font-size:12px; font-weight:800; box-shadow:0 3px 8px rgba(0,0,0,0.25);" id="postNowEl">POST NOW →</div>
 </div>
 
-<!-- ✅ Filter Panel — RentSell added -->
+<!-- Filter Panel -->
 <div style="background:white; padding:12px 15px; border-bottom:1px solid #eee; overflow-x:auto; -webkit-overflow-scrolling:touch;">
     <div style="display:flex; gap:8px; min-width:max-content;">
         <button class="filter-btn active-filter" id="filter-all" onclick="setFilter('all')"><span id="filterAllEl">All</span></button>
@@ -328,7 +327,7 @@
 <nav class="bottom-nav">
     <a href="index.html" class="nav-item active"><i class="fa fa-home"></i><div id="navExplore">Explore</div></a>
     <a href="my-ads.html" class="nav-item guest-hidden" id="navMyAdsBtn"><i class="fa fa-layer-group"></i><div id="navMyAds">My Ads</div></a>
-    <div class="post-btn-wrapper guest-hidden" id="navPostBtn"><a href="add-property.html" class="post-btn"><i class="fa fa-plus"></i></a></div>
+    <div class="post-btn-wrapper guest-hidden" id="navPostBtn"><a href="add-property.html" class="post-btn" onclick="gtag('event','post_property_click',{location:'bottom_nav'});"><i class="fa fa-plus"></i></a></div>
     <a href="favorites.html" class="nav-item guest-hidden" id="navFavsBtn"><i class="fa-regular fa-heart"></i><div id="navFavs">Favs</div></a>
     <a href="profile.html" class="nav-item guest-hidden" id="navProfileBtn"><i class="fa-regular fa-user"></i><div id="navProfile">Profile</div></a>
 </nav>
@@ -394,6 +393,23 @@ const CURRENCY_SYMBOLS = {
     JPY:'¥', KRW:'₩', RUB:'₽', CHF:'CHF', SEK:'kr', NOK:'kr',
     DKK:'kr', PLN:'zł'
 };
+
+// =============================================
+// ✅ GA4 TRACKING HELPER FUNCTION
+// =============================================
+function trackEvent(eventName, params) {
+    try {
+        if (typeof gtag === 'function') {
+            gtag('event', eventName, params || {});
+        }
+    } catch(e) {}
+}
+
+// ✅ CTA "POST NOW" button click track
+function trackPostClick() {
+    trackEvent('post_property_click', { location: 'cta_banner' });
+    location.href = 'add-property.html';
+}
 
 function detectUserCurrency() {
     try {
@@ -670,6 +686,8 @@ function loadLanguageDropdown() {
 function handleLanguageChange() {
     const lang=document.getElementById('langDropdown').value;
     localStorage.setItem('selectedLang',lang); applyLanguage();
+    // ✅ GA4: Language change track
+    trackEvent('language_change', { language: lang });
     showToast(`✓ Language changed to ${languages.find(l=>l.code===lang)?.name||lang}`);
 }
 
@@ -750,8 +768,17 @@ async function toggleFavorite(propId) {
     if(!currentUser){showToast('Please login to add favorites');setTimeout(()=>location.href='login.html',1000);return;}
     try {
         const q=await db.collection("favorites").where("userId","==",currentUser.uid).where("propertyId","==",propId).get();
-        if(!q.empty){await q.docs[0].ref.delete();showToast('Removed from favorites');}
-        else{await db.collection("favorites").add({userId:currentUser.uid,propertyId:propId,addedAt:firebase.firestore.FieldValue.serverTimestamp()});showToast('Added to favorites ❤️');}
+        if(!q.empty){
+            await q.docs[0].ref.delete();
+            showToast('Removed from favorites');
+            // ✅ GA4: Favourite remove
+            trackEvent('remove_from_favorites', { property_id: propId });
+        } else {
+            await db.collection("favorites").add({userId:currentUser.uid,propertyId:propId,addedAt:firebase.firestore.FieldValue.serverTimestamp()});
+            showToast('Added to favorites ❤️');
+            // ✅ GA4: Favourite add
+            trackEvent('add_to_favorites', { property_id: propId });
+        }
     } catch(e){console.error(e);showToast('Error updating favorites');}
 }
 
@@ -817,6 +844,8 @@ auth.onAuthStateChanged(user=>{
             else{if(adminIcon)adminIcon.style.display='none';if(adminSideBtn)adminSideBtn.style.display='none';}
             loadUserFavorites(user.uid);
             listenForNotifications(user.uid);
+            // ✅ GA4: User login track
+            trackEvent('user_login', { method: user.providerData?.[0]?.providerId || 'unknown' });
         }).catch(e=>console.error("User fetch error:",e));
     } else {
         hideNavForGuest();
@@ -837,7 +866,11 @@ auth.onAuthStateChanged(user=>{
 });
 
 function handleLogout() {
-    if(confirm('Are you sure you want to logout?')) auth.signOut().then(()=>location.reload());
+    if(confirm('Are you sure you want to logout?')) {
+        // ✅ GA4: Logout track
+        trackEvent('user_logout', {});
+        auth.signOut().then(()=>location.reload());
+    }
 }
 
 function loadProperties(isLoadMore=false) {
@@ -862,6 +895,8 @@ function loadProperties(isLoadMore=false) {
         renderAds(displayedAds,isLoadMore);
         isLoading=false;
         if(btn){btn.disabled=false;btn.innerHTML=`<span id="loadMoreText">${getT().loadMore||'Load More'}</span>`;}
+        // ✅ GA4: Load more track
+        if(isLoadMore) trackEvent('load_more_properties', { page: Math.ceil(allAds.length / ADS_PER_PAGE) });
     }).catch(err=>{
         console.error('Firestore error:',err);
         isDataLoaded=true;
@@ -927,7 +962,6 @@ function renderAds(ads, append=false) {
         const card=document.createElement('div'); card.className='prop-card';
         const sid=sanitize(p.id), stitle=sanitize(p.title)||'Untitled Property', sloc=sanitize(p.location)||'Location not specified';
 
-        // ✅ RentSell badge color added
         const pColors={
             'Sell':{bg:'#e8f5e9',color:'#2e7d32'},
             'Rent':{bg:'#e3f2fd',color:'#1565c0'},
@@ -993,22 +1027,43 @@ function renderAds(ads, append=false) {
             });
         }
 
-        // ✅ CHANGE 1: Image click → property-detail.html
+        // ✅ Image click → property-detail + GA4 track
         document.getElementById('imgbox-'+sid).addEventListener('click',e=>{
             if(e.target.closest('.card-actions')) return;
+            trackEvent('view_property', { property_id: p.id, property_title: p.title || '', click_source: 'image' });
             location.href='property-detail.html?id='+p.id;
         });
 
-        // ✅ CHANGE 2: Title click → property-detail.html
+        // ✅ Title click → property-detail + GA4 track
         document.getElementById('ptitle-'+sid).addEventListener('click',()=>{
+            trackEvent('view_property', { property_id: p.id, property_title: p.title || '', click_source: 'title' });
             location.href='property-detail.html?id='+p.id;
         });
 
+        // ✅ Share + GA4 track
         document.getElementById('share-'+sid).addEventListener('click',e=>{e.stopPropagation();shareProperty(p.id,p.title||'');});
+
+        // ✅ Favourite + GA4 track (handled inside toggleFavorite)
         document.getElementById('fav-'+sid).addEventListener('click',e=>{e.stopPropagation();toggleFavorite(p.id);});
-        document.getElementById('call-'+sid).addEventListener('click',()=>contact(p.phone,'tel',''));
-        document.getElementById('wa-'+sid).addEventListener('click',()=>contact(p.phone,'wa',p.title||''));
-        document.getElementById('chat-'+sid).addEventListener('click',()=>location.href='chat.html?to='+encodeURIComponent(p.ownerId||''));
+
+        // ✅ Call + GA4 track
+        document.getElementById('call-'+sid).addEventListener('click',()=>{
+            trackEvent('contact_call', { property_id: p.id });
+            contact(p.phone,'tel','');
+        });
+
+        // ✅ WhatsApp + GA4 track
+        document.getElementById('wa-'+sid).addEventListener('click',()=>{
+            trackEvent('contact_whatsapp', { property_id: p.id });
+            contact(p.phone,'wa',p.title||'');
+        });
+
+        // ✅ Chat + GA4 track
+        document.getElementById('chat-'+sid).addEventListener('click',()=>{
+            trackEvent('chat_click', { property_id: p.id });
+            location.href='chat.html?to='+encodeURIComponent(p.ownerId||'');
+        });
+
         if(images.length>1) setupCardSwipe(sid,images);
     });
 }
@@ -1030,7 +1085,6 @@ function setupCardSwipe(id,images) {
     });
 }
 
-// ✅ CHANGE 3: RentSell filter added
 let activeFilter='all';
 function setFilter(type) {
     activeFilter=type;
@@ -1038,6 +1092,8 @@ function setFilter(type) {
         const b=document.getElementById('filter-'+f); if(!b) return;
         if(f===type) b.classList.add('active-filter'); else b.classList.remove('active-filter');
     });
+    // ✅ GA4: Filter click track
+    trackEvent('filter_click', { filter_type: type });
     applyFilterAndSearch();
 }
 
@@ -1056,7 +1112,11 @@ function applyFilterAndSearch() {
             return true;
         });
     }
-    if(val) filtered=filtered.filter(a=>(a.location||'').toLowerCase().includes(val)||(a.title||'').toLowerCase().includes(val)||(a.description||'').toLowerCase().includes(val)||(a.country||'').toLowerCase().includes(val));
+    if(val) {
+        filtered=filtered.filter(a=>(a.location||'').toLowerCase().includes(val)||(a.title||'').toLowerCase().includes(val)||(a.description||'').toLowerCase().includes(val)||(a.country||'').toLowerCase().includes(val));
+        // ✅ GA4: Search track (only if 3+ chars)
+        if(val.length >= 3) trackEvent('search', { search_term: val });
+    }
     if(activeSort==='nearest'&&userLocation){
         filtered=sortByProximity(filtered);
     } else {
@@ -1079,6 +1139,8 @@ function contact(num,type,title) {
 }
 
 function shareProperty(propId,title) {
+    // ✅ GA4: Share track
+    trackEvent('share_property', { property_id: propId, property_title: title });
     const url=`${window.location.origin}/property-detail.html?id=${propId}`;
     if(navigator.share){navigator.share({title:title+' - The Earth Property',url}).catch(()=>{});}
     else if(navigator.clipboard){navigator.clipboard.writeText(url).then(()=>showToast('Link copied! 📋'));}
@@ -1099,6 +1161,8 @@ function setSort(type) {
     document.getElementById('sort-nearest').style.background = type === 'nearest' ? '#2e7d32' : 'white';
     document.getElementById('sort-nearest').style.color = type === 'nearest' ? 'white' : '#555';
     document.getElementById('sort-nearest').style.borderColor = type === 'nearest' ? '#2e7d32' : '#ddd';
+    // ✅ GA4: Sort track
+    trackEvent('sort_click', { sort_type: type });
     if (type === 'nearest') {
         if (!userLocation) {
             if (!navigator.geolocation) { showToast('📍 GPS not supported on this device.'); setSort('latest'); return; }
