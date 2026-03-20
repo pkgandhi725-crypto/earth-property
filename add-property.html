@@ -221,7 +221,7 @@
             <input type="number" id="manualLat" placeholder="Latitude" step="any" oninput="onManualCoordsChange()">
             <input type="number" id="manualLng" placeholder="Longitude" step="any" oninput="onManualCoordsChange()">
         </div>
-        <div id="coordsHint">✏️ Ya manually latitude/longitude type karo (Google Maps se copy kar sakte ho)</div>
+        <div id="coordsHint">✏️ Or enter latitude/longitude manually (copy from Google Maps)</div>
 
         <div class="gps-divider" style="margin-top:14px;"><span>OR use GPS</span></div>
 
@@ -496,7 +496,7 @@ async function geocodeAddress() {
     const address = document.getElementById('location').value.trim();
     const country = document.getElementById('selectedCountry').value.trim();
     const query = [address, country].filter(Boolean).join(', ');
-    if (!query) { showToast('Pehle address fill karo', 'error'); return; }
+    if (!query) { showToast('Please fill address first', 'error'); return; }
 
     const btn = document.getElementById('btnGetMap');
     const btnText = document.getElementById('getMapBtnText');
@@ -517,7 +517,7 @@ async function geocodeAddress() {
             initMap(lat, lng);
             showToast('✓ Location found on map!', 'success');
         } else {
-            showToast('Address nahi mila. Aur specific address try karo ya GPS use karo.', 'error');
+            showToast('Address not found. Try a more specific address or use GPS.', 'error');
         }
     } catch (e) {
         showToast('Network error. Please try again.', 'error');
