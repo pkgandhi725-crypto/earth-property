@@ -1,0 +1,204 @@
+/* ============================================
+   The Earth Property — Desktop Styles
+   Mobile pe kuch nahi badlega!
+   Sirf 768px+ screens pe apply hoga
+   ============================================ */
+
+/* ── Tablet (768px+) ── */
+@media (min-width: 768px) {
+
+    body {
+        padding-bottom: 0;
+    }
+
+    /* Header wider */
+    header {
+        padding: 12px 40px;
+    }
+
+    /* Search box wider */
+    .search-box {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    /* Hero banner */
+    #heroTitleEl {
+        font-size: 28px !important;
+    }
+
+    #heroSubtitleEl {
+        font-size: 15px !important;
+    }
+
+    /* CTA Banner */
+    .cta-banner {
+        max-width: 900px;
+        margin: 12px auto !important;
+    }
+
+    /* Filter panel centered */
+    .filter-panel-inner {
+        justify-content: center !important;
+    }
+
+    /* Property cards — 2 columns on tablet */
+    #propertyList {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0;
+        padding: 0 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .prop-card {
+        margin: 10px 8px;
+    }
+
+    /* Skeleton cards 2 col */
+    .skeleton-card {
+        margin: 10px 8px;
+    }
+
+    /* Bottom nav hidden on desktop */
+    .bottom-nav {
+        display: none !important;
+    }
+
+    /* Load more button */
+    #loadMoreContainer {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    /* Drawer wider on tablet */
+    .drawer {
+        width: 320px;
+    }
+}
+
+/* ── Desktop (1024px+) ── */
+@media (min-width: 1024px) {
+
+    /* Header */
+    header {
+        padding: 14px 60px;
+    }
+
+    .header-top {
+        max-width: 1200px;
+        margin: 0 auto 8px;
+    }
+
+    .search-box {
+        max-width: 1200px;
+        margin: 0 auto;
+        border-radius: 10px;
+    }
+
+    /* Hero */
+    #heroTitleEl {
+        font-size: 34px !important;
+    }
+
+    #heroSubtitleEl {
+        font-size: 16px !important;
+    }
+
+    /* Hero banner wrapper */
+    div[style*="linear-gradient(135deg,#1b5e20"] {
+        padding: 30px 60px !important;
+    }
+
+    /* CTA Banner */
+    div[style*="linear-gradient(135deg,#1976d2"] {
+        max-width: 1200px;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        position: relative !important;
+        top: 0 !important;
+    }
+
+    /* Filter panel */
+    div[style*="overflow-x:auto"] {
+        padding: 12px 60px !important;
+    }
+
+    /* Sort bar */
+    div[style*="justify-content:flex-end"] {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 8px 20px !important;
+    }
+
+    /* 3 column grid on desktop */
+    #propertyList {
+        grid-template-columns: repeat(3, 1fr);
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 40px;
+    }
+
+    .prop-card {
+        margin: 12px 10px;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    /* Hover effect on desktop */
+    .prop-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.14);
+    }
+
+    .prop-card:active {
+        transform: translateY(-2px);
+    }
+
+    /* Image taller on desktop */
+    .img-box {
+        height: 220px;
+    }
+
+    /* Skeleton 3 col */
+    .skeleton-card {
+        margin: 12px 10px;
+    }
+
+    /* Load more */
+    #loadMoreContainer {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* Location card */
+    #locationCard {
+        max-width: 600px;
+        margin: 12px auto !important;
+    }
+
+    /* About modal bigger */
+    #aboutModal > div {
+        max-width: 500px;
+    }
+
+    /* Drawer */
+    .drawer {
+        width: 340px;
+    }
+}
+
+/* ── Large Desktop (1400px+) ── */
+@media (min-width: 1400px) {
+
+    #propertyList {
+        grid-template-columns: repeat(4, 1fr);
+        max-width: 1400px;
+    }
+
+    header .header-top,
+    header .search-box {
+        max-width: 1400px;
+    }
+}
