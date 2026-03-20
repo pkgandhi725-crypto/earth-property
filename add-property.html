@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Post Property - Earth Property</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
     <style>
         :root { --primary: #2e7d32; --bg: #f8f9fa; --danger: #d32f2f; --accent: #e8f5e9; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--bg); padding-bottom: 30px; }
@@ -48,10 +49,7 @@
         #plotFields { background: #fff8e1; padding: 15px; border-radius: 15px; display: none; border: 1px solid #ffe082; margin-bottom: 18px; }
         #commercialFields { background: #fce4ec; padding: 15px; border-radius: 15px; display: none; border: 1px solid #f8bbd0; margin-bottom: 18px; }
         #pgFields { background: #e8eaf6; padding: 15px; border-radius: 15px; display: none; border: 1px solid #c5cae9; margin-bottom: 18px; }
-
-        /* ✅ NEW: Rent & Sell Both fields */
         #rentSellFields { background: linear-gradient(135deg, #f3e5f5, #e8f5e9); padding: 15px; border-radius: 15px; display: none; border: 1px solid #ce93d8; margin-bottom: 18px; }
-
         .toggle-row { display: flex; gap: 10px; align-items: center; }
         .toggle-row label { margin-bottom: 0; flex: 1; }
         .toggle-row select { flex: 1; }
@@ -65,23 +63,29 @@
         .flex-slot-title { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
         .phone-hint { font-size: 11px; color: #888; margin-top: 5px; line-height: 1.6; }
         .phone-hint span { color: var(--primary); font-weight: 600; }
-
-        /* ✅ NEW: Area fields row */
         .area-row { display: flex; gap: 10px; }
         .area-row .form-group { flex: 1; margin-bottom: 0; }
         .area-row-wrap { margin-bottom: 18px; }
-
-        /* ✅ NEW: Dual price box styling */
         .dual-price-box { background: #fff; border: 1.5px solid #ce93d8; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
         .dual-price-label { font-size: 12px; font-weight: 700; color: #7b1fa2; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+
+        /* ===== MAP STYLES ===== */
+        #propertyMap { height: 220px; border-radius: 12px; margin-top: 12px; display: none; border: 1.5px solid #c8e6c9; position: relative; z-index: 1; }
+        .get-map-btn { width: 100%; padding: 11px; background: linear-gradient(135deg, #2e7d32, #388e3c); color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; box-sizing: border-box; }
+        .get-map-btn:disabled { background: #aaa; cursor: not-allowed; }
+        .map-coords-row { display: none; gap: 8px; margin-top: 10px; }
+        .map-coords-row input { flex: 1; font-size: 13px; padding: 9px 10px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9; color: #444; }
+        .map-coords-row input:focus { border-color: var(--primary); background: #fff; outline: none; }
+        #mapPinInfo { font-size: 12px; color: #2e7d32; margin-top: 8px; display: none; background: #e8f5e9; padding: 8px 12px; border-radius: 8px; }
+        #coordsHint { font-size: 11px; color: #999; margin-top: 5px; display: none; }
     </style>
     <script src="translations.js"></script>
     <script src="lang.js"></script>
-<style>
-@keyframes fadeIn { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
-@keyframes spin { to { transform: rotate(360deg); } }
-.loading-spinner { width: 16px; height: 16px; border: 2px solid #c8e6c9; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; margin-right: 6px; vertical-align: middle; }
-</style>
+    <style>
+        @keyframes fadeIn { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-spinner { width: 16px; height: 16px; border: 2px solid #c8e6c9; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; margin-right: 6px; vertical-align: middle; }
+    </style>
 </head>
 <body>
 <div id="toastContainer" style="position:fixed;top:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:8px;"></div>
@@ -113,7 +117,6 @@
         <input type="text" id="title" maxlength="100" placeholder="e.g. 3BHK Flat in City Center">
     </div>
 
-    <!-- ✅ PURPOSE DROPDOWN — now includes Rent & Sell Both -->
     <div class="form-group">
         <label>Purpose</label>
         <select id="purpose" onchange="togglePurposeFields()">
@@ -126,118 +129,28 @@
         </select>
     </div>
 
-    <!-- ✅ SELL PRICE — shown for Sell, Plot, Commercial (hidden for Rent, PG, RentSell) -->
     <div class="form-group" id="singlePriceWrap">
         <label>Price / Amount</label>
         <div style="display:flex; gap:6px;">
             <select id="currency" style="width:90px; padding:12px 6px; border:1px solid #ddd; border-radius:10px; font-size:13px; font-weight:600; background:#fff; outline:none;">
-                <option value="INR">🇮🇳 ₹</option>
-                <option value="USD">🇺🇸 $</option>
-                <option value="AED">🇦🇪 AED</option>
-                <option value="SAR">🇸🇦 SAR</option>
-                <option value="GBP">🇬🇧 £</option>
-                <option value="EUR">🇪🇺 €</option>
-                <option value="PKR">🇵🇰 ₨</option>
-                <option value="BDT">🇧🇩 ৳</option>
-                <option value="SGD">🇸🇬 S$</option>
-                <option value="MYR">🇲🇾 RM</option>
-                <option value="CAD">🇨🇦 C$</option>
-                <option value="AUD">🇦🇺 A$</option>
-                <option value="NGN">🇳🇬 ₦</option>
-                <option value="GHS">🇬🇭 ₵</option>
-                <option value="KES">🇰🇪 KSh</option>
-                <option value="UGX">🇺🇬 USh</option>
-                <option value="RWF">🇷🇼 Fr</option>
-                <option value="NPR">🇳🇵 Rs</option>
-                <option value="LKR">🇱🇰 Rs</option>
-                <option value="ZAR">🇿🇦 R</option>
-                <option value="TZS">🇹🇿 TSh</option>
-                <option value="PHP">🇵🇭 ₱</option>
-                <option value="IDR">🇮🇩 Rp</option>
-                <option value="THB">🇹🇭 ฿</option>
-                <option value="VND">🇻🇳 ₫</option>
-                <option value="TRY">🇹🇷 ₺</option>
-                <option value="BRL">🇧🇷 R$</option>
-                <option value="MXN">🇲🇽 $</option>
-                <option value="KWD">🇰🇼 KD</option>
-                <option value="QAR">🇶🇦 QR</option>
-                <option value="OMR">🇴🇲 OMR</option>
-                <option value="BHD">🇧🇭 BD</option>
-                <option value="JOD">🇯🇴 JD</option>
-                <option value="EGP">🇪🇬 £</option>
-                <option value="MAD">🇲🇦 MAD</option>
-                <option value="CNY">🇨🇳 ¥</option>
-                <option value="JPY">🇯🇵 ¥</option>
-                <option value="KRW">🇰🇷 ₩</option>
-                <option value="RUB">🇷🇺 ₽</option>
-                <option value="CHF">🇨🇭 CHF</option>
-                <option value="SEK">🇸🇪 kr</option>
-                <option value="NOK">🇳🇴 kr</option>
-                <option value="DKK">🇩🇰 kr</option>
-                <option value="PLN">🇵🇱 zł</option>
+                <option value="INR">🇮🇳 ₹</option><option value="USD">🇺🇸 $</option><option value="AED">🇦🇪 AED</option><option value="SAR">🇸🇦 SAR</option><option value="GBP">🇬🇧 £</option><option value="EUR">🇪🇺 €</option><option value="PKR">🇵🇰 ₨</option><option value="BDT">🇧🇩 ৳</option><option value="SGD">🇸🇬 S$</option><option value="MYR">🇲🇾 RM</option><option value="CAD">🇨🇦 C$</option><option value="AUD">🇦🇺 A$</option><option value="NGN">🇳🇬 ₦</option><option value="GHS">🇬🇭 ₵</option><option value="KES">🇰🇪 KSh</option><option value="UGX">🇺🇬 USh</option><option value="RWF">🇷🇼 Fr</option><option value="NPR">🇳🇵 Rs</option><option value="LKR">🇱🇰 Rs</option><option value="ZAR">🇿🇦 R</option><option value="TZS">🇹🇿 TSh</option><option value="PHP">🇵🇭 ₱</option><option value="IDR">🇮🇩 Rp</option><option value="THB">🇹🇭 ฿</option><option value="VND">🇻🇳 ₫</option><option value="TRY">🇹🇷 ₺</option><option value="BRL">🇧🇷 R$</option><option value="MXN">🇲🇽 $</option><option value="KWD">🇰🇼 KD</option><option value="QAR">🇶🇦 QR</option><option value="OMR">🇴🇲 OMR</option><option value="BHD">🇧🇭 BD</option><option value="JOD">🇯🇴 JD</option><option value="EGP">🇪🇬 £</option><option value="MAD">🇲🇦 MAD</option><option value="CNY">🇨🇳 ¥</option><option value="JPY">🇯🇵 ¥</option><option value="KRW">🇰🇷 ₩</option><option value="RUB">🇷🇺 ₽</option><option value="CHF">🇨🇭 CHF</option><option value="SEK">🇸🇪 kr</option><option value="NOK">🇳🇴 kr</option><option value="DKK">🇩🇰 kr</option><option value="PLN">🇵🇱 zł</option>
             </select>
             <input type="number" id="price" placeholder="Amount" min="1" step="1" style="flex:1;">
         </div>
     </div>
 
-    <!-- ✅ RENT PRICE — shown for Rent, PG (hidden for others) -->
     <div class="form-group" id="rentPriceWrap" style="display:none;">
         <label>Rent Price / Month</label>
         <div style="display:flex; gap:6px;">
             <select id="rentCurrency" style="width:90px; padding:12px 6px; border:1px solid #ddd; border-radius:10px; font-size:13px; font-weight:600; background:#fff; outline:none;">
-                <option value="INR">🇮🇳 ₹</option>
-                <option value="USD">🇺🇸 $</option>
-                <option value="AED">🇦🇪 AED</option>
-                <option value="SAR">🇸🇦 SAR</option>
-                <option value="GBP">🇬🇧 £</option>
-                <option value="EUR">🇪🇺 €</option>
-                <option value="PKR">🇵🇰 ₨</option>
-                <option value="BDT">🇧🇩 ৳</option>
-                <option value="SGD">🇸🇬 S$</option>
-                <option value="MYR">🇲🇾 RM</option>
-                <option value="CAD">🇨🇦 C$</option>
-                <option value="AUD">🇦🇺 A$</option>
-                <option value="NGN">🇳🇬 ₦</option>
-                <option value="GHS">🇬🇭 ₵</option>
-                <option value="KES">🇰🇪 KSh</option>
-                <option value="UGX">🇺🇬 USh</option>
-                <option value="RWF">🇷🇼 Fr</option>
-                <option value="NPR">🇳🇵 Rs</option>
-                <option value="LKR">🇱🇰 Rs</option>
-                <option value="ZAR">🇿🇦 R</option>
-                <option value="TZS">🇹🇿 TSh</option>
-                <option value="PHP">🇵🇭 ₱</option>
-                <option value="IDR">🇮🇩 Rp</option>
-                <option value="THB">🇹🇭 ฿</option>
-                <option value="VND">🇻🇳 ₫</option>
-                <option value="TRY">🇹🇷 ₺</option>
-                <option value="BRL">🇧🇷 R$</option>
-                <option value="MXN">🇲🇽 $</option>
-                <option value="KWD">🇰🇼 KD</option>
-                <option value="QAR">🇶🇦 QR</option>
-                <option value="OMR">🇴🇲 OMR</option>
-                <option value="BHD">🇧🇭 BD</option>
-                <option value="JOD">🇯🇴 JD</option>
-                <option value="EGP">🇪🇬 £</option>
-                <option value="MAD">🇲🇦 MAD</option>
-                <option value="CNY">🇨🇳 ¥</option>
-                <option value="JPY">🇯🇵 ¥</option>
-                <option value="KRW">🇰🇷 ₩</option>
-                <option value="RUB">🇷🇺 ₽</option>
-                <option value="CHF">🇨🇭 CHF</option>
-                <option value="SEK">🇸🇪 kr</option>
-                <option value="NOK">🇳🇴 kr</option>
-                <option value="DKK">🇩🇰 kr</option>
-                <option value="PLN">🇵🇱 zł</option>
+                <option value="INR">🇮🇳 ₹</option><option value="USD">🇺🇸 $</option><option value="AED">🇦🇪 AED</option><option value="SAR">🇸🇦 SAR</option><option value="GBP">🇬🇧 £</option><option value="EUR">🇪🇺 €</option><option value="PKR">🇵🇰 ₨</option><option value="BDT">🇧🇩 ৳</option><option value="SGD">🇸🇬 S$</option><option value="MYR">🇲🇾 RM</option><option value="CAD">🇨🇦 C$</option><option value="AUD">🇦🇺 A$</option><option value="NGN">🇳🇬 ₦</option><option value="GHS">🇬🇭 ₵</option><option value="KES">🇰🇪 KSh</option><option value="UGX">🇺🇬 USh</option><option value="RWF">🇷🇼 Fr</option><option value="NPR">🇳🇵 Rs</option><option value="LKR">🇱🇰 Rs</option><option value="ZAR">🇿🇦 R</option><option value="TZS">🇹🇿 TSh</option><option value="PHP">🇵🇭 ₱</option><option value="IDR">🇮🇩 Rp</option><option value="THB">🇹🇭 ฿</option><option value="VND">🇻🇳 ₫</option><option value="TRY">🇹🇷 ₺</option><option value="BRL">🇧🇷 R$</option><option value="MXN">🇲🇽 $</option><option value="KWD">🇰🇼 KD</option><option value="QAR">🇶🇦 QR</option><option value="OMR">🇴🇲 OMR</option><option value="BHD">🇧🇭 BD</option><option value="JOD">🇯🇴 JD</option><option value="EGP">🇪🇬 £</option><option value="MAD">🇲🇦 MAD</option><option value="CNY">🇨🇳 ¥</option><option value="JPY">🇯🇵 ¥</option><option value="KRW">🇰🇷 ₩</option><option value="RUB">🇷🇺 ₽</option><option value="CHF">🇨🇭 CHF</option><option value="SEK">🇸🇪 kr</option><option value="NOK">🇳🇴 kr</option><option value="DKK">🇩🇰 kr</option><option value="PLN">🇵🇱 zł</option>
             </select>
             <input type="number" id="rentPrice" placeholder="Monthly Rent" min="1" step="1" style="flex:1;">
         </div>
     </div>
 
-    <!-- ✅ NEW: RENT & SELL BOTH — dual price fields -->
     <div id="rentSellFields">
         <div class="section-title">🏠🔑 Rent &amp; Sell Prices</div>
-
         <div class="dual-price-box">
             <div class="dual-price-label">🏠 Sell Price</div>
             <div style="display:flex; gap:6px;">
@@ -247,7 +160,6 @@
                 <input type="number" id="rsSellPrice" placeholder="Sell Amount" min="1" step="1" style="flex:1;">
             </div>
         </div>
-
         <div class="dual-price-box">
             <div class="dual-price-label">🔑 Rent Price / Month</div>
             <div style="display:flex; gap:6px;">
@@ -259,7 +171,6 @@
         </div>
     </div>
 
-    <!-- ✅ FIXED: International phone number support -->
     <div class="form-group">
         <label>Contact Number (WhatsApp)</label>
         <input type="text" inputmode="numeric" maxlength="15" id="phone" placeholder="Country code + number e.g. 919876543210">
@@ -271,12 +182,15 @@
         </div>
     </div>
 
+    <!-- ===== LOCATION SECTION ===== -->
     <div class="location-section">
         <div class="location-section-title">
             <i class="fa fa-map-marker-alt" style="color:var(--primary);"></i>
             Location
         </div>
+
         <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:10px;">📋 Add Full Address</div>
+
         <div class="form-group" style="margin-bottom:12px;">
             <label style="font-size:13px;">Country</label>
             <div class="country-search-wrap">
@@ -286,24 +200,44 @@
             </div>
             <input type="hidden" id="selectedCountry" value="">
         </div>
-        <div class="form-group" style="margin-bottom:0;">
+
+        <div class="form-group" style="margin-bottom:10px;">
             <label style="font-size:13px;">Address</label>
-            <input type="text" id="location" placeholder="Area, City, State">
+            <input type="text" id="location" placeholder="Area, City, State" oninput="onAddressInput()">
         </div>
-        <div class="gps-divider"><span>OR</span></div>
-        <button type="button" id="btnGPS" onclick="showGPSConfirmModal()" style="width:100%;padding:11px;background:#fff;border:1.5px solid var(--primary);color:var(--primary);border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+
+        <!-- Get on Map button -->
+        <button type="button" class="get-map-btn" id="btnGetMap" onclick="geocodeAddress()">
+            <span id="getMapBtnIcon">🗺️</span>
+            <span id="getMapBtnText">Get on Map</span>
+        </button>
+
+        <!-- Leaflet Map -->
+        <div id="propertyMap"></div>
+        <div id="mapPinInfo"><i class="fa fa-check-circle"></i> <span id="mapPinText"></span></div>
+
+        <!-- Manual Lat/Lng -->
+        <div class="map-coords-row" id="coordsRow">
+            <input type="number" id="manualLat" placeholder="Latitude" step="any" oninput="onManualCoordsChange()">
+            <input type="number" id="manualLng" placeholder="Longitude" step="any" oninput="onManualCoordsChange()">
+        </div>
+        <div id="coordsHint">✏️ Ya manually latitude/longitude type karo (Google Maps se copy kar sakte ho)</div>
+
+        <div class="gps-divider" style="margin-top:14px;"><span>OR use GPS</span></div>
+
+        <button type="button" id="btnGPS" onclick="showGPSConfirmModal()" style="width:100%;padding:11px;background:#fff;border:1.5px solid var(--primary);color:var(--primary);border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;box-sizing:border-box;">
             <span id="gpsButtonIcon">📍</span> <span id="gpsButtonText">Use GPS</span>
         </button>
         <div id="gpsInfo" class="gps-info" style="margin-top:10px;"></div>
         <p class="gps-hint-text">If you are now on property site then use GPS also</p>
     </div>
+    <!-- ===== END LOCATION SECTION ===== -->
 
     <div class="form-group">
         <label>Property Size</label>
         <input type="text" id="size" placeholder="e.g. 1200 Sq.Ft / 100 Gaj">
     </div>
 
-    <!-- ✅ NEW: Lot Area & Floor Area fields -->
     <div class="area-row-wrap">
         <div class="area-row">
             <div class="form-group">
@@ -389,6 +323,7 @@
     <button class="btn-post" id="postBtn" onclick="submitProperty()">Post Property</button>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -406,6 +341,9 @@ let slotMode = [null,null,null,'photo','photo'];
 let currentUserVerified = false, currentUserBizName = "", currentUserEpId = "";
 const urlParams = new URLSearchParams(window.location.search);
 const editId = urlParams.get('edit');
+
+// ===== LEAFLET MAP VARS =====
+let leafletMap = null, leafletMarker = null;
 
 const COUNTRIES = [
   {name:"Afghanistan",flag:"🇦🇫"},{name:"Albania",flag:"🇦🇱"},{name:"Algeria",flag:"🇩🇿"},{name:"Argentina",flag:"🇦🇷"},{name:"Australia",flag:"🇦🇺"},{name:"Austria",flag:"🇦🇹"},{name:"Bahrain",flag:"🇧🇭"},{name:"Bangladesh",flag:"🇧🇩"},{name:"Belgium",flag:"🇧🇪"},{name:"Brazil",flag:"🇧🇷"},{name:"Canada",flag:"🇨🇦"},{name:"Chile",flag:"🇨🇱"},{name:"China",flag:"🇨🇳"},{name:"Colombia",flag:"🇨🇴"},{name:"Croatia",flag:"🇭🇷"},{name:"Czech Republic",flag:"🇨🇿"},{name:"Denmark",flag:"🇩🇰"},{name:"Egypt",flag:"🇪🇬"},{name:"Ethiopia",flag:"🇪🇹"},{name:"Finland",flag:"🇫🇮"},{name:"France",flag:"🇫🇷"},{name:"Germany",flag:"🇩🇪"},{name:"Ghana",flag:"🇬🇭"},{name:"Greece",flag:"🇬🇷"},{name:"Hungary",flag:"🇭🇺"},{name:"India",flag:"🇮🇳"},{name:"Indonesia",flag:"🇮🇩"},{name:"Iran",flag:"🇮🇷"},{name:"Iraq",flag:"🇮🇶"},{name:"Ireland",flag:"🇮🇪"},{name:"Israel",flag:"🇮🇱"},{name:"Italy",flag:"🇮🇹"},{name:"Japan",flag:"🇯🇵"},{name:"Jordan",flag:"🇯🇴"},{name:"Kazakhstan",flag:"🇰🇿"},{name:"Kenya",flag:"🇰🇪"},{name:"Kuwait",flag:"🇰🇼"},{name:"Lebanon",flag:"🇱🇧"},{name:"Libya",flag:"🇱🇾"},{name:"Malaysia",flag:"🇲🇾"},{name:"Mexico",flag:"🇲🇽"},{name:"Morocco",flag:"🇲🇦"},{name:"Myanmar",flag:"🇲🇲"},{name:"Nepal",flag:"🇳🇵"},{name:"Netherlands",flag:"🇳🇱"},{name:"New Zealand",flag:"🇳🇿"},{name:"Nigeria",flag:"🇳🇬"},{name:"Norway",flag:"🇳🇴"},{name:"Oman",flag:"🇴🇲"},{name:"Pakistan",flag:"🇵🇰"},{name:"Palestine",flag:"🇵🇸"},{name:"Philippines",flag:"🇵🇭"},{name:"Poland",flag:"🇵🇱"},{name:"Portugal",flag:"🇵🇹"},{name:"Qatar",flag:"🇶🇦"},{name:"Romania",flag:"🇷🇴"},{name:"Russia",flag:"🇷🇺"},{name:"Saudi Arabia",flag:"🇸🇦"},{name:"Singapore",flag:"🇸🇬"},{name:"South Africa",flag:"🇿🇦"},{name:"South Korea",flag:"🇰🇷"},{name:"Spain",flag:"🇪🇸"},{name:"Sri Lanka",flag:"🇱🇰"},{name:"Sudan",flag:"🇸🇩"},{name:"Sweden",flag:"🇸🇪"},{name:"Switzerland",flag:"🇨🇭"},{name:"Syria",flag:"🇸🇾"},{name:"Taiwan",flag:"🇹🇼"},{name:"Tanzania",flag:"🇹🇿"},{name:"Thailand",flag:"🇹🇭"},{name:"Tunisia",flag:"🇹🇳"},{name:"Turkey",flag:"🇹🇷"},{name:"UAE",flag:"🇦🇪"},{name:"Uganda",flag:"🇺🇬"},{name:"Ukraine",flag:"🇺🇦"},{name:"United Kingdom",flag:"🇬🇧"},{name:"United States",flag:"🇺🇸"},{name:"Uzbekistan",flag:"🇺🇿"},{name:"Venezuela",flag:"🇻🇪"},{name:"Vietnam",flag:"🇻🇳"},{name:"Yemen",flag:"🇾🇪"},{name:"Zambia",flag:"🇿🇲"},{name:"Zimbabwe",flag:"🇿🇼"}
@@ -433,7 +371,6 @@ firebase.auth().onAuthStateChanged(async user=>{
     if(editId)loadEditData(editId,user.uid);
     document.getElementById('title').addEventListener('input',function(){document.getElementById('titleCount').innerText=this.value.length+'/100';});
     document.getElementById('phone').addEventListener('input',function(){this.value=this.value.replace(/\D/g,'').slice(0,15);});
-    // Init price visibility
     togglePurposeFields();
 });
 
@@ -447,8 +384,6 @@ async function loadEditData(id,uid){
     document.getElementById('titleCount').innerText=(data.title||'').length+'/100';
     document.getElementById('purpose').value=data.purpose||'Sell';
     togglePurposeFields();
-
-    // ✅ Load prices based on purpose
     const p=data.purpose||'Sell';
     if(p==='RentSell'){
         if(data.sellPrice)document.getElementById('rsSellPrice').value=data.sellPrice;
@@ -462,7 +397,6 @@ async function loadEditData(id,uid){
         if(data.price)document.getElementById('price').value=data.price;
         if(data.currency)document.getElementById('currency').value=data.currency;
     }
-
     document.getElementById('location').value=data.location||'';
     document.getElementById('desc').value=data.description||'';
     document.getElementById('phone').value=data.phone||'';
@@ -470,47 +404,151 @@ async function loadEditData(id,uid){
     document.getElementById('nearby').value=data.nearby||'';
     document.getElementById('lotArea').value=data.lotArea||'';
     document.getElementById('floorArea').value=data.floorArea||'';
-
     if(data.country){const c=COUNTRIES.find(x=>x.name===data.country);if(c)selectCountry(c.name,c.flag);else{document.getElementById('countrySearch').value=data.country;document.getElementById('selectedCountry').value=data.country;document.getElementById('countryClearBtn').style.display='block';}}
     if(p==='Rent'&&data.rentDetails){document.getElementById('furnished').value=data.rentDetails.furnished||'Unfurnished';document.getElementById('bills').value=data.rentDetails.bills||'Extra';document.getElementById('advance').value=data.rentDetails.advance||'';document.getElementById('maintenance').value=data.rentDetails.maintenance||'Not Applicable';}
     if(p==='Plot'&&data.plotDetails){document.getElementById('plotArea').value=data.plotDetails.area||'';document.getElementById('plotRoadFacing').value=data.plotDetails.roadFacing||'No';document.getElementById('plotCorner').value=data.plotDetails.corner||'No';}
     if(p==='Commercial'&&data.commercialDetails){document.getElementById('commercialType').value=data.commercialDetails.type||'Shop';document.getElementById('commercialFloor').value=data.commercialDetails.floor||'';document.getElementById('commercialFurnished').value=data.commercialDetails.furnished||'Unfurnished';document.getElementById('commercialBills').value=data.commercialDetails.bills||'Extra';}
     if(p==='PG'&&data.pgDetails){document.getElementById('pgSharing').value=data.pgDetails.sharing||'Single';document.getElementById('pgFood').value=data.pgDetails.food||'No';document.getElementById('pgBedding').value=data.pgDetails.bedding||'No';document.getElementById('pgAC').value=data.pgDetails.ac||'Non-AC';document.getElementById('pgLaundry').value=data.pgDetails.laundry||'No';document.getElementById('pgBills').value=data.pgDetails.bills||'Included';document.getElementById('pgAdvance').value=data.pgDetails.advance||'';}
     if(Array.isArray(data.images)){data.images.forEach((img,i)=>{if(i>=5||!img)return;if(img.type==='video'){if(i>=3){switchSlotMode(i,'video');uploadedImages[i]=img;if(img.videoUrl){document.getElementById(`videoUrl${i}`).value=img.videoUrl;previewVideo(i);}}}else if(typeof img==='string'){uploadedImages[i]={url:img,public_id:null};showImage(i,img);}else if(img&&img.url){uploadedImages[i]={url:img.url,public_id:img.public_id||null};showImage(i,img.url);}});}
-    if(data.latitude&&data.longitude){currentCoords={lat:data.latitude,lng:data.longitude};showGPSInfo();}
+    // Load map if coords exist
+    if(data.latitude&&data.longitude){
+        currentCoords={lat:data.latitude,lng:data.longitude};
+        showGPSInfo();
+        initMap(data.latitude, data.longitude);
+    }
 }
 
-// ✅ UPDATED: togglePurposeFields now handles price visibility + RentSell
 function togglePurposeFields(){
     const p=document.getElementById('purpose').value;
-
-    // Show/hide purpose-specific detail sections
     document.getElementById('rentFields').style.display=p==='Rent'?'block':'none';
     document.getElementById('plotFields').style.display=p==='Plot'?'block':'none';
     document.getElementById('commercialFields').style.display=p==='Commercial'?'block':'none';
     document.getElementById('pgFields').style.display=p==='PG'?'block':'none';
     document.getElementById('rentSellFields').style.display=p==='RentSell'?'block':'none';
+    const singlePriceWrap=document.getElementById('singlePriceWrap');
+    const rentPriceWrap=document.getElementById('rentPriceWrap');
+    if(p==='RentSell'){singlePriceWrap.style.display='none';rentPriceWrap.style.display='none';}
+    else if(p==='Rent'||p==='PG'){singlePriceWrap.style.display='none';rentPriceWrap.style.display='block';}
+    else{singlePriceWrap.style.display='block';rentPriceWrap.style.display='none';}
+}
 
-    // ✅ Price field visibility logic
-    const singlePriceWrap = document.getElementById('singlePriceWrap');
-    const rentPriceWrap = document.getElementById('rentPriceWrap');
+function showGPSInfo(){
+    const gi=document.getElementById('gpsInfo');
+    gi.innerHTML='';
+    const icon=document.createElement('i');icon.className='fa fa-check-circle';
+    const text=document.createTextNode(' GPS Captured: '+currentCoords.lat.toFixed(5)+', '+currentCoords.lng.toFixed(5));
+    const br=document.createElement('br');
+    const small=document.createElement('small');small.textContent='Location will be shown on map to buyers';
+    gi.appendChild(icon);gi.appendChild(text);gi.appendChild(br);gi.appendChild(small);
+    gi.style.display='block';
+}
 
-    if(p==='RentSell'){
-        // Dual price fields shown inside rentSellFields, hide both single price fields
-        singlePriceWrap.style.display='none';
-        rentPriceWrap.style.display='none';
-    } else if(p==='Rent'||p==='PG'){
-        // Show rent price field only
-        singlePriceWrap.style.display='none';
-        rentPriceWrap.style.display='block';
+// ===== LEAFLET MAP FUNCTIONS =====
+function initMap(lat, lng) {
+    const mapDiv = document.getElementById('propertyMap');
+    mapDiv.style.display = 'block';
+    document.getElementById('coordsRow').style.display = 'flex';
+    document.getElementById('coordsHint').style.display = 'block';
+
+    if (!leafletMap) {
+        leafletMap = L.map('propertyMap').setView([lat, lng], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(leafletMap);
+        leafletMarker = L.marker([lat, lng], { draggable: true }).addTo(leafletMap);
+        // Drag pin to adjust
+        leafletMarker.on('dragend', function() {
+            const pos = leafletMarker.getLatLng();
+            updateCoordsFromMap(pos.lat, pos.lng);
+        });
+        // Click map to move pin
+        leafletMap.on('click', function(e) {
+            leafletMarker.setLatLng(e.latlng);
+            updateCoordsFromMap(e.latlng.lat, e.latlng.lng);
+        });
     } else {
-        // Sell, Plot, Commercial — show sell price field only
-        singlePriceWrap.style.display='block';
-        rentPriceWrap.style.display='none';
+        leafletMap.setView([lat, lng], 15);
+        leafletMarker.setLatLng([lat, lng]);
+        setTimeout(() => leafletMap.invalidateSize(), 100);
+    }
+
+    document.getElementById('manualLat').value = lat.toFixed(6);
+    document.getElementById('manualLng').value = lng.toFixed(6);
+    updatePinInfo(lat, lng);
+}
+
+function updateCoordsFromMap(lat, lng) {
+    currentCoords = { lat, lng };
+    document.getElementById('manualLat').value = lat.toFixed(6);
+    document.getElementById('manualLng').value = lng.toFixed(6);
+    updatePinInfo(lat, lng);
+}
+
+function updatePinInfo(lat, lng) {
+    currentCoords = { lat, lng };
+    const info = document.getElementById('mapPinInfo');
+    document.getElementById('mapPinText').textContent =
+        'Pin set: ' + lat.toFixed(5) + ', ' + lng.toFixed(5) + ' — Drag pin to adjust';
+    info.style.display = 'block';
+}
+
+async function geocodeAddress() {
+    const address = document.getElementById('location').value.trim();
+    const country = document.getElementById('selectedCountry').value.trim();
+    const query = [address, country].filter(Boolean).join(', ');
+    if (!query) { showToast('Pehle address fill karo', 'error'); return; }
+
+    const btn = document.getElementById('btnGetMap');
+    const btnText = document.getElementById('getMapBtnText');
+    const btnIcon = document.getElementById('getMapBtnIcon');
+    btnText.textContent = 'Searching...';
+    btnIcon.textContent = '⏳';
+    btn.disabled = true;
+
+    try {
+        const resp = await fetch(
+            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`,
+            { headers: { 'Accept-Language': 'en' } }
+        );
+        const results = await resp.json();
+        if (results && results.length > 0) {
+            const lat = parseFloat(results[0].lat);
+            const lng = parseFloat(results[0].lon);
+            initMap(lat, lng);
+            showToast('✓ Location found on map!', 'success');
+        } else {
+            showToast('Address nahi mila. Aur specific address try karo ya GPS use karo.', 'error');
+        }
+    } catch (e) {
+        showToast('Network error. Please try again.', 'error');
+    }
+
+    btnText.textContent = 'Get on Map';
+    btnIcon.textContent = '🗺️';
+    btn.disabled = false;
+}
+
+function onManualCoordsChange() {
+    const lat = parseFloat(document.getElementById('manualLat').value);
+    const lng = parseFloat(document.getElementById('manualLng').value);
+    if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        if (leafletMap) {
+            leafletMarker.setLatLng([lat, lng]);
+            leafletMap.setView([lat, lng], 15);
+        } else {
+            initMap(lat, lng);
+        }
+        updatePinInfo(lat, lng);
     }
 }
 
-function showGPSInfo(){const gi=document.getElementById('gpsInfo');gi.innerHTML='';const icon=document.createElement('i');icon.className='fa fa-check-circle';const text=document.createTextNode(' GPS Captured: '+currentCoords.lat.toFixed(5)+', '+currentCoords.lng.toFixed(5));const br=document.createElement('br');const small=document.createElement('small');small.textContent='Location will be shown on map to buyers';gi.appendChild(icon);gi.appendChild(text);gi.appendChild(br);gi.appendChild(small);gi.style.display='block';}
+function onAddressInput() {
+    // Reset pin info only — don't hide map if already shown
+    if (!currentCoords.lat) {
+        document.getElementById('mapPinInfo').style.display = 'none';
+    }
+}
+// ===== END MAP FUNCTIONS =====
 
 function triggerUpload(slot){if(uploadedImages[slot])return;activeSlot=slot;document.getElementById('fileInput').click();}
 
@@ -533,7 +571,6 @@ async function submitProperty(){
     if(!/^\d{7,15}$/.test(phone))return showToast("Enter valid phone number with country code (e.g. 919876543210)","error");
     if(!title||!location)return showToast("Please fill all required fields: Title, Location","error");
 
-    // ✅ Price validation based on purpose
     let priceValue=0, currencyValue='INR';
     let rentPriceValue=0, rentCurrencyValue='INR';
 
@@ -558,8 +595,8 @@ async function submitProperty(){
 
     const propertyData={
         title,
-        price: purpose==='RentSell' ? priceValue : priceValue, // primary price = sell price
-        currency: currencyValue,
+        price:priceValue,
+        currency:currencyValue,
         phone,
         purpose,
         size:document.getElementById('size').value,
@@ -576,7 +613,6 @@ async function submitProperty(){
         updatedAt:firebase.firestore.FieldValue.serverTimestamp()
     };
 
-    // ✅ Save dual prices for RentSell
     if(purpose==='RentSell'){
         propertyData.sellPrice=priceValue;
         propertyData.sellCurrency=currencyValue;
@@ -601,8 +637,6 @@ async function submitProperty(){
             propertyData.ownerEpId=currentUserEpId;
             propertyData.createdAt=firebase.firestore.FieldValue.serverTimestamp();
             propertyData.isExpired=false;
-
-            // ✅ Expiry logic — RentSell = 180 days (same as Sell)
             const expiry=new Date();
             const is30Days=(purpose==='Rent'||purpose==='PG');
             expiry.setDate(expiry.getDate()+(is30Days?30:180));
@@ -610,7 +644,6 @@ async function submitProperty(){
             const deletion=new Date(expiry);
             deletion.setDate(deletion.getDate()+30);
             propertyData.deletionDate=firebase.firestore.Timestamp.fromDate(deletion);
-
             if(currentUserVerified){propertyData.isVerified=true;propertyData.dealerName=currentUserBizName;}else{propertyData.isVerified=false;}
             const docRef=await db.collection("properties").add(propertyData);
             showToast('Property Posted Successfully! 🎉','success');
@@ -634,9 +667,49 @@ function showNormalGPSModal(icon,title,desc,yesBtn,settingsBtn,manualBtn){icon.t
 function closeGPSModal(){document.getElementById('gpsModal').style.display='none';}
 function openLocationSettings(){closeGPSModal();showToast('Go to Settings → Privacy → Location → Enable for your browser','info');}
 
-function confirmGPSCapture(){closeGPSModal();if(!navigator.geolocation){showToast('GPS not supported. Please enter address manually.','error');return;}const btn=document.getElementById('btnGPS');const btnText=document.getElementById('gpsButtonText');const btnIcon=document.getElementById('gpsButtonIcon');btnText.textContent='Getting location...';btnIcon.textContent='⏳';btn.disabled=true;navigator.geolocation.getCurrentPosition(async function(position){currentCoords={lat:position.coords.latitude,lng:position.coords.longitude};showGPSInfo();btn.disabled=false;btnIcon.textContent='✅';btnText.textContent='GPS Captured';try{btnText.textContent='Fetching address...';const resp=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${currentCoords.lat}&lon=${currentCoords.lng}&format=json`,{headers:{'Accept-Language':'en'}});const geo=await resp.json();if(geo&&geo.address){const a=geo.address;const countryName=a.country||'';if(countryName){const found=COUNTRIES.find(c=>c.name.toLowerCase()===countryName.toLowerCase());if(found)selectCountry(found.name,found.flag);else{document.getElementById('countrySearch').value=countryName;document.getElementById('selectedCountry').value=countryName;document.getElementById('countryClearBtn').style.display='block';}}const parts=[a.suburb||a.neighbourhood||a.village||a.hamlet||'',a.city||a.town||a.county||'',a.state||''].filter(Boolean);if(parts.length>0)document.getElementById('location').value=parts.join(', ');showToast('✓ Address auto-filled from GPS!','success');}}catch(err){showToast('✓ GPS Captured! Please type your address.','success');}btnText.textContent='GPS Captured ✓';},function(error){btn.disabled=false;btnIcon.textContent='📍';btnText.textContent='Use GPS';if(error.code===1)showToast('Location permission denied. Please enable in settings.','error');else showToast('GPS failed. Please enter address manually.','error');},{enableHighAccuracy:true,timeout:10000,maximumAge:0});}
+function confirmGPSCapture(){
+    closeGPSModal();
+    if(!navigator.geolocation){showToast('GPS not supported. Please enter address manually.','error');return;}
+    const btn=document.getElementById('btnGPS');
+    const btnText=document.getElementById('gpsButtonText');
+    const btnIcon=document.getElementById('gpsButtonIcon');
+    btnText.textContent='Getting location...';
+    btnIcon.textContent='⏳';
+    btn.disabled=true;
+    navigator.geolocation.getCurrentPosition(async function(position){
+        currentCoords={lat:position.coords.latitude,lng:position.coords.longitude};
+        // Show map with GPS pin
+        initMap(position.coords.latitude, position.coords.longitude);
+        showGPSInfo();
+        btn.disabled=false;
+        btnIcon.textContent='✅';
+        btnText.textContent='GPS Captured';
+        try{
+            btnText.textContent='Fetching address...';
+            const resp=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${currentCoords.lat}&lon=${currentCoords.lng}&format=json`,{headers:{'Accept-Language':'en'}});
+            const geo=await resp.json();
+            if(geo&&geo.address){
+                const a=geo.address;
+                const countryName=a.country||'';
+                if(countryName){const found=COUNTRIES.find(c=>c.name.toLowerCase()===countryName.toLowerCase());if(found)selectCountry(found.name,found.flag);else{document.getElementById('countrySearch').value=countryName;document.getElementById('selectedCountry').value=countryName;document.getElementById('countryClearBtn').style.display='block';}}
+                const parts=[a.suburb||a.neighbourhood||a.village||a.hamlet||'',a.city||a.town||a.county||'',a.state||''].filter(Boolean);
+                if(parts.length>0)document.getElementById('location').value=parts.join(', ');
+                showToast('✓ Address auto-filled from GPS!','success');
+            }
+        }catch(err){showToast('✓ GPS Captured! Please type your address.','success');}
+        btnText.textContent='GPS Captured ✓';
+    },function(error){
+        btn.disabled=false;btnIcon.textContent='📍';btnText.textContent='Use GPS';
+        if(error.code===1)showToast('Location permission denied. Please enable in settings.','error');
+        else showToast('GPS failed. Please enter address manually.','error');
+    },{enableHighAccuracy:true,timeout:10000,maximumAge:0});
+}
 
-document.addEventListener('DOMContentLoaded',function(){document.addEventListener('click',function(e){if(!e.target.closest('.country-search-wrap'))document.getElementById('countryDropdown').style.display='none';});});
+document.addEventListener('DOMContentLoaded',function(){
+    document.addEventListener('click',function(e){
+        if(!e.target.closest('.country-search-wrap'))document.getElementById('countryDropdown').style.display='none';
+    });
+});
 </script>
 </body>
 </html>
