@@ -214,6 +214,54 @@
             padding: 50px; 
             color: #2e7d32; 
         }
+
+        /* ✅ Legal Links Section */
+        .legal-section {
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .legal-section h3 {
+            font-size: 14px;
+            font-weight: 800;
+            color: #555;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .legal-links {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .legal-link {
+            flex: 1;
+            min-width: 140px;
+            background: #f8f9fa;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 12px 15px;
+            text-decoration: none;
+            color: #333;
+            font-size: 13px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .legal-link:hover {
+            border-color: #2e7d32;
+            color: #2e7d32;
+            background: #e8f5e9;
+        }
+        .legal-link i {
+            font-size: 16px;
+            color: #2e7d32;
+        }
     </style>
 </head>
 <body>
@@ -318,31 +366,30 @@
                 If you find a suspicious or fake listing, please submit a support ticket below with the property details. Our team will investigate and take action.
             </div>
         </div>
+
+        <!-- ✅ Legal Links in FAQ tab -->
+        <div class="legal-section">
+            <h3><i class="fa fa-file-alt" style="color:#2e7d32;"></i> Legal & Policies</h3>
+            <div class="legal-links">
+                <a href="privacy-policy.html" class="legal-link">
+                    <i class="fa fa-lock"></i>
+                    Privacy Policy
+                </a>
+                <a href="terms.html" class="legal-link">
+                    <i class="fa fa-file-contract"></i>
+                    Terms & Conditions
+                </a>
+            </div>
+        </div>
     </div>
     
     <!-- Support Tab -->
     <div id="supportTab" class="tab-content">
         <div class="support-form">
             <h3 style="margin-top: 0;">Submit Support Ticket</h3>
-            <div style="
-background:#f1f3f4;
-padding:12px;
-border-radius:10px;
-margin-bottom:15px;
-font-size:14px;
-font-weight:600;
-">
-
-📧 Or email us directly:  
-<a href="mailto:support@theearthproperty.com"
-style="
-color:#2e7d32;
-text-decoration:none;
-font-weight:700;
-">
-support@theearthproperty.com
-</a>
-
+            <div style="background:#f1f3f4; padding:12px; border-radius:10px; margin-bottom:15px; font-size:14px; font-weight:600;">
+                📧 Or email us directly: 
+                <a href="mailto:contact@theearthproperty.com" style="color:#2e7d32; text-decoration:none; font-weight:700;">contact@theearthproperty.com</a>
             </div>
             
             <div class="form-group">
@@ -380,6 +427,12 @@ support@theearthproperty.com
             <button class="submit-btn" id="submitTicketBtn" onclick="submitTicket()">
                 <i class="fa fa-paper-plane"></i> Submit Ticket
             </button>
+
+            <!-- ✅ Legal links in Support tab too -->
+            <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee; display:flex; gap:15px; justify-content:center;">
+                <a href="privacy-policy.html" style="color:#2e7d32; font-size:12px; font-weight:700; text-decoration:none;"><i class="fa fa-lock" style="margin-right:4px;"></i>Privacy Policy</a>
+                <a href="terms.html" style="color:#2e7d32; font-size:12px; font-weight:700; text-decoration:none;"><i class="fa fa-file-contract" style="margin-right:4px;"></i>Terms & Conditions</a>
+            </div>
         </div>
     </div>
     
@@ -392,9 +445,9 @@ support@theearthproperty.com
     </div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 
 <script>
 const firebaseConfig = { 
@@ -408,75 +461,40 @@ const auth = firebase.auth();
 
 let currentUser = null;
 
-// Tab switching
 function switchTab(tab) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    
     event.target.closest('.tab').classList.add('active');
-    
     if (tab === 'faq') document.getElementById('faqTab').classList.add('active');
     if (tab === 'support') document.getElementById('supportTab').classList.add('active');
     if (tab === 'tickets') document.getElementById('ticketsTab').classList.add('active');
 }
 
-// FAQ toggle
 function toggleFAQ(element) {
     const faqItem = element.closest('.faq-item');
     const wasOpen = faqItem.classList.contains('open');
-    
-    // Close all
-    document.querySelectorAll('.faq-item').forEach(item => {
-        item.classList.remove('open');
-    });
-    
-    // Open clicked if it was closed
-    if (!wasOpen) {
-        faqItem.classList.add('open');
-    }
+    document.querySelectorAll('.faq-item').forEach(item => item.classList.remove('open'));
+    if (!wasOpen) faqItem.classList.add('open');
 }
 
-// Auth check
 auth.onAuthStateChanged(user => {
-    if (!user) {
-        location.href = 'login.html';
-        return;
-    }
+    if (!user) { location.href = 'login.html'; return; }
     currentUser = user;
     loadUserTickets(user.uid);
 });
 
-// Submit ticket
 async function submitTicket() {
-    if (!currentUser) {
-        alert('Please login first');
-        return;
-    }
-    
+    if (!currentUser) { alert('Please login first'); return; }
     const subject = document.getElementById('subject').value.trim();
     const category = document.getElementById('ticketCategory').value;
     const priority = document.getElementById('priority').value;
     const description = document.getElementById('ticketDescription').value.trim();
-    
-    if (!subject || subject.length < 5) {
-        alert('Please enter a subject (minimum 5 characters)');
-        return;
-    }
-    
-    if (!category) {
-        alert('Please select a category');
-        return;
-    }
-    
-    if (!description || description.length < 20) {
-        alert('Please provide detailed description (minimum 20 characters)');
-        return;
-    }
-    
+    if (!subject || subject.length < 5) { alert('Please enter a subject (minimum 5 characters)'); return; }
+    if (!category) { alert('Please select a category'); return; }
+    if (!description || description.length < 20) { alert('Please provide detailed description (minimum 20 characters)'); return; }
     try {
         document.getElementById('submitTicketBtn').disabled = true;
         document.getElementById('submitTicketBtn').innerHTML = '<i class="fa fa-spinner fa-spin"></i> Submitting...';
-        
         await db.collection('support_tickets').add({
             userId: currentUser.uid,
             userName: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
@@ -490,19 +508,13 @@ async function submitTicket() {
             lastReply: firebase.firestore.FieldValue.serverTimestamp(),
             replies: []
         });
-        
         alert('✓ Ticket Submitted!\n\nYour support ticket has been created. Our team will respond soon.');
-        
-        // Reset form
         document.getElementById('subject').value = '';
         document.getElementById('ticketCategory').value = '';
         document.getElementById('priority').value = 'medium';
         document.getElementById('ticketDescription').value = '';
-        
-        // Switch to tickets tab
         switchTab('tickets');
         loadUserTickets(currentUser.uid);
-        
     } catch (e) {
         alert('Error submitting ticket: ' + e.message);
     } finally {
@@ -511,70 +523,38 @@ async function submitTicket() {
     }
 }
 
-// Load user tickets
 function loadUserTickets(uid) {
-    db.collection('support_tickets')
-        .where('userId', '==', uid)
-        .orderBy('createdAt', 'desc')
-        .onSnapshot(snapshot => {
-            const container = document.getElementById('ticketsList');
-            
-            if (snapshot.empty) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fa fa-ticket"></i>
-                        <h3>No Support Tickets</h3>
-                        <p>You haven't submitted any support tickets yet.</p>
-                    </div>`;
-                return;
-            }
-            
-            let html = '';
-            snapshot.forEach(doc => {
-                const d = doc.data();
-                const date = d.createdAt ? d.createdAt.toDate().toLocaleDateString('en-IN', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric'
-                }) : 'Just now';
-                
-                const statusClass = d.status === 'closed' ? 'status-closed' : 
-                                   d.status === 'in-progress' ? 'status-in-progress' : 
-                                   'status-open';
-                
-                const statusText = d.status === 'closed' ? 'Closed' : 
-                                  d.status === 'in-progress' ? 'In Progress' : 
-                                  'Open';
-                
-                const priorityIcon = d.priority === 'high' ? '🔴' : 
-                                    d.priority === 'medium' ? '🟡' : '🟢';
-                
-                html += `
-                    <div class="ticket-card">
-                        <div class="ticket-header">
-                            <div>
-                                <div class="ticket-subject">${escapeHtml(d.subject)}</div>
-                                <div class="ticket-category">${priorityIcon} ${d.category}</div>
-                            </div>
-                            <div class="ticket-status ${statusClass}">${statusText}</div>
+    db.collection('support_tickets').where('userId', '==', uid).orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+        const container = document.getElementById('ticketsList');
+        if (snapshot.empty) {
+            container.innerHTML = `<div class="empty-state"><i class="fa fa-ticket"></i><h3>No Support Tickets</h3><p>You haven't submitted any support tickets yet.</p></div>`;
+            return;
+        }
+        let html = '';
+        snapshot.forEach(doc => {
+            const d = doc.data();
+            const date = d.createdAt ? d.createdAt.toDate().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Just now';
+            const statusClass = d.status === 'closed' ? 'status-closed' : d.status === 'in-progress' ? 'status-in-progress' : 'status-open';
+            const statusText = d.status === 'closed' ? 'Closed' : d.status === 'in-progress' ? 'In Progress' : 'Open';
+            const priorityIcon = d.priority === 'high' ? '🔴' : d.priority === 'medium' ? '🟡' : '🟢';
+            html += `
+                <div class="ticket-card">
+                    <div class="ticket-header">
+                        <div>
+                            <div class="ticket-subject">${escapeHtml(d.subject)}</div>
+                            <div class="ticket-category">${priorityIcon} ${d.category}</div>
                         </div>
-                        <div class="ticket-description">${escapeHtml(d.description)}</div>
-                        <div class="ticket-footer">
-                            <div>
-                                <i class="fa fa-calendar"></i> ${date}
-                            </div>
-                            <div>
-                                ${d.replies && d.replies.length > 0 ? 
-                                  `<i class="fa fa-comments"></i> ${d.replies.length} ${d.replies.length === 1 ? 'Reply' : 'Replies'}` : 
-                                  '<i class="fa fa-clock"></i> Awaiting response'}
-                            </div>
-                        </div>
+                        <div class="ticket-status ${statusClass}">${statusText}</div>
                     </div>
-                `;
-            });
-            
-            container.innerHTML = html;
+                    <div class="ticket-description">${escapeHtml(d.description)}</div>
+                    <div class="ticket-footer">
+                        <div><i class="fa fa-calendar"></i> ${date}</div>
+                        <div>${d.replies && d.replies.length > 0 ? `<i class="fa fa-comments"></i> ${d.replies.length} ${d.replies.length === 1 ? 'Reply' : 'Replies'}` : '<i class="fa fa-clock"></i> Awaiting response'}</div>
+                    </div>
+                </div>`;
         });
+        container.innerHTML = html;
+    });
 }
 
 function escapeHtml(text) {
