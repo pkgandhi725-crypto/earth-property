@@ -446,9 +446,14 @@ async function geocodeAddress(){
     const btnText=document.getElementById('getMapBtnText');
     const btnIcon=document.getElementById('getMapBtnIcon');
     btnText.textContent='Searching...';btnIcon.textContent='⏳';btn.disabled=true;
-    // ✅ Wait for Google Maps to load
+    // ✅ Wait up to 5 seconds for Google Maps to load
+    let waited=0;
+    while(!googleMapsReady&&waited<50){
+        await new Promise(r=>setTimeout(r,100));
+        waited++;
+    }
     if(!googleMapsReady||!googleGeocoder){
-        showToast('Map loading, please try again in a moment.','error');
+        showToast('Map not loaded. Please refresh and try again.','error');
         btnText.textContent='Get on Map';btnIcon.textContent='🗺️';btn.disabled=false;
         return;
     }
