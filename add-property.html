@@ -449,11 +449,11 @@ function togglePurposeFields(){
     document.getElementById('plotFields').style.display=p==='Plot'?'block':'none';
     document.getElementById('commercialFields').style.display=(p==='CommercialSell'||p==='CommercialRent'||p==='CommercialRentSell')?'block':'none';
     document.getElementById('pgFields').style.display=p==='PG'?'block':'none';
-    document.getElementById('rentSellFields').style.display=p==='RentSell'?'block':'none';
+    document.getElementById('rentSellFields').style.display=(p==='RentSell'||p==='CommercialRentSell')?'block':'none';
     const singlePriceWrap=document.getElementById('singlePriceWrap');
     const rentPriceWrap=document.getElementById('rentPriceWrap');
-    if(p==='RentSell'){singlePriceWrap.style.display='none';rentPriceWrap.style.display='none';}
-    else if(p==='Rent'||p==='PG'){singlePriceWrap.style.display='none';rentPriceWrap.style.display='block';}
+    if(p==='RentSell'||p==='CommercialRentSell'){singlePriceWrap.style.display='none';rentPriceWrap.style.display='none';}
+    else if(p==='Rent'||p==='PG'||p==='CommercialRent'){singlePriceWrap.style.display='none';rentPriceWrap.style.display='block';}
     else{singlePriceWrap.style.display='block';rentPriceWrap.style.display='none';}
 }
 
