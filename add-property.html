@@ -349,7 +349,10 @@ firebase.auth().onAuthStateChanged(async user=>{
 });
 async function loadEditData(id,uid){
     const doc=await db.collection("properties").doc(id).get();
-    if(!doc.exists||doc.data().ownerId!==uid)return history.back();
+    // ✅ Admin bypass — skip owner check if admin is editing
+    const isAdminEdit = sessionStorage.getItem('adminEdit') === 'true';
+    sessionStorage.removeItem('adminEdit');
+    if(!doc.exists||(doc.data().ownerId!==uid && !isAdminEdit))return history.back();
     const data=doc.data();
     document.getElementById('pageTitle').innerText="Edit Property";document.getElementById('postBtn').innerText="Update Property";
     document.getElementById('title').value=data.title||'';document.getElementById('titleCount').innerText=(data.title||'').length+'/100';
