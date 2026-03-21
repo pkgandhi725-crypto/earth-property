@@ -124,7 +124,9 @@
             <option value="Rent">🔑 Rent (30d)</option>
             <option value="RentSell">🏠🔑 Rent &amp; Sell Both (180d)</option>
             <option value="Plot">🗺️ Plot/Land (180d)</option>
-            <option value="Commercial">🏢 Commercial (180d)</option>
+            <option value="CommercialSell">🏢 Commercial Sell (180d)</option>
+            <option value="CommercialRent">🏢🔑 Commercial Rent (180d)</option>
+            <option value="CommercialRentSell">🏢🔑 Commercial Rent &amp; Sell Both (180d)</option>
             <option value="PG">🛏️ PG/Hostel (30d)</option>
         </select>
     </div>
@@ -445,7 +447,7 @@ function togglePurposeFields(){
     const p=document.getElementById('purpose').value;
     document.getElementById('rentFields').style.display=p==='Rent'?'block':'none';
     document.getElementById('plotFields').style.display=p==='Plot'?'block':'none';
-    document.getElementById('commercialFields').style.display=p==='Commercial'?'block':'none';
+    document.getElementById('commercialFields').style.display=(p==='CommercialSell'||p==='CommercialRent'||p==='CommercialRentSell')?'block':'none';
     document.getElementById('pgFields').style.display=p==='PG'?'block':'none';
     document.getElementById('rentSellFields').style.display=p==='RentSell'?'block':'none';
     const singlePriceWrap=document.getElementById('singlePriceWrap');
@@ -604,7 +606,7 @@ async function submitProperty(){
         rentCurrencyValue=document.getElementById('rsRentCurrency').value;
         if(priceValue<=0||rentPriceValue<=0)return showToast("Please enter both Sell Price and Rent Price","error");
         if(priceValue>1000000000000||rentPriceValue>1000000000000)return showToast("Price too large.","error");
-    } else if(purpose==='Rent'||purpose==='PG'){
+    } else if(purpose==='Rent'||purpose==='PG'||purpose==='CommercialRent'){
         priceValue=Number(document.getElementById('rentPrice').value);
         currencyValue=document.getElementById('rentCurrency').value;
         if(priceValue<=0)return showToast("Please enter a valid price","error");
@@ -635,6 +637,12 @@ async function submitProperty(){
         status:"active",
         updatedAt:firebase.firestore.FieldValue.serverTimestamp()
     };
+    if(purpose==='CommercialRentSell'){
+        propertyData.sellPrice=Number(document.getElementById('rsSellPrice').value);
+        propertyData.sellCurrency=document.getElementById('rsSelCurrency').value;
+        propertyData.rentPrice=Number(document.getElementById('rsRentPrice').value);
+        propertyData.rentCurrency=document.getElementById('rsRentCurrency').value;
+    }
 
     if(purpose==='RentSell'){
         propertyData.sellPrice=priceValue;
@@ -645,7 +653,7 @@ async function submitProperty(){
 
     if(purpose==='Rent')propertyData.rentDetails={furnished:document.getElementById('furnished').value,bills:document.getElementById('bills').value,advance:document.getElementById('advance').value,maintenance:document.getElementById('maintenance').value};
     if(purpose==='Plot')propertyData.plotDetails={area:document.getElementById('plotArea').value,roadFacing:document.getElementById('plotRoadFacing').value,corner:document.getElementById('plotCorner').value};
-    if(purpose==='Commercial')propertyData.commercialDetails={type:document.getElementById('commercialType').value,floor:document.getElementById('commercialFloor').value,furnished:document.getElementById('commercialFurnished').value,bills:document.getElementById('commercialBills').value};
+    if(purpose==='CommercialSell'||purpose==='CommercialRent'||purpose==='CommercialRentSell')propertyData.commercialDetails={type:document.getElementById('commercialType').value,floor:document.getElementById('commercialFloor').value,furnished:document.getElementById('commercialFurnished').value,bills:document.getElementById('commercialBills').value};
     if(purpose==='PG')propertyData.pgDetails={sharing:document.getElementById('pgSharing').value,food:document.getElementById('pgFood').value,bedding:document.getElementById('pgBedding').value,ac:document.getElementById('pgAC').value,laundry:document.getElementById('pgLaundry').value,bills:document.getElementById('pgBills').value,advance:document.getElementById('pgAdvance').value};
 
     try{
@@ -661,7 +669,7 @@ async function submitProperty(){
             propertyData.createdAt=firebase.firestore.FieldValue.serverTimestamp();
             propertyData.isExpired=false;
             const expiry=new Date();
-            const is30Days=(purpose==='Rent'||purpose==='PG');
+            const is30Days=(purpose==='Rent'||purpose==='PG'||purpose==='CommercialRent');
             expiry.setDate(expiry.getDate()+(is30Days?30:180));
             propertyData.expiryDate=firebase.firestore.Timestamp.fromDate(expiry);
             const deletion=new Date(expiry);
