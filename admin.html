@@ -7,234 +7,52 @@
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
         header { background: linear-gradient(135deg, #1b5e20, #2e7d32); color: white; padding: 20px; text-align: center; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        
-        .stats-bar { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 15px; 
-            margin-bottom: 20px; 
-        }
-        .stat-card { 
-            background: white; 
-            padding: 15px; 
-            border-radius: 12px; 
-            text-align: center; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
-        }
+        .stats-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .stat-card .number { font-size: 24px; font-weight: 800; color: #2e7d32; }
         .stat-card .label { font-size: 12px; color: #666; margin-top: 5px; text-transform: uppercase; }
-        
-        .controls { 
-            background: white; 
-            padding: 15px; 
-            border-radius: 12px; 
-            margin-bottom: 20px; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
-        }
-        .search-box { 
-            width: 100%; 
-            padding: 12px; 
-            border-radius: 10px; 
-            border: 1px solid #ddd; 
-            box-sizing: border-box; 
-            font-size: 14px; 
-            margin-bottom: 12px; 
-        }
-        
-        .filter-row { 
-            display: flex; 
-            gap: 10px; 
-            flex-wrap: wrap; 
-        }
-        .filter-btn { 
-            padding: 8px 15px; 
-            border: 1px solid #ddd; 
-            background: white; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-size: 13px; 
-            font-weight: 600; 
-            transition: 0.2s; 
-        }
-        .filter-btn.active { 
-            background: #2e7d32; 
-            color: white; 
-            border-color: #2e7d32; 
-        }
-        
-        .card { 
-            background: white; 
-            margin-bottom: 15px; 
-            padding: 15px; 
-            border-radius: 12px; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
-            border-left: 5px solid #2e7d32; 
-        }
-        .card-header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: start; 
-            margin-bottom: 10px; 
-        }
-        .card h3 { 
-            margin: 0; 
-            font-size: 16px; 
-            color: #333; 
-        }
-        
-        .status-badge { 
-            padding: 4px 10px; 
-            border-radius: 12px; 
-            font-size: 11px; 
-            font-weight: 700; 
-            text-transform: uppercase; 
-        }
+        .controls { background: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .search-box { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-size: 14px; margin-bottom: 12px; }
+        .filter-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        .filter-btn { padding: 8px 15px; border: 1px solid #ddd; background: white; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: 0.2s; }
+        .filter-btn.active { background: #2e7d32; color: white; border-color: #2e7d32; }
+        .card { background: white; margin-bottom: 15px; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 5px solid #2e7d32; }
+        .card-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px; }
+        .card h3 { margin: 0; font-size: 16px; color: #333; }
+        .status-badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
         .status-active { background: #e8f5e9; color: #2e7d32; }
         .status-expired { background: #ffebee; color: #d32f2f; }
-        
-        .property-info { 
-            display: grid; 
-            gap: 8px; 
-            margin-top: 10px; 
-            font-size: 13px; 
-        }
-        .info-row { 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-            color: #666; 
-        }
-        .info-row i { 
-            width: 16px; 
-            color: #2e7d32; 
-        }
-        .info-row strong { 
-            color: #333; 
-        }
-        
-        .btn-group { 
-            margin-top: 15px; 
-            padding-top: 15px; 
-            border-top: 1px solid #eee; 
-            display: flex; 
-            gap: 10px; 
-        }
-        button { 
-            flex: 1; 
-            padding: 10px; 
-            border: none; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-weight: 700; 
-            font-size: 13px; 
-            transition: 0.2s; 
-        }
-        .del-btn { 
-            background: #ffebee; 
-            color: #d32f2f; 
-        }
-        .del-btn:hover { 
-            background: #d32f2f; 
-            color: white; 
-        }
-        .view-btn { 
-            background: #e3f2fd; 
-            color: #1976d2; 
-        }
-        .view-btn:hover { 
-            background: #1976d2; 
-            color: white; 
-        }
-        .edit-btn { 
-            background: #e8f5e9; 
-            color: #2e7d32; 
-        }
-        .edit-btn:hover { 
-            background: #2e7d32; 
-            color: white; 
-        }
-        .copy-btn { 
-            background: #fff3e0; 
-            color: #f57c00; 
-        }
-        .copy-btn:hover { 
-            background: #f57c00; 
-            color: white; 
-        }
-        
-        .verify-link { 
-            background: linear-gradient(135deg, #ffd700, #ffa500); 
-            color: #000; 
-            padding: 12px 20px; 
-            border-radius: 10px; 
-            text-decoration: none; 
-            font-weight: 700; 
-            display: inline-flex; 
-            align-items: center; 
-            gap: 8px; 
-            box-shadow: 0 4px 15px rgba(255, 165, 0, 0.3); 
-        }
-        
-        .admin-tabs { 
-            display: flex; 
-            gap: 10px; 
-            background: white; 
-            padding: 10px; 
-            border-radius: 12px; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
-            margin-bottom: 20px;
-        }
-        .tab-btn { 
-            flex: 1; 
-            padding: 12px 20px; 
-            border: 2px solid #e0e0e0; 
-            background: white; 
-            border-radius: 10px; 
-            cursor: pointer; 
-            font-weight: 600; 
-            font-size: 14px; 
-            transition: 0.2s; 
-            color: #666; 
-        }
-        .tab-btn.active { 
-            background: linear-gradient(135deg, #2e7d32, #1b5e20); 
-            color: white; 
-            border-color: #2e7d32; 
-        }
-        .tab-btn:hover:not(.active) { 
-            background: #f5f5f5; 
-        }
-        .admin-section {
-            display: block;
-        }
-        
-        .empty-state { 
-            text-align: center; 
-            padding: 50px 20px; 
-            color: #999; 
-        }
-        .empty-state i { 
-            font-size: 60px; 
-            margin-bottom: 20px; 
-            opacity: 0.3; 
-        }
-        
-        .loading { 
-            text-align: center; 
-            padding: 50px; 
-            color: #2e7d32; 
-        }
-        .loading i { 
-            font-size: 40px; 
-        }
+        .property-info { display: grid; gap: 8px; margin-top: 10px; font-size: 13px; }
+        .info-row { display: flex; align-items: center; gap: 8px; color: #666; }
+        .info-row i { width: 16px; color: #2e7d32; }
+        .info-row strong { color: #333; }
+        .btn-group { margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; display: flex; gap: 10px; flex-wrap: wrap; }
+        button { flex: 1; padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 13px; transition: 0.2s; }
+        .del-btn { background: #ffebee; color: #d32f2f; }
+        .del-btn:hover { background: #d32f2f; color: white; }
+        .view-btn { background: #e3f2fd; color: #1976d2; }
+        .view-btn:hover { background: #1976d2; color: white; }
+        .edit-btn { background: #e8f5e9; color: #2e7d32; }
+        .edit-btn:hover { background: #2e7d32; color: white; }
+        .copy-btn { background: #fff3e0; color: #f57c00; }
+        .copy-btn:hover { background: #f57c00; color: white; }
+        .verify-link { background: linear-gradient(135deg, #ffd700, #ffa500); color: #000; padding: 12px 20px; border-radius: 10px; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(255,165,0,0.3); }
+        .admin-tabs { display: flex; gap: 10px; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 12px 20px; border: 2px solid #e0e0e0; background: white; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; transition: 0.2s; color: #666; }
+        .tab-btn.active { background: linear-gradient(135deg, #2e7d32, #1b5e20); color: white; border-color: #2e7d32; }
+        .tab-btn:hover:not(.active) { background: #f5f5f5; }
+        .admin-section { display: block; }
+        .empty-state { text-align: center; padding: 50px 20px; color: #999; }
+        .empty-state i { font-size: 60px; margin-bottom: 20px; opacity: 0.3; }
+        .loading { text-align: center; padding: 50px; color: #2e7d32; }
+        .loading i { font-size: 40px; }
     </style>
 </head>
 <body>
 
 <header>
-    <h2 style="margin:0; display: flex; align-items: center; justify-content: center; gap: 10px;">
-        <i class="fa fa-shield-halved"></i>
-        Admin Control Panel
+    <h2 style="margin:0; display:flex; align-items:center; justify-content:center; gap:10px;">
+        <i class="fa fa-shield-halved"></i> Admin Control Panel
     </h2>
 </header>
 
@@ -244,27 +62,24 @@
         <div class="label">Total Posts</div>
     </div>
     <div class="stat-card">
-        <div class="number" id="activeAds" style="color: #2e7d32;">0</div>
+        <div class="number" id="activeAds" style="color:#2e7d32;">0</div>
         <div class="label">Active</div>
     </div>
     <div class="stat-card">
-        <div class="number" id="expiredAds" style="color: #d32f2f;">0</div>
+        <div class="number" id="expiredAds" style="color:#d32f2f;">0</div>
         <div class="label">Expired</div>
     </div>
 </div>
 
-<div style="text-align: center; margin-bottom: 20px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+<div style="text-align:center; margin-bottom:20px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
     <a href="admin-verify.html" class="verify-link">
-        <i class="fa fa-certificate"></i>
-        Verification Requests
+        <i class="fa fa-certificate"></i> Verification Requests
     </a>
-    <a href="admin-reports.html" class="verify-link" style="background: linear-gradient(135deg, #d32f2f, #b71c1c); box-shadow: 0 4px 15px rgba(211,47,47,0.3);">
-        <i class="fa fa-flag"></i>
-        Reports & Chats
+    <a href="admin-reports.html" class="verify-link" style="background:linear-gradient(135deg,#d32f2f,#b71c1c); box-shadow:0 4px 15px rgba(211,47,47,0.3);">
+        <i class="fa fa-flag"></i> Reports & Chats
     </a>
 </div>
 
-<!-- Tab Navigation -->
 <div class="admin-tabs">
     <button class="tab-btn active" onclick="showTab('properties')" id="propertiesTab">
         <i class="fa fa-home"></i> Properties (<span id="propertiesTabCount">0</span>)
@@ -279,24 +94,22 @@
 
 <!-- Properties Section -->
 <div id="propertiesSection" class="admin-section">
-<div class="controls">
-    <input type="text" id="searchBox" class="search-box" placeholder="🔍 Search by Title, Location, Phone, or Owner...">
-    
-    <div class="filter-row">
-        <button class="filter-btn active" onclick="filterByStatus('all')">All Posts</button>
-        <button class="filter-btn" onclick="filterByStatus('active')">Active Only</button>
-        <button class="filter-btn" onclick="filterByStatus('expired')">Expired Only</button>
+    <div class="controls">
+        <input type="text" id="searchBox" class="search-box" placeholder="🔍 Search by Title, Location, Phone, EP ID or Owner...">
+        <div class="filter-row">
+            <button class="filter-btn active" onclick="filterByStatus('all', event)">All Posts</button>
+            <button class="filter-btn" onclick="filterByStatus('active', event)">Active Only</button>
+            <button class="filter-btn" onclick="filterByStatus('expired', event)">Expired Only</button>
+        </div>
+    </div>
+    <div id="list" class="loading">
+        <i class="fa fa-database"></i>
+        <p>Loading properties...</p>
     </div>
 </div>
 
-<div id="list" class="loading">
-    <i class="fa fa-database"></i>
-    <p>Loading properties...</p>
-</div>
-</div>
-
 <!-- Feedbacks Section -->
-<div id="feedbacksSection" class="admin-section" style="display: none;">
+<div id="feedbacksSection" class="admin-section" style="display:none;">
     <div id="feedbacksList" class="loading">
         <i class="fa fa-database"></i>
         <p>Loading feedbacks...</p>
@@ -304,36 +117,64 @@
 </div>
 
 <!-- Support Section -->
-<div id="supportSection" class="admin-section" style="display: none;">
+<div id="supportSection" class="admin-section" style="display:none;">
     <div id="supportTicketsList" class="loading">
         <i class="fa fa-database"></i>
         <p>Loading support tickets...</p>
     </div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-import { getFirestore, collection, doc, deleteDoc, updateDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+<!-- ✅ Firebase 10.14.1 compat — same version as rest of site -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 
-const firebaseConfig = { 
-    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", 
-    authDomain: "earth-properties-c3c56.firebaseapp.com", 
-    projectId: "earth-properties-c3c56" 
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
+    authDomain: "earth-properties-c3c56.firebaseapp.com",
+    projectId: "earth-properties-c3c56"
 };
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
 const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
 
 let allProperties = [];
 let currentFilter = 'all';
+let feedbacksLoaded = false;
+let supportLoaded = false;
 
-function escape(str) { 
-    return String(str || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); 
+// ✅ Currency symbols
+const CURRENCY_SYMBOLS = {
+    INR:'₹', USD:'$', GBP:'£', EUR:'€', AED:'AED', SAR:'SAR',
+    PKR:'Rs', BDT:'৳', SGD:'S$', MYR:'RM', CAD:'C$', AUD:'A$',
+    NGN:'₦', GHS:'₵', KES:'KSh', UGX:'USh', RWF:'Fr', NPR:'Rs',
+    LKR:'Rs', ZAR:'R', TZS:'TSh', PHP:'₱', IDR:'Rp', THB:'฿',
+    VND:'₫', TRY:'₺', BRL:'R$', MXN:'$', KWD:'KD', QAR:'QR',
+    OMR:'OMR', BHD:'BD', JOD:'JD', EGP:'£', MAD:'MAD', CNY:'¥',
+    JPY:'¥', KRW:'₩', RUB:'₽', CHF:'CHF', SEK:'kr', NOK:'kr'
+};
+
+function formatPrice(price, currency) {
+    const sym = CURRENCY_SYMBOLS[currency] || currency || '₹';
+    const num = Number(price || 0);
+    if (currency === 'INR' || !currency) {
+        if (num >= 10000000) return `${sym}${(num/10000000).toFixed(1)}Cr`;
+        if (num >= 100000) return `${sym}${(num/100000).toFixed(1)}L`;
+        return `${sym}${num.toLocaleString('en-IN')}`;
+    }
+    if (num >= 1000000) return `${sym}${(num/1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${sym}${num.toLocaleString()}`;
+    return `${sym}${num}`;
 }
 
-onAuthStateChanged(auth, (user) => {
+function escapeHtml(str) {
+    return String(str || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+// ✅ Auth check
+auth.onAuthStateChanged((user) => {
     if (!user || user.uid !== ADMIN_UID) {
         window.location.href = "index.html";
     } else {
@@ -341,413 +182,266 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-async function loadProperties() {
-    onSnapshot(query(collection(db, "properties")), async (snap) => {
+// ✅ Load properties using compat syntax
+function loadProperties() {
+    db.collection("properties").onSnapshot(async (snap) => {
         const list = document.getElementById("list");
-        
+
         if (snap.empty) {
-            list.innerHTML = `
-                <div class="empty-state">
-                    <i class="fa fa-home"></i>
-                    <h3>No Properties Found</h3>
-                    <p>No properties have been posted yet.</p>
-                </div>`;
+            list.innerHTML = `<div class="empty-state"><i class="fa fa-home"></i><h3>No Properties Found</h3><p>No properties have been posted yet.</p></div>`;
             return;
         }
 
-        // Store all properties
         allProperties = [];
         let activeCount = 0;
         let expiredCount = 0;
 
-        // Fetch owner info for each property
         for (const docSnap of snap.docs) {
             const d = docSnap.data();
             const id = docSnap.id;
-            
-            // Fetch owner details
-            let ownerName = "Unknown";
-            let ownerEmail = "";
+
+            // Fetch owner info
+            let ownerName = "Unknown", ownerEmail = "", ownerEpId = "";
             try {
-                const ownerDoc = await db.collection("users").doc(d.ownerId).get();
-                if (ownerDoc.exists) {
-                    const ownerData = ownerDoc.data();
-                    ownerName = ownerData.displayName || ownerData.name || ownerData.email?.split('@')[0] || "User";
-                    ownerEmail = ownerData.email || "";
+                if (d.ownerId) {
+                    const ownerDoc = await db.collection("users").doc(d.ownerId).get();
+                    if (ownerDoc.exists) {
+                        const od = ownerDoc.data();
+                        ownerName = od.displayName || od.name || od.email?.split('@')[0] || "User";
+                        ownerEmail = od.email || "";
+                        ownerEpId = od.epId || "";
+                    }
                 }
-            } catch (e) {
-                console.error("Error fetching owner:", e);
-            }
+            } catch (e) { console.error("Owner fetch error:", e); }
 
-            // Check if expired
             const isExpired = d.isExpired || false;
-            if (isExpired) expiredCount++;
-            else activeCount++;
+            if (isExpired) expiredCount++; else activeCount++;
 
-            // Format date
             let postDate = "Unknown";
             if (d.createdAt) {
-                const date = d.createdAt.toDate();
-                postDate = date.toLocaleDateString('en-IN', { 
-                    day: 'numeric', 
-                    month: 'short', 
-                    year: 'numeric' 
+                postDate = d.createdAt.toDate().toLocaleDateString('en-IN', {
+                    day: 'numeric', month: 'short', year: 'numeric'
+                });
+            }
+
+            let expiryDate = "N/A";
+            if (d.expiryDate) {
+                expiryDate = d.expiryDate.toDate().toLocaleDateString('en-IN', {
+                    day: 'numeric', month: 'short', year: 'numeric'
                 });
             }
 
             allProperties.push({
                 id,
                 title: d.title || "Untitled",
-                location: d.location || "Location not specified",
+                location: d.location || "N/A",
+                country: d.country || "",
                 price: d.price || 0,
+                currency: d.currency || 'INR',
                 phone: d.phone || "N/A",
                 purpose: d.purpose || "Sell",
+                ownerId: d.ownerId || "",
                 ownerName,
                 ownerEmail,
+                ownerEpId,
                 postDate,
+                expiryDate,
                 isExpired,
-                searchText: `${d.title} ${d.location} ${d.phone} ${ownerName} ${ownerEmail}`.toLowerCase()
+                isVerified: d.isVerified || false,
+                searchText: `${d.title} ${d.location} ${d.phone} ${ownerName} ${ownerEmail} ${ownerEpId}`.toLowerCase()
             });
         }
 
-        // Update stats
         document.getElementById("totalAds").innerText = allProperties.length;
         document.getElementById("activeAds").innerText = activeCount;
         document.getElementById("expiredAds").innerText = expiredCount;
         document.getElementById("propertiesTabCount").innerText = allProperties.length;
 
-        // Render properties
         renderProperties();
     });
 }
 
-// Tab switching
-window.showTab = function(tab) {
-    document.querySelectorAll('.admin-section').forEach(section => {
-        section.style.display = 'none';
-    });
-    
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
+// ✅ Tab switching
+function showTab(tab) {
+    document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
     if (tab === 'properties') {
         document.getElementById('propertiesSection').style.display = 'block';
         document.getElementById('propertiesTab').classList.add('active');
     } else if (tab === 'feedbacks') {
         document.getElementById('feedbacksSection').style.display = 'block';
         document.getElementById('feedbacksTab').classList.add('active');
-        loadFeedbacks();
+        if (!feedbacksLoaded) { loadFeedbacks(); feedbacksLoaded = true; }
     } else if (tab === 'support') {
         document.getElementById('supportSection').style.display = 'block';
         document.getElementById('supportTab').classList.add('active');
-        loadSupportTickets();
+        if (!supportLoaded) { loadSupportTickets(); supportLoaded = true; }
     }
-};
+}
 
-// Load feedbacks
+// ✅ Load feedbacks
 function loadFeedbacks() {
-    onSnapshot(query(collection(db, 'feedbacks')), async (snapshot) => {
+    db.collection('feedbacks').onSnapshot((snapshot) => {
         const container = document.getElementById('feedbacksList');
         document.getElementById('feedbacksTabCount').innerText = snapshot.size;
-        
+
         if (snapshot.empty) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <i class="fa fa-comment-slash"></i>
-                    <h3>No Feedbacks Yet</h3>
-                    <p>Users haven't submitted any feedback.</p>
-                </div>`;
+            container.innerHTML = `<div class="empty-state"><i class="fa fa-comment-slash"></i><h3>No Feedbacks Yet</h3><p>Users haven't submitted any feedback.</p></div>`;
             return;
         }
-        
-        const feedbacks = [];
-        for (const docSnap of snapshot.docs) {
-            const d = docSnap.data();
-            const date = d.createdAt ? d.createdAt.toDate().toLocaleDateString('en-IN', {
-                day: 'numeric', month: 'short', year: 'numeric'
-            }) : 'Just now';
-            
-            feedbacks.push({
-                id: docSnap.id,
-                userName: d.userName || 'Unknown',
-                userEmail: d.userEmail || '',
-                rating: d.rating || 0,
-                category: d.category || 'General',
-                feedbackText: d.feedbackText || '',
-                status: d.status || 'pending',
-                date: date
-            });
-        }
-        
+
         let html = '';
-        feedbacks.forEach(f => {
-            const stars = '★'.repeat(f.rating) + '☆'.repeat(5 - f.rating);
-            
+        snapshot.forEach(docSnap => {
+            const f = docSnap.data();
+            const id = docSnap.id;
+            const date = f.createdAt ? f.createdAt.toDate().toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : 'Just now';
+            const stars = '★'.repeat(f.rating || 0) + '☆'.repeat(5 - (f.rating || 0));
+
             html += `
                 <div class="card">
                     <div class="card-header">
                         <div>
-                            <div style="color: #ffd700; font-size: 18px; margin-bottom: 5px;">${stars}</div>
-                            <h3>${escape(f.userName)}</h3>
-                            <div style="font-size: 12px; color: #999;">${escape(f.userEmail)}</div>
+                            <div style="color:#ffd700; font-size:18px; margin-bottom:5px;">${stars}</div>
+                            <h3>${escapeHtml(f.userName || 'Unknown')}</h3>
+                            <div style="font-size:12px; color:#999;">${escapeHtml(f.userEmail || '')}</div>
                         </div>
                         <span class="status-badge ${f.status === 'resolved' ? 'status-active' : 'status-expired'}">
                             ${f.status === 'resolved' ? 'RESOLVED' : 'PENDING'}
                         </span>
                     </div>
                     <div class="property-info">
-                        <div class="info-row">
-                            <i class="fa fa-tag"></i>
-                            <span>${escape(f.category)}</span>
-                        </div>
-                        <div class="info-row">
-                            <i class="fa fa-message"></i>
-                            <span>${escape(f.feedbackText)}</span>
-                        </div>
-                        <div class="info-row">
-                            <i class="fa fa-calendar"></i>
-                            <span>${f.date}</span>
-                        </div>
+                        <div class="info-row"><i class="fa fa-tag"></i><span>${escapeHtml(f.category || 'General')}</span></div>
+                        <div class="info-row"><i class="fa fa-message"></i><span>${escapeHtml(f.feedbackText || '')}</span></div>
+                        <div class="info-row"><i class="fa fa-calendar"></i><span>${date}</span></div>
                     </div>
                     <div class="btn-group">
-                        ${f.status === 'pending' ? 
-                            `<button class="edit-btn" onclick="window.markFeedbackResolved('${f.id}')">
-                                <i class="fa fa-check"></i> Mark Resolved
-                            </button>` : 
-                            `<button class="view-btn" disabled style="opacity: 0.5; cursor: not-allowed;">
-                                <i class="fa fa-check-circle"></i> Resolved
-                            </button>`
+                        ${f.status !== 'resolved' ?
+                            `<button class="edit-btn" onclick="markFeedbackResolved('${id}')"><i class="fa fa-check"></i> Mark Resolved</button>` :
+                            `<button class="view-btn" disabled style="opacity:0.5;cursor:not-allowed;"><i class="fa fa-check-circle"></i> Resolved</button>`
                         }
-                        <button class="del-btn" onclick="window.deleteFeedback('${f.id}')">
-                            <i class="fa fa-trash"></i> Delete
-                        </button>
+                        <button class="del-btn" onclick="deleteFeedback('${id}')"><i class="fa fa-trash"></i> Delete</button>
                     </div>
-                </div>
-            `;
+                </div>`;
         });
-        
         container.innerHTML = html;
     });
 }
 
-// Load support tickets
+// ✅ Load support tickets
 function loadSupportTickets() {
-    onSnapshot(query(collection(db, 'support_tickets')), async (snapshot) => {
+    db.collection('support_tickets').onSnapshot((snapshot) => {
         const container = document.getElementById('supportTicketsList');
         document.getElementById('supportTabCount').innerText = snapshot.size;
-        
+
         if (snapshot.empty) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <i class="fa fa-ticket"></i>
-                    <h3>No Support Tickets</h3>
-                    <p>No support tickets have been submitted.</p>
-                </div>`;
+            container.innerHTML = `<div class="empty-state"><i class="fa fa-ticket"></i><h3>No Support Tickets</h3><p>No support tickets submitted.</p></div>`;
             return;
         }
-        
-        const tickets = [];
-        for (const docSnap of snapshot.docs) {
-            const d = docSnap.data();
-            const date = d.createdAt ? d.createdAt.toDate().toLocaleDateString('en-IN', {
-                day: 'numeric', month: 'short', year: 'numeric'
-            }) : 'Just now';
-            
-            tickets.push({
-                id: docSnap.id,
-                userName: d.userName || 'Unknown',
-                userEmail: d.userEmail || '',
-                subject: d.subject || 'No subject',
-                category: d.category || 'Other',
-                priority: d.priority || 'medium',
-                description: d.description || '',
-                status: d.status || 'open',
-                replies: d.replies || [],
-                date: date
-            });
-        }
-        
+
         let html = '';
-        tickets.forEach(t => {
-            const priorityColor = t.priority === 'high' ? '#d32f2f' : 
-                                 t.priority === 'medium' ? '#f57c00' : '#2e7d32';
-            
+        snapshot.forEach(docSnap => {
+            const t = docSnap.data();
+            const id = docSnap.id;
+            const date = t.createdAt ? t.createdAt.toDate().toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : 'Just now';
+            const priorityColor = t.priority === 'high' ? '#d32f2f' : t.priority === 'medium' ? '#f57c00' : '#2e7d32';
+
             html += `
                 <div class="card">
                     <div class="card-header">
                         <div>
-                            <h3>${escape(t.subject)}</h3>
-                            <div style="font-size: 12px; color: #999;">${escape(t.userName)} (${escape(t.userEmail)})</div>
+                            <h3>${escapeHtml(t.subject || 'No subject')}</h3>
+                            <div style="font-size:12px; color:#999;">${escapeHtml(t.userName || 'Unknown')} (${escapeHtml(t.userEmail || '')})</div>
                         </div>
-                        <span class="status-badge" style="background: ${priorityColor}20; color: ${priorityColor};">
-                            ${t.priority.toUpperCase()} PRIORITY
+                        <span class="status-badge" style="background:${priorityColor}20; color:${priorityColor};">
+                            ${(t.priority || 'medium').toUpperCase()} PRIORITY
                         </span>
                     </div>
                     <div class="property-info">
-                        <div class="info-row">
-                            <i class="fa fa-tag"></i>
-                            <span>${escape(t.category)}</span>
-                        </div>
-                        <div class="info-row">
-                            <i class="fa fa-message"></i>
-                            <span>${escape(t.description)}</span>
-                        </div>
-                        <div class="info-row">
-                            <i class="fa fa-calendar"></i>
-                            <span>${t.date}</span>
-                        </div>
-                        <div class="info-row">
-                            <i class="fa fa-signal"></i>
-                            <span>Status: ${t.status.toUpperCase()}</span>
-                        </div>
-                        ${t.replies.length > 0 ? 
-                            `<div class="info-row">
-                                <i class="fa fa-comments"></i>
-                                <span>${t.replies.length} ${t.replies.length === 1 ? 'Reply' : 'Replies'}</span>
-                            </div>` : ''
-                        }
+                        <div class="info-row"><i class="fa fa-tag"></i><span>${escapeHtml(t.category || 'Other')}</span></div>
+                        <div class="info-row"><i class="fa fa-message"></i><span>${escapeHtml(t.description || '')}</span></div>
+                        <div class="info-row"><i class="fa fa-calendar"></i><span>${date}</span></div>
+                        <div class="info-row"><i class="fa fa-signal"></i><span>Status: ${(t.status || 'open').toUpperCase()}</span></div>
+                        ${(t.replies || []).length > 0 ? `<div class="info-row"><i class="fa fa-comments"></i><span>${t.replies.length} ${t.replies.length === 1 ? 'Reply' : 'Replies'}</span></div>` : ''}
                     </div>
                     <div class="btn-group">
-                        ${t.status !== 'closed' ? 
-                            `<button class="edit-btn" onclick="window.closeTicket('${t.id}')">
-                                <i class="fa fa-check"></i> Close Ticket
-                            </button>` : 
-                            `<button class="view-btn" disabled style="opacity: 0.5; cursor: not-allowed;">
-                                <i class="fa fa-check-circle"></i> Closed
-                            </button>`
+                        ${t.status !== 'closed' ?
+                            `<button class="edit-btn" onclick="closeTicket('${id}')"><i class="fa fa-check"></i> Close Ticket</button>` :
+                            `<button class="view-btn" disabled style="opacity:0.5;cursor:not-allowed;"><i class="fa fa-check-circle"></i> Closed</button>`
                         }
-                        <button class="del-btn" onclick="window.deleteTicket('${t.id}')">
-                            <i class="fa fa-trash"></i> Delete
-                        </button>
+                        <button class="del-btn" onclick="deleteTicket('${id}')"><i class="fa fa-trash"></i> Delete</button>
                     </div>
-                </div>
-            `;
+                </div>`;
         });
-        
         container.innerHTML = html;
     });
 }
 
-// Feedback actions
-window.markFeedbackResolved = async (id) => {
-    if (!confirm('Mark this feedback as resolved?')) return;
-    try {
-        await updateDoc(doc(db, 'feedbacks', id), {
-            status: 'resolved',
-            resolvedAt: new Date(),
-            resolvedBy: auth.currentUser.uid
-        });
-        alert('Feedback marked as resolved!');
-    } catch (e) {
-        alert('Error: ' + e.message);
-    }
-};
-
-window.deleteFeedback = async (id) => {
-    if (!confirm('Delete this feedback permanently?')) return;
-    try {
-        await deleteDoc(doc(db, 'feedbacks', id));
-        alert('Feedback deleted!');
-    } catch (e) {
-        alert('Error: ' + e.message);
-    }
-};
-
-// Support ticket actions
-window.closeTicket = async (id) => {
-    if (!confirm('Close this support ticket?')) return;
-    try {
-        await updateDoc(doc(db, 'support_tickets', id), {
-            status: 'closed',
-            lastReply: new Date()
-        });
-        alert('Ticket closed!');
-    } catch (e) {
-        alert('Error: ' + e.message);
-    }
-};
-
-window.deleteTicket = async (id) => {
-    if (!confirm('Delete this support ticket permanently?')) return;
-    try {
-        await deleteDoc(doc(db, 'support_tickets', id));
-        alert('Ticket deleted!');
-    } catch (e) {
-        alert('Error: ' + e.message);
-    }
-};
-
+// ✅ Render properties
 function renderProperties() {
     const list = document.getElementById("list");
-    const searchTerm = document.getElementById('searchBox').value.toLowerCase();
-    
+    const searchTerm = document.getElementById('searchBox').value.toLowerCase().trim();
+
     let filtered = allProperties.filter(p => {
-        // Filter by status
         if (currentFilter === 'active' && p.isExpired) return false;
         if (currentFilter === 'expired' && !p.isExpired) return false;
-        
-        // Filter by search
         if (searchTerm && !p.searchText.includes(searchTerm)) return false;
-        
         return true;
     });
 
     if (filtered.length === 0) {
-        list.innerHTML = `
-            <div class="empty-state">
-                <i class="fa fa-search"></i>
-                <h3>No Results Found</h3>
-                <p>Try different search terms or filters.</p>
-            </div>`;
+        list.innerHTML = `<div class="empty-state"><i class="fa fa-search"></i><h3>No Results Found</h3><p>Try different search terms or filters.</p></div>`;
         return;
     }
 
     list.innerHTML = filtered.map(p => `
-        <div class="card">
+        <div class="card" style="border-left-color: ${p.isExpired ? '#d32f2f' : '#2e7d32'};">
             <div class="card-header">
-                <h3>${escape(p.title)}</h3>
+                <h3>
+                    ${p.isVerified ? '<i class="fa fa-check-circle" style="color:#1da1f2; margin-right:4px;"></i>' : ''}
+                    ${escapeHtml(p.title)}
+                </h3>
                 <span class="status-badge ${p.isExpired ? 'status-expired' : 'status-active'}">
                     ${p.isExpired ? 'EXPIRED' : 'ACTIVE'}
                 </span>
             </div>
-            
             <div class="property-info">
                 <div class="info-row">
                     <i class="fa fa-location-dot"></i>
-                    <span>${escape(p.location)}</span>
+                    <span>${escapeHtml(p.location)}${p.country ? `, ${escapeHtml(p.country)}` : ''}</span>
                 </div>
                 <div class="info-row">
-                    <i class="fa fa-indian-rupee-sign"></i>
-                    <strong>₹${Number(p.price).toLocaleString('en-IN')}</strong>
-                    <span style="color: #999; margin-left: 8px;">(${p.purpose})</span>
+                    <i class="fa fa-tag"></i>
+                    <strong>${formatPrice(p.price, p.currency)}</strong>
+                    <span style="color:#999; margin-left:8px;">(${escapeHtml(p.purpose)})</span>
                 </div>
                 <div class="info-row">
                     <i class="fa fa-phone"></i>
-                    <span>${escape(p.phone)}</span>
+                    <span>${escapeHtml(p.phone)}</span>
                 </div>
                 <div class="info-row">
                     <i class="fa fa-user"></i>
-                    <span><strong>${escape(p.ownerName)}</strong></span>
-                    ${p.ownerEmail ? `<span style="color: #999; font-size: 11px;">(${escape(p.ownerEmail)})</span>` : ''}
+                    <strong>${escapeHtml(p.ownerName)}</strong>
+                    ${p.ownerEpId ? `<span style="background:#e8f5e9; color:#2e7d32; padding:1px 6px; border-radius:8px; font-size:10px; font-weight:700; margin-left:4px;">${escapeHtml(p.ownerEpId)}</span>` : ''}
+                    ${p.ownerEmail ? `<span style="color:#999; font-size:11px; margin-left:4px;">(${escapeHtml(p.ownerEmail)})</span>` : ''}
                 </div>
                 <div class="info-row">
                     <i class="fa fa-calendar"></i>
                     <span>Posted: ${p.postDate}</span>
+                    ${p.expiryDate !== 'N/A' ? `<span style="color:#999; margin-left:8px;">· Expires: ${p.expiryDate}</span>` : ''}
                 </div>
             </div>
-            
             <div class="btn-group">
-                <button class="view-btn" onclick="window.viewProperty('${p.id}')">
+                <button class="view-btn" onclick="viewProperty('${p.id}')">
                     <i class="fa fa-eye"></i> View
                 </button>
-                <button class="edit-btn" onclick="window.editProperty('${p.id}')">
+                <button class="edit-btn" onclick="editProperty('${p.id}')">
                     <i class="fa fa-edit"></i> Edit
                 </button>
-                <button class="copy-btn" onclick="window.copyPropertyId('${p.id}')">
-                    <i class="fa fa-copy"></i> Copy ID
+                <button class="copy-btn" onclick="copyPropertyId('${p.id}')">
+                    <i class="fa fa-copy"></i> ID
                 </button>
-                <button class="del-btn" onclick="window.deletePost('${p.id}', '${escape(p.title)}')">
+                <button class="del-btn" onclick="deletePost('${p.id}', '${escapeHtml(p.title)}')">
                     <i class="fa fa-trash-alt"></i> Delete
                 </button>
             </div>
@@ -755,190 +449,149 @@ function renderProperties() {
     `).join('');
 }
 
-// Filter by status
-window.filterByStatus = (status) => {
+// ✅ Filter
+function filterByStatus(status, event) {
     currentFilter = status;
-    
-    // Update button states
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    event.target.classList.add('active');
-    
+    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+    if (event && event.target) event.target.classList.add('active');
     renderProperties();
-};
+}
 
-// Search functionality
-document.getElementById('searchBox').addEventListener('input', () => {
-    renderProperties();
-});
+// ✅ Search
+document.getElementById('searchBox').addEventListener('input', renderProperties);
 
-// Copy property ID
-window.copyPropertyId = (id) => {
+// ✅ Copy ID
+function copyPropertyId(id) {
     navigator.clipboard.writeText(id).then(() => {
-        alert('Property ID copied to clipboard!\n\nID: ' + id);
-    }).catch(err => {
+        alert('Property ID copied!\n\n' + id);
+    }).catch(() => {
         prompt('Copy this Property ID:', id);
     });
-};
+}
 
-// View property - Open detail modal
-window.viewProperty = (id) => {
-    const property = allProperties.find(p => p.id === id);
-    if (!property) return;
-    
-    // Create modal
+// ✅ View property modal
+function viewProperty(id) {
+    const p = allProperties.find(x => x.id === id);
+    if (!p) return;
+
     const modal = document.createElement('div');
-    modal.style.cssText = `
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.8); z-index: 9999;
-        display: flex; align-items: center; justify-content: center;
-        padding: 20px; box-sizing: border-box;
-    `;
-    
+    modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';
+
     modal.innerHTML = `
-        <div style="
-            background: white; 
-            max-width: 600px; 
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            border-radius: 15px;
-            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
-        ">
-            <div style="
-                padding: 20px;
-                border-bottom: 1px solid #eee;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                position: sticky;
-                top: 0;
-                background: white;
-                z-index: 1;
-            ">
-                <h2 style="margin: 0; font-size: 18px;">Property Details</h2>
-                <button onclick="this.closest('[style*=\\'position: fixed\\']').remove()" 
-                    style="
-                        background: none;
-                        border: none;
-                        font-size: 24px;
-                        cursor: pointer;
-                        color: #999;
-                    ">&times;</button>
+        <div style="background:white;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;border-radius:15px;box-shadow:0 10px 50px rgba(0,0,0,0.5);">
+            <div style="padding:20px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:white;z-index:1;">
+                <h2 style="margin:0;font-size:18px;">Property Details</h2>
+                <button onclick="this.closest('.admin-modal').remove()" style="background:none;border:none;font-size:24px;cursor:pointer;color:#999;">&times;</button>
             </div>
-            <div style="padding: 20px;">
-                <h3 style="color: #2e7d32; margin-top: 0;">${escape(property.title)}</h3>
-                
-                <div style="display: grid; gap: 15px; margin-top: 20px;">
-                    <div>
-                        <strong style="color: #666; font-size: 12px; text-transform: uppercase;">Status</strong>
-                        <div style="margin-top: 5px;">
-                            <span class="status-badge ${property.isExpired ? 'status-expired' : 'status-active'}">
-                                ${property.isExpired ? 'EXPIRED' : 'ACTIVE'}
-                            </span>
+            <div style="padding:20px;">
+                <h3 style="color:#2e7d32;margin-top:0;">${escapeHtml(p.title)}</h3>
+                <div style="display:grid;gap:15px;margin-top:20px;">
+                    <div><strong style="color:#666;font-size:12px;text-transform:uppercase;">Status</strong>
+                        <div style="margin-top:5px;"><span class="status-badge ${p.isExpired ? 'status-expired' : 'status-active'}">${p.isExpired ? 'EXPIRED' : 'ACTIVE'}</span></div>
+                    </div>
+                    <div><strong style="color:#666;font-size:12px;text-transform:uppercase;">Price</strong>
+                        <div style="font-size:20px;font-weight:800;color:#2e7d32;margin-top:5px;">${formatPrice(p.price, p.currency)}</div>
+                        <div style="color:#999;font-size:13px;">Purpose: ${escapeHtml(p.purpose)}</div>
+                    </div>
+                    <div><strong style="color:#666;font-size:12px;text-transform:uppercase;">Location</strong>
+                        <div style="margin-top:5px;">${escapeHtml(p.location)}${p.country ? `, ${escapeHtml(p.country)}` : ''}</div>
+                    </div>
+                    <div><strong style="color:#666;font-size:12px;text-transform:uppercase;">Contact</strong>
+                        <div style="margin-top:5px;">${escapeHtml(p.phone)}</div>
+                    </div>
+                    <div><strong style="color:#666;font-size:12px;text-transform:uppercase;">Owner</strong>
+                        <div style="margin-top:5px;">
+                            <div style="font-weight:600;">${escapeHtml(p.ownerName)}</div>
+                            ${p.ownerEpId ? `<div style="color:#2e7d32;font-size:12px;font-weight:700;">${escapeHtml(p.ownerEpId)}</div>` : ''}
+                            ${p.ownerEmail ? `<div style="color:#999;font-size:13px;">${escapeHtml(p.ownerEmail)}</div>` : ''}
                         </div>
                     </div>
-                    
-                    <div>
-                        <strong style="color: #666; font-size: 12px; text-transform: uppercase;">Price</strong>
-                        <div style="font-size: 20px; font-weight: 800; color: #2e7d32; margin-top: 5px;">
-                            ₹${Number(property.price).toLocaleString('en-IN')}
-                        </div>
-                        <div style="color: #999; font-size: 13px;">Purpose: ${property.purpose}</div>
-                    </div>
-                    
-                    <div>
-                        <strong style="color: #666; font-size: 12px; text-transform: uppercase;">Location</strong>
-                        <div style="margin-top: 5px;">${escape(property.location)}</div>
-                    </div>
-                    
-                    <div>
-                        <strong style="color: #666; font-size: 12px; text-transform: uppercase;">Contact</strong>
-                        <div style="margin-top: 5px;">${escape(property.phone)}</div>
-                    </div>
-                    
-                    <div>
-                        <strong style="color: #666; font-size: 12px; text-transform: uppercase;">Owner</strong>
-                        <div style="margin-top: 5px;">
-                            <div style="font-weight: 600;">${escape(property.ownerName)}</div>
-                            ${property.ownerEmail ? `<div style="color: #999; font-size: 13px;">${escape(property.ownerEmail)}</div>` : ''}
+                    <div><strong style="color:#666;font-size:12px;text-transform:uppercase;">Dates</strong>
+                        <div style="margin-top:5px;font-size:13px;">
+                            <div>Posted: ${p.postDate}</div>
+                            ${p.expiryDate !== 'N/A' ? `<div style="color:#999;">Expires: ${p.expiryDate}</div>` : ''}
                         </div>
                     </div>
-                    
-                    <div>
-                        <strong style="color: #666; font-size: 12px; text-transform: uppercase;">Posted On</strong>
-                        <div style="margin-top: 5px;">${property.postDate}</div>
-                    </div>
-                    
-                    <div>
-                        <strong style="color: #666; font-size: 12px; text-transform: uppercase;">Property ID</strong>
-                        <div style="margin-top: 5px; font-family: monospace; background: #f5f5f5; padding: 8px; border-radius: 5px; font-size: 12px;">
-                            ${property.id}
-                        </div>
+                    <div><strong style="color:#666;font-size:12px;text-transform:uppercase;">Property ID</strong>
+                        <div style="margin-top:5px;font-family:monospace;background:#f5f5f5;padding:8px;border-radius:5px;font-size:12px;">${p.id}</div>
                     </div>
                 </div>
-                
-                <div style="margin-top: 30px; display: flex; gap: 10px;">
-                    <button onclick="window.editProperty('${property.id}')" 
-                        style="
-                            flex: 1;
-                            background: #2e7d32;
-                            color: white;
-                            border: none;
-                            padding: 12px;
-                            border-radius: 8px;
-                            font-weight: 700;
-                            cursor: pointer;
-                        ">
+                <div style="margin-top:30px;display:flex;gap:10px;">
+                    <button onclick="editProperty('${p.id}')" style="flex:1;background:#2e7d32;color:white;border:none;padding:12px;border-radius:8px;font-weight:700;cursor:pointer;">
                         <i class="fa fa-edit"></i> Edit Property
                     </button>
-                    <button onclick="this.closest('[style*=\\'position: fixed\\']').remove()" 
-                        style="
-                            background: #f5f5f5;
-                            color: #666;
-                            border: none;
-                            padding: 12px 20px;
-                            border-radius: 8px;
-                            font-weight: 700;
-                            cursor: pointer;
-                        ">
+                    <button onclick="this.closest('.admin-modal').remove()" style="background:#f5f5f5;color:#666;border:none;padding:12px 20px;border-radius:8px;font-weight:700;cursor:pointer;">
                         Close
                     </button>
                 </div>
             </div>
-        </div>
-    `;
-    
+        </div>`;
+
+    modal.classList.add('admin-modal');
     document.body.appendChild(modal);
-    
-    // Close on outside click
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.remove();
-    });
-};
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+}
 
-// Edit property
-window.editProperty = (id) => {
-    // Close modal if open
-    const modal = document.querySelector('[style*="position: fixed"]');
+// ✅ Edit property — admin bypass using sessionStorage flag
+function editProperty(id) {
+    const modal = document.querySelector('.admin-modal');
     if (modal) modal.remove();
-    
-    // Open edit page
+    // ✅ Store admin edit flag so add-property.html skips owner check
+    sessionStorage.setItem('adminEdit', 'true');
     window.open(`add-property.html?edit=${id}`, '_blank');
-};
+}
 
-// Delete property
-window.deletePost = async (id, title) => {
-    if (!confirm(`Delete this property permanently?\n\nTitle: ${title}\n\nThis action cannot be undone.`)) return;
-    
-    try { 
-        await deleteDoc(doc(db, "properties", id));
+// ✅ Delete property
+async function deletePost(id, title) {
+    if (!confirm(`Delete this property permanently?\n\nTitle: ${title}\n\nThis cannot be undone.`)) return;
+    try {
+        await db.collection("properties").doc(id).delete();
         alert("Property deleted successfully!");
-    } catch (e) { 
-        alert("Error: " + e.message); 
+    } catch (e) {
+        alert("Error: " + e.message);
     }
-};
+}
+
+// ✅ Feedback actions
+async function markFeedbackResolved(id) {
+    if (!confirm('Mark this feedback as resolved?')) return;
+    try {
+        await db.collection('feedbacks').doc(id).update({
+            status: 'resolved',
+            resolvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            resolvedBy: auth.currentUser.uid
+        });
+        alert('Feedback marked as resolved!');
+    } catch (e) { alert('Error: ' + e.message); }
+}
+
+async function deleteFeedback(id) {
+    if (!confirm('Delete this feedback permanently?')) return;
+    try {
+        await db.collection('feedbacks').doc(id).delete();
+        alert('Feedback deleted!');
+    } catch (e) { alert('Error: ' + e.message); }
+}
+
+// ✅ Support ticket actions
+async function closeTicket(id) {
+    if (!confirm('Close this support ticket?')) return;
+    try {
+        await db.collection('support_tickets').doc(id).update({
+            status: 'closed',
+            lastReply: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        alert('Ticket closed!');
+    } catch (e) { alert('Error: ' + e.message); }
+}
+
+async function deleteTicket(id) {
+    if (!confirm('Delete this support ticket permanently?')) return;
+    try {
+        await db.collection('support_tickets').doc(id).delete();
+        alert('Ticket deleted!');
+    } catch (e) { alert('Error: ' + e.message); }
+}
 </script>
 </body>
 </html>
