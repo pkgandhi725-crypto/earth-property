@@ -42,6 +42,7 @@
 
         /* Delete countdown info line */
         .delete-info { font-size: 11px; color: #e65100; margin-top: 6px; display: flex; align-items: center; gap: 4px; font-weight: 600; }
+        .verified-badge { display: inline-flex; align-items: center; gap: 4px; background: linear-gradient(135deg, #1da1f2, #0d8bd9); color: white; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; letter-spacing: 0.3px; margin-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -177,8 +178,9 @@ firebase.auth().onAuthStateChanged(user => {
                   adList.innerHTML += `
                   <div class="ad-card" style="${isExp ? 'opacity:0.85;' : ''}">
                       <div class="ad-info">
-                          <img src="${data.images?.[0] || 'https://via.placeholder.com/150'}" class="ad-img" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
+                          <img src="${data.images?.[0]?.url || data.images?.[0] || 'https://via.placeholder.com/150'}" class="ad-img" onerror="this.src='https://via.placeholder.com/150?text=No+Image'">
                           <div class="ad-details">
+                              ${data.isVerified ? '<span class="verified-badge"><i class="fa fa-check-circle"></i> Verified</span>' : ''}
                               <h4>${escapeHtml(data.title)}</h4>
                               <div class="price">₹${Number(data.price || 0).toLocaleString('en-IN')}</div>
                               <div class="status-badge ${isExp ? 'expired-badge' : 'active-badge'}">
