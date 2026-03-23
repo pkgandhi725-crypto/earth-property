@@ -206,7 +206,7 @@
         <div class="drawer-item" onclick="location.href='my-ads.html'"><i class="fa fa-layer-group" style="color:var(--primary);"></i><span id="myAdsText">My Ads</span></div>
         <div class="drawer-item" onclick="location.href='favorites.html'"><i class="fa fa-heart" style="color:#ff5252;"></i><span id="favsText">Favorites</span></div>
         <div class="drawer-item" onclick="location.href='feedback.html'"><i class="fa fa-comment-dots" style="color:#9C27B0;"></i><span id="feedbackText">Feedback</span></div>
-        <div class="drawer-item" onclick="location.href='help.html'"><i class="fa fa-question-circle" style="color:#2196F3;"></i><span id="helpText">Help & Support</span></div>
+        <div class="drawer-item" onclick="if(auth.currentUser){location.href='help.html'}else{toggleDrawer();setTimeout(()=>document.getElementById('helpAuthModal').style.display='flex',300)}"><i class="fa fa-question-circle" style="color:#2196F3;"></i><span id="helpText">Help & Support</span></div>
         <div class="drawer-item" onclick="showAboutAlert()"><i class="fa fa-info-circle" style="color:#FF9800;"></i><span id="aboutText">About Us</span></div>
         <div id="adminSideBtn" class="drawer-item" onclick="location.href='admin.html'" style="display:none; color:#ffd700;"><i class="fa fa-user-shield"></i><span id="adminText">Admin Portal</span></div>
         <div id="logoutBtn" class="drawer-item" style="display:none; color:#d32f2f;" onclick="handleLogout()"><i class="fa fa-sign-out-alt"></i><span id="logoutText">Logout</span></div>
@@ -1226,12 +1226,34 @@ applyLanguage();
 setTimeout(initLocationCard, 2000);
 </script>
 
+<!-- Help Auth Modal -->
+<div id="helpAuthModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);display:none;justify-content:center;align-items:center;z-index:9999;" onclick="if(event.target===this)document.getElementById('helpAuthModal').style.display='none'">
+  <div style="background:#fff;width:92%;max-width:380px;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:postModalSlideUp 0.35s ease;">
+    <div style="background:linear-gradient(135deg,#1565c0,#1976d2);padding:28px 22px 22px;text-align:center;">
+      <div style="background:white;border-radius:16px;padding:10px 16px;display:inline-block;margin-bottom:12px;">
+        <img src="logo.png" alt="The Earth Property" style="height:72px;width:auto;object-fit:contain;display:block;" onerror="this.style.display='none';document.getElementById('helpModalLogoFallback').style.display='block';">
+        <div id="helpModalLogoFallback" style="display:none;font-size:44px;line-height:1;">🌍</div>
+      </div>
+      <div style="color:white;font-size:18px;font-weight:800;line-height:1.3;">Help & Support</div>
+      <div style="color:rgba(255,255,255,0.85);font-size:12px;margin-top:5px;font-weight:600;">We're here to help you 24/7</div>
+    </div>
+    <div style="padding:22px;">
+      <div style="font-size:15px;font-weight:800;color:#1565c0;text-align:center;margin-bottom:6px;">Login Required</div>
+      <div style="font-size:13px;color:#666;text-align:center;margin-bottom:20px;line-height:1.6;">Please login or sign up to access Help & Support and get assistance from our team.</div>
+      <button onclick="location.href='login.html'" style="width:100%;background:linear-gradient(135deg,#1976d2,#1565c0);color:white;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;letter-spacing:0.3px;box-shadow:0 4px 15px rgba(25,118,210,0.4);">Login / Sign Up 🚀</button>
+      <button onclick="document.getElementById('helpAuthModal').style.display='none'" style="width:100%;background:transparent;color:#999;border:none;padding:10px;margin-top:8px;font-size:13px;cursor:pointer;font-weight:600;">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- Chat Auth Modal -->
 <div id="chatAuthModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);display:none;justify-content:center;align-items:center;z-index:9999;" onclick="if(event.target===this)document.getElementById('chatAuthModal').style.display='none'">
   <div style="background:#fff;width:92%;max-width:380px;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:postModalSlideUp 0.35s ease;">
     <div style="background:linear-gradient(135deg,#1b5e20,#2e7d32);padding:28px 22px 22px;text-align:center;">
-      <img src="logo.png" alt="The Earth Property" style="height:56px;width:auto;object-fit:contain;margin-bottom:10px;" onerror="this.style.display='none';document.getElementById('chatModalLogoFallback').style.display='block';">
-      <div id="chatModalLogoFallback" style="display:none;font-size:44px;margin-bottom:8px;">🌍</div>
+      <div style="background:white;border-radius:16px;padding:10px 16px;display:inline-block;margin-bottom:12px;">
+        <img src="logo.png" alt="The Earth Property" style="height:72px;width:auto;object-fit:contain;display:block;" onerror="this.style.display='none';document.getElementById('chatModalLogoFallback').style.display='block';">
+        <div id="chatModalLogoFallback" style="display:none;font-size:44px;line-height:1;">🌍</div>
+      </div>
       <div style="color:white;font-size:18px;font-weight:800;line-height:1.3;">Chat with Seller</div>
       <div style="color:rgba(255,255,255,0.85);font-size:12px;margin-top:5px;font-weight:600;">Directly — No Broker, No Commission</div>
     </div>
@@ -1248,8 +1270,10 @@ setTimeout(initLocationCard, 2000);
 <div id="postNowModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);display:none;justify-content:center;align-items:center;z-index:9999;" onclick="if(event.target===this)closePostNowModal()">
   <div style="background:#fff;width:92%;max-width:380px;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:postModalSlideUp 0.35s ease;">
     <div style="background:linear-gradient(135deg,#1976d2,#1565c0);padding:28px 22px 22px;text-align:center;">
-      <img src="logo.png" alt="The Earth Property" style="height:56px;width:auto;object-fit:contain;margin-bottom:10px;" onerror="this.style.display='none';document.getElementById('postModalLogoFallback').style.display='block';">
-      <div id="postModalLogoFallback" style="display:none;font-size:44px;margin-bottom:8px;">🌍</div>
+      <div style="background:white;border-radius:16px;padding:10px 16px;display:inline-block;margin-bottom:12px;">
+        <img src="logo.png" alt="The Earth Property" style="height:72px;width:auto;object-fit:contain;display:block;" onerror="this.style.display='none';document.getElementById('postModalLogoFallback').style.display='block';">
+        <div id="postModalLogoFallback" style="display:none;font-size:44px;line-height:1;">🌍</div>
+      </div>
       <div style="color:white;font-size:18px;font-weight:800;line-height:1.3;">Welcome to The Earth Property</div>
       <div style="color:rgba(255,255,255,0.85);font-size:12px;margin-top:5px;font-weight:600;letter-spacing:0.3px;">Worldwide Property Platform</div>
     </div>
