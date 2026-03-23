@@ -43,8 +43,89 @@
         .remove-btn { position: absolute; top: 5px; right: 5px; background: var(--danger); color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; z-index: 10; border: none; cursor: pointer; }
         .prog-container { width: 80%; height: 6px; background: #eee; border-radius: 10px; overflow: hidden; display: none; z-index: 5; }
         .prog-bar { height: 100%; background: var(--primary); width: 0%; transition: width 0.2s; }
+
+        /* ✅ NEW: Overall upload progress banner */
+        #uploadProgressBanner {
+            display: none;
+            background: #e8f5e9;
+            border: 1.5px solid #a5d6a7;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-top: 12px;
+            margin-bottom: 4px;
+        }
+        #uploadProgressBanner .upb-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        #uploadProgressBanner .upb-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #2e7d32;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        #uploadProgressBanner .upb-count {
+            font-size: 12px;
+            color: #388e3c;
+            font-weight: 600;
+        }
+        #uploadProgressBanner .upb-track {
+            width: 100%;
+            height: 8px;
+            background: #c8e6c9;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        #uploadProgressBanner .upb-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2e7d32, #66bb6a);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        #uploadProgressBanner .upb-slots {
+            display: flex;
+            gap: 5px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        #uploadProgressBanner .upb-slot-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: #c8e6c9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: #555;
+            transition: all 0.3s;
+        }
+        #uploadProgressBanner .upb-slot-dot.uploading {
+            background: #fff9c4;
+            color: #f57f17;
+            animation: pulse-dot 1s infinite;
+        }
+        #uploadProgressBanner .upb-slot-dot.done {
+            background: #2e7d32;
+            color: #fff;
+        }
+        #uploadProgressBanner .upb-slot-dot.failed {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.15); opacity: 0.8; }
+        }
+
         .btn-post { background: var(--primary); color: white; border: none; width: 100%; padding: 16px; border-radius: 12px; font-size: 16px; font-weight: 700; margin-top: 25px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(46, 125, 50, 0.3); }
-        .btn-post:disabled { background: #999; cursor: not-allowed; }
+        .btn-post:disabled { background: #999; cursor: not-allowed; box-shadow: none; }
         #rentFields { background: var(--accent); padding: 15px; border-radius: 15px; display: none; border: 1px solid #c8e6c9; margin-bottom: 18px; }
         #plotFields { background: #fff8e1; padding: 15px; border-radius: 15px; display: none; border: 1px solid #ffe082; margin-bottom: 18px; }
         #commercialFields { background: #fce4ec; padding: 15px; border-radius: 15px; display: none; border: 1px solid #f8bbd0; margin-bottom: 18px; }
@@ -259,12 +340,29 @@
     <div class="form-group"><label>Nearby Landmarks (Optional)</label><input type="text" id="nearby" placeholder="e.g. Near Metro, Hospital"></div>
     <div class="form-group"><label>Description</label><textarea id="desc" rows="3" placeholder="Features, facilities, etc."></textarea></div>
     <div class="media-section-label">📸 Photos (Max 7)</div>
-    <div class="media-section-sub">Slot 1–3: Photos only &nbsp;|&nbsp; Slot 4–7: Photo or Video</div>
+    <div class="media-section-sub">Tap any empty slot OR tap below to add up to 7 photos at once</div>
+
+    <!-- ✅ NEW: Multi-select trigger button -->
+    <button type="button" id="btnAddPhotos" onclick="triggerMultiUpload()" style="width:100%;padding:12px;background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border:2px dashed #2e7d32;border-radius:12px;color:#2e7d32;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;box-sizing:border-box;">
+        <i class="fa fa-images"></i> Add Photos (Select up to 7 at once)
+    </button>
+
     <div class="img-upload-grid">
         <div class="img-box" id="box0" onclick="triggerUpload(0)"><i class="fa fa-camera" id="icon0"></i><img id="prev0" style="display:none;"><div class="prog-container" id="cont0"><div class="prog-bar" id="bar0"></div></div></div>
         <div class="img-box" id="box1" onclick="triggerUpload(1)"><i class="fa fa-camera" id="icon1"></i><img id="prev1" style="display:none;"><div class="prog-container" id="cont1"><div class="prog-bar" id="bar1"></div></div></div>
         <div class="img-box" id="box2" onclick="triggerUpload(2)"><i class="fa fa-camera" id="icon2"></i><img id="prev2" style="display:none;"><div class="prog-container" id="cont2"><div class="prog-bar" id="bar2"></div></div></div>
     </div>
+
+    <!-- ✅ NEW: Overall upload progress banner (shown during upload) -->
+    <div id="uploadProgressBanner">
+        <div class="upb-top">
+            <div class="upb-label"><span class="loading-spinner"></span> <span id="upbLabel">Uploading photos...</span></div>
+            <div class="upb-count" id="upbCount">0/0</div>
+        </div>
+        <div class="upb-track"><div class="upb-fill" id="upbFill"></div></div>
+        <div class="upb-slots" id="upbSlots"></div>
+    </div>
+
     <div class="flex-slots-wrap" style="margin-top:10px;">
         <div class="flex-slot">
             <div class="flex-slot-title">Slot 4 (Optional)</div>
@@ -303,7 +401,11 @@
             </div>
         </div>
     </div>
-    <input type="file" id="fileInput" hidden accept="image/*" onchange="handleFile(event)">
+
+    <!-- ✅ CHANGED: single fileInput for single-slot click, multiFileInput for bulk -->
+    <input type="file" id="fileInput" hidden accept="image/*" onchange="handleSingleFile(event)">
+    <input type="file" id="multiFileInput" hidden accept="image/*" multiple onchange="handleMultiFiles(event)">
+
     <button class="btn-post" id="postBtn" onclick="submitProperty()">Post Property</button>
 </div>
 
@@ -322,8 +424,230 @@ let currentCoords={lat:null,lng:null},slotMode=[null,null,null,'photo','photo','
 let currentUserVerified=false,currentUserBizName="",currentUserEpId="";
 const urlParams=new URLSearchParams(window.location.search),editId=urlParams.get('edit');
 
-// ✅ Leaflet vars (Google Maps removed)
+// ✅ Leaflet vars
 let leafletMap=null,leafletMarker=null;
+
+// ========================================================
+// ✅ NEW: Upload Progress Banner helpers
+// ========================================================
+// slotUploadStatus: null | 'uploading' | 'done' | 'failed'
+let slotUploadStatus = [null,null,null,null,null,null,null];
+
+function updateUploadBanner() {
+    const activeSlots = slotUploadStatus.map((s,i) => s ? i : -1).filter(i => i >= 0);
+    const banner = document.getElementById('uploadProgressBanner');
+    if (activeSlots.length === 0) {
+        banner.style.display = 'none';
+        return;
+    }
+    // Count statuses
+    const total = activeSlots.length;
+    const done = slotUploadStatus.filter(s => s === 'done' || s === 'failed').length;
+    const successCount = slotUploadStatus.filter(s => s === 'done').length;
+    banner.style.display = 'block';
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    document.getElementById('upbFill').style.width = pct + '%';
+    document.getElementById('upbCount').textContent = done + '/' + total;
+    if (done === total) {
+        document.getElementById('upbLabel').textContent = '✅ ' + successCount + ' photo' + (successCount !== 1 ? 's' : '') + ' uploaded!';
+        // Hide banner after 3 seconds when all done
+        setTimeout(() => {
+            // Only hide if no new upload started
+            if (slotUploadStatus.every(s => s === null || s === 'done' || s === 'failed')) {
+                banner.style.display = 'none';
+                slotUploadStatus = [null,null,null,null,null,null,null];
+            }
+        }, 3000);
+    } else {
+        document.getElementById('upbLabel').textContent = 'Uploading photos...';
+    }
+    // Slot dots
+    const slotsEl = document.getElementById('upbSlots');
+    slotsEl.innerHTML = '';
+    activeSlots.forEach(i => {
+        const dot = document.createElement('div');
+        dot.className = 'upb-slot-dot ' + (slotUploadStatus[i] || '');
+        dot.textContent = slotUploadStatus[i] === 'done' ? '✓' : slotUploadStatus[i] === 'failed' ? '✗' : (i + 1);
+        slotsEl.appendChild(dot);
+    });
+}
+
+function setSlotUploading(slot) {
+    slotUploadStatus[slot] = 'uploading';
+    updateUploadBanner();
+}
+
+function setSlotDone(slot) {
+    slotUploadStatus[slot] = 'done';
+    updateUploadBanner();
+}
+
+function setSlotFailed(slot) {
+    slotUploadStatus[slot] = 'failed';
+    updateUploadBanner();
+}
+
+// ========================================================
+// ✅ NEW: Find next available (empty) photo slot (0–6)
+// ========================================================
+function getNextEmptyPhotoSlot(startFrom = 0) {
+    for (let i = startFrom; i < 7; i++) {
+        // For slots 3-6, only use if in photo mode
+        if (i >= 3 && slotMode[i] !== 'photo') continue;
+        if (!uploadedImages[i]) return i;
+    }
+    return -1; // all full
+}
+
+// ========================================================
+// ✅ NEW: triggerMultiUpload — opens multi-select file picker
+// ========================================================
+function triggerMultiUpload() {
+    const firstEmpty = getNextEmptyPhotoSlot(0);
+    if (firstEmpty === -1) {
+        showToast('All 7 photo slots are already filled!', 'info');
+        return;
+    }
+    document.getElementById('multiFileInput').value = '';
+    document.getElementById('multiFileInput').click();
+}
+
+// ========================================================
+// ✅ NEW: handleMultiFiles — handle multiple files at once,
+//         upload each to next available slot in parallel
+// ========================================================
+function handleMultiFiles(e) {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+
+    // Find how many empty slots available
+    let slots = [];
+    let searchFrom = 0;
+    for (let f = 0; f < files.length; f++) {
+        const slot = getNextEmptyPhotoSlot(searchFrom);
+        if (slot === -1) break;
+        slots.push({ file: files[f], slot });
+        searchFrom = slot + 1;
+    }
+
+    if (slots.length === 0) {
+        showToast('All photo slots are already filled!', 'info');
+        e.target.value = '';
+        return;
+    }
+
+    const skipped = files.length - slots.length;
+    if (skipped > 0) {
+        showToast(`Only ${slots.length} empty slot(s) available. ${skipped} photo(s) skipped.`, 'info');
+    }
+
+    // Mark all assigned slots as 'uploading' upfront so banner appears immediately
+    slots.forEach(({ slot }) => setSlotUploading(slot));
+
+    // Disable post button
+    uploadingCount += slots.length;
+    document.getElementById('postBtn').disabled = true;
+
+    // Upload all in parallel
+    slots.forEach(({ file, slot }) => {
+        uploadImageToSlot(file, slot, () => {
+            // onprogress callback - update individual slot bar
+        });
+    });
+
+    e.target.value = '';
+}
+
+// ========================================================
+// ✅ UPDATED: triggerUpload — single slot click (empty slot)
+// ========================================================
+function triggerUpload(slot) {
+    if (uploadedImages[slot]) return; // already has image, do nothing (remove btn handles it)
+    activeSlot = slot;
+    document.getElementById('fileInput').value = '';
+    document.getElementById('fileInput').click();
+}
+
+// ========================================================
+// ✅ UPDATED: handleSingleFile — for single slot click upload
+// ========================================================
+function handleSingleFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('File too large! Maximum 5MB allowed.', 'error');
+        e.target.value = '';
+        return;
+    }
+    setSlotUploading(activeSlot);
+    uploadingCount++;
+    document.getElementById('postBtn').disabled = true;
+    uploadImageToSlot(file, activeSlot, null);
+    e.target.value = '';
+}
+
+// ========================================================
+// ✅ NEW CORE: uploadImageToSlot — uploads one file to one slot
+// ========================================================
+function uploadImageToSlot(file, slot, onProgressCallback) {
+    if (file.size > 5 * 1024 * 1024) {
+        showToast(`Slot ${slot + 1}: File too large! Max 5MB.`, 'error');
+        setSlotFailed(slot);
+        uploadingCount--;
+        if (uploadingCount === 0) document.getElementById('postBtn').disabled = false;
+        return;
+    }
+
+    // Show progress bar in slot
+    const bar = document.getElementById(`bar${slot}`);
+    const cont = document.getElementById(`cont${slot}`);
+    const icon = document.getElementById(`icon${slot}`);
+    if (cont) cont.style.display = 'block';
+    if (icon) icon.style.display = 'none';
+
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('upload_preset', UPLOAD_PRESET);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
+
+    xhr.upload.onprogress = (ev) => {
+        if (bar) bar.style.width = (ev.loaded / ev.total * 100) + '%';
+        if (onProgressCallback) onProgressCallback(ev.loaded / ev.total);
+    };
+
+    xhr.onload = () => {
+        if (cont) cont.style.display = 'none';
+        if (xhr.status === 200) {
+            const res = JSON.parse(xhr.responseText);
+            uploadedImages[slot] = { url: res.secure_url, public_id: res.public_id };
+            showImage(slot, res.secure_url);
+            setSlotDone(slot);
+        } else {
+            showToast(`Slot ${slot + 1}: Upload failed. Try again.`, 'error');
+            if (icon) icon.style.display = 'block';
+            setSlotFailed(slot);
+        }
+        uploadingCount--;
+        if (uploadingCount === 0) document.getElementById('postBtn').disabled = false;
+    };
+
+    xhr.onerror = () => {
+        if (cont) cont.style.display = 'none';
+        if (icon) icon.style.display = 'block';
+        showToast(`Slot ${slot + 1}: Upload error. Check connection.`, 'error');
+        setSlotFailed(slot);
+        uploadingCount--;
+        if (uploadingCount === 0) document.getElementById('postBtn').disabled = false;
+    };
+
+    xhr.send(fd);
+}
+
+// ========================================================
+// Everything below is unchanged from original
+// ========================================================
 
 const COUNTRY_CODES={"Afghanistan":"+93","Albania":"+355","Algeria":"+213","Andorra":"+376","Angola":"+244","Antigua and Barbuda":"+1","Argentina":"+54","Armenia":"+374","Australia":"+61","Austria":"+43","Azerbaijan":"+994","Bahamas":"+1","Bahrain":"+973","Bangladesh":"+880","Barbados":"+1","Belarus":"+375","Belgium":"+32","Belize":"+501","Benin":"+229","Bhutan":"+975","Bolivia":"+591","Bosnia and Herzegovina":"+387","Botswana":"+267","Brazil":"+55","Brunei":"+673","Bulgaria":"+359","Burkina Faso":"+226","Burundi":"+257","Cambodia":"+855","Cameroon":"+237","Canada":"+1","Cape Verde":"+238","Central African Republic":"+236","Chad":"+235","Chile":"+56","China":"+86","Colombia":"+57","Comoros":"+269","Congo":"+242","Costa Rica":"+506","Croatia":"+385","Cuba":"+53","Cyprus":"+357","Czech Republic":"+420","DR Congo":"+243","Denmark":"+45","Djibouti":"+253","Dominican Republic":"+1","Ecuador":"+593","Egypt":"+20","El Salvador":"+503","Equatorial Guinea":"+240","Eritrea":"+291","Estonia":"+372","Eswatini":"+268","Ethiopia":"+251","Fiji":"+679","Finland":"+358","France":"+33","Gabon":"+241","Gambia":"+220","Georgia":"+995","Germany":"+49","Ghana":"+233","Greece":"+30","Grenada":"+1","Guatemala":"+502","Guinea":"+224","Guinea-Bissau":"+245","Guyana":"+592","Haiti":"+509","Honduras":"+504","Hungary":"+36","Iceland":"+354","India":"+91","Indonesia":"+62","Iran":"+98","Iraq":"+964","Ireland":"+353","Israel":"+972","Italy":"+39","Ivory Coast":"+225","Jamaica":"+1","Japan":"+81","Jordan":"+962","Kazakhstan":"+7","Kenya":"+254","Kiribati":"+686","Kuwait":"+965","Kyrgyzstan":"+996","Laos":"+856","Latvia":"+371","Lebanon":"+961","Lesotho":"+266","Liberia":"+231","Libya":"+218","Liechtenstein":"+423","Lithuania":"+370","Luxembourg":"+352","Madagascar":"+261","Malawi":"+265","Malaysia":"+60","Maldives":"+960","Mali":"+223","Malta":"+356","Marshall Islands":"+692","Mauritania":"+222","Mauritius":"+230","Mexico":"+52","Micronesia":"+691","Moldova":"+373","Monaco":"+377","Mongolia":"+976","Montenegro":"+382","Morocco":"+212","Mozambique":"+258","Myanmar":"+95","Namibia":"+264","Nauru":"+674","Nepal":"+977","Netherlands":"+31","New Zealand":"+64","Nicaragua":"+505","Niger":"+227","Nigeria":"+234","North Korea":"+850","North Macedonia":"+389","Norway":"+47","Oman":"+968","Pakistan":"+92","Palau":"+680","Palestine":"+970","Panama":"+507","Papua New Guinea":"+675","Paraguay":"+595","Peru":"+51","Philippines":"+63","Poland":"+48","Portugal":"+351","Qatar":"+974","Romania":"+40","Russia":"+7","Rwanda":"+250","Saint Kitts and Nevis":"+1","Saint Lucia":"+1","Saint Vincent and the Grenadines":"+1","Samoa":"+685","San Marino":"+378","Sao Tome and Principe":"+239","Saudi Arabia":"+966","Senegal":"+221","Serbia":"+381","Seychelles":"+248","Sierra Leone":"+232","Singapore":"+65","Slovakia":"+421","Slovenia":"+386","Solomon Islands":"+677","Somalia":"+252","South Africa":"+27","South Korea":"+82","South Sudan":"+211","Spain":"+34","Sri Lanka":"+94","Sudan":"+249","Suriname":"+597","Sweden":"+46","Switzerland":"+41","Syria":"+963","Taiwan":"+886","Tajikistan":"+992","Tanzania":"+255","Thailand":"+66","Timor-Leste":"+670","Togo":"+228","Tonga":"+676","Trinidad and Tobago":"+1","Tunisia":"+216","Turkey":"+90","Turkmenistan":"+993","Tuvalu":"+688","UAE":"+971","Uganda":"+256","Ukraine":"+380","United Kingdom":"+44","United States":"+1","Uruguay":"+598","Uzbekistan":"+998","Vanuatu":"+678","Vatican City":"+39","Venezuela":"+58","Vietnam":"+84","Yemen":"+967","Zambia":"+260","Zimbabwe":"+263"};
 
@@ -391,7 +715,6 @@ function togglePurposeFields(){
 
 function showGPSInfo(){const gi=document.getElementById('gpsInfo');gi.innerHTML='';const icon=document.createElement('i');icon.className='fa fa-check-circle';const text=document.createTextNode(' GPS Captured: '+currentCoords.lat.toFixed(5)+', '+currentCoords.lng.toFixed(5));const br=document.createElement('br');const small=document.createElement('small');small.textContent='Location will be shown on map to buyers';gi.appendChild(icon);gi.appendChild(text);gi.appendChild(br);gi.appendChild(small);gi.style.display='block';}
 
-// ✅ Leaflet initMap
 function initMap(lat,lng){
     const mapDiv=document.getElementById('propertyMap');
     mapDiv.style.display='block';
@@ -400,18 +723,10 @@ function initMap(lat,lng){
     const latF=parseFloat(lat),lngF=parseFloat(lng);
     if(!leafletMap){
         leafletMap=L.map('propertyMap',{zoomControl:true}).setView([latF,lngF],16);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-            attribution:'© OpenStreetMap contributors',maxZoom:19
-        }).addTo(leafletMap);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors',maxZoom:19}).addTo(leafletMap);
         leafletMarker=L.marker([latF,lngF],{draggable:true}).addTo(leafletMap);
-        leafletMarker.on('dragend',function(){
-            const p=leafletMarker.getLatLng();
-            updateCoordsFromMap(p.lat,p.lng);
-        });
-        leafletMap.on('click',function(e){
-            leafletMarker.setLatLng(e.latlng);
-            updateCoordsFromMap(e.latlng.lat,e.latlng.lng);
-        });
+        leafletMarker.on('dragend',function(){const p=leafletMarker.getLatLng();updateCoordsFromMap(p.lat,p.lng);});
+        leafletMap.on('click',function(e){leafletMarker.setLatLng(e.latlng);updateCoordsFromMap(e.latlng.lat,e.latlng.lng);});
     }else{
         leafletMap.setView([latF,lngF],16);
         leafletMarker.setLatLng([latF,lngF]);
@@ -422,20 +737,9 @@ function initMap(lat,lng){
     updatePinInfo(latF,lngF);
 }
 
-function updateCoordsFromMap(lat,lng){
-    currentCoords={lat,lng};
-    document.getElementById('manualLat').value=lat.toFixed(6);
-    document.getElementById('manualLng').value=lng.toFixed(6);
-    updatePinInfo(lat,lng);
-}
+function updateCoordsFromMap(lat,lng){currentCoords={lat,lng};document.getElementById('manualLat').value=lat.toFixed(6);document.getElementById('manualLng').value=lng.toFixed(6);updatePinInfo(lat,lng);}
+function updatePinInfo(lat,lng){currentCoords={lat:parseFloat(lat),lng:parseFloat(lng)};document.getElementById('mapPinText').textContent='Pin set: '+parseFloat(lat).toFixed(5)+', '+parseFloat(lng).toFixed(5)+' — Drag pin to adjust';document.getElementById('mapPinInfo').style.display='block';}
 
-function updatePinInfo(lat,lng){
-    currentCoords={lat:parseFloat(lat),lng:parseFloat(lng)};
-    document.getElementById('mapPinText').textContent='Pin set: '+parseFloat(lat).toFixed(5)+', '+parseFloat(lng).toFixed(5)+' — Drag pin to adjust';
-    document.getElementById('mapPinInfo').style.display='block';
-}
-
-// ✅ Nominatim geocoding (replaces Google Geocoder - FREE)
 async function geocodeAddress(){
     const address=document.getElementById('location').value.trim();
     const country=document.getElementById('selectedCountry').value.trim();
@@ -449,34 +753,36 @@ async function geocodeAddress(){
         const url=`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`;
         const res=await fetch(url,{headers:{'Accept-Language':'en'}});
         const data=await res.json();
-        if(data&&data.length>0){
-            const lat=parseFloat(data[0].lat),lng=parseFloat(data[0].lon);
-            initMap(lat,lng);
-            showToast('✓ Location found on map!','success');
-        }else{
-            showToast('Address not found. Try more specific address or use GPS.','error');
-        }
-    }catch(e){
-        showToast('Map search failed. Check your connection.','error');
-    }
+        if(data&&data.length>0){const lat=parseFloat(data[0].lat),lng=parseFloat(data[0].lon);initMap(lat,lng);showToast('✓ Location found on map!','success');}
+        else{showToast('Address not found. Try more specific address or use GPS.','error');}
+    }catch(e){showToast('Map search failed. Check your connection.','error');}
     btnText.textContent='Get on Map';btnIcon.textContent='🗺️';btn.disabled=false;
 }
 
-function onManualCoordsChange(){
-    const lat=parseFloat(document.getElementById('manualLat').value);
-    const lng=parseFloat(document.getElementById('manualLng').value);
-    if(!isNaN(lat)&&!isNaN(lng)&&lat>=-90&&lat<=90&&lng>=-180&&lng<=180){
-        if(leafletMap){leafletMarker.setLatLng([lat,lng]);leafletMap.setView([lat,lng],15);}
-        else initMap(lat,lng);
-        updatePinInfo(lat,lng);
+function onManualCoordsChange(){const lat=parseFloat(document.getElementById('manualLat').value);const lng=parseFloat(document.getElementById('manualLng').value);if(!isNaN(lat)&&!isNaN(lng)&&lat>=-90&&lat<=90&&lng>=-180&&lng<=180){if(leafletMap){leafletMarker.setLatLng([lat,lng]);leafletMap.setView([lat,lng],15);}else initMap(lat,lng);updatePinInfo(lat,lng);}}
+function onAddressInput(){if(!currentCoords.lat)document.getElementById('mapPinInfo').style.display='none';}
+
+function showImage(slot,url){
+    const box=document.getElementById(`box${slot}`);
+    document.getElementById(`prev${slot}`).src=url;
+    document.getElementById(`prev${slot}`).style.display='block';
+    document.getElementById(`icon${slot}`).style.display='none';
+    if(!box.querySelector('.remove-btn')){
+        const btn=document.createElement('button');
+        btn.className='remove-btn';
+        btn.innerHTML='×';
+        btn.onclick=(e)=>{e.stopPropagation();removeImage(slot);};
+        box.appendChild(btn);
     }
 }
 
-function onAddressInput(){if(!currentCoords.lat)document.getElementById('mapPinInfo').style.display='none';}
-function triggerUpload(slot){if(uploadedImages[slot])return;activeSlot=slot;document.getElementById('fileInput').click();}
-function handleFile(e){const file=e.target.files[0];if(!file)return;if(file.size>5*1024*1024){showToast('File too large! Maximum 5MB allowed.','error');e.target.value='';return;}const bar=document.getElementById(`bar${activeSlot}`);const cont=document.getElementById(`cont${activeSlot}`);const icon=document.getElementById(`icon${activeSlot}`);cont.style.display='block';icon.style.display='none';uploadingCount++;document.getElementById('postBtn').disabled=true;const fd=new FormData();fd.append('file',file);fd.append('upload_preset',UPLOAD_PRESET);const xhr=new XMLHttpRequest();xhr.open('POST',`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);xhr.upload.onprogress=(ev)=>bar.style.width=(ev.loaded/ev.total*100)+'%';xhr.onload=()=>{if(xhr.status===200){const res=JSON.parse(xhr.responseText);uploadedImages[activeSlot]={url:res.secure_url,public_id:res.public_id};showImage(activeSlot,res.secure_url);}else{showToast('Image upload failed.','error');document.getElementById(`icon${activeSlot}`).style.display='block';}cont.style.display='none';uploadingCount--;if(uploadingCount===0)document.getElementById('postBtn').disabled=false;e.target.value='';};xhr.onerror=()=>{showToast('Upload error.','error');cont.style.display='none';icon.style.display='block';uploadingCount--;if(uploadingCount===0)document.getElementById('postBtn').disabled=false;e.target.value='';};xhr.send(fd);}
-function showImage(slot,url){const box=document.getElementById(`box${slot}`);document.getElementById(`prev${slot}`).src=url;document.getElementById(`prev${slot}`).style.display='block';document.getElementById(`icon${slot}`).style.display='none';if(!box.querySelector('.remove-btn')){const btn=document.createElement('button');btn.className='remove-btn';btn.innerHTML='×';btn.onclick=(e)=>{e.stopPropagation();removeImage(slot);};box.appendChild(btn);}}
-function removeImage(slot){uploadedImages[slot]=null;document.getElementById(`prev${slot}`).style.display='none';document.getElementById(`icon${slot}`).style.display='block';const btn=document.getElementById(`box${slot}`).querySelector('.remove-btn');if(btn)btn.remove();}
+function removeImage(slot){
+    uploadedImages[slot]=null;
+    document.getElementById(`prev${slot}`).style.display='none';
+    document.getElementById(`icon${slot}`).style.display='block';
+    const btn=document.getElementById(`box${slot}`).querySelector('.remove-btn');
+    if(btn)btn.remove();
+}
 
 async function submitProperty(){
     const user=firebase.auth().currentUser;
@@ -517,7 +823,6 @@ function showNormalGPSModal(icon,title,desc,yesBtn,settingsBtn,manualBtn){icon.t
 function closeGPSModal(){document.getElementById('gpsModal').style.display='none';}
 function openLocationSettings(){closeGPSModal();showToast('Go to Settings → Privacy → Location → Enable for your browser','info');}
 
-// ✅ GPS + Nominatim reverse geocoding (replaces Google reverse geocoding)
 function confirmGPSCapture(){
     closeGPSModal();
     if(!navigator.geolocation){showToast('GPS not supported. Please enter address manually.','error');return;}
@@ -541,11 +846,7 @@ function confirmGPSCapture(){
                 const state=a.state||a.state_district||'';
                 const city=a.city||a.town||a.village||'';
                 const area=a.suburb||a.neighbourhood||a.county||'';
-                if(countryName){
-                    const found=COUNTRIES.find(c=>c.name.toLowerCase()===countryName.toLowerCase());
-                    if(found)selectCountry(found.name,found.flag);
-                    else{document.getElementById('countrySearch').value=countryName;document.getElementById('selectedCountry').value=countryName;document.getElementById('countryClearBtn').style.display='block';updatePhoneCode(countryName,'🌍');}
-                }
+                if(countryName){const found=COUNTRIES.find(c=>c.name.toLowerCase()===countryName.toLowerCase());if(found)selectCountry(found.name,found.flag);else{document.getElementById('countrySearch').value=countryName;document.getElementById('selectedCountry').value=countryName;document.getElementById('countryClearBtn').style.display='block';updatePhoneCode(countryName,'🌍');}}
                 const parts=[area,city,state].filter(Boolean);
                 if(parts.length>0)document.getElementById('location').value=parts.join(', ');
                 showToast('✓ Address auto-filled from GPS!','success');
