@@ -206,7 +206,7 @@
         <div class="drawer-item" onclick="location.href='my-ads.html'"><i class="fa fa-layer-group" style="color:var(--primary);"></i><span id="myAdsText">My Ads</span></div>
         <div class="drawer-item" onclick="location.href='favorites.html'"><i class="fa fa-heart" style="color:#ff5252;"></i><span id="favsText">Favorites</span></div>
         <div class="drawer-item" onclick="location.href='feedback.html'"><i class="fa fa-comment-dots" style="color:#9C27B0;"></i><span id="feedbackText">Feedback</span></div>
-        <div class="drawer-item" onclick="if(auth.currentUser){location.href='help.html'}else{toggleDrawer();setTimeout(()=>document.getElementById('helpAuthModal').style.display='flex',300)}"><i class="fa fa-question-circle" style="color:#2196F3;"></i><span id="helpText">Help & Support</span></div>
+        <div class="drawer-item" onclick="if(auth.currentUser){location.href='help.html'}else{toggleDrawer();setTimeout(()=>{document.getElementById('helpAuthModal').style.display='flex';document.body.style.overflow='hidden';},300)}"><i class="fa fa-question-circle" style="color:#2196F3;"></i><span id="helpText">Help & Support</span></div>
         <div class="drawer-item" onclick="showAboutAlert()"><i class="fa fa-info-circle" style="color:#FF9800;"></i><span id="aboutText">About Us</span></div>
         <div id="adminSideBtn" class="drawer-item" onclick="location.href='admin.html'" style="display:none; color:#ffd700;"><i class="fa fa-user-shield"></i><span id="adminText">Admin Portal</span></div>
         <div id="logoutBtn" class="drawer-item" style="display:none; color:#d32f2f;" onclick="handleLogout()"><i class="fa fa-sign-out-alt"></i><span id="logoutText">Logout</span></div>
@@ -414,10 +414,12 @@ function trackPostClick() {
         location.href = 'add-property.html';
     } else {
         document.getElementById('postNowModal').style.display = 'flex';
+        document.body.style.overflow='hidden';
     }
 }
 function closePostNowModal() {
     document.getElementById('postNowModal').style.display = 'none';
+    document.body.style.overflow=''; document.body.style.position=''; document.body.style.width='';
 }
 
 function detectUserCurrency() {
@@ -679,6 +681,9 @@ function toggleDrawer() {
     const isOpening=!drawer.classList.contains('open');
     drawer.classList.toggle('open');
     overlay.style.display=drawer.classList.contains('open')?'block':'none';
+    document.body.style.overflow=drawer.classList.contains('open')?'hidden':'';
+    document.body.style.position=drawer.classList.contains('open')?'fixed':'';
+    document.body.style.width=drawer.classList.contains('open')?'100%':'';
     if(isOpening) window.history.pushState({drawer:true},null,window.location.href);
 }
 
@@ -708,8 +713,8 @@ function showToast(message) {
     setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300);},2500);
 }
 
-function showAboutAlert() { document.getElementById("aboutModal").style.display="flex"; }
-function closeAboutModal() { document.getElementById("aboutModal").style.display="none"; }
+function showAboutAlert() { document.getElementById("aboutModal").style.display="flex"; document.body.style.overflow='hidden'; }
+function closeAboutModal() { document.getElementById("aboutModal").style.display="none"; document.body.style.overflow=''; document.body.style.position=''; document.body.style.width=''; }
 document.addEventListener("click",e=>{ const m=document.getElementById("aboutModal"); if(m&&e.target===m) closeAboutModal(); });
 
 function getT() { const l=localStorage.getItem('selectedLang')||'en'; return TRANSLATIONS[l]||TRANSLATIONS['en']; }
@@ -1075,6 +1080,7 @@ function renderAds(ads, append=false) {
                 location.href='chat.html?to='+encodeURIComponent(p.ownerId||'');
             } else {
                 document.getElementById('chatAuthModal').style.display = 'flex';
+                document.body.style.overflow='hidden';
             }
         });
 
@@ -1227,7 +1233,7 @@ setTimeout(initLocationCard, 2000);
 </script>
 
 <!-- Help Auth Modal -->
-<div id="helpAuthModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);display:none;justify-content:center;align-items:center;z-index:9999;" onclick="if(event.target===this)document.getElementById('helpAuthModal').style.display='none'">
+<div id="helpAuthModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);display:none;justify-content:center;align-items:center;z-index:9999;" onclick="if(event.target===this){this.style.display='none';document.body.style.overflow='';document.body.style.position='';document.body.style.width='';}">
   <div style="background:#fff;width:92%;max-width:380px;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:postModalSlideUp 0.35s ease;">
     <div style="background:linear-gradient(135deg,#1565c0,#1976d2);padding:28px 22px 22px;text-align:center;">
       <div style="background:white;border-radius:16px;padding:10px 16px;display:inline-block;margin-bottom:12px;">
@@ -1241,13 +1247,13 @@ setTimeout(initLocationCard, 2000);
       <div style="font-size:15px;font-weight:800;color:#1565c0;text-align:center;margin-bottom:6px;">Login Required</div>
       <div style="font-size:13px;color:#666;text-align:center;margin-bottom:20px;line-height:1.6;">Please login or sign up to access Help & Support and get assistance from our team.</div>
       <button onclick="location.href='login.html'" style="width:100%;background:linear-gradient(135deg,#1976d2,#1565c0);color:white;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;letter-spacing:0.3px;box-shadow:0 4px 15px rgba(25,118,210,0.4);">Login / Sign Up 🚀</button>
-      <button onclick="document.getElementById('helpAuthModal').style.display='none'" style="width:100%;background:transparent;color:#999;border:none;padding:10px;margin-top:8px;font-size:13px;cursor:pointer;font-weight:600;">Cancel</button>
+      <button onclick="document.getElementById('helpAuthModal').style.display='none';document.body.style.overflow='';document.body.style.position='';document.body.style.width='';" style="width:100%;background:transparent;color:#999;border:none;padding:10px;margin-top:8px;font-size:13px;cursor:pointer;font-weight:600;">Cancel</button>
     </div>
   </div>
 </div>
 
 <!-- Chat Auth Modal -->
-<div id="chatAuthModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);display:none;justify-content:center;align-items:center;z-index:9999;" onclick="if(event.target===this)document.getElementById('chatAuthModal').style.display='none'">
+<div id="chatAuthModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);display:none;justify-content:center;align-items:center;z-index:9999;" onclick="if(event.target===this){this.style.display='none';document.body.style.overflow='';document.body.style.position='';document.body.style.width='';}">
   <div style="background:#fff;width:92%;max-width:380px;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:postModalSlideUp 0.35s ease;">
     <div style="background:linear-gradient(135deg,#1b5e20,#2e7d32);padding:28px 22px 22px;text-align:center;">
       <div style="background:white;border-radius:16px;padding:10px 16px;display:inline-block;margin-bottom:12px;">
@@ -1261,7 +1267,7 @@ setTimeout(initLocationCard, 2000);
       <div style="font-size:15px;font-weight:800;color:#1b5e20;text-align:center;margin-bottom:6px;">Login to Start Chatting</div>
       <div style="font-size:13px;color:#666;text-align:center;margin-bottom:20px;line-height:1.6;">Login or Sign Up to chat directly with the seller — completely free! 💬</div>
       <button onclick="location.href='login.html'" style="width:100%;background:linear-gradient(135deg,#2e7d32,#1b5e20);color:white;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;letter-spacing:0.3px;box-shadow:0 4px 15px rgba(46,125,50,0.4);">Login / Sign Up 🚀</button>
-      <button onclick="document.getElementById('chatAuthModal').style.display='none'" style="width:100%;background:transparent;color:#999;border:none;padding:10px;margin-top:8px;font-size:13px;cursor:pointer;font-weight:600;">Cancel</button>
+      <button onclick="document.getElementById('chatAuthModal').style.display='none';document.body.style.overflow='';document.body.style.position='';document.body.style.width='';" style="width:100%;background:transparent;color:#999;border:none;padding:10px;margin-top:8px;font-size:13px;cursor:pointer;font-weight:600;">Cancel</button>
     </div>
   </div>
 </div>
