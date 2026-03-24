@@ -116,6 +116,27 @@
         .submit-btn:active:not(:disabled) { 
             transform: scale(0.98); 
         }
+
+        /* Guest banner */
+        .guest-banner {
+            background: #e3f2fd;
+            border: 1.5px solid #90caf9;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: #1565c0;
+            font-weight: 600;
+        }
+        .guest-banner a {
+            color: #1565c0;
+            font-weight: 800;
+            text-decoration: underline;
+            cursor: pointer;
+        }
         
         /* Previous Feedbacks */
         .section-title { 
@@ -215,6 +236,12 @@
     <div class="feedback-form">
         <div class="form-title">Share Your Feedback</div>
         <div class="form-subtitle">Help us improve Earth Property Global</div>
+
+        <!-- Guest banner — shown only to guests -->
+        <div class="guest-banner" id="guestBanner" style="display:none;">
+            <i class="fa fa-info-circle" style="font-size:16px;flex-shrink:0;"></i>
+            You're submitting as a guest. <a onclick="location.href='login.html'">Login</a> to track your feedback history.
+        </div>
         
         <div class="form-group">
             <label class="form-label">How would you rate us?</label>
@@ -251,15 +278,16 @@
         </button>
     </div>
     
-    <!-- Previous Feedbacks -->
-    <div class="section-title">
-        <i class="fa fa-history"></i>
-        Your Previous Feedbacks
-    </div>
-    
-    <div id="previousFeedbacks" class="loading">
-        <i class="fa fa-spinner fa-spin"></i>
-        <p>Loading your feedbacks...</p>
+    <!-- Previous Feedbacks — only for logged in users -->
+    <div id="previousFeedbacksSection" style="display:none;">
+        <div class="section-title">
+            <i class="fa fa-history"></i>
+            Your Previous Feedbacks
+        </div>
+        <div id="previousFeedbacks" class="loading">
+            <i class="fa fa-spinner fa-spin"></i>
+            <p>Loading your feedbacks...</p>
+        </div>
     </div>
 </div>
 
@@ -290,65 +318,50 @@ function setRating(rating) {
     selectedRating = rating;
     const stars = document.querySelectorAll('.star');
     const ratingTexts = ['Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
-    
     stars.forEach((star, index) => {
-        if (index < rating) {
-            star.classList.add('active');
-        } else {
-            star.classList.remove('active');
-        }
+        if (index < rating) star.classList.add('active');
+        else star.classList.remove('active');
     });
-    
     document.getElementById('ratingText').innerText = `Rating: ${ratingTexts[rating - 1]}`;
 }
 
-// Auth check
+// Auth check — NO redirect, guest allowed
 auth.onAuthStateChanged(user => {
-    if (!user) {
-        location.href = 'login.html';
-        return;
-    }
     currentUser = user;
-    loadPreviousFeedbacks(user.uid);
+    if (user) {
+        // Logged in — hide guest banner, show previous feedbacks
+        document.getElementById('guestBanner').style.display = 'none';
+        document.getElementById('previousFeedbacksSection').style.display = 'block';
+        loadPreviousFeedbacks(user.uid);
+    } else {
+        // Guest — show info banner, hide previous feedbacks
+        document.getElementById('guestBanner').style.display = 'flex';
+        document.getElementById('previousFeedbacksSection').style.display = 'none';
+    }
 });
 
-// Submit feedback
+// Submit feedback — works for both guest and logged in
 async function submitFeedback() {
-    if (!currentUser) {
-        alert('Please login first');
-        return;
-    }
-    
     const category = document.getElementById('category').value;
     const feedbackText = document.getElementById('feedbackText').value.trim();
     
-    if (selectedRating === 0) {
-        alert('Please select a rating');
-        return;
-    }
-    
-    if (!category) {
-        alert('Please select a category');
-        return;
-    }
-    
-    if (!feedbackText || feedbackText.length < 10) {
-        alert('Please write at least 10 characters');
-        return;
-    }
+    if (selectedRating === 0) { alert('Please select a rating'); return; }
+    if (!category) { alert('Please select a category'); return; }
+    if (!feedbackText || feedbackText.length < 10) { alert('Please write at least 10 characters'); return; }
     
     try {
         document.getElementById('submitBtn').disabled = true;
         document.getElementById('submitBtn').innerHTML = '<i class="fa fa-spinner fa-spin"></i> Submitting...';
         
         await db.collection('feedbacks').add({
-            userId: currentUser.uid,
-            userName: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
-            userEmail: currentUser.email || '',
+            userId: currentUser ? currentUser.uid : 'guest',
+            userName: currentUser ? (currentUser.displayName || currentUser.email?.split('@')[0] || 'User') : 'Guest',
+            userEmail: currentUser ? (currentUser.email || '') : '',
             rating: selectedRating,
             category: category,
             feedbackText: feedbackText,
             status: 'pending',
+            isGuest: !currentUser,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         
@@ -362,8 +375,8 @@ async function submitFeedback() {
         document.getElementById('feedbackText').value = '';
         document.getElementById('charCount').innerText = '0';
         
-        // Reload feedbacks
-        loadPreviousFeedbacks(currentUser.uid);
+        // Reload feedbacks if logged in
+        if (currentUser) loadPreviousFeedbacks(currentUser.uid);
         
     } catch (e) {
         alert('Error submitting feedback: ' + e.message);
@@ -373,7 +386,7 @@ async function submitFeedback() {
     }
 }
 
-// Load previous feedbacks
+// Load previous feedbacks — only for logged in users
 function loadPreviousFeedbacks(uid) {
     db.collection('feedbacks')
         .where('userId', '==', uid)
@@ -395,13 +408,9 @@ function loadPreviousFeedbacks(uid) {
             snapshot.forEach(doc => {
                 const d = doc.data();
                 const date = d.createdAt ? d.createdAt.toDate().toLocaleDateString('en-IN', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric'
+                    day: 'numeric', month: 'short', year: 'numeric'
                 }) : 'Just now';
-                
                 const stars = '★'.repeat(d.rating) + '☆'.repeat(5 - d.rating);
-                
                 html += `
                     <div class="feedback-card">
                         <div class="feedback-header">
@@ -414,10 +423,8 @@ function loadPreviousFeedbacks(uid) {
                             <i class="fa fa-${d.status === 'resolved' ? 'check-circle' : 'clock'}"></i>
                             ${d.status === 'resolved' ? 'Resolved' : 'Pending Review'}
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
-            
             container.innerHTML = html;
         });
 }
