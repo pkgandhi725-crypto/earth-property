@@ -81,6 +81,7 @@
             min-width: 100%;
             height: 100%;
             position: relative;
+            cursor: pointer;
         }
         .gallery-slide img {
             width: 100%; height: 100%;
@@ -146,6 +147,25 @@
         }
         .no-image-placeholder i { font-size: 48px; }
         .no-image-placeholder span { font-size: 14px; }
+
+        /* ── TAP TO VIEW HINT ── */
+        .gallery-tap-hint {
+            position: absolute;
+            bottom: 44px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.5);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 4px 12px;
+            border-radius: 20px;
+            pointer-events: none;
+            opacity: 1;
+            transition: opacity 0.5s;
+            white-space: nowrap;
+        }
+        .gallery-tap-hint.hidden { opacity: 0; }
 
         /* ── PURPOSE BADGE ── */
         .purpose-badge {
@@ -596,7 +616,7 @@
         }
         .btn-call:active { transform: scale(0.97); }
 
-        /* ── LOADING ── */
+        /* ── LOADING SCREEN ── */
         .loading-screen {
             position: fixed;
             inset: 0;
@@ -606,13 +626,20 @@
             align-items: center;
             justify-content: center;
             z-index: 9999;
-            gap: 16px;
+            gap: 20px;
         }
-        .loading-logo {
+        .loading-logo-img {
+            width: 120px;
+            height: auto;
+            object-fit: contain;
+        }
+        /* Fallback if logo image fails to load */
+        .loading-logo-text {
             font-family: 'Playfair Display', serif;
-            font-size: 22px;
+            font-size: 20px;
             color: var(--primary);
             font-weight: 700;
+            display: none;
         }
         .loading-spinner-ring {
             width: 44px; height: 44px;
@@ -735,13 +762,200 @@
             border-radius: 8px;
         }
         @keyframes shimmer { to { background-position: -200% 0; } }
+
+        /* ═══════════════════════════════════════
+           FULLSCREEN PHOTO VIEWER
+        ═══════════════════════════════════════ */
+        .photo-viewer {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+        .photo-viewer.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Top bar of viewer */
+        .pv-topbar {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 48px 16px 16px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+        }
+        .pv-close {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: #fff;
+            font-size: 18px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+        }
+        .pv-counter {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            background: rgba(0,0,0,0.4);
+            padding: 5px 14px;
+            border-radius: 20px;
+        }
+        .pv-download {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            text-decoration: none;
+        }
+
+        /* Slides area */
+        .pv-slides-wrap {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+        }
+        .pv-slides {
+            display: flex;
+            height: 100%;
+            width: 100%;
+            transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+            will-change: transform;
+        }
+        .pv-slide {
+            min-width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            position: relative;
+        }
+        .pv-slide img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 4px;
+            user-select: none;
+            -webkit-user-drag: none;
+            /* Pinch zoom via CSS */
+            touch-action: pan-y pinch-zoom;
+        }
+
+        /* Prev/Next arrows (shown on wider screens or always visible) */
+        .pv-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 3;
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+        }
+        .pv-arrow.left { left: 10px; }
+        .pv-arrow.right { right: 10px; }
+        .pv-arrow:active { background: rgba(255,255,255,0.3); }
+
+        /* Bottom dots + thumbnails */
+        .pv-bottom {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            z-index: 2;
+            background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
+            padding: 20px 16px 32px;
+        }
+        .pv-dots {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+        .pv-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.4);
+            transition: all 0.3s;
+            cursor: pointer;
+            border: none;
+        }
+        .pv-dot.active {
+            background: #fff;
+            width: 20px;
+            border-radius: 3px;
+        }
+        /* Thumbnails strip */
+        .pv-thumbs {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+            padding-bottom: 2px;
+        }
+        .pv-thumbs::-webkit-scrollbar { display: none; }
+        .pv-thumb {
+            min-width: 56px;
+            height: 56px;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border-color 0.2s, opacity 0.2s;
+            scroll-snap-align: start;
+            flex-shrink: 0;
+            opacity: 0.5;
+        }
+        .pv-thumb.active {
+            border-color: #fff;
+            opacity: 1;
+        }
+        .pv-thumb img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+        }
+        .pv-thumb-video {
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            background: #333;
+            color: #fff;
+            font-size: 18px;
+        }
     </style>
 </head>
 <body>
 
 <!-- Loading Screen -->
 <div class="loading-screen" id="loadingScreen">
-    <div class="loading-logo">🌍 The Earth Property</div>
+    <img
+        class="loading-logo-img"
+        src="logo.png"
+        alt="The Earth Property"
+        onerror="this.style.display='none'; document.querySelector('.loading-logo-text').style.display='block';"
+    >
+    <span class="loading-logo-text">🌍 The Earth Property</span>
     <div class="loading-spinner-ring"></div>
 </div>
 
@@ -767,6 +981,7 @@
     <div class="gallery-dots" id="galleryDots"></div>
     <div class="gallery-count" id="galleryCount" style="display:none;"></div>
     <div class="purpose-badge" id="purposeBadge"></div>
+    <div class="gallery-tap-hint" id="galleryTapHint">👆 Tap photo to view fullscreen</div>
 </div>
 
 <!-- Content -->
@@ -887,6 +1102,34 @@
     </div>
 </div>
 
+<!-- ═══════════════════════════════════════
+     FULLSCREEN PHOTO VIEWER
+═══════════════════════════════════════ -->
+<div class="photo-viewer" id="photoViewer">
+    <!-- Top bar -->
+    <div class="pv-topbar">
+        <button class="pv-close" onclick="closePhotoViewer()"><i class="fa fa-times"></i></button>
+        <span class="pv-counter" id="pvCounter">1 / 1</span>
+        <a class="pv-download" id="pvDownload" href="#" download target="_blank" title="Open photo">
+            <i class="fa fa-external-link-alt"></i>
+        </a>
+    </div>
+
+    <!-- Slides -->
+    <div class="pv-slides-wrap">
+        <div class="pv-slides" id="pvSlides"></div>
+        <!-- Arrows -->
+        <button class="pv-arrow left" id="pvPrev" onclick="pvGoSlide(pvIndex - 1)"><i class="fa fa-chevron-left"></i></button>
+        <button class="pv-arrow right" id="pvNext" onclick="pvGoSlide(pvIndex + 1)"><i class="fa fa-chevron-right"></i></button>
+    </div>
+
+    <!-- Bottom: dots + thumbs -->
+    <div class="pv-bottom">
+        <div class="pv-dots" id="pvDots"></div>
+        <div class="pv-thumbs" id="pvThumbs"></div>
+    </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -942,9 +1185,11 @@ function buildGallery(images) {
     const slides = document.getElementById('gallerySlides');
     const dots = document.getElementById('galleryDots');
     const count = document.getElementById('galleryCount');
+    const hint = document.getElementById('galleryTapHint');
 
     if (galleryItems.length === 0) {
         slides.innerHTML = `<div class="gallery-slide"><div class="no-image-placeholder"><i class="fa fa-home"></i><span>No photos available</span></div></div>`;
+        if (hint) hint.classList.add('hidden');
         return;
     }
 
@@ -952,14 +1197,15 @@ function buildGallery(images) {
         if (img.type === 'video' && img.videoUrl) {
             const ytId = getYouTubeId(img.videoUrl);
             const thumb = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : '';
-            return `<div class="gallery-slide" data-video="${escHtml(img.videoUrl)}">
+            return `<div class="gallery-slide" data-video="${escHtml(img.videoUrl)}" onclick="openVideo('${escHtml(img.videoUrl)}')">
                 ${thumb ? `<img src="${thumb}" class="video-thumb" loading="lazy">` : '<div style="width:100%;height:100%;background:#111;"></div>'}
-                <div class="gallery-play-btn" onclick="openVideo('${escHtml(img.videoUrl)}')">
+                <div class="gallery-play-btn">
                     <div class="play-circle"><i class="fa fa-play"></i></div>
                 </div>
             </div>`;
         }
-        return `<div class="gallery-slide"><img src="${escHtml(img.url)}" loading="${i===0?'eager':'lazy'}" alt="Property photo ${i+1}"></div>`;
+        // Photo slide — tap opens fullscreen viewer
+        return `<div class="gallery-slide" onclick="openPhotoViewer(${i})"><img src="${escHtml(img.url)}" loading="${i===0?'eager':'lazy'}" alt="Property photo ${i+1}"></div>`;
     }).join('');
 
     if (galleryItems.length > 1) {
@@ -968,7 +1214,12 @@ function buildGallery(images) {
         count.style.display = 'block';
     }
 
-    // Swipe support
+    // Hide hint after 3 seconds or first tap
+    if (hint) {
+        setTimeout(() => hint.classList.add('hidden'), 3000);
+    }
+
+    // Swipe support on gallery
     let startX = 0;
     const wrap = document.getElementById('galleryWrap');
     wrap.addEventListener('touchstart', e => startX = e.touches[0].clientX, {passive:true});
@@ -1001,6 +1252,149 @@ function escHtml(str) {
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ═══════════════════════════════════════
+//  FULLSCREEN PHOTO VIEWER
+// ═══════════════════════════════════════
+let pvIndex = 0;
+let pvPhotoItems = []; // only photo items (no videos)
+let pvStartX = 0, pvStartY = 0, pvDragging = false;
+
+function openPhotoViewer(galleryIdx) {
+    // Build photo-only list
+    pvPhotoItems = galleryItems.filter(img => img.type !== 'video' && img.url);
+    // Map galleryIdx to pvPhotoItems index
+    const clickedItem = galleryItems[galleryIdx];
+    if (!clickedItem || clickedItem.type === 'video') return;
+    pvIndex = pvPhotoItems.findIndex(img => img.url === clickedItem.url);
+    if (pvIndex < 0) pvIndex = 0;
+
+    buildPvSlides();
+    pvGoSlide(pvIndex, false);
+
+    document.getElementById('photoViewer').classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    // Hide gallery tap hint forever
+    const hint = document.getElementById('galleryTapHint');
+    if (hint) hint.classList.add('hidden');
+}
+
+function closePhotoViewer() {
+    document.getElementById('photoViewer').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+function buildPvSlides() {
+    const slidesEl = document.getElementById('pvSlides');
+    const thumbsEl = document.getElementById('pvThumbs');
+    const dotsEl   = document.getElementById('pvDots');
+
+    slidesEl.innerHTML = pvPhotoItems.map((img, i) =>
+        `<div class="pv-slide">
+            <img src="${escHtml(img.url)}" alt="Photo ${i+1}" loading="${i===0?'eager':'lazy'}">
+        </div>`
+    ).join('');
+
+    thumbsEl.innerHTML = pvPhotoItems.map((img, i) =>
+        `<div class="pv-thumb ${i===pvIndex?'active':''}" id="pvThumb${i}" onclick="pvGoSlide(${i})">
+            <img src="${escHtml(img.url)}" alt="Thumb ${i+1}" loading="lazy">
+        </div>`
+    ).join('');
+
+    // Dots only if <= 10 photos
+    if (pvPhotoItems.length <= 10) {
+        dotsEl.innerHTML = pvPhotoItems.map((_, i) =>
+            `<button class="pv-dot ${i===pvIndex?'active':''}" id="pvDot${i}" onclick="pvGoSlide(${i})"></button>`
+        ).join('');
+    } else {
+        dotsEl.innerHTML = '';
+    }
+
+    // Show/hide arrows
+    const prev = document.getElementById('pvPrev');
+    const next = document.getElementById('pvNext');
+    if (pvPhotoItems.length <= 1) {
+        prev.style.display = 'none';
+        next.style.display = 'none';
+    } else {
+        prev.style.display = 'flex';
+        next.style.display = 'flex';
+    }
+
+    // Touch swipe on viewer
+    slidesEl.addEventListener('touchstart', pvTouchStart, {passive:true});
+    slidesEl.addEventListener('touchend', pvTouchEnd, {passive:true});
+}
+
+function pvGoSlide(idx, animate = true) {
+    if (pvPhotoItems.length === 0) return;
+    pvIndex = Math.max(0, Math.min(idx, pvPhotoItems.length - 1));
+
+    const slidesEl = document.getElementById('pvSlides');
+    if (!animate) slidesEl.style.transition = 'none';
+    slidesEl.style.transform = `translateX(-${pvIndex * 100}%)`;
+    if (!animate) {
+        // Force reflow then re-enable transition
+        slidesEl.getBoundingClientRect();
+        slidesEl.style.transition = '';
+    }
+
+    // Update counter
+    document.getElementById('pvCounter').textContent = `${pvIndex + 1} / ${pvPhotoItems.length}`;
+
+    // Update download link
+    const dlLink = document.getElementById('pvDownload');
+    if (dlLink && pvPhotoItems[pvIndex]) dlLink.href = pvPhotoItems[pvIndex].url;
+
+    // Update dots
+    document.querySelectorAll('.pv-dot').forEach((d, i) => d.classList.toggle('active', i === pvIndex));
+
+    // Update thumbs
+    document.querySelectorAll('.pv-thumb').forEach((t, i) => t.classList.toggle('active', i === pvIndex));
+
+    // Scroll active thumb into view
+    const activeThumb = document.getElementById(`pvThumb${pvIndex}`);
+    if (activeThumb) activeThumb.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+
+    // Update arrow visibility at edges
+    const prev = document.getElementById('pvPrev');
+    const next = document.getElementById('pvNext');
+    if (prev) prev.style.opacity = pvIndex === 0 ? '0.3' : '1';
+    if (next) next.style.opacity = pvIndex === pvPhotoItems.length - 1 ? '0.3' : '1';
+}
+
+function pvTouchStart(e) {
+    pvStartX = e.touches[0].clientX;
+    pvStartY = e.touches[0].clientY;
+    pvDragging = true;
+}
+
+function pvTouchEnd(e) {
+    if (!pvDragging) return;
+    pvDragging = false;
+    const dx = pvStartX - e.changedTouches[0].clientX;
+    const dy = pvStartY - e.changedTouches[0].clientY;
+    // Only swipe if horizontal movement dominates
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+        pvGoSlide(dx > 0 ? pvIndex + 1 : pvIndex - 1);
+    }
+}
+
+// Close viewer on back button (Android)
+window.addEventListener('popstate', () => {
+    if (document.getElementById('photoViewer').classList.contains('open')) {
+        closePhotoViewer();
+    }
+});
+
+// Keyboard support
+document.addEventListener('keydown', e => {
+    if (!document.getElementById('photoViewer').classList.contains('open')) return;
+    if (e.key === 'ArrowRight') pvGoSlide(pvIndex + 1);
+    if (e.key === 'ArrowLeft')  pvGoSlide(pvIndex - 1);
+    if (e.key === 'Escape') closePhotoViewer();
+});
+
 // ── LOAD PROPERTY ──
 async function loadProperty() {
     if (!propertyId) { showNotFound(); return; }
@@ -1009,10 +1403,7 @@ async function loadProperty() {
         if (!doc.exists) { showNotFound(); return; }
         propertyData = { id: doc.id, ...doc.data() };
 
-        // Check expiry
-        if (propertyData.isExpired) {
-            showExpired(); return;
-        }
+        if (propertyData.isExpired) { showExpired(); return; }
 
         renderProperty();
         loadSellerInfo();
@@ -1027,19 +1418,15 @@ async function loadProperty() {
 function renderProperty() {
     const d = propertyData;
 
-    // Gallery
     buildGallery(d.images);
 
-    // Purpose badge
     const badge = document.getElementById('purposeBadge');
     badge.textContent = getPurposeLabel(d.purpose);
     badge.className = `purpose-badge ${getPurposeBadgeClass(d.purpose)}`;
 
-    // Title card
     const titleCard = document.getElementById('titleCard');
     let verifiedHtml = d.isVerified ? `<div class="verified-tag"><i class="fa fa-certificate"></i> Verified Dealer${d.dealerName ? ' · ' + escHtml(d.dealerName) : ''}</div>` : '';
 
-    // Price display
     let priceHtml = '';
     if (d.purpose === 'RentSell') {
         priceHtml = `<div class="price-row">
@@ -1095,7 +1482,6 @@ function renderProperty() {
         qs.classList.remove('hidden');
     }
 
-    // Area Card — lot + floor
     if (d.lotArea || d.floorArea) {
         const ah = document.getElementById('areaHighlight');
         let areaHtml = '';
@@ -1105,7 +1491,6 @@ function renderProperty() {
         document.getElementById('areaCard').classList.remove('hidden');
     }
 
-    // Details Grid
     const details = [];
     if (d.size) details.push({ icon: '📐', label: 'Property Size', value: d.size });
     if (d.nearby) details.push({ icon: '📍', label: 'Nearby', value: d.nearby });
@@ -1147,18 +1532,15 @@ function renderProperty() {
         document.getElementById('detailsCard').classList.remove('hidden');
     }
 
-    // Description
     if (d.description) {
         document.getElementById('descText').textContent = d.description;
         document.getElementById('descCard').classList.remove('hidden');
-        // Hide read more if short
         if (d.description.length < 200) {
             document.getElementById('readMoreBtn').style.display = 'none';
             document.getElementById('descText').classList.remove('collapsed');
         }
     }
 
-    // Location
     const locationCard = document.getElementById('locationCard');
     document.getElementById('locationText').textContent = [d.location, d.country].filter(Boolean).join(', ');
     if (d.latitude && d.longitude) {
@@ -1168,7 +1550,6 @@ function renderProperty() {
     }
     locationCard.classList.remove('hidden');
 
-    // Expiry info
     if (d.expiryDate) {
         const expDate = d.expiryDate.toDate ? d.expiryDate.toDate() : new Date(d.expiryDate);
         const daysLeft = Math.ceil((expDate - new Date()) / (1000 * 60 * 60 * 24));
@@ -1179,7 +1560,6 @@ function renderProperty() {
         }
     }
 
-    // Bottom bar
     document.getElementById('bottomBar').classList.remove('hidden');
 }
 
@@ -1189,7 +1569,6 @@ async function loadSellerInfo() {
     sellerCard.classList.remove('hidden');
 
     try {
-        // Get seller info from users collection
         const usersSnap = await db.collection('users').where('__name__', '==', d.ownerId).get();
         let sellerName = 'Property Owner';
         let epId = d.ownerEpId || '';
