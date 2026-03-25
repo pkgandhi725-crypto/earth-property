@@ -1252,6 +1252,22 @@ function escHtml(str) {
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ✅ ADD THIS BELOW
+function setMeta(name, content, isProperty = false) {
+    let el = isProperty 
+        ? document.querySelector(`meta[property="${name}"]`)
+        : document.querySelector(`meta[name="${name}"]`);
+
+    if (!el) {
+        el = document.createElement('meta');
+        if (isProperty) el.setAttribute('property', name);
+        else el.setAttribute('name', name);
+        document.head.appendChild(el);
+    }
+
+    el.setAttribute('content', content);
+}
+
 // ═══════════════════════════════════════
 //  FULLSCREEN PHOTO VIEWER
 // ═══════════════════════════════════════
@@ -1418,6 +1434,31 @@ async function loadProperty() {
 function renderProperty() {
     const d = propertyData;
 
+    // ✅ ADD THIS HERE
+    const metaTitle = `${d.title} - ${d.location || ''} | The Earth Property`;
+
+    const metaDesc = `${getPurposeLabel(d.purpose)} property in ${d.location || ''}. Price: ${formatPrice(d.price, d.currency)}. ${
+        d.description ? d.description.substring(0, 120) + '...' : ''
+    }`;
+
+    const metaImage = (d.images && d.images[0]) 
+        ? (d.images[0].url || '') 
+        : 'https://theearthproperty.com/logo.png';
+
+    const metaUrl = window.location.href;
+
+    document.title = metaTitle;
+    setMeta('description', metaDesc);
+    setMeta('og:title', metaTitle, true);
+    setMeta('og:description', metaDesc, true);
+    setMeta('og:image', metaImage, true);
+    setMeta('og:url', metaUrl, true);
+    setMeta('og:type', 'website', true);
+    setMeta('twitter:title', metaTitle, true);
+    setMeta('twitter:description', metaDesc, true);
+    setMeta('twitter:image', metaImage, true);
+
+    // 👇 YE LINE PEHLE SE HAI (isko rehne dena)
     buildGallery(d.images);
 
     const badge = document.getElementById('purposeBadge');
