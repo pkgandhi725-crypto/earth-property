@@ -1457,8 +1457,35 @@ function renderProperty() {
     setMeta('twitter:title', metaTitle, true);
     setMeta('twitter:description', metaDesc, true);
     setMeta('twitter:image', metaImage, true);
+    // ── JSON-LD SCHEMA ──
+    const schema = {
+        "@context": "https://schema.org",
+        "@type": "RealEstateListing",
+        "name": d.title,
+        "description": d.description || metaDesc,
+        "url": metaUrl,
+        "image": metaImage,
+        "offers": {
+            "@type": "Offer",
+            "price": d.price || d.sellPrice || 0,
+            "priceCurrency": d.currency || d.sellCurrency || "INR"
+        },
+        "address": {
+            "@type": "PostalAddress",
+            "addressLocality": d.location || "",
+            "addressCountry": d.country || ""
+        }
+    };
+    let schemaEl = document.getElementById('jsonLdSchema');
+    if (!schemaEl) {
+        schemaEl = document.createElement('script');
+        schemaEl.id = 'jsonLdSchema';
+        schemaEl.type = 'application/ld+json';
+        document.head.appendChild(schemaEl);
+    }
+    schemaEl.textContent = JSON.stringify(schema);
+    // ── END JSON-LD ──
 
-    // 👇 YE LINE PEHLE SE HAI (isko rehne dena)
     buildGallery(d.images);
 
     const badge = document.getElementById('purposeBadge');
