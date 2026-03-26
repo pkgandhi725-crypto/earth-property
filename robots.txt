@@ -2,10 +2,14 @@ User-agent: *
 Allow: /
 
 Disallow: /admin.html
+Disallow: /admin-verify.html
+Disallow: /admin-reports.html
 Disallow: /profile.html
 Disallow: /favorites.html
 Disallow: /chat.html
 Disallow: /notifications.html
 Disallow: /my-ads.html
+Disallow: /inbox.html
+Disallow: /add-property.html
 
 Sitemap: https://theearthproperty.com/sitemap.xml
