@@ -494,22 +494,62 @@ function toggleAmenity(key, el) {
 
 // ---- COUNTRY → CURRENCY MAP ----
 const COUNTRY_CURRENCY = {
-    "India": "INR", "United States": "USD", "UAE": "AED", "Saudi Arabia": "SAR",
-    "United Kingdom": "GBP", "France": "EUR", "Germany": "EUR", "Italy": "EUR",
-    "Spain": "EUR", "Netherlands": "EUR", "Portugal": "EUR", "Belgium": "EUR",
-    "Austria": "EUR", "Finland": "EUR", "Greece": "EUR", "Ireland": "EUR",
-    "Luxembourg": "EUR", "Malta": "EUR", "Cyprus": "EUR", "Slovakia": "EUR",
-    "Slovenia": "EUR", "Estonia": "EUR", "Latvia": "EUR", "Lithuania": "EUR",
-    "Pakistan": "PKR", "Bangladesh": "BDT", "Singapore": "SGD", "Malaysia": "MYR",
-    "Canada": "CAD", "Australia": "AUD", "Nigeria": "NGN", "Ghana": "GHS",
-    "Kenya": "KES", "Uganda": "UGX", "Rwanda": "RWF", "Nepal": "NPR",
-    "Sri Lanka": "LKR", "South Africa": "ZAR", "Tanzania": "TZS",
-    "Philippines": "PHP", "Indonesia": "IDR", "Thailand": "THB", "Vietnam": "VND",
-    "Turkey": "TRY", "Brazil": "BRL", "Mexico": "MXN", "Kuwait": "KWD",
-    "Qatar": "QAR", "Oman": "OMR", "Bahrain": "BHD", "Jordan": "JOD",
-    "Egypt": "EGP", "Morocco": "MAD", "China": "CNY", "Japan": "JPY",
-    "South Korea": "KRW", "Russia": "RUB", "Switzerland": "CHF", "Sweden": "SEK",
-    "Norway": "NOK", "Denmark": "DKK", "Poland": "PLN"
+    // Asia
+    "India":"INR","Pakistan":"PKR","Bangladesh":"BDT","Nepal":"NPR","Sri Lanka":"LKR",
+    "Singapore":"SGD","Malaysia":"MYR","Indonesia":"IDR","Philippines":"PHP","Thailand":"THB",
+    "Vietnam":"VND","China":"CNY","Japan":"JPY","South Korea":"KRW","Myanmar":"INR",
+    "Cambodia":"USD","Laos":"USD","Brunei":"SGD","Timor-Leste":"USD","Mongolia":"USD",
+    "Afghanistan":"USD","Bhutan":"INR","Maldives":"USD","Taiwan":"USD",
+    // Middle East
+    "UAE":"AED","Saudi Arabia":"SAR","Kuwait":"KWD","Qatar":"QAR","Oman":"OMR",
+    "Bahrain":"BHD","Jordan":"JOD","Iraq":"USD","Syria":"USD","Lebanon":"USD",
+    "Yemen":"USD","Palestine":"USD","Israel":"USD","Iran":"USD",
+    // Africa
+    "Nigeria":"NGN","Ghana":"GHS","Kenya":"KES","Uganda":"UGX","Rwanda":"RWF",
+    "Tanzania":"TZS","South Africa":"ZAR","Egypt":"EGP","Morocco":"MAD",
+    "Ethiopia":"USD","Senegal":"USD","Ivory Coast":"USD","Cameroon":"USD",
+    "DR Congo":"USD","Congo":"USD","Angola":"USD","Zambia":"USD","Zimbabwe":"USD",
+    "Mozambique":"USD","Madagascar":"USD","Malawi":"USD","Botswana":"ZAR",
+    "Namibia":"ZAR","Eswatini":"ZAR","Lesotho":"ZAR","Sudan":"USD","Libya":"USD",
+    "Algeria":"USD","Tunisia":"USD","Somalia":"USD","South Sudan":"USD",
+    "Eritrea":"USD","Djibouti":"USD","Comoros":"USD","Cape Verde":"USD",
+    "Sao Tome and Principe":"USD","Equatorial Guinea":"USD","Gabon":"USD",
+    "Central African Republic":"USD","Chad":"USD","Niger":"USD","Mali":"USD",
+    "Burkina Faso":"USD","Togo":"USD","Benin":"USD","Guinea":"USD",
+    "Guinea-Bissau":"USD","Sierra Leone":"USD","Liberia":"USD","Gambia":"USD",
+    "Mauritania":"USD","Mauritius":"USD","Seychelles":"USD",
+    // Europe
+    "United Kingdom":"GBP","Switzerland":"CHF","Sweden":"SEK","Norway":"NOK",
+    "Denmark":"DKK","Poland":"PLN","Russia":"RUB","Ukraine":"USD","Turkey":"TRY",
+    "Czech Republic":"USD","Hungary":"USD","Romania":"USD","Serbia":"USD",
+    "Croatia":"EUR","Bulgaria":"USD","Belarus":"USD","Moldova":"USD",
+    "Georgia":"USD","Armenia":"USD","Azerbaijan":"USD","Kazakhstan":"USD",
+    "Uzbekistan":"USD","Kyrgyzstan":"USD","Tajikistan":"USD","Turkmenistan":"USD",
+    "Albania":"EUR","Bosnia and Herzegovina":"EUR","Montenegro":"EUR",
+    "North Macedonia":"EUR","Kosovo":"EUR","Slovenia":"EUR","Slovakia":"EUR",
+    "Estonia":"EUR","Latvia":"EUR","Lithuania":"EUR","Cyprus":"EUR","Malta":"EUR",
+    "Luxembourg":"EUR","Belgium":"EUR","Netherlands":"EUR","Austria":"EUR",
+    "Finland":"EUR","Greece":"EUR","Portugal":"EUR","Spain":"EUR","Italy":"EUR",
+    "France":"EUR","Germany":"EUR","Ireland":"EUR","Iceland":"USD",
+    "Liechtenstein":"CHF","Monaco":"EUR","San Marino":"EUR","Andorra":"EUR",
+    "Vatican City":"EUR",
+    // Americas
+    "United States":"USD","Canada":"CAD","Mexico":"MXN","Brazil":"BRL",
+    "Argentina":"USD","Colombia":"USD","Chile":"USD","Peru":"USD","Venezuela":"USD",
+    "Ecuador":"USD","Bolivia":"USD","Paraguay":"USD","Uruguay":"USD","Guyana":"USD",
+    "Suriname":"USD","Trinidad and Tobago":"USD","Jamaica":"USD","Cuba":"USD",
+    "Haiti":"USD","Dominican Republic":"USD","Barbados":"USD",
+    "Saint Kitts and Nevis":"USD","Saint Lucia":"USD",
+    "Saint Vincent and the Grenadines":"USD","Grenada":"USD",
+    "Antigua and Barbuda":"USD","Belize":"USD","Guatemala":"USD","Honduras":"USD",
+    "El Salvador":"USD","Nicaragua":"USD","Costa Rica":"USD","Panama":"USD",
+    // Oceania
+    "Australia":"AUD","New Zealand":"USD","Papua New Guinea":"USD","Fiji":"USD",
+    "Solomon Islands":"USD","Vanuatu":"USD","Samoa":"USD","Tonga":"USD",
+    "Kiribati":"USD","Tuvalu":"USD","Nauru":"USD","Micronesia":"USD",
+    "Marshall Islands":"USD","Palau":"USD","Timor-Leste":"USD",
+    // Other
+    "North Korea":"USD","South Sudan":"USD","Taiwan":"USD"
 };
 
 // Store last set currency globally
