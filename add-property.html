@@ -512,16 +512,25 @@ const COUNTRY_CURRENCY = {
     "Norway": "NOK", "Denmark": "DKK", "Poland": "PLN"
 };
 
-// Store last set currency so togglePurposeFields can re-apply it
+// Store last set currency globally
 let _lastCurrencyCode = null;
 
 function setAllCurrencies(currencyCode) {
+    if (!currencyCode) return;
     _lastCurrencyCode = currencyCode;
     const ids = ['currency','rentCurrency','rsSelCurrency','rsRentCurrency'];
     ids.forEach(id => {
         const sel = document.getElementById(id);
         if (!sel) return;
-        sel.value = currencyCode; // direct assignment works on hidden selects too
+        // Store on element so re-apply works after show/hide
+        sel.dataset.pendingCurrency = currencyCode;
+        // Iterate options — works even in hidden parents
+        for (let i = 0; i < sel.options.length; i++) {
+            if (sel.options[i].value === currencyCode) {
+                sel.selectedIndex = i;
+                break;
+            }
+        }
     });
 }
 
@@ -741,8 +750,19 @@ function togglePurposeFields(){
     if(p==='RentSell'||p==='CommercialRentSell'){sp.style.display='none';rp.style.display='none';}
     else if(p==='Rent'||p==='PG'||p==='CommercialRent'){sp.style.display='none';rp.style.display='block';}
     else{sp.style.display='block';rp.style.display='none';}
-    // Re-apply currency after DOM changes
-    if(_lastCurrencyCode) setAllCurrencies(_lastCurrencyCode);
+    // Re-apply currency to every select that now has a pending value
+    if (_lastCurrencyCode) {
+        ['currency','rentCurrency','rsSelCurrency','rsRentCurrency'].forEach(id => {
+            const sel = document.getElementById(id);
+            if (!sel) return;
+            for (let i = 0; i < sel.options.length; i++) {
+                if (sel.options[i].value === _lastCurrencyCode) {
+                    sel.selectedIndex = i;
+                    break;
+                }
+            }
+        });
+    }
 }
 
 function showGPSInfo(){const gi=document.getElementById('gpsInfo');gi.innerHTML='';const icon=document.createElement('i');icon.className='fa fa-check-circle';const text=document.createTextNode(' GPS Captured: '+currentCoords.lat.toFixed(5)+', '+currentCoords.lng.toFixed(5));const br=document.createElement('br');const small=document.createElement('small');small.textContent='Location will be shown on map to buyers';gi.appendChild(icon);gi.appendChild(text);gi.appendChild(br);gi.appendChild(small);gi.style.display='block';}
