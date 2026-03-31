@@ -1021,6 +1021,12 @@
         <button class="read-more-btn" id="readMoreBtn" onclick="toggleDesc()">Read more ↓</button>
     </div>
 
+    <!-- Amenities -->
+    <div class="section-card hidden" id="amenitiesCard">
+    <div class="section-heading"><span>✨ Amenities</span></div>
+    <div class="amenities-list" id="amenitiesList"></div>
+    </div>
+
     <!-- Location -->
     <div class="section-card hidden" id="locationCard">
         <div class="section-heading"><span>📍 Location</span></div>
@@ -1608,6 +1614,23 @@ function renderProperty() {
             document.getElementById('descText').classList.remove('collapsed');
         }
     }
+
+    // Amenities
+    const AMENITY_LABELS = {
+    parking:'🚗 Parking', lift:'🛗 Lift / Elevator', security:'💂 24/7 Security',
+    cctv:'📹 CCTV', gym:'🏋️ Gym', pool:'🏊 Swimming Pool', clubhouse:'🏠 Clubhouse',
+    garden:'🌳 Garden / Park', wifi:'📶 WiFi', powerbackup:'🔋 Power Backup',
+    water24:'💧 24/7 Water', gas:'🔥 Piped Gas', balcony:'🏗️ Balcony',
+    petfriendly:'🐾 Pet Friendly', hospital:'🏥 Near Hospital', school:'🏫 Near School'
+};
+
+    if (Array.isArray(d.amenities) && d.amenities.length > 0) {
+    const al = document.getElementById('amenitiesList');
+    al.innerHTML = d.amenities.map(key =>
+        `<div class="amenity-chip">${AMENITY_LABELS[key] || key}</div>`
+    ).join('');
+    document.getElementById('amenitiesCard').classList.remove('hidden');
+}
 
     const locationCard = document.getElementById('locationCard');
     document.getElementById('locationText').textContent = [d.location, d.country].filter(Boolean).join(', ');
