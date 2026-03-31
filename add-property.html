@@ -516,10 +516,20 @@ function setAllCurrencies(currencyCode) {
     const ids = ['currency','rentCurrency','rsSelCurrency','rsRentCurrency'];
     ids.forEach(id => {
         const sel = document.getElementById(id);
-        if (sel) {
-            // Try to select the matching option
+        if (!sel) return;
+        // Works even if element is hidden (display:none)
+        let found = false;
+        for (let i = 0; i < sel.options.length; i++) {
+            if (sel.options[i].value === currencyCode) {
+                sel.selectedIndex = i;
+                found = true;
+                break;
+            }
+        }
+        // Fallback: if exact code not found, try first word match (e.g. "INR" in "🇮🇳 ₹")
+        if (!found) {
             for (let i = 0; i < sel.options.length; i++) {
-                if (sel.options[i].value === currencyCode) {
+                if (sel.options[i].text.includes(currencyCode)) {
                     sel.selectedIndex = i;
                     break;
                 }
@@ -681,7 +691,7 @@ function updatePhoneCode(countryName, countryFlag) {
     }
     // Auto-set currency
     const curr = COUNTRY_CURRENCY[countryName];
-    if (curr) setAllCurrencies(curr);
+    if (curr) { setAllCurrencies(curr); setTimeout(() => setAllCurrencies(curr), 50); }
 }
 
 function filterCountries(){const q=document.getElementById('countrySearch').value.toLowerCase().trim();const dd=document.getElementById('countryDropdown');const cb=document.getElementById('countryClearBtn');cb.style.display=q?'block':'none';renderDropdown(q?COUNTRIES.filter(c=>c.name.toLowerCase().includes(q)):COUNTRIES);dd.style.display='block';}
