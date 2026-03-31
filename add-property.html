@@ -44,7 +44,6 @@
         .prog-container { width: 80%; height: 6px; background: #eee; border-radius: 10px; overflow: hidden; display: none; z-index: 5; }
         .prog-bar { height: 100%; background: var(--primary); width: 0%; transition: width 0.2s; }
 
-        /* ✅ NEW: Overall upload progress banner */
         #uploadProgressBanner {
             display: none;
             background: #e8f5e9;
@@ -159,6 +158,19 @@
         .map-coords-row input:focus { border-color: var(--primary); background: #fff; outline: none; }
         #mapPinInfo { font-size: 12px; color: #2e7d32; margin-top: 8px; display: none; background: #e8f5e9; padding: 8px 12px; border-radius: 8px; }
         #coordsHint { font-size: 11px; color: #999; margin-top: 5px; display: none; }
+
+        /* ---- AMENITIES ---- */
+        .amenities-section { background: #fff; border: 1px solid #e0e0e0; border-radius: 14px; padding: 16px; margin-bottom: 18px; }
+        .amenities-title { font-size: 14px; font-weight: 700; color: var(--primary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+        .amenities-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .amenity-item { display: flex; align-items: center; gap: 8px; background: #f8f9fa; border: 1.5px solid #e0e0e0; border-radius: 10px; padding: 9px 10px; cursor: pointer; transition: 0.2s; user-select: none; }
+        .amenity-item:active { transform: scale(0.97); }
+        .amenity-item.selected { background: var(--accent); border-color: var(--primary); }
+        .amenity-item input[type="checkbox"] { display: none; }
+        .amenity-check { width: 18px; height: 18px; border: 2px solid #ccc; border-radius: 5px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: 0.2s; font-size: 12px; }
+        .amenity-item.selected .amenity-check { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .amenity-label { font-size: 12px; font-weight: 600; color: #444; }
+        .amenity-item.selected .amenity-label { color: var(--primary); }
     </style>
     <script src="translations.js"></script>
     <script src="lang.js"></script>
@@ -206,6 +218,46 @@
             <option value="PG">🛏️ PG/Hostel (30d)</option>
         </select>
     </div>
+
+    <!-- LOCATION SECTION -->
+    <div class="location-section">
+        <div class="location-section-title"><i class="fa fa-map-marker-alt" style="color:var(--primary);"></i> Location</div>
+        <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:10px;">📋 Add Full Address</div>
+        <div class="form-group" style="margin-bottom:12px;">
+            <label style="font-size:13px;">Country</label>
+            <div class="country-search-wrap">
+                <input type="text" id="countrySearch" placeholder="🔍 Search country..." autocomplete="off" oninput="filterCountries()" onfocus="showCountryDropdown()" onblur="hideCountryDropdown()">
+                <button class="clear-btn" id="countryClearBtn" onclick="clearCountry()" type="button">×</button>
+                <div class="country-dropdown" id="countryDropdown"></div>
+            </div>
+            <input type="hidden" id="selectedCountry" value="">
+        </div>
+        <div class="form-group" style="margin-bottom:10px;">
+            <label style="font-size:13px;">Address</label>
+            <input type="text" id="location" placeholder="Area, City, State" oninput="onAddressInput()">
+        </div>
+        <button type="button" class="get-map-btn" id="btnGetMap" onclick="geocodeAddress()">
+            <span id="getMapBtnIcon">🗺️</span><span id="getMapBtnText">Get on Map</span>
+        </button>
+        <div style="font-size:11px;color:#2e7d32;background:#e8f5e9;border-radius:8px;padding:8px 10px;margin-top:8px;line-height:1.5;">
+            📍 <strong>Fill address above and tap "Get on Map"</strong> — Pin your exact location so buyers can find your property in nearby search!
+        </div>
+        <div id="propertyMap"></div>
+        <div id="mapPinInfo"><i class="fa fa-check-circle"></i> <span id="mapPinText"></span></div>
+        <div class="map-coords-row" id="coordsRow">
+            <input type="number" id="manualLat" placeholder="Latitude" step="any" oninput="onManualCoordsChange()">
+            <input type="number" id="manualLng" placeholder="Longitude" step="any" oninput="onManualCoordsChange()">
+        </div>
+        <div id="coordsHint">✏️ Or enter latitude/longitude manually (copy from Google Maps)</div>
+        <div class="gps-divider" style="margin-top:14px;"><span>OR use GPS</span></div>
+        <button type="button" id="btnGPS" onclick="showGPSConfirmModal()" style="width:100%;padding:11px;background:#fff;border:1.5px solid var(--primary);color:var(--primary);border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;box-sizing:border-box;">
+            <span id="gpsButtonIcon">📍</span> <span id="gpsButtonText">Use GPS</span>
+        </button>
+        <div id="gpsInfo" class="gps-info" style="margin-top:10px;"></div>
+        <p class="gps-hint-text">If you are now on property site then use GPS also</p>
+    </div>
+
+    <!-- PRICE SECTION — moved below location -->
     <div class="form-group" id="singlePriceWrap">
         <label>Price / Amount</label>
         <div style="display:flex; gap:6px;">
@@ -245,50 +297,14 @@
             </div>
         </div>
     </div>
-    <!-- LOCATION SECTION -->
-    <div class="location-section">
-        <div class="location-section-title"><i class="fa fa-map-marker-alt" style="color:var(--primary);"></i> Location</div>
-        <div style="font-size:13px;font-weight:700;color:#333;margin-bottom:10px;">📋 Add Full Address</div>
-        <div class="form-group" style="margin-bottom:12px;">
-            <label style="font-size:13px;">Country</label>
-            <div class="country-search-wrap">
-                <input type="text" id="countrySearch" placeholder="🔍 Search country..." autocomplete="off" oninput="filterCountries()" onfocus="showCountryDropdown()" onblur="hideCountryDropdown()">
-                <button class="clear-btn" id="countryClearBtn" onclick="clearCountry()" type="button">×</button>
-                <div class="country-dropdown" id="countryDropdown"></div>
-            </div>
-            <input type="hidden" id="selectedCountry" value="">
-        </div>
-        <div class="form-group" style="margin-bottom:10px;">
-            <label style="font-size:13px;">Address</label>
-            <input type="text" id="location" placeholder="Area, City, State" oninput="onAddressInput()">
-        </div>
-        <button type="button" class="get-map-btn" id="btnGetMap" onclick="geocodeAddress()">
-            <span id="getMapBtnIcon">🗺️</span><span id="getMapBtnText">Get on Map</span>
-        </button>
-        <div style="font-size:11px;color:#2e7d32;background:#e8f5e9;border-radius:8px;padding:8px 10px;margin-top:8px;line-height:1.5;">
-            📍 <strong>Fill address above and tap "Get on Map"</strong> — Pin your exact location so buyers can find your property in nearby search!
-        </div>
-        <div id="propertyMap"></div>
-        <div id="mapPinInfo"><i class="fa fa-check-circle"></i> <span id="mapPinText"></span></div>
-        <div class="map-coords-row" id="coordsRow">
-            <input type="number" id="manualLat" placeholder="Latitude" step="any" oninput="onManualCoordsChange()">
-            <input type="number" id="manualLng" placeholder="Longitude" step="any" oninput="onManualCoordsChange()">
-        </div>
-        <div id="coordsHint">✏️ Or enter latitude/longitude manually (copy from Google Maps)</div>
-        <div class="gps-divider" style="margin-top:14px;"><span>OR use GPS</span></div>
-        <button type="button" id="btnGPS" onclick="showGPSConfirmModal()" style="width:100%;padding:11px;background:#fff;border:1.5px solid var(--primary);color:var(--primary);border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;box-sizing:border-box;">
-            <span id="gpsButtonIcon">📍</span> <span id="gpsButtonText">Use GPS</span>
-        </button>
-        <div id="gpsInfo" class="gps-info" style="margin-top:10px;"></div>
-        <p class="gps-hint-text">If you are now on property site then use GPS also</p>
-    </div>
+
     <div class="form-group">
         <label>📞 Contact Number (WhatsApp)</label>
         <div class="phone-input-wrap">
             <div class="phone-code-badge" id="phoneCodeBadge">🇮🇳 +91</div>
             <input type="text" inputmode="numeric" maxlength="12" id="phone" placeholder="Enter number without country code" style="flex:1;">
         </div>
-        <div class="phone-hint" id="phoneHintText"></div>
+        <div class="phone-hint" id="phoneHintText">Select a country to auto-set the phone code 🌍</div>
     </div>
     <div class="form-group">
         <label>Property Size</label>
@@ -337,12 +353,20 @@
         <div class="form-group"><label>Electricity &amp; Water Bills</label><select id="pgBills"><option value="Included">Included in Rent</option><option value="Extra">Extra (As per usage)</option></select></div>
         <div class="form-group"><label>Advance / Security Deposit</label><input type="text" id="pgAdvance" placeholder="e.g. 1 Month Rent"></div>
     </div>
+
+    <!-- AMENITIES SECTION -->
+    <div class="amenities-section">
+        <div class="amenities-title"><i class="fa fa-star" style="color:var(--primary);"></i> Amenities <span style="font-size:11px;font-weight:400;color:#999;margin-left:4px;">(Optional)</span></div>
+        <div class="amenities-grid" id="amenitiesGrid">
+            <!-- Rendered by JS -->
+        </div>
+    </div>
+
     <div class="form-group"><label>Nearby Landmarks (Optional)</label><input type="text" id="nearby" placeholder="e.g. Near Metro, Hospital"></div>
     <div class="form-group"><label>Description</label><textarea id="desc" rows="3" placeholder="Features, facilities, etc."></textarea></div>
     <div class="media-section-label">📸 Photos (Max 7)</div>
     <div class="media-section-sub">Tap any empty slot OR tap below to add up to 7 photos at once</div>
 
-    <!-- ✅ NEW: Multi-select trigger button -->
     <button type="button" id="btnAddPhotos" onclick="triggerMultiUpload()" style="width:100%;padding:12px;background:linear-gradient(135deg,#e8f5e9,#c8e6c9);border:2px dashed #2e7d32;border-radius:12px;color:#2e7d32;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;box-sizing:border-box;">
         <i class="fa fa-images"></i> Add Photos (Select up to 7 at once)
     </button>
@@ -353,7 +377,6 @@
         <div class="img-box" id="box2" onclick="triggerUpload(2)"><i class="fa fa-camera" id="icon2"></i><img id="prev2" style="display:none;"><div class="prog-container" id="cont2"><div class="prog-bar" id="bar2"></div></div></div>
     </div>
 
-    <!-- ✅ NEW: Overall upload progress banner (shown during upload) -->
     <div id="uploadProgressBanner">
         <div class="upb-top">
             <div class="upb-label"><span class="loading-spinner"></span> <span id="upbLabel">Uploading photos...</span></div>
@@ -402,14 +425,12 @@
         </div>
     </div>
 
-    <!-- ✅ CHANGED: single fileInput for single-slot click, multiFileInput for bulk -->
     <input type="file" id="fileInput" hidden accept="image/*" onchange="handleSingleFile(event)">
     <input type="file" id="multiFileInput" hidden accept="image/*" multiple onchange="handleMultiFiles(event)">
 
     <button class="btn-post" id="postBtn" onclick="submitProperty()">Post Property</button>
 </div>
 
-<!-- ✅ Leaflet (Free, No API Key) -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -424,23 +445,96 @@ let currentCoords={lat:null,lng:null},slotMode=[null,null,null,'photo','photo','
 let currentUserVerified=false,currentUserBizName="",currentUserEpId="";
 const urlParams=new URLSearchParams(window.location.search),editId=urlParams.get('edit');
 
-// ✅ Leaflet vars
+// Leaflet vars
 let leafletMap=null,leafletMarker=null;
 
-// ========================================================
-// ✅ NEW: Upload Progress Banner helpers
-// ========================================================
-// slotUploadStatus: null | 'uploading' | 'done' | 'failed'
+// ---- AMENITIES ----
+const AMENITIES_LIST = [
+    {key:'parking', label:'🚗 Parking'},
+    {key:'lift', label:'🛗 Lift / Elevator'},
+    {key:'security', label:'💂 24/7 Security'},
+    {key:'cctv', label:'📹 CCTV'},
+    {key:'gym', label:'🏋️ Gym'},
+    {key:'pool', label:'🏊 Swimming Pool'},
+    {key:'clubhouse', label:'🏠 Clubhouse'},
+    {key:'garden', label:'🌳 Garden / Park'},
+    {key:'wifi', label:'📶 WiFi'},
+    {key:'powerbackup', label:'🔋 Power Backup'},
+    {key:'water24', label:'💧 24/7 Water'},
+    {key:'gas', label:'🔥 Piped Gas'},
+    {key:'balcony', label:'🏗️ Balcony'},
+    {key:'petfriendly', label:'🐾 Pet Friendly'},
+    {key:'hospital', label:'🏥 Near Hospital'},
+    {key:'school', label:'🏫 Near School'},
+];
+
+let selectedAmenities = new Set();
+
+function renderAmenities() {
+    const grid = document.getElementById('amenitiesGrid');
+    grid.innerHTML = AMENITIES_LIST.map(a => `
+        <div class="amenity-item ${selectedAmenities.has(a.key) ? 'selected' : ''}" onclick="toggleAmenity('${a.key}', this)">
+            <div class="amenity-check">${selectedAmenities.has(a.key) ? '✓' : ''}</div>
+            <span class="amenity-label">${a.label}</span>
+        </div>
+    `).join('');
+}
+
+function toggleAmenity(key, el) {
+    if (selectedAmenities.has(key)) {
+        selectedAmenities.delete(key);
+        el.classList.remove('selected');
+        el.querySelector('.amenity-check').textContent = '';
+    } else {
+        selectedAmenities.add(key);
+        el.classList.add('selected');
+        el.querySelector('.amenity-check').textContent = '✓';
+    }
+}
+
+// ---- COUNTRY → CURRENCY MAP ----
+const COUNTRY_CURRENCY = {
+    "India": "INR", "United States": "USD", "UAE": "AED", "Saudi Arabia": "SAR",
+    "United Kingdom": "GBP", "France": "EUR", "Germany": "EUR", "Italy": "EUR",
+    "Spain": "EUR", "Netherlands": "EUR", "Portugal": "EUR", "Belgium": "EUR",
+    "Austria": "EUR", "Finland": "EUR", "Greece": "EUR", "Ireland": "EUR",
+    "Luxembourg": "EUR", "Malta": "EUR", "Cyprus": "EUR", "Slovakia": "EUR",
+    "Slovenia": "EUR", "Estonia": "EUR", "Latvia": "EUR", "Lithuania": "EUR",
+    "Pakistan": "PKR", "Bangladesh": "BDT", "Singapore": "SGD", "Malaysia": "MYR",
+    "Canada": "CAD", "Australia": "AUD", "Nigeria": "NGN", "Ghana": "GHS",
+    "Kenya": "KES", "Uganda": "UGX", "Rwanda": "RWF", "Nepal": "NPR",
+    "Sri Lanka": "LKR", "South Africa": "ZAR", "Tanzania": "TZS",
+    "Philippines": "PHP", "Indonesia": "IDR", "Thailand": "THB", "Vietnam": "VND",
+    "Turkey": "TRY", "Brazil": "BRL", "Mexico": "MXN", "Kuwait": "KWD",
+    "Qatar": "QAR", "Oman": "OMR", "Bahrain": "BHD", "Jordan": "JOD",
+    "Egypt": "EGP", "Morocco": "MAD", "China": "CNY", "Japan": "JPY",
+    "South Korea": "KRW", "Russia": "RUB", "Switzerland": "CHF", "Sweden": "SEK",
+    "Norway": "NOK", "Denmark": "DKK", "Poland": "PLN"
+};
+
+function setAllCurrencies(currencyCode) {
+    const ids = ['currency','rentCurrency','rsSelCurrency','rsRentCurrency'];
+    ids.forEach(id => {
+        const sel = document.getElementById(id);
+        if (sel) {
+            // Try to select the matching option
+            for (let i = 0; i < sel.options.length; i++) {
+                if (sel.options[i].value === currencyCode) {
+                    sel.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+    });
+}
+
+// Upload Progress Banner helpers
 let slotUploadStatus = [null,null,null,null,null,null,null];
 
 function updateUploadBanner() {
     const activeSlots = slotUploadStatus.map((s,i) => s ? i : -1).filter(i => i >= 0);
     const banner = document.getElementById('uploadProgressBanner');
-    if (activeSlots.length === 0) {
-        banner.style.display = 'none';
-        return;
-    }
-    // Count statuses
+    if (activeSlots.length === 0) { banner.style.display = 'none'; return; }
     const total = activeSlots.length;
     const done = slotUploadStatus.filter(s => s === 'done' || s === 'failed').length;
     const successCount = slotUploadStatus.filter(s => s === 'done').length;
@@ -450,9 +544,7 @@ function updateUploadBanner() {
     document.getElementById('upbCount').textContent = done + '/' + total;
     if (done === total) {
         document.getElementById('upbLabel').textContent = '✅ ' + successCount + ' photo' + (successCount !== 1 ? 's' : '') + ' uploaded!';
-        // Hide banner after 3 seconds when all done
         setTimeout(() => {
-            // Only hide if no new upload started
             if (slotUploadStatus.every(s => s === null || s === 'done' || s === 'failed')) {
                 banner.style.display = 'none';
                 slotUploadStatus = [null,null,null,null,null,null,null];
@@ -461,7 +553,6 @@ function updateUploadBanner() {
     } else {
         document.getElementById('upbLabel').textContent = 'Uploading photos...';
     }
-    // Slot dots
     const slotsEl = document.getElementById('upbSlots');
     slotsEl.innerHTML = '';
     activeSlots.forEach(i => {
@@ -472,55 +563,28 @@ function updateUploadBanner() {
     });
 }
 
-function setSlotUploading(slot) {
-    slotUploadStatus[slot] = 'uploading';
-    updateUploadBanner();
-}
+function setSlotUploading(slot) { slotUploadStatus[slot] = 'uploading'; updateUploadBanner(); }
+function setSlotDone(slot) { slotUploadStatus[slot] = 'done'; updateUploadBanner(); }
+function setSlotFailed(slot) { slotUploadStatus[slot] = 'failed'; updateUploadBanner(); }
 
-function setSlotDone(slot) {
-    slotUploadStatus[slot] = 'done';
-    updateUploadBanner();
-}
-
-function setSlotFailed(slot) {
-    slotUploadStatus[slot] = 'failed';
-    updateUploadBanner();
-}
-
-// ========================================================
-// ✅ NEW: Find next available (empty) photo slot (0–6)
-// ========================================================
 function getNextEmptyPhotoSlot(startFrom = 0) {
     for (let i = startFrom; i < 7; i++) {
-        // For slots 3-6, only use if in photo mode
         if (i >= 3 && slotMode[i] !== 'photo') continue;
         if (!uploadedImages[i]) return i;
     }
-    return -1; // all full
+    return -1;
 }
 
-// ========================================================
-// ✅ NEW: triggerMultiUpload — opens multi-select file picker
-// ========================================================
 function triggerMultiUpload() {
     const firstEmpty = getNextEmptyPhotoSlot(0);
-    if (firstEmpty === -1) {
-        showToast('All 7 photo slots are already filled!', 'info');
-        return;
-    }
+    if (firstEmpty === -1) { showToast('All 7 photo slots are already filled!', 'info'); return; }
     document.getElementById('multiFileInput').value = '';
     document.getElementById('multiFileInput').click();
 }
 
-// ========================================================
-// ✅ NEW: handleMultiFiles — handle multiple files at once,
-//         upload each to next available slot in parallel
-// ========================================================
 function handleMultiFiles(e) {
     const files = Array.from(e.target.files);
     if (!files.length) return;
-
-    // Find how many empty slots available
     let slots = [];
     let searchFrom = 0;
     for (let f = 0; f < files.length; f++) {
@@ -529,56 +593,27 @@ function handleMultiFiles(e) {
         slots.push({ file: files[f], slot });
         searchFrom = slot + 1;
     }
-
-    if (slots.length === 0) {
-        showToast('All photo slots are already filled!', 'info');
-        e.target.value = '';
-        return;
-    }
-
+    if (slots.length === 0) { showToast('All photo slots are already filled!', 'info'); e.target.value = ''; return; }
     const skipped = files.length - slots.length;
-    if (skipped > 0) {
-        showToast(`Only ${slots.length} empty slot(s) available. ${skipped} photo(s) skipped.`, 'info');
-    }
-
-    // Mark all assigned slots as 'uploading' upfront so banner appears immediately
+    if (skipped > 0) showToast(`Only ${slots.length} empty slot(s) available. ${skipped} photo(s) skipped.`, 'info');
     slots.forEach(({ slot }) => setSlotUploading(slot));
-
-    // Disable post button
     uploadingCount += slots.length;
     document.getElementById('postBtn').disabled = true;
-
-    // Upload all in parallel
-    slots.forEach(({ file, slot }) => {
-        uploadImageToSlot(file, slot, () => {
-            // onprogress callback - update individual slot bar
-        });
-    });
-
+    slots.forEach(({ file, slot }) => uploadImageToSlot(file, slot, () => {}));
     e.target.value = '';
 }
 
-// ========================================================
-// ✅ UPDATED: triggerUpload — single slot click (empty slot)
-// ========================================================
 function triggerUpload(slot) {
-    if (uploadedImages[slot]) return; // already has image, do nothing (remove btn handles it)
+    if (uploadedImages[slot]) return;
     activeSlot = slot;
     document.getElementById('fileInput').value = '';
     document.getElementById('fileInput').click();
 }
 
-// ========================================================
-// ✅ UPDATED: handleSingleFile — for single slot click upload
-// ========================================================
 function handleSingleFile(e) {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-        showToast('File too large! Maximum 5MB allowed.', 'error');
-        e.target.value = '';
-        return;
-    }
+    if (file.size > 5 * 1024 * 1024) { showToast('File too large! Maximum 5MB allowed.', 'error'); e.target.value = ''; return; }
     setSlotUploading(activeSlot);
     uploadingCount++;
     document.getElementById('postBtn').disabled = true;
@@ -586,37 +621,24 @@ function handleSingleFile(e) {
     e.target.value = '';
 }
 
-// ========================================================
-// ✅ NEW CORE: uploadImageToSlot — uploads one file to one slot
-// ========================================================
 function uploadImageToSlot(file, slot, onProgressCallback) {
     if (file.size > 5 * 1024 * 1024) {
         showToast(`Slot ${slot + 1}: File too large! Max 5MB.`, 'error');
-        setSlotFailed(slot);
-        uploadingCount--;
+        setSlotFailed(slot); uploadingCount--;
         if (uploadingCount === 0) document.getElementById('postBtn').disabled = false;
         return;
     }
-
-    // Show progress bar in slot
     const bar = document.getElementById(`bar${slot}`);
     const cont = document.getElementById(`cont${slot}`);
     const icon = document.getElementById(`icon${slot}`);
     if (cont) cont.style.display = 'block';
     if (icon) icon.style.display = 'none';
-
     const fd = new FormData();
     fd.append('file', file);
     fd.append('upload_preset', UPLOAD_PRESET);
-
     const xhr = new XMLHttpRequest();
     xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
-
-    xhr.upload.onprogress = (ev) => {
-        if (bar) bar.style.width = (ev.loaded / ev.total * 100) + '%';
-        if (onProgressCallback) onProgressCallback(ev.loaded / ev.total);
-    };
-
+    xhr.upload.onprogress = (ev) => { if (bar) bar.style.width = (ev.loaded / ev.total * 100) + '%'; if (onProgressCallback) onProgressCallback(ev.loaded / ev.total); };
     xhr.onload = () => {
         if (cont) cont.style.display = 'none';
         if (xhr.status === 200) {
@@ -632,34 +654,42 @@ function uploadImageToSlot(file, slot, onProgressCallback) {
         uploadingCount--;
         if (uploadingCount === 0) document.getElementById('postBtn').disabled = false;
     };
-
     xhr.onerror = () => {
         if (cont) cont.style.display = 'none';
         if (icon) icon.style.display = 'block';
         showToast(`Slot ${slot + 1}: Upload error. Check connection.`, 'error');
-        setSlotFailed(slot);
-        uploadingCount--;
+        setSlotFailed(slot); uploadingCount--;
         if (uploadingCount === 0) document.getElementById('postBtn').disabled = false;
     };
-
     xhr.send(fd);
 }
-
-// ========================================================
-// Everything below is unchanged from original
-// ========================================================
 
 const COUNTRY_CODES={"Afghanistan":"+93","Albania":"+355","Algeria":"+213","Andorra":"+376","Angola":"+244","Antigua and Barbuda":"+1","Argentina":"+54","Armenia":"+374","Australia":"+61","Austria":"+43","Azerbaijan":"+994","Bahamas":"+1","Bahrain":"+973","Bangladesh":"+880","Barbados":"+1","Belarus":"+375","Belgium":"+32","Belize":"+501","Benin":"+229","Bhutan":"+975","Bolivia":"+591","Bosnia and Herzegovina":"+387","Botswana":"+267","Brazil":"+55","Brunei":"+673","Bulgaria":"+359","Burkina Faso":"+226","Burundi":"+257","Cambodia":"+855","Cameroon":"+237","Canada":"+1","Cape Verde":"+238","Central African Republic":"+236","Chad":"+235","Chile":"+56","China":"+86","Colombia":"+57","Comoros":"+269","Congo":"+242","Costa Rica":"+506","Croatia":"+385","Cuba":"+53","Cyprus":"+357","Czech Republic":"+420","DR Congo":"+243","Denmark":"+45","Djibouti":"+253","Dominican Republic":"+1","Ecuador":"+593","Egypt":"+20","El Salvador":"+503","Equatorial Guinea":"+240","Eritrea":"+291","Estonia":"+372","Eswatini":"+268","Ethiopia":"+251","Fiji":"+679","Finland":"+358","France":"+33","Gabon":"+241","Gambia":"+220","Georgia":"+995","Germany":"+49","Ghana":"+233","Greece":"+30","Grenada":"+1","Guatemala":"+502","Guinea":"+224","Guinea-Bissau":"+245","Guyana":"+592","Haiti":"+509","Honduras":"+504","Hungary":"+36","Iceland":"+354","India":"+91","Indonesia":"+62","Iran":"+98","Iraq":"+964","Ireland":"+353","Israel":"+972","Italy":"+39","Ivory Coast":"+225","Jamaica":"+1","Japan":"+81","Jordan":"+962","Kazakhstan":"+7","Kenya":"+254","Kiribati":"+686","Kuwait":"+965","Kyrgyzstan":"+996","Laos":"+856","Latvia":"+371","Lebanon":"+961","Lesotho":"+266","Liberia":"+231","Libya":"+218","Liechtenstein":"+423","Lithuania":"+370","Luxembourg":"+352","Madagascar":"+261","Malawi":"+265","Malaysia":"+60","Maldives":"+960","Mali":"+223","Malta":"+356","Marshall Islands":"+692","Mauritania":"+222","Mauritius":"+230","Mexico":"+52","Micronesia":"+691","Moldova":"+373","Monaco":"+377","Mongolia":"+976","Montenegro":"+382","Morocco":"+212","Mozambique":"+258","Myanmar":"+95","Namibia":"+264","Nauru":"+674","Nepal":"+977","Netherlands":"+31","New Zealand":"+64","Nicaragua":"+505","Niger":"+227","Nigeria":"+234","North Korea":"+850","North Macedonia":"+389","Norway":"+47","Oman":"+968","Pakistan":"+92","Palau":"+680","Palestine":"+970","Panama":"+507","Papua New Guinea":"+675","Paraguay":"+595","Peru":"+51","Philippines":"+63","Poland":"+48","Portugal":"+351","Qatar":"+974","Romania":"+40","Russia":"+7","Rwanda":"+250","Saint Kitts and Nevis":"+1","Saint Lucia":"+1","Saint Vincent and the Grenadines":"+1","Samoa":"+685","San Marino":"+378","Sao Tome and Principe":"+239","Saudi Arabia":"+966","Senegal":"+221","Serbia":"+381","Seychelles":"+248","Sierra Leone":"+232","Singapore":"+65","Slovakia":"+421","Slovenia":"+386","Solomon Islands":"+677","Somalia":"+252","South Africa":"+27","South Korea":"+82","South Sudan":"+211","Spain":"+34","Sri Lanka":"+94","Sudan":"+249","Suriname":"+597","Sweden":"+46","Switzerland":"+41","Syria":"+963","Taiwan":"+886","Tajikistan":"+992","Tanzania":"+255","Thailand":"+66","Timor-Leste":"+670","Togo":"+228","Tonga":"+676","Trinidad and Tobago":"+1","Tunisia":"+216","Turkey":"+90","Turkmenistan":"+993","Tuvalu":"+688","UAE":"+971","Uganda":"+256","Ukraine":"+380","United Kingdom":"+44","United States":"+1","Uruguay":"+598","Uzbekistan":"+998","Vanuatu":"+678","Vatican City":"+39","Venezuela":"+58","Vietnam":"+84","Yemen":"+967","Zambia":"+260","Zimbabwe":"+263"};
 
 const COUNTRIES=[{name:"Afghanistan",flag:"🇦🇫"},{name:"Albania",flag:"🇦🇱"},{name:"Algeria",flag:"🇩🇿"},{name:"Andorra",flag:"🇦🇩"},{name:"Angola",flag:"🇦🇴"},{name:"Antigua and Barbuda",flag:"🇦🇬"},{name:"Argentina",flag:"🇦🇷"},{name:"Armenia",flag:"🇦🇲"},{name:"Australia",flag:"🇦🇺"},{name:"Austria",flag:"🇦🇹"},{name:"Azerbaijan",flag:"🇦🇿"},{name:"Bahamas",flag:"🇧🇸"},{name:"Bahrain",flag:"🇧🇭"},{name:"Bangladesh",flag:"🇧🇩"},{name:"Barbados",flag:"🇧🇧"},{name:"Belarus",flag:"🇧🇾"},{name:"Belgium",flag:"🇧🇪"},{name:"Belize",flag:"🇧🇿"},{name:"Benin",flag:"🇧🇯"},{name:"Bhutan",flag:"🇧🇹"},{name:"Bolivia",flag:"🇧🇴"},{name:"Bosnia and Herzegovina",flag:"🇧🇦"},{name:"Botswana",flag:"🇧🇼"},{name:"Brazil",flag:"🇧🇷"},{name:"Brunei",flag:"🇧🇳"},{name:"Bulgaria",flag:"🇧🇬"},{name:"Burkina Faso",flag:"🇧🇫"},{name:"Burundi",flag:"🇧🇮"},{name:"Cambodia",flag:"🇰🇭"},{name:"Cameroon",flag:"🇨🇲"},{name:"Canada",flag:"🇨🇦"},{name:"Cape Verde",flag:"🇨🇻"},{name:"Central African Republic",flag:"🇨🇫"},{name:"Chad",flag:"🇹🇩"},{name:"Chile",flag:"🇨🇱"},{name:"China",flag:"🇨🇳"},{name:"Colombia",flag:"🇨🇴"},{name:"Comoros",flag:"🇰🇲"},{name:"Congo",flag:"🇨🇬"},{name:"Costa Rica",flag:"🇨🇷"},{name:"Croatia",flag:"🇭🇷"},{name:"Cuba",flag:"🇨🇺"},{name:"Cyprus",flag:"🇨🇾"},{name:"Czech Republic",flag:"🇨🇿"},{name:"DR Congo",flag:"🇨🇩"},{name:"Denmark",flag:"🇩🇰"},{name:"Djibouti",flag:"🇩🇯"},{name:"Dominican Republic",flag:"🇩🇴"},{name:"Ecuador",flag:"🇪🇨"},{name:"Egypt",flag:"🇪🇬"},{name:"El Salvador",flag:"🇸🇻"},{name:"Equatorial Guinea",flag:"🇬🇶"},{name:"Eritrea",flag:"🇪🇷"},{name:"Estonia",flag:"🇪🇪"},{name:"Eswatini",flag:"🇸🇿"},{name:"Ethiopia",flag:"🇪🇹"},{name:"Fiji",flag:"🇫🇯"},{name:"Finland",flag:"🇫🇮"},{name:"France",flag:"🇫🇷"},{name:"Gabon",flag:"🇬🇦"},{name:"Gambia",flag:"🇬🇲"},{name:"Georgia",flag:"🇬🇪"},{name:"Germany",flag:"🇩🇪"},{name:"Ghana",flag:"🇬🇭"},{name:"Greece",flag:"🇬🇷"},{name:"Grenada",flag:"🇬🇩"},{name:"Guatemala",flag:"🇬🇹"},{name:"Guinea",flag:"🇬🇳"},{name:"Guinea-Bissau",flag:"🇬🇼"},{name:"Guyana",flag:"🇬🇾"},{name:"Haiti",flag:"🇭🇹"},{name:"Honduras",flag:"🇭🇳"},{name:"Hungary",flag:"🇭🇺"},{name:"Iceland",flag:"🇮🇸"},{name:"India",flag:"🇮🇳"},{name:"Indonesia",flag:"🇮🇩"},{name:"Iran",flag:"🇮🇷"},{name:"Iraq",flag:"🇮🇶"},{name:"Ireland",flag:"🇮🇪"},{name:"Israel",flag:"🇮🇱"},{name:"Italy",flag:"🇮🇹"},{name:"Ivory Coast",flag:"🇨🇮"},{name:"Jamaica",flag:"🇯🇲"},{name:"Japan",flag:"🇯🇵"},{name:"Jordan",flag:"🇯🇴"},{name:"Kazakhstan",flag:"🇰🇿"},{name:"Kenya",flag:"🇰🇪"},{name:"Kiribati",flag:"🇰🇮"},{name:"Kuwait",flag:"🇰🇼"},{name:"Kyrgyzstan",flag:"🇰🇬"},{name:"Laos",flag:"🇱🇦"},{name:"Latvia",flag:"🇱🇻"},{name:"Lebanon",flag:"🇱🇧"},{name:"Lesotho",flag:"🇱🇸"},{name:"Liberia",flag:"🇱🇷"},{name:"Libya",flag:"🇱🇾"},{name:"Liechtenstein",flag:"🇱🇮"},{name:"Lithuania",flag:"🇱🇹"},{name:"Luxembourg",flag:"🇱🇺"},{name:"Madagascar",flag:"🇲🇬"},{name:"Malawi",flag:"🇲🇼"},{name:"Malaysia",flag:"🇲🇾"},{name:"Maldives",flag:"🇲🇻"},{name:"Mali",flag:"🇲🇱"},{name:"Malta",flag:"🇲🇹"},{name:"Marshall Islands",flag:"🇲🇭"},{name:"Mauritania",flag:"🇲🇷"},{name:"Mauritius",flag:"🇲🇺"},{name:"Mexico",flag:"🇲🇽"},{name:"Micronesia",flag:"🇫🇲"},{name:"Moldova",flag:"🇲🇩"},{name:"Monaco",flag:"🇲🇨"},{name:"Mongolia",flag:"🇲🇳"},{name:"Montenegro",flag:"🇲🇪"},{name:"Morocco",flag:"🇲🇦"},{name:"Mozambique",flag:"🇲🇿"},{name:"Myanmar",flag:"🇲🇲"},{name:"Namibia",flag:"🇳🇦"},{name:"Nauru",flag:"🇳🇷"},{name:"Nepal",flag:"🇳🇵"},{name:"Netherlands",flag:"🇳🇱"},{name:"New Zealand",flag:"🇳🇿"},{name:"Nicaragua",flag:"🇳🇮"},{name:"Niger",flag:"🇳🇪"},{name:"Nigeria",flag:"🇳🇬"},{name:"North Korea",flag:"🇰🇵"},{name:"North Macedonia",flag:"🇲🇰"},{name:"Norway",flag:"🇳🇴"},{name:"Oman",flag:"🇴🇲"},{name:"Pakistan",flag:"🇵🇰"},{name:"Palau",flag:"🇵🇼"},{name:"Palestine",flag:"🇵🇸"},{name:"Panama",flag:"🇵🇦"},{name:"Papua New Guinea",flag:"🇵🇬"},{name:"Paraguay",flag:"🇵🇾"},{name:"Peru",flag:"🇵🇪"},{name:"Philippines",flag:"🇵🇭"},{name:"Poland",flag:"🇵🇱"},{name:"Portugal",flag:"🇵🇹"},{name:"Qatar",flag:"🇶🇦"},{name:"Romania",flag:"🇷🇴"},{name:"Russia",flag:"🇷🇺"},{name:"Rwanda",flag:"🇷🇼"},{name:"Saint Kitts and Nevis",flag:"🇰🇳"},{name:"Saint Lucia",flag:"🇱🇨"},{name:"Saint Vincent and the Grenadines",flag:"🇻🇨"},{name:"Samoa",flag:"🇼🇸"},{name:"San Marino",flag:"🇸🇲"},{name:"Sao Tome and Principe",flag:"🇸🇹"},{name:"Saudi Arabia",flag:"🇸🇦"},{name:"Senegal",flag:"🇸🇳"},{name:"Serbia",flag:"🇷🇸"},{name:"Seychelles",flag:"🇸🇨"},{name:"Sierra Leone",flag:"🇸🇱"},{name:"Singapore",flag:"🇸🇬"},{name:"Slovakia",flag:"🇸🇰"},{name:"Slovenia",flag:"🇸🇮"},{name:"Solomon Islands",flag:"🇸🇧"},{name:"Somalia",flag:"🇸🇴"},{name:"South Africa",flag:"🇿🇦"},{name:"South Korea",flag:"🇰🇷"},{name:"South Sudan",flag:"🇸🇸"},{name:"Spain",flag:"🇪🇸"},{name:"Sri Lanka",flag:"🇱🇰"},{name:"Sudan",flag:"🇸🇩"},{name:"Suriname",flag:"🇸🇷"},{name:"Sweden",flag:"🇸🇪"},{name:"Switzerland",flag:"🇨🇭"},{name:"Syria",flag:"🇸🇾"},{name:"Taiwan",flag:"🇹🇼"},{name:"Tajikistan",flag:"🇹🇯"},{name:"Tanzania",flag:"🇹🇿"},{name:"Thailand",flag:"🇹🇭"},{name:"Timor-Leste",flag:"🇹🇱"},{name:"Togo",flag:"🇹🇬"},{name:"Tonga",flag:"🇹🇴"},{name:"Trinidad and Tobago",flag:"🇹🇹"},{name:"Tunisia",flag:"🇹🇳"},{name:"Turkey",flag:"🇹🇷"},{name:"Turkmenistan",flag:"🇹🇲"},{name:"Tuvalu",flag:"🇹🇻"},{name:"UAE",flag:"🇦🇪"},{name:"Uganda",flag:"🇺🇬"},{name:"Ukraine",flag:"🇺🇦"},{name:"United Kingdom",flag:"🇬🇧"},{name:"United States",flag:"🇺🇸"},{name:"Uruguay",flag:"🇺🇾"},{name:"Uzbekistan",flag:"🇺🇿"},{name:"Vanuatu",flag:"🇻🇺"},{name:"Vatican City",flag:"🇻🇦"},{name:"Venezuela",flag:"🇻🇪"},{name:"Vietnam",flag:"🇻🇳"},{name:"Yemen",flag:"🇾🇪"},{name:"Zambia",flag:"🇿🇲"},{name:"Zimbabwe",flag:"🇿🇼"}];
 
-function updatePhoneCode(countryName,countryFlag){const code=COUNTRY_CODES[countryName]||'';const badge=document.getElementById('phoneCodeBadge');if(code){badge.textContent=countryFlag+' '+code;document.getElementById('phoneHintText').textContent=countryName+' ka code auto-set ho gaya! Sirf baaki number daalo 📱';document.getElementById('phone').placeholder='e.g. 9876543210';}else{badge.textContent='🌍 +?';document.getElementById('phoneHintText').textContent='Number with country code enter karo';}}
+function updatePhoneCode(countryName, countryFlag) {
+    const code = COUNTRY_CODES[countryName] || '';
+    const badge = document.getElementById('phoneCodeBadge');
+    if (code) {
+        badge.textContent = countryFlag + ' ' + code;
+        document.getElementById('phoneHintText').textContent = countryName + ' code auto-set! Enter remaining digits only 📱';
+        document.getElementById('phone').placeholder = 'e.g. 9876543210';
+    } else {
+        badge.textContent = '🌍 +?';
+        document.getElementById('phoneHintText').textContent = 'Enter number with country code';
+    }
+    // Auto-set currency
+    const curr = COUNTRY_CURRENCY[countryName];
+    if (curr) setAllCurrencies(curr);
+}
+
 function filterCountries(){const q=document.getElementById('countrySearch').value.toLowerCase().trim();const dd=document.getElementById('countryDropdown');const cb=document.getElementById('countryClearBtn');cb.style.display=q?'block':'none';renderDropdown(q?COUNTRIES.filter(c=>c.name.toLowerCase().includes(q)):COUNTRIES);dd.style.display='block';}
 function showCountryDropdown(){const q=document.getElementById('countrySearch').value.toLowerCase().trim();renderDropdown(q?COUNTRIES.filter(c=>c.name.toLowerCase().includes(q)):COUNTRIES);document.getElementById('countryDropdown').style.display='block';}
 function hideCountryDropdown(){setTimeout(()=>{document.getElementById('countryDropdown').style.display='none';},200);}
 function renderDropdown(list){const dd=document.getElementById('countryDropdown');const sel=document.getElementById('selectedCountry').value;if(list.length===0){dd.innerHTML='<div style="padding:12px;text-align:center;color:#999;font-size:13px;">No country found</div>';return;}dd.innerHTML=list.map(c=>`<div class="c-item ${sel===c.name?'active':''}" onmousedown="selectCountry('${c.name}','${c.flag}')"><span class="flag">${c.flag}</span> ${c.name}</div>`).join('');}
 function selectCountry(name,flag){document.getElementById('countrySearch').value=flag+' '+name;document.getElementById('selectedCountry').value=name;document.getElementById('countryClearBtn').style.display='block';document.getElementById('countryDropdown').style.display='none';updatePhoneCode(name,flag);}
-function clearCountry(){document.getElementById('countrySearch').value='';document.getElementById('selectedCountry').value='';document.getElementById('countryClearBtn').style.display='none';document.getElementById('countrySearch').focus();document.getElementById('phoneCodeBadge').textContent='🌍 +?';document.getElementById('phoneHintText').textContent='Country select karne ke baad code automatically fill ho jayega 🌍';}
+function clearCountry(){document.getElementById('countrySearch').value='';document.getElementById('selectedCountry').value='';document.getElementById('countryClearBtn').style.display='none';document.getElementById('countrySearch').focus();document.getElementById('phoneCodeBadge').textContent='🌍 +?';document.getElementById('phoneHintText').textContent='Select a country to auto-set the phone code 🌍';}
 function switchSlotMode(slot,mode){slotMode[slot]=mode;const pb=document.getElementById(`togglePhoto${slot}`);const vb=document.getElementById(`toggleVideo${slot}`);const pd=document.getElementById(`photoMode${slot}`);const vd=document.getElementById(`videoMode${slot}`);if(mode==='photo'){pb.classList.add('active');vb.classList.remove('active');pd.style.display='block';vd.style.display='none';if(uploadedImages[slot]&&uploadedImages[slot].type==='video')uploadedImages[slot]=null;}else{vb.classList.add('active');pb.classList.remove('active');pd.style.display='none';vd.style.display='block';if(uploadedImages[slot]&&uploadedImages[slot].type!=='video')removeImage(slot);const vui=document.getElementById(`videoVerifiedUI${slot}`);const lui=document.getElementById(`videoLockedUI${slot}`);if(currentUserVerified){if(vui)vui.style.display='block';if(lui)lui.style.display='none';}else{if(vui)vui.style.display='none';if(lui)lui.style.display='block';}}}
 function getYouTubeId(url){const m=url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);return m?m[1]:null;}
 function getVimeoId(url){const m=url.match(/vimeo\.com\/(\d+)/);return m?m[1]:null;}
@@ -674,6 +704,7 @@ firebase.auth().onAuthStateChanged(async user=>{
     document.getElementById('title').addEventListener('input',function(){document.getElementById('titleCount').innerText=this.value.length+'/100';});
     document.getElementById('phone').addEventListener('input',function(){this.value=this.value.replace(/\D/g,'').slice(0,12);});
     togglePurposeFields();
+    renderAmenities();
 });
 
 async function loadEditData(id,uid){
@@ -696,6 +727,8 @@ async function loadEditData(id,uid){
     if(p==='Plot'&&data.plotDetails){document.getElementById('plotArea').value=data.plotDetails.area||'';document.getElementById('plotRoadFacing').value=data.plotDetails.roadFacing||'No';document.getElementById('plotCorner').value=data.plotDetails.corner||'No';}
     if((p==='Commercial'||p==='CommercialSell'||p==='CommercialRent'||p==='CommercialRentSell')&&data.commercialDetails){document.getElementById('commercialType').value=data.commercialDetails.type||'Shop';document.getElementById('commercialFloor').value=data.commercialDetails.floor||'';document.getElementById('commercialFurnished').value=data.commercialDetails.furnished||'Unfurnished';document.getElementById('commercialBills').value=data.commercialDetails.bills||'Extra';}
     if(p==='PG'&&data.pgDetails){document.getElementById('pgSharing').value=data.pgDetails.sharing||'Single';document.getElementById('pgFood').value=data.pgDetails.food||'No';document.getElementById('pgBedding').value=data.pgDetails.bedding||'No';document.getElementById('pgAC').value=data.pgDetails.ac||'Non-AC';document.getElementById('pgLaundry').value=data.pgDetails.laundry||'No';document.getElementById('pgBills').value=data.pgDetails.bills||'Included';document.getElementById('pgAdvance').value=data.pgDetails.advance||'';}
+    // Load saved amenities
+    if(Array.isArray(data.amenities)){data.amenities.forEach(k=>selectedAmenities.add(k));renderAmenities();}
     if(Array.isArray(data.images)){data.images.forEach((img,i)=>{if(i>=7||!img)return;if(img.type==='video'){if(i>=3){switchSlotMode(i,'video');uploadedImages[i]=img;if(img.videoUrl){document.getElementById(`videoUrl${i}`).value=img.videoUrl;previewVideo(i);}}}else if(typeof img==='string'){uploadedImages[i]={url:img,public_id:null};showImage(i,img);}else if(img&&img.url){uploadedImages[i]={url:img.url,public_id:img.public_id||null};showImage(i,img.url);}});}
     if(data.latitude&&data.longitude){currentCoords={lat:data.latitude,lng:data.longitude};showGPSInfo();initMap(data.latitude,data.longitude);}
 }
@@ -802,7 +835,7 @@ async function submitProperty(){
     if(purpose==='RentSell'||purpose==='CommercialRentSell'){priceValue=Number(document.getElementById('rsSellPrice').value);currencyValue=document.getElementById('rsSelCurrency').value;rentPriceValue=Number(document.getElementById('rsRentPrice').value);rentCurrencyValue=document.getElementById('rsRentCurrency').value;if(priceValue<=0||rentPriceValue<=0)return showToast("Please enter both Sell Price and Rent Price","error");if(priceValue>1000000000000||rentPriceValue>1000000000000)return showToast("Price too large.","error");}
     else if(purpose==='Rent'||purpose==='PG'||purpose==='CommercialRent'){priceValue=Number(document.getElementById('rentPrice').value);currencyValue=document.getElementById('rentCurrency').value;if(priceValue<=0)return showToast("Please enter a valid price","error");if(priceValue>1000000000000)return showToast("Price too large.","error");}
     else{priceValue=Number(document.getElementById('price').value);currencyValue=document.getElementById('currency').value;if(priceValue<=0)return showToast("Please enter a valid price","error");if(priceValue>1000000000000)return showToast("Price too large.","error");}
-    const propertyData={title,price:priceValue,currency:currencyValue,phone,purpose,size:document.getElementById('size').value,lotArea:document.getElementById('lotArea').value.trim(),floorArea:document.getElementById('floorArea').value.trim(),location,country,description:document.getElementById('desc').value.trim(),nearby:document.getElementById('nearby').value,images:finalImages,latitude:currentCoords.lat,longitude:currentCoords.lng,status:"active",updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+    const propertyData={title,price:priceValue,currency:currencyValue,phone,purpose,size:document.getElementById('size').value,lotArea:document.getElementById('lotArea').value.trim(),floorArea:document.getElementById('floorArea').value.trim(),location,country,description:document.getElementById('desc').value.trim(),nearby:document.getElementById('nearby').value,images:finalImages,latitude:currentCoords.lat,longitude:currentCoords.lng,amenities:Array.from(selectedAmenities),status:"active",updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
     if(purpose==='RentSell'||purpose==='CommercialRentSell'){propertyData.sellPrice=priceValue;propertyData.sellCurrency=currencyValue;propertyData.rentPrice=rentPriceValue;propertyData.rentCurrency=rentCurrencyValue;}
     if(purpose==='Rent')propertyData.rentDetails={furnished:document.getElementById('furnished').value,bills:document.getElementById('bills').value,advance:document.getElementById('advance').value,maintenance:document.getElementById('maintenance').value};
     if(purpose==='Plot')propertyData.plotDetails={area:document.getElementById('plotArea').value,roadFacing:document.getElementById('plotRoadFacing').value,corner:document.getElementById('plotCorner').value};
