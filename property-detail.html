@@ -1295,6 +1295,7 @@ function openPhotoViewer(galleryIdx) {
 
     document.getElementById('photoViewer').classList.add('open');
     document.body.style.overflow = 'hidden';
+    window.history.pushState({ photoViewer: true }, '');
 
     // Hide gallery tap hint forever
     const hint = document.getElementById('galleryTapHint');
