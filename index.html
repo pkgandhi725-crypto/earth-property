@@ -1044,16 +1044,24 @@ function renderAds(ads, append=false) {
 
         // ✅ Image click → property-detail + GA4 track
         document.getElementById('imgbox-'+sid).addEventListener('click',e=>{
-            if(e.target.closest('.card-actions')) return;
-            trackEvent('view_property', { property_id: p.id, property_title: p.title || '', click_source: 'image' });
-            location.href='property-detail.html?id='+p.id;
-        });
+    if(e.target.closest('.card-actions')) return;
+    trackEvent('view_property', { property_id: p.id, property_title: p.title || '', click_source: 'image' });
+
+    // ✅ ADD THIS
+    sessionStorage.setItem('tepScrollPos', window.scrollY);
+
+    location.href='property-detail.html?id='+p.id;
+});
 
         // ✅ Title click → property-detail + GA4 track
         document.getElementById('ptitle-'+sid).addEventListener('click',()=>{
-            trackEvent('view_property', { property_id: p.id, property_title: p.title || '', click_source: 'title' });
-            location.href='property-detail.html?id='+p.id;
-        });
+    trackEvent('view_property', { property_id: p.id, property_title: p.title || '', click_source: 'title' });
+
+    // ✅ ADD THIS
+    sessionStorage.setItem('tepScrollPos', window.scrollY);
+
+    location.href='property-detail.html?id='+p.id;
+});
 
         // ✅ Share + GA4 track
         document.getElementById('share-'+sid).addEventListener('click',e=>{e.stopPropagation();shareProperty(p.id,p.title||'');});
@@ -1226,6 +1234,15 @@ function dismissLocationCard() {
     document.getElementById('locationCard').style.display = 'none';
     localStorage.setItem('locationCardDismissed', '1');
 }
+
+// ✅ ADD THIS BLOCK
+window.addEventListener('load', () => {
+    const pos = sessionStorage.getItem('tepScrollPos');
+    if (pos) {
+        window.scrollTo(0, parseInt(pos));
+        sessionStorage.removeItem('tepScrollPos');
+    }
+});
 
 loadLanguageDropdown();
 applyLanguage();
