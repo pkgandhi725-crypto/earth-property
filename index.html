@@ -251,7 +251,7 @@
     </div>
     <div class="search-box">
         <i class="fa fa-search" style="color:#999;"></i>
-        <input type="text" id="searchInput" placeholder="Search location, property type..." oninput="filterAds()">
+        <input type="text" id="searchInput" placeholder="Search country, city, area, location..." oninput="filterAds()">
     </div>
 </header>
 
@@ -743,7 +743,7 @@ function applyLanguage() {
     document.getElementById('navMyAds').innerText=t.myAds||'My Ads';
     document.getElementById('navFavs').innerText=t.favorites||'Favs';
     document.getElementById('navProfile').innerText=t.profile||'Profile';
-    document.getElementById('searchInput').placeholder=t.searchPlaceholder||'Search location, property type...';
+    document.getElementById('searchInput').placeholder=t.searchPlaceholder||'Search country, city, area, location...';
     const lmt=document.getElementById('loadMoreText'); if(lmt) lmt.innerText=t.loadMore||'Load More';
     if(currentUserData) updateVerificationStatus(currentUserData.isVerified||false);
     const s=(id,k,f)=>{const el=document.getElementById(id);if(el)el.innerText=t[k]||f;};
