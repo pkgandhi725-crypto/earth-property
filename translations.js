@@ -6,7 +6,7 @@ const TRANSLATIONS = Object.freeze({
     logout: "Logout",
     
     // Index.html - Search & Navigation
-    searchPlaceholder: "Search location, city, area...",
+    searchPlaceholder: "Search country, city, area...",
     explore: "Explore",
     myAds: "My Ads",
     favorites: "Favs",
