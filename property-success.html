@@ -266,6 +266,12 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 
 <script>
+// Back button press hone par my-ads pe bhejo
+history.replaceState(null, '', window.location.href);
+window.addEventListener('popstate', function() {
+    window.location.replace('my-ads.html');
+});
+
 const firebaseConfig = {
     apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
     authDomain: "earth-properties-c3c56.firebaseapp.com",
