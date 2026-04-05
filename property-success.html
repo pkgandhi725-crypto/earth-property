@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Property Posted – The Earth Property</title>
-    <!-- OG Meta Tags — updated dynamically via JS after Firebase load -->
     <meta property="og:title" content="Property on The Earth Property">
     <meta property="og:description" content="View this property listing on The Earth Property">
     <meta property="og:type" content="website">
@@ -20,164 +19,50 @@
         :root { --primary: #2e7d32; --bg: #f0f2f5; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 20px 16px 40px; }
-
-        /* ===== SUCCESS ANIMATION ===== */
-        .success-wrap {
-            width: 100%; max-width: 440px;
-            animation: slideUp 0.5s ease both;
-        }
+        .success-wrap { width: 100%; max-width: 440px; animation: slideUp 0.5s ease both; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* ===== TOP CARD ===== */
-        .top-card {
-            background: linear-gradient(135deg, #1b5e20, #2e7d32);
-            border-radius: 20px;
-            padding: 30px 20px 24px;
-            text-align: center;
-            color: white;
-            margin-bottom: 16px;
-            box-shadow: 0 8px 24px rgba(46,125,50,0.3);
-        }
-        .checkmark-circle {
-            width: 72px; height: 72px;
-            background: rgba(255,255,255,0.15);
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            margin: 0 auto 14px;
-            animation: popIn 0.6s 0.2s cubic-bezier(0.34,1.56,0.64,1) both;
-        }
+        .top-card { background: linear-gradient(135deg, #1b5e20, #2e7d32); border-radius: 20px; padding: 30px 20px 24px; text-align: center; color: white; margin-bottom: 16px; box-shadow: 0 8px 24px rgba(46,125,50,0.3); }
+        .checkmark-circle { width: 72px; height: 72px; background: rgba(255,255,255,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; animation: popIn 0.6s 0.2s cubic-bezier(0.34,1.56,0.64,1) both; }
         @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         .checkmark-circle i { font-size: 36px; color: #fff; }
         .top-card h2 { font-size: 22px; font-weight: 800; margin-bottom: 6px; letter-spacing: 0.3px; }
         .top-card p { font-size: 13px; opacity: 0.88; line-height: 1.5; }
-
-        /* ===== PROPERTY PREVIEW ===== */
-        .preview-card {
-            background: white;
-            border-radius: 16px;
-            padding: 14px 16px;
-            margin-bottom: 16px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-            display: flex; align-items: center; gap: 12px;
-        }
-        .preview-img {
-            width: 60px; height: 60px; border-radius: 10px;
-            background: #e8f5e9; flex-shrink: 0;
-            overflow: hidden;
-        }
+        .preview-card { background: white; border-radius: 16px; padding: 14px 16px; margin-bottom: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.07); display: flex; align-items: center; gap: 12px; }
+        .preview-img { width: 60px; height: 60px; border-radius: 10px; background: #e8f5e9; flex-shrink: 0; overflow: hidden; }
         .preview-img img { width: 100%; height: 100%; object-fit: cover; }
         .preview-img i { font-size: 26px; color: var(--primary); display: flex; align-items: center; justify-content: center; height: 100%; }
         .preview-info { flex: 1; min-width: 0; }
         .preview-title { font-size: 14px; font-weight: 700; color: #222; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
         .preview-price { font-size: 16px; font-weight: 800; color: var(--primary); }
         .preview-id { font-size: 11px; color: #999; margin-top: 3px; }
-
-        /* ===== SHARE SECTION ===== */
-        .share-card {
-            background: white;
-            border-radius: 16px;
-            padding: 18px 16px;
-            margin-bottom: 16px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-        }
-        .share-title {
-            font-size: 13px; font-weight: 700; color: #555;
-            margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
-            text-transform: uppercase; letter-spacing: 0.5px;
-        }
+        .share-card { background: white; border-radius: 16px; padding: 18px 16px; margin-bottom: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.07); }
+        .share-title { font-size: 13px; font-weight: 700; color: #555; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
         .share-title i { color: var(--primary); font-size: 15px; }
-
-        /* Share Buttons Grid */
-        .share-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 12px;
-        }
-        .share-btn {
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            gap: 6px;
-            padding: 14px 8px;
-            border-radius: 12px;
-            border: none; cursor: pointer;
-            font-size: 11px; font-weight: 700;
-            text-decoration: none;
-            color: white;
-            transition: transform 0.15s, box-shadow 0.15s;
-            -webkit-tap-highlight-color: transparent;
-        }
+        .share-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+        .share-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 14px 8px; border-radius: 12px; border: none; cursor: pointer; font-size: 11px; font-weight: 700; text-decoration: none; color: white; transition: transform 0.15s, box-shadow 0.15s; -webkit-tap-highlight-color: transparent; }
         .share-btn:active { transform: scale(0.94); }
         .share-btn i { font-size: 22px; }
-
         .btn-whatsapp  { background: #25D366; box-shadow: 0 4px 12px rgba(37,211,102,0.35); }
         .btn-facebook  { background: #1877f2; box-shadow: 0 4px 12px rgba(24,119,242,0.35); }
         .btn-instagram { background: linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888); box-shadow: 0 4px 12px rgba(220,39,67,0.35); }
         .btn-twitter   { background: #000; box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
         .btn-telegram  { background: #0088cc; box-shadow: 0 4px 12px rgba(0,136,204,0.35); }
         .btn-linkedin  { background: #0077b5; box-shadow: 0 4px 12px rgba(0,119,181,0.35); }
-
-        /* Copy Link Row */
-        .copy-row {
-            display: flex; gap: 8px; align-items: center;
-            background: #f5f5f5; border-radius: 10px; padding: 10px 14px;
-        }
-        .copy-url {
-            flex: 1; font-size: 12px; color: #666;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .copy-btn {
-            background: var(--primary); color: white; border: none;
-            padding: 8px 14px; border-radius: 8px;
-            font-size: 12px; font-weight: 700; cursor: pointer;
-            flex-shrink: 0; white-space: nowrap;
-            transition: 0.15s;
-        }
+        .copy-row { display: flex; gap: 8px; align-items: center; background: #f5f5f5; border-radius: 10px; padding: 10px 14px; }
+        .copy-url { flex: 1; font-size: 12px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .copy-btn { background: var(--primary); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; flex-shrink: 0; white-space: nowrap; transition: 0.15s; }
         .copy-btn:active { transform: scale(0.95); }
         .copy-btn.copied { background: #1976d2; }
-
-        /* ===== NATIVE SHARE ===== */
-        .native-share-btn {
-            width: 100%; padding: 14px;
-            background: linear-gradient(135deg, #1976d2, #1565c0);
-            color: white; border: none; border-radius: 12px;
-            font-size: 14px; font-weight: 700; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            margin-bottom: 12px;
-            box-shadow: 0 4px 14px rgba(25,118,210,0.35);
-            transition: 0.15s;
-        }
+        .native-share-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #1976d2, #1565c0); color: white; border: none; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; box-shadow: 0 4px 14px rgba(25,118,210,0.35); transition: 0.15s; }
         .native-share-btn:active { transform: scale(0.97); }
-
-        /* ===== BOTTOM BUTTONS ===== */
         .action-row { display: flex; gap: 10px; }
-        .action-btn {
-            flex: 1; padding: 14px;
-            border-radius: 12px; border: none;
-            font-size: 13px; font-weight: 700; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            transition: 0.15s;
-        }
+        .action-btn { flex: 1; padding: 14px; border-radius: 12px; border: none; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.15s; }
         .action-btn:active { transform: scale(0.96); }
         .btn-view { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(46,125,50,0.3); }
         .btn-home { background: white; color: #444; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-
-        /* ===== TOAST ===== */
-        .toast {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: #222; color: #fff;
-            padding: 12px 24px; border-radius: 25px;
-            font-size: 13px; font-weight: 600;
-            z-index: 9999; pointer-events: none;
-            opacity: 0; transition: opacity 0.3s;
-            white-space: nowrap;
-        }
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #222; color: #fff; padding: 12px 24px; border-radius: 25px; font-size: 13px; font-weight: 600; z-index: 9999; pointer-events: none; opacity: 0; transition: opacity 0.3s; white-space: nowrap; }
         .toast.show { opacity: 1; }
-
-        /* ===== LOADING STATE ===== */
-        .loading-state {
-            text-align: center; padding: 60px 20px; color: #999;
-        }
+        .loading-state { text-align: center; padding: 60px 20px; color: #999; }
         .loading-state i { font-size: 40px; margin-bottom: 12px; display: block; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
@@ -186,7 +71,6 @@
 
 <div class="success-wrap">
 
-    <!-- TOP SUCCESS CARD -->
     <div class="top-card">
         <div class="checkmark-circle">
             <i class="fa fa-check"></i>
@@ -195,7 +79,6 @@
         <p>Your listing is now visible to buyers worldwide.<br>Share it to get more responses faster!</p>
     </div>
 
-    <!-- PROPERTY PREVIEW -->
     <div class="preview-card" id="previewCard" style="display:none;">
         <div class="preview-img" id="previewImgWrap">
             <i class="fa fa-home"></i>
@@ -207,15 +90,12 @@
         </div>
     </div>
 
-    <!-- NATIVE SHARE (shown only if supported) -->
     <button class="native-share-btn" id="nativeShareBtn" style="display:none;" onclick="nativeShare()">
         <i class="fa fa-share-nodes"></i> Share via Phone
     </button>
 
-    <!-- SHARE BUTTONS -->
     <div class="share-card">
         <div class="share-title"><i class="fa fa-share-alt"></i> Share Your Listing</div>
-
         <div class="share-grid">
             <a class="share-btn btn-whatsapp" id="btnWhatsApp" href="#" target="_blank" rel="noopener">
                 <i class="fa-brands fa-whatsapp"></i> WhatsApp
@@ -236,8 +116,6 @@
                 <i class="fa-brands fa-linkedin-in"></i> LinkedIn
             </a>
         </div>
-
-        <!-- Copy Link -->
         <div class="copy-row">
             <span class="copy-url" id="copyUrlText">Loading link...</span>
             <button class="copy-btn" id="copyBtn" onclick="copyLink()">
@@ -246,7 +124,6 @@
         </div>
     </div>
 
-    <!-- BOTTOM ACTIONS -->
     <div class="action-row">
         <button class="action-btn btn-view" onclick="viewProperty()">
             <i class="fa fa-eye"></i> View Listing
@@ -258,17 +135,18 @@
 
 </div>
 
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 
 <script>
-// Back button press hone par my-ads pe bhejo
-history.replaceState(null, '', window.location.href);
+// ===== BACK BUTTON FIX =====
+// add-property.html history mein nahi hoga (replace use ki add-property mein)
+// Phir bhi agar koi back kare to my-ads pe bhejo
+window.history.pushState(null, '', window.location.href);
 window.addEventListener('popstate', function() {
+    window.history.pushState(null, '', window.location.href);
     window.location.replace('my-ads.html');
 });
 
@@ -280,27 +158,22 @@ const firebaseConfig = {
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// Get property ID from URL
 const params = new URLSearchParams(window.location.search);
 const propertyId = params.get('id');
 
-// Property page URL
 const propertyUrl = propertyId
     ? `${window.location.origin}/property-detail.html?id=${propertyId}`
     : window.location.origin;
 
-// Share messages
 const shareMsg = `🏡 Check out this property on The Earth Property!\n\n${propertyUrl}`;
 const shareTitle = 'Property Listed – The Earth Property';
 
-// Set all share links
 document.getElementById('btnWhatsApp').href  = `https://wa.me/?text=${encodeURIComponent(shareMsg)}`;
 document.getElementById('btnFacebook').href  = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(propertyUrl)}`;
 document.getElementById('btnTwitter').href   = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareMsg)}`;
 document.getElementById('btnTelegram').href  = `https://t.me/share/url?url=${encodeURIComponent(propertyUrl)}&text=${encodeURIComponent('🏡 Check out this property on The Earth Property!')}`;
 document.getElementById('btnLinkedIn').href  = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(propertyUrl)}`;
 
-// Instagram — no direct share URL API, open Instagram instead
 document.getElementById('btnInstagram').href = `https://www.instagram.com/`;
 document.getElementById('btnInstagram').onclick = function(e) {
     e.preventDefault();
@@ -309,35 +182,27 @@ document.getElementById('btnInstagram').onclick = function(e) {
     setTimeout(() => window.open('https://www.instagram.com/', '_blank'), 800);
 };
 
-// Show copy URL
 document.getElementById('copyUrlText').textContent = propertyUrl;
 
-// Native Share (mobile)
 if (navigator.share) {
     document.getElementById('nativeShareBtn').style.display = 'flex';
 }
 
-// Load property details for preview
 if (propertyId) {
     db.collection("properties").doc(propertyId).get().then(doc => {
         if (!doc.exists) return;
         const p = doc.data();
 
-        const card = document.getElementById('previewCard');
-        card.style.display = 'flex';
-
-        // Title
+        document.getElementById('previewCard').style.display = 'flex';
         document.getElementById('previewTitle').textContent = p.title || 'Property';
 
-        // Price
         const price = p.price ? '₹' + Number(p.price).toLocaleString('en-IN') : '—';
         document.getElementById('previewPrice').textContent = price;
-
-        // ID
         document.getElementById('previewId').textContent = '📍 ' + (p.location || '') + (p.country ? ', ' + p.country : '');
 
-        // Update OG meta tags dynamically
+        const imgs = p.images;
         const ogImg = (imgs && imgs.length > 0) ? (typeof imgs[0]==='string' ? imgs[0] : imgs[0].url) : 'https://theearthproperty.com/logo.png';
+
         document.querySelector('meta[property="og:title"]').setAttribute('content', (p.title||'Property') + ' – The Earth Property');
         document.querySelector('meta[property="og:description"]').setAttribute('content', '💰 ' + price + ' | 📍 ' + (p.location||'') + ' | View on The Earth Property');
         document.querySelector('meta[property="og:url"]').setAttribute('content', propertyUrl);
@@ -346,17 +211,13 @@ if (propertyId) {
         document.querySelector('meta[name="twitter:description"]').setAttribute('content', '💰 ' + price + ' | 📍 ' + (p.location||''));
         document.querySelector('meta[name="twitter:image"]').setAttribute('content', ogImg);
 
-        // Image
-        const imgs = p.images;
         if (imgs && imgs.length > 0) {
             const imgUrl = typeof imgs[0] === 'string' ? imgs[0] : imgs[0].url;
             if (imgUrl) {
-                const wrap = document.getElementById('previewImgWrap');
-                wrap.innerHTML = `<img src="${imgUrl}" alt="Property">`;
+                document.getElementById('previewImgWrap').innerHTML = `<img src="${imgUrl}" alt="Property">`;
             }
         }
 
-        // Update share message with title
         const richMsg = `🏡 ${p.title || 'Property'} – The Earth Property\n💰 ${price}\n📍 ${p.location || ''}\n\n${propertyUrl}`;
         document.getElementById('btnWhatsApp').href = `https://wa.me/?text=${encodeURIComponent(richMsg)}`;
         document.getElementById('btnTwitter').href  = `https://twitter.com/intent/tweet?text=${encodeURIComponent(richMsg)}`;
