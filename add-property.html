@@ -233,12 +233,13 @@
             <input type="hidden" id="selectedCountry" value="">
         </div>
         <div class="form-group" style="margin-bottom:10px;">
-            <label style="font-size:13px;">Address</label>
-            <input type="text" id="location" placeholder="Area, City, State" oninput="onAddressInput()">
-            <div class="form-group" style="margin-bottom:10px;">
-            <label style="font-size:13px;">City <span style="color:#d32f2f;">*</span></label>
-            <input type="text" id="city" placeholder="e.g. Gurugram, Mumbai, Dubai">
-        </div>
+    <label style="font-size:13px;">Address</label>
+    <input type="text" id="location" placeholder="Area, City, State" oninput="onAddressInput()">
+</div>
+<div class="form-group" style="margin-bottom:10px;">
+    <label style="font-size:13px;">City <span style="color:#d32f2f;">*</span></label>
+    <input type="text" id="city" placeholder="e.g. Gurugram, Mumbai, Dubai">
+</div>
         </div>
         <button type="button" class="get-map-btn" id="btnGetMap" onclick="geocodeAddress()">
             <span id="getMapBtnIcon">🗺️</span><span id="getMapBtnText">Get on Map</span>
@@ -945,6 +946,7 @@ function confirmGPSCapture(){
                 if(countryName){const found=COUNTRIES.find(c=>c.name.toLowerCase()===countryName.toLowerCase());if(found)selectCountry(found.name,found.flag);else{document.getElementById('countrySearch').value=countryName;document.getElementById('selectedCountry').value=countryName;document.getElementById('countryClearBtn').style.display='block';updatePhoneCode(countryName,'🌍');}}
                 const parts=[area,city,state].filter(Boolean);
                 if(parts.length>0)document.getElementById('location').value=parts.join(', ');
+                if(city) document.getElementById('city').value = city;
                 showToast('✓ Address auto-filled from GPS!','success');
             }else{showToast('✓ GPS Captured! Please type your address.','success');}
         }catch(e){showToast('✓ GPS Captured! Please type your address.','success');}
