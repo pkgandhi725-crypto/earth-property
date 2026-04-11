@@ -861,17 +861,19 @@
 
         const now = new Date();
         const q = query(
-          collection(db, 'properties'),
-          where('city', '==', 'Gurugram'),
-          where('status', '==', 'active'),
-          where('expiresAt', '>', now),
-          orderBy('expiresAt', 'asc'),
-          orderBy('createdAt', 'desc')
-        );
+  collection(db, 'properties'),
+  where('city', '==', 'Gurugram'),
+  where('isExpired', '==', false),
+  orderBy('createdAt', 'desc')
+);
 
-        let snapshot;
-        try {
-          snapshot = await getDocs(q);
+let snapshot;
+try {
+  snapshot = await getDocs(q);
+} catch (e) {
+  console.error('Query error:', e);
+  throw e;
+}
         } catch (e) {
           const q2 = query(
             collection(db, 'properties'),
