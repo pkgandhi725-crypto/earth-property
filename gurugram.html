@@ -4,19 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- SEO Meta Tags -->
   <title>Property in Gurugram | Flats, Rooms & Plots for Sale & Rent – The Earth Property</title>
   <meta name="description" content="Find verified properties in Gurugram – flats for rent, rooms, 2BHK, 3BHK, commercial spaces, plots for sale. No broker. Direct owner listings on The Earth Property." />
   <meta name="keywords" content="property in gurugram, flats for rent in gurugram, room for rent gurugram, 2bhk gurugram, 3bhk gurugram, plots in gurugram, buy flat gurugram, pg in gurugram, commercial space gurugram, property gurugram no broker" />
   <link rel="canonical" href="https://theearthproperty.com/gurugram" />
 
-  <!-- Open Graph -->
   <meta property="og:title" content="Properties in Gurugram – The Earth Property" />
   <meta property="og:description" content="Browse flats, rooms, PG, plots & commercial properties in Gurugram. Direct owner listings, no brokerage." />
   <meta property="og:url" content="https://theearthproperty.com/gurugram" />
   <meta property="og:type" content="website" />
 
-  <!-- JSON-LD Schema -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -39,15 +36,13 @@
   }
   </script>
 
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
 
-  <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, query, where, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
@@ -62,7 +57,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     window._db = db;
-    window._firestoreModules = { collection, query, where, orderBy, limit, getDocs };
+    window._firestoreModules = { collection, query, where, orderBy, getDocs };
     window.dispatchEvent(new Event("firebaseReady"));
   </script>
 
@@ -90,7 +85,6 @@
       overflow-x: hidden;
     }
 
-    /* ── NAV ── */
     nav {
       position: fixed;
       top: 0; left: 0; right: 0;
@@ -123,7 +117,6 @@
       letter-spacing: 0.5px;
     }
 
-    /* ── HERO ── */
     .hero {
       min-height: 100svh;
       background: var(--black);
@@ -203,10 +196,7 @@
       animation: fadeUp 0.6s 0.3s ease both;
     }
 
-    .stat {
-      display: flex;
-      flex-direction: column;
-    }
+    .stat { display: flex; flex-direction: column; }
 
     .stat-num {
       font-family: 'Bebas Neue', sans-serif;
@@ -250,7 +240,6 @@
       50% { opacity: 1; }
     }
 
-    /* ── SEO DESCRIPTION ── */
     .city-desc {
       background: var(--cream);
       padding: 40px 20px;
@@ -271,7 +260,6 @@
       margin-bottom: 10px;
     }
 
-    /* ── FILTER TABS ── */
     .filters-wrap {
       position: sticky;
       top: 52px;
@@ -311,7 +299,6 @@
       border-bottom-color: var(--gold);
     }
 
-    /* ── LISTINGS SECTION ── */
     .listings-section {
       padding: 28px 16px 60px;
       max-width: 480px;
@@ -336,7 +323,6 @@
       color: var(--gray);
     }
 
-    /* ── CARD ── */
     .cards-grid {
       display: flex;
       flex-direction: column;
@@ -414,9 +400,7 @@
       gap: 3px;
     }
 
-    .card-body {
-      padding: 14px 16px 16px;
-    }
+    .card-body { padding: 14px 16px 16px; }
 
     .card-price {
       font-family: 'Bebas Neue', sans-serif;
@@ -469,7 +453,6 @@
       gap: 4px;
     }
 
-    /* ── STATES ── */
     .loading-state {
       display: flex;
       flex-direction: column;
@@ -490,10 +473,7 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .loading-state p {
-      font-size: 0.8rem;
-      color: var(--gray);
-    }
+    .loading-state p { font-size: 0.8rem; color: var(--gray); }
 
     .empty-state {
       text-align: center;
@@ -516,7 +496,6 @@
       margin-bottom: 20px;
     }
 
-    /* ── CTA BANNER ── */
     .cta-banner {
       margin: 8px 0 0;
       background: var(--black);
@@ -551,7 +530,6 @@
       letter-spacing: 0.5px;
     }
 
-    /* ── NEARBY CITIES ── */
     .nearby-section {
       padding: 0 16px 40px;
       max-width: 480px;
@@ -585,7 +563,6 @@
 
     .nearby-chip:active { background: var(--gray-light); }
 
-    /* ── FOOTER ── */
     footer {
       background: var(--black);
       color: rgba(250,250,248,0.4);
@@ -597,44 +574,35 @@
 
     footer a { color: var(--gold); text-decoration: none; }
 
-    /* ── ANIMATIONS ── */
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(24px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .fade-in {
-      animation: fadeUp 0.5s ease both;
-    }
+    .fade-in { animation: fadeUp 0.5s ease both; }
   </style>
 </head>
 <body>
 
-  <!-- NAV -->
   <nav>
     <a href="/" class="nav-logo">TEP</a>
     <a href="/add-property.html" class="nav-cta">+ List Free</a>
   </nav>
 
-  <!-- HERO -->
   <section class="hero">
     <div class="hero-bg"></div>
     <div class="hero-grid"></div>
-
     <div class="hero-tag">
       <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#c9a84c"/></svg>
       Haryana · India
     </div>
-
     <h1 class="hero-title">
       Property<br>in
       <span>Gurugram</span>
     </h1>
-
     <p class="hero-sub">
       Verified flats, rooms, PG, plots & commercial spaces. Direct owner listings — no broker, no commission.
     </p>
-
     <div class="hero-stats">
       <div class="stat">
         <span class="stat-num" id="heroCount">—</span>
@@ -649,14 +617,12 @@
         <span class="stat-label">To List</span>
       </div>
     </div>
-
     <div class="hero-scroll">
       <div class="scroll-line"></div>
       scroll
     </div>
   </section>
 
-  <!-- SEO DESCRIPTION -->
   <div class="city-desc">
     <h2>Find Your Perfect Property in Gurugram</h2>
     <p>
@@ -670,7 +636,6 @@
     </p>
   </div>
 
-  <!-- FILTER TABS -->
   <div class="filters-wrap">
     <div class="filters" id="filterTabs">
       <button class="filter-btn active" data-filter="all">All</button>
@@ -682,7 +647,6 @@
     </div>
   </div>
 
-  <!-- LISTINGS -->
   <section class="listings-section">
     <div class="section-header">
       <h2 class="section-title">Gurugram Properties</h2>
@@ -703,7 +667,6 @@
       <a href="/add-property.html" class="cta-btn">List Your Property</a>
     </div>
 
-    <!-- CTA BANNER -->
     <div class="cta-banner" id="ctaBanner" style="display:none;">
       <h3>Own Property in Gurugram?</h3>
       <p>List it free — reach thousands of buyers & tenants directly.</p>
@@ -711,7 +674,6 @@
     </div>
   </section>
 
-  <!-- NEARBY CITIES -->
   <section class="nearby-section">
     <h3 class="nearby-title">Properties in Nearby Cities</h3>
     <div class="nearby-chips">
@@ -724,7 +686,6 @@
     </div>
   </section>
 
-  <!-- FOOTER -->
   <footer>
     <p>© 2025 <a href="/">The Earth Property</a> · Free property listings worldwide</p>
     <p>Gurugram · Haryana · India</p>
@@ -738,7 +699,6 @@
   <script type="module">
     import { getFirestore, collection, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // ── Helpers ──
     function escHtml(str) {
       if (!str) return '';
       return String(str)
@@ -793,7 +753,7 @@
         ? `<span class="verified-badge">✓ Verified</span>` : '';
 
       const bhk = d.bedrooms ? `<span class="card-meta-item">🛏 ${escHtml(String(d.bedrooms))} BHK</span>` : '';
-      const area = d.area ? `<span class="card-meta-item">📐 ${escHtml(String(d.area))} sqft</span>` : '';
+      const area = d.floorArea || d.area ? `<span class="card-meta-item">📐 ${escHtml(String(d.floorArea || d.area))} sqft</span>` : '';
       const type = d.propertyType ? `<span class="card-meta-item">🏠 ${escHtml(d.propertyType)}</span>` : '';
 
       return `
@@ -813,14 +773,13 @@
               <svg width="11" height="13" viewBox="0 0 11 13" fill="none">
                 <path d="M5.5 0C3.01 0 1 2.01 1 4.5c0 3.375 4.5 8.5 4.5 8.5S10 7.875 10 4.5C10 2.01 7.99 0 5.5 0zm0 6.125A1.625 1.625 0 1 1 5.5 2.875a1.625 1.625 0 0 1 0 3.25z" fill="#6b6b6b"/>
               </svg>
-              ${escHtml(d.locality || d.city || 'Gurugram')}${d.city && d.locality ? ', ' + escHtml(d.city) : ''}
+              ${escHtml(d.location || d.locality || d.city || 'Gurugram')}
             </div>
             ${(bhk || area || type) ? `<div class="card-meta">${bhk}${area}${type}</div>` : ''}
           </div>
         </a>`;
     }
 
-    // ── State ──
     let allListings = [];
     let activeFilter = 'all';
 
@@ -853,37 +812,19 @@
       document.getElementById('heroCount').textContent = allListings.length || '0';
     }
 
-    // ── Fetch from Firestore ──
     async function loadListings() {
       try {
         const db = window._db;
         const { collection, query, where, orderBy, getDocs } = window._firestoreModules;
 
-        const now = new Date();
         const q = query(
-  collection(db, 'properties'),
-  where('city', '==', 'Gurugram'),
-  where('isExpired', '==', false),
-  orderBy('createdAt', 'desc')
-);
+          collection(db, 'properties'),
+          where('city', '==', 'Gurugram'),
+          where('isExpired', '==', false),
+          orderBy('createdAt', 'desc')
+        );
 
-let snapshot;
-try {
-  snapshot = await getDocs(q);
-} catch (e) {
-  console.error('Query error:', e);
-  throw e;
-}
-        } catch (e) {
-          const q2 = query(
-            collection(db, 'properties'),
-            where('city', '==', 'Gurugram'),
-            where('status', '==', 'active'),
-            orderBy('createdAt', 'desc')
-          );
-          snapshot = await getDocs(q2);
-        }
-
+        const snapshot = await getDocs(q);
         allListings = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
         document.getElementById('loadingState').style.display = 'none';
         renderListings(activeFilter);
@@ -895,7 +836,6 @@ try {
       }
     }
 
-    // ── Filter tabs ──
     document.getElementById('filterTabs').addEventListener('click', (e) => {
       const btn = e.target.closest('.filter-btn');
       if (!btn) return;
@@ -905,7 +845,6 @@ try {
       renderListings(activeFilter);
     });
 
-    // ── Init ──
     window.addEventListener('firebaseReady', loadListings);
     if (window._db) loadListings();
   </script>
