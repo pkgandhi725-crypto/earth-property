@@ -56,13 +56,12 @@
       const emptyEl = document.getElementById("empty-state");
 
       try {
-        // Query by city field (new listings)
+        // Query by city field (new listings) — isExpired filter removed, done client-side
         const cityQuery = query(
           collection(db, "properties"),
           where("city", "==", "Jaipur"),
-          where("isExpired", "==", false),
           orderBy("createdAt", "desc"),
-          limit(30)
+          limit(50)
         );
 
         // Also query by location string (old listings without city field)
@@ -70,10 +69,9 @@
           collection(db, "properties"),
           where("location", ">=", "Jaipur"),
           where("location", "<=", "Jaipur\uf8ff"),
-          where("isExpired", "==", false),
           orderBy("location"),
           orderBy("createdAt", "desc"),
-          limit(30)
+          limit(50)
         );
 
         const [citySnap, locationSnap] = await Promise.all([
@@ -81,12 +79,14 @@
           getDocs(locationQuery)
         ]);
 
-        // Merge and deduplicate
+        // Merge, deduplicate, and filter expired client-side
         const seen = new Set();
         const docs = [];
         [...citySnap.docs, ...locationSnap.docs].forEach(d => {
           if (!seen.has(d.id)) {
             seen.add(d.id);
+            const data = d.data();
+            if (data.isExpired === true) return; // skip expired listings
             docs.push(d);
           }
         });
