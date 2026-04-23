@@ -204,6 +204,19 @@
     </div>
     <div class="drawer-footer">
         <div class="drawer-item" onclick="location.href='my-ads.html'"><i class="fa fa-layer-group" style="color:var(--primary);"></i><span id="myAdsText">My Ads</span></div>
+        <div class="drawer-item" onclick="var s=document.getElementById('citySubmenu');s.style.display=s.style.display==='none'?'block':'none';this.querySelector('.city-arrow').textContent=s.style.display==='none'?'▼':'▲'">
+    <i class="fa fa-map-marker-alt" style="color:#e91e63;"></i>
+    <span>Explore by City</span>
+    <span class="city-arrow" style="margin-left:auto;">▼</span>
+</div>
+<div id="citySubmenu" style="display:none; background:#f9f9f9; border-bottom:1px solid #f0f0f0;">
+    <div class="drawer-item" style="padding-left:35px;" onclick="location.href='gurugram.html'">
+        <span>🏙️ Gurugram</span>
+    </div>
+    <div class="drawer-item" style="padding-left:35px;" onclick="location.href='jaipur.html'">
+        <span>🏰 Jaipur</span>
+    </div>
+</div>
         <div class="drawer-item" onclick="location.href='favorites.html'"><i class="fa fa-heart" style="color:#ff5252;"></i><span id="favsText">Favorites</span></div>
         <div class="drawer-item" onclick="location.href='feedback.html'"><i class="fa fa-comment-dots" style="color:#9C27B0;"></i><span id="feedbackText">Feedback</span></div>
         <div class="drawer-item" onclick="if(auth.currentUser){location.href='help.html'}else{toggleDrawer();setTimeout(()=>{document.getElementById('helpAuthModal').style.display='flex';document.body.style.overflow='hidden';},300)}"><i class="fa fa-question-circle" style="color:#2196F3;"></i><span id="helpText">Help & Support</span></div>
