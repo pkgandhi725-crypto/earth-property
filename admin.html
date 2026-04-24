@@ -214,7 +214,12 @@ function loadProperties() {
                 }
             } catch (e) { console.error("Owner fetch error:", e); }
 
-            const isExpired = d.isExpired || false;
+            const purpose = d.purpose || 'Sell';
+            const limit = (purpose === 'Rent' || purpose === 'PG' || purpose === 'CommercialRent') ? 30 : 180;
+            const baseDate = d.renewedAt ? d.renewedAt.toDate() : (d.createdAt ? d.createdAt.toDate() : new Date());
+            const expDate = new Date(baseDate);
+            expDate.setDate(expDate.getDate() + limit);
+            const isExpired = new Date() > expDate;
             if (isExpired) expiredCount++; else activeCount++;
 
             let postDate = "Unknown";
