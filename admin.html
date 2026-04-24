@@ -36,6 +36,8 @@
         .edit-btn:hover { background: #2e7d32; color: white; }
         .copy-btn { background: #fff3e0; color: #f57c00; }
         .copy-btn:hover { background: #f57c00; color: white; }
+        .renew-btn { background: #fff3e0; color: #f57c00; }
+        .renew-btn:hover { background: #f57c00; color: white; }
         .verify-link { background: linear-gradient(135deg, #ffd700, #ffa500); color: #000; padding: 12px 20px; border-radius: 10px; text-decoration: none; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(255,165,0,0.3); }
         .admin-tabs { display: flex; gap: 10px; background: white; padding: 10px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; }
         .tab-btn { flex: 1; padding: 12px 20px; border: 2px solid #e0e0e0; background: white; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; transition: 0.2s; color: #666; }
@@ -124,7 +126,6 @@
     </div>
 </div>
 
-<!-- ✅ Firebase 10.14.1 compat — same version as rest of site -->
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -145,7 +146,6 @@ let currentFilter = 'all';
 let feedbacksLoaded = false;
 let supportLoaded = false;
 
-// ✅ Currency symbols
 const CURRENCY_SYMBOLS = {
     INR:'₹', USD:'$', GBP:'£', EUR:'€', AED:'AED', SAR:'SAR',
     PKR:'Rs', BDT:'৳', SGD:'S$', MYR:'RM', CAD:'C$', AUD:'A$',
@@ -173,7 +173,6 @@ function escapeHtml(str) {
     return String(str || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
-// ✅ Auth check
 auth.onAuthStateChanged((user) => {
     if (!user || user.uid !== ADMIN_UID) {
         window.location.href = "index.html";
@@ -182,7 +181,6 @@ auth.onAuthStateChanged((user) => {
     }
 });
 
-// ✅ Load properties using compat syntax
 function loadProperties() {
     db.collection("properties").onSnapshot(async (snap) => {
         const list = document.getElementById("list");
@@ -200,7 +198,6 @@ function loadProperties() {
             const d = docSnap.data();
             const id = docSnap.id;
 
-            // Fetch owner info
             let ownerName = "Unknown", ownerEmail = "", ownerEpId = "";
             try {
                 if (d.ownerId) {
@@ -220,6 +217,7 @@ function loadProperties() {
             const expDate = new Date(baseDate);
             expDate.setDate(expDate.getDate() + limit);
             const isExpired = new Date() > expDate;
+
             if (isExpired) expiredCount++; else activeCount++;
 
             let postDate = "Unknown";
@@ -244,7 +242,7 @@ function loadProperties() {
                 price: d.price || 0,
                 currency: d.currency || 'INR',
                 phone: d.phone || "N/A",
-                purpose: d.purpose || "Sell",
+                purpose,
                 ownerId: d.ownerId || "",
                 ownerName,
                 ownerEmail,
@@ -266,7 +264,6 @@ function loadProperties() {
     });
 }
 
-// ✅ Tab switching
 function showTab(tab) {
     document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -285,7 +282,6 @@ function showTab(tab) {
     }
 }
 
-// ✅ Load feedbacks
 function loadFeedbacks() {
     db.collection('feedbacks').onSnapshot((snapshot) => {
         const container = document.getElementById('feedbacksList');
@@ -333,7 +329,6 @@ function loadFeedbacks() {
     });
 }
 
-// ✅ Load support tickets
 function loadSupportTickets() {
     db.collection('support_tickets').onSnapshot((snapshot) => {
         const container = document.getElementById('supportTicketsList');
@@ -382,7 +377,6 @@ function loadSupportTickets() {
     });
 }
 
-// ✅ Render properties
 function renderProperties() {
     const list = document.getElementById("list");
     const searchTerm = document.getElementById('searchBox').value.toLowerCase().trim();
@@ -446,6 +440,9 @@ function renderProperties() {
                 <button class="copy-btn" onclick="copyPropertyId('${p.id}')">
                     <i class="fa fa-copy"></i> ID
                 </button>
+                ${p.isExpired ? `<button class="renew-btn" onclick="adminRenewAd('${p.id}', '${p.purpose}', this)">
+                    <i class="fa fa-rotate-right"></i> Renew
+                </button>` : ''}
                 <button class="del-btn" onclick="deletePost('${p.id}', '${escapeHtml(p.title)}')">
                     <i class="fa fa-trash-alt"></i> Delete
                 </button>
@@ -454,7 +451,6 @@ function renderProperties() {
     `).join('');
 }
 
-// ✅ Filter
 function filterByStatus(status, event) {
     currentFilter = status;
     document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
@@ -462,10 +458,8 @@ function filterByStatus(status, event) {
     renderProperties();
 }
 
-// ✅ Search
 document.getElementById('searchBox').addEventListener('input', renderProperties);
 
-// ✅ Copy ID
 function copyPropertyId(id) {
     navigator.clipboard.writeText(id).then(() => {
         alert('Property ID copied!\n\n' + id);
@@ -474,7 +468,6 @@ function copyPropertyId(id) {
     });
 }
 
-// ✅ View property modal
 function viewProperty(id) {
     const p = allProperties.find(x => x.id === id);
     if (!p) return;
@@ -537,16 +530,13 @@ function viewProperty(id) {
     modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 }
 
-// ✅ Edit property — admin bypass using sessionStorage flag
 function editProperty(id) {
     const modal = document.querySelector('.admin-modal');
     if (modal) modal.remove();
-    // ✅ Store admin edit flag so add-property.html skips owner check
     sessionStorage.setItem('adminEdit', 'true');
     window.open(`add-property.html?edit=${id}`, '_blank');
 }
 
-// ✅ Delete property
 async function deletePost(id, title) {
     if (!confirm(`Delete this property permanently?\n\nTitle: ${title}\n\nThis cannot be undone.`)) return;
     try {
@@ -557,7 +547,35 @@ async function deletePost(id, title) {
     }
 }
 
-// ✅ Feedback actions
+// ✅ Admin Renew Ad
+async function adminRenewAd(id, purpose, btn) {
+    if (!confirm("Renew this ad for another full period?")) return;
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+
+    try {
+        const limit = (purpose === 'Rent' || purpose === 'PG' || purpose === 'CommercialRent') ? 30 : 180;
+        const newExpiry = new Date();
+        newExpiry.setDate(newExpiry.getDate() + limit);
+
+        await db.collection("properties").doc(id).update({
+            isExpired: false,
+            renewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            expiryDate: firebase.firestore.Timestamp.fromDate(newExpiry)
+        });
+
+        btn.innerHTML = '<i class="fa fa-check"></i> Renewed';
+        btn.style.background = "#4caf50";
+        btn.style.color = "white";
+        setTimeout(() => alert("Ad renewed successfully!"), 100);
+    } catch(e) {
+        alert("Error: " + e.message);
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}
+
 async function markFeedbackResolved(id) {
     if (!confirm('Mark this feedback as resolved?')) return;
     try {
@@ -578,7 +596,6 @@ async function deleteFeedback(id) {
     } catch (e) { alert('Error: ' + e.message); }
 }
 
-// ✅ Support ticket actions
 async function closeTicket(id) {
     if (!confirm('Close this support ticket?')) return;
     try {
