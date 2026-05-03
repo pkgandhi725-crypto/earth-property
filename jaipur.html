@@ -4,20 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- SEO Meta Tags -->
   <title>Properties in Jaipur – Buy, Sell & Rent | The Earth Property</title>
   <meta name="description" content="Find properties in Jaipur – flats, villas, plots, PG & commercial spaces. Buy, sell or rent with zero brokerage on The Earth Property." />
   <meta name="keywords" content="property in Jaipur, flats in Jaipur, house for sale Jaipur, rent in Jaipur, PG in Jaipur, plots Jaipur, real estate Jaipur, buy property Jaipur" />
   <link rel="canonical" href="https://theearthproperty.com/jaipur.html" />
 
-  <!-- Open Graph -->
   <meta property="og:title" content="Properties in Jaipur – Buy, Sell & Rent | The Earth Property" />
   <meta property="og:description" content="Browse verified properties in Jaipur with zero brokerage. Flats, villas, plots, PG & commercial spaces." />
   <meta property="og:url" content="https://theearthproperty.com/jaipur.html" />
   <meta property="og:type" content="website" />
   <meta property="og:image" content="https://theearthproperty.com/assets/og-jaipur.jpg" />
 
-  <!-- JSON-LD Schema -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -33,18 +30,18 @@
   }
   </script>
 
-  <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, query, where, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyC6pMiHpAlVOVHs2XBWCLY_R8xNPBMnpmo",
+      apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
       authDomain: "earth-properties-c3c56.firebaseapp.com",
+      databaseURL: "https://earth-properties-c3c56-default-rtdb.firebaseio.com",
       projectId: "earth-properties-c3c56",
       storageBucket: "earth-properties-c3c56.firebasestorage.app",
-      messagingSenderId: "1049990861645",
-      appId: "1:1049990861645:web:4e7e0b1d3c4f9a2e8b1c3d"
+      messagingSenderId: "677407721236",
+      appId: "1:677407721236:web:2964262087105819e6a401"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -56,40 +53,21 @@
       const emptyEl = document.getElementById("empty-state");
 
       try {
-        // Query by city field (new listings) — isExpired filter removed, done client-side
-        const cityQuery = query(
+        const q = query(
           collection(db, "properties"),
-          where("city", "==", "Jaipur"),
-          orderBy("createdAt", "desc"),
-          limit(50)
+          where("isExpired", "==", false),
+          orderBy("createdAt", "desc")
         );
 
-        // Also query by location string (old listings without city field)
-        const locationQuery = query(
-          collection(db, "properties"),
-          where("location", ">=", "Jaipur"),
-          where("location", "<=", "Jaipur\uf8ff"),
-          orderBy("location"),
-          orderBy("createdAt", "desc"),
-          limit(50)
-        );
-
-        const [citySnap, locationSnap] = await Promise.all([
-          getDocs(cityQuery),
-          getDocs(locationQuery)
-        ]);
-
-        // Merge, deduplicate, and filter expired client-side
-        const seen = new Set();
-        const docs = [];
-        [...citySnap.docs, ...locationSnap.docs].forEach(d => {
-          if (!seen.has(d.id)) {
-            seen.add(d.id);
-            const data = d.data();
-            if (data.isExpired === true) return; // skip expired listings
-            docs.push(d);
-          }
-        });
+        const snapshot = await getDocs(q);
+        const docs = snapshot.docs
+          .map(d => ({ id: d.id, data: d.data() }))
+          .filter(p => {
+            const city = (p.data.city || '').toLowerCase().trim();
+            const loc = (p.data.location || '').toLowerCase();
+            return ['jaipur', 'jaipur city', 'jaipur rajasthan', 'pink city'].includes(city)
+              || loc.includes('jaipur');
+          });
 
         loadingEl.style.display = "none";
 
@@ -98,9 +76,8 @@
           return;
         }
 
-        docs.forEach(doc => {
-          const p = doc.data();
-          const card = createCard(doc.id, p);
+        docs.forEach(({ id, data: p }) => {
+          const card = createCard(id, p);
           grid.appendChild(card);
         });
 
@@ -172,7 +149,6 @@
       color: #222;
     }
 
-    /* ── Header ── */
     header {
       background: #fff;
       border-bottom: 1px solid #e5e5e5;
@@ -207,7 +183,6 @@
       text-decoration: none;
     }
 
-    /* ── Hero ── */
     .hero {
       background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
       color: #fff;
@@ -250,7 +225,6 @@
       font-weight: 500;
     }
 
-    /* ── Filter Bar ── */
     .filter-bar {
       background: #fff;
       border-bottom: 1px solid #e5e5e5;
@@ -277,7 +251,6 @@
       color: #fff;
     }
 
-    /* ── Section ── */
     .section {
       max-width: 1200px;
       margin: 0 auto;
@@ -290,7 +263,6 @@
       color: #111;
     }
 
-    /* ── Grid ── */
     #listings-grid {
       display: grid;
       grid-template-columns: 1fr;
@@ -306,7 +278,6 @@
       #listings-grid { grid-template-columns: repeat(4, 1fr); }
     }
 
-    /* ── Card ── */
     .card {
       background: #fff;
       border-radius: 12px;
@@ -392,7 +363,6 @@
       margin-top: 4px;
     }
 
-    /* ── States ── */
     #loading {
       text-align: center;
       padding: 48px 16px;
@@ -418,7 +388,6 @@
     #empty-state h3 { font-size: 18px; margin-bottom: 8px; }
     #empty-state p { font-size: 14px; color: #666; margin-bottom: 20px; }
 
-    /* ── Info Strip ── */
     .info-strip {
       background: #fff;
       border-top: 1px solid #e5e5e5;
@@ -440,7 +409,6 @@
     .info-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
     .info-card p { font-size: 13px; color: #666; line-height: 1.5; }
 
-    /* ── Areas ── */
     .areas-grid {
       display: flex;
       flex-wrap: wrap;
@@ -460,7 +428,6 @@
     }
     .area-pill:hover { border-color: #1a73e8; color: #1a73e8; }
 
-    /* ── Footer ── */
     footer {
       background: #111;
       color: #aaa;
@@ -476,7 +443,6 @@
 
 <body>
 
-  <!-- Header -->
   <header>
     <div class="header-inner">
       <a href="index.html" class="logo">The Earth<span>Property</span></a>
@@ -484,7 +450,6 @@
     </div>
   </header>
 
-  <!-- Hero -->
   <section class="hero">
     <div class="hero-eyebrow">🏰 Pink City Real Estate</div>
     <h1>Properties in Jaipur</h1>
@@ -497,16 +462,14 @@
     </div>
   </section>
 
-  <!-- Filter Bar -->
   <div class="filter-bar">
-    <button class="filter-btn active" onclick="filterListings('all')">All</button>
-    <button class="filter-btn" onclick="filterListings('Sell')">For Sale</button>
-    <button class="filter-btn" onclick="filterListings('Rent')">For Rent</button>
-    <button class="filter-btn" onclick="filterListings('PG')">PG</button>
-    <button class="filter-btn" onclick="filterListings('RentSell')">Rent / Sell</button>
+    <button class="filter-btn active" onclick="filterListings('all', this)">All</button>
+    <button class="filter-btn" onclick="filterListings('Sell', this)">For Sale</button>
+    <button class="filter-btn" onclick="filterListings('Rent', this)">For Rent</button>
+    <button class="filter-btn" onclick="filterListings('PG', this)">PG</button>
+    <button class="filter-btn" onclick="filterListings('RentSell', this)">Rent / Sell</button>
   </div>
 
-  <!-- Listings -->
   <div class="section">
     <div class="section-title">Latest Listings in Jaipur</div>
 
@@ -525,7 +488,6 @@
     <div id="listings-grid"></div>
   </div>
 
-  <!-- Popular Areas -->
   <div class="section">
     <div class="section-title">Popular Areas in Jaipur</div>
     <div class="areas-grid">
@@ -544,7 +506,6 @@
     </div>
   </div>
 
-  <!-- Info Strip -->
   <div class="info-strip">
     <div class="info-inner">
       <div class="info-card">
@@ -565,22 +526,17 @@
     </div>
   </div>
 
-  <!-- Footer -->
   <footer>
     <p>© 2025 The Earth Property · <a href="index.html">Home</a> · <a href="add-property.html">List Property</a> · <a href="index.html?search=Jaipur">All Jaipur Listings</a></p>
   </footer>
 
   <script>
-    function filterListings(type) {
+    function filterListings(type, btn) {
       document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-      event.target.classList.add("active");
-
+      btn.classList.add("active");
       const cards = document.querySelectorAll(".card");
       cards.forEach(card => {
-        if (type === "all") {
-          card.style.display = "block";
-          return;
-        }
+        if (type === "all") { card.style.display = "block"; return; }
         const badge = card.querySelector(".badge");
         if (!badge) return;
         const cls = badge.className;
