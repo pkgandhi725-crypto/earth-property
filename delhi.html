@@ -817,8 +817,7 @@
         const db = window._db;
         const { collection, query, where, orderBy, getDocs } = window._firestoreModules;
 
-        // Query 1: city field match (case-insensitive handled below)
-        // Firestore doesn't support case-insensitive — so we query all 3 variants
+        // Query 1: city field — all case variants
         const variants = ['Delhi', 'delhi', 'DELHI'];
 
         const snapshots = await Promise.all(
@@ -832,13 +831,12 @@
           )
         );
 
-        // Also query location field for old listings
+        // Query 2: old listings using location field (no orderBy createdAt to avoid composite index)
         const locationSnap = await getDocs(query(
           collection(db, 'properties'),
           where('location', '>=', 'Delhi'),
           where('location', '<=', 'Delhi\uf8ff'),
-          orderBy('location'),
-          orderBy('createdAt', 'desc')
+          orderBy('location')
         ));
 
         // Merge & deduplicate
@@ -849,8 +847,9 @@
           if (!seen.has(d.id)) {
             seen.add(d.id);
             const data = d.data();
-            // Client-side: skip expired, and verify city is actually Delhi
+            // Skip expired listings
             if (data.isExpired === true) return;
+            // Verify city is actually Delhi
             const cityVal = (data.city || '').toLowerCase();
             const locationVal = (data.location || '').toLowerCase();
             if (cityVal !== 'delhi' && !locationVal.includes('delhi')) return;
@@ -858,7 +857,7 @@
           }
         });
 
-        // Sort by createdAt desc
+        // Sort by createdAt desc (client-side)
         docs.sort((a, b) => {
           const ta = a.data.createdAt?.toMillis?.() || 0;
           const tb = b.data.createdAt?.toMillis?.() || 0;
