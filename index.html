@@ -935,16 +935,33 @@ function loadProperties(isLoadMore=false) {
             if(ad.expiryDate&&ad.expiryDate.toDate()<new Date()) return false;
             return true;
         });
-        if(isLoadMore){allAds=[...allAds,...newAds];displayedAds=[...displayedAds,...newAds];}
-        else{allAds=newAds;displayedAds=newAds;}
-        if(snap.docs.length<ADS_PER_PAGE){hasMoreAds=false;document.getElementById('loadMoreContainer').style.display='none';}
-        else{hasMoreAds=true;lastVisible=snap.docs[snap.docs.length-1];document.getElementById('loadMoreContainer').style.display='block';}
+        if(isLoadMore){
+            allAds=[...allAds,...newAds];
+            displayedAds=[...displayedAds,...newAds];
+        } else {
+            allAds=newAds;
+            displayedAds=newAds;
+        }
+        if(snap.docs.length<ADS_PER_PAGE){
+            hasMoreAds=false;
+            document.getElementById('loadMoreContainer').style.display='none';
+        } else {
+            hasMoreAds=true;
+            lastVisible=snap.docs[snap.docs.length-1];
+            document.getElementById('loadMoreContainer').style.display='block';
+        }
         if(userLocation) displayedAds=sortByProximity(displayedAds);
         isDataLoaded=true;
-        renderAds(displayedAds,isLoadMore);
+
+        if(isLoadMore){
+            const toRender = userLocation ? sortByProximity(newAds) : newAds;
+            renderAds(toRender, true);
+        } else {
+            renderAds(displayedAds, false);
+        }
+
         isLoading=false;
         if(btn){btn.disabled=false;btn.innerHTML=`<span id="loadMoreText">${getT().loadMore||'Load More'}</span>`;}
-        // ✅ GA4: Load more track
         if(isLoadMore) trackEvent('load_more_properties', { page: Math.ceil(allAds.length / ADS_PER_PAGE) });
     }).catch(err=>{
         console.error('Firestore error:',err);
