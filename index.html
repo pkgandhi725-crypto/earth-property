@@ -1189,33 +1189,151 @@ function setFilter(type) {
 }
 
 function applyFilterAndSearch() {
-    const val=document.getElementById('searchInput').value.toLowerCase().trim();
-    let filtered=[...allAds];
-    if(activeFilter!=='all'){
-        filtered=filtered.filter(a=>{
-            const p=(a.purpose||'').toLowerCase();
-            if(activeFilter==='buy') return p==='sell';
-            if(activeFilter==='rent') return p==='rent';
-            if(activeFilter==='rentsell') return p==='rentsell';
-            if(activeFilter==='plot') return p==='plot';
-            if(activeFilter==='commercial') return p==='commercial';
-            if(activeFilter==='pg') return p==='pg'||p==='pg/hostel';
+    const val = document.getElementById('searchInput').value.trim();
+    const valLower = val.toLowerCase();
+
+    let filtered = [...allAds];
+
+    // Apply purpose filter
+    if (activeFilter !== 'all') {
+        filtered = filtered.filter(a => {
+            const p = (a.purpose || '').toLowerCase();
+            if (activeFilter === 'buy') return p === 'sell';
+            if (activeFilter === 'rent') return p === 'rent';
+            if (activeFilter === 'rentsell') return p === 'rentsell';
+            if (activeFilter === 'plot') return p === 'plot';
+            if (activeFilter === 'commercial') return p === 'commercial';
+            if (activeFilter === 'pg') return p === 'pg' || p === 'pg/hostel';
             return true;
         });
     }
-    if(val) {
-        filtered=filtered.filter(a=>(a.location||'').toLowerCase().includes(val)||(a.title||'').toLowerCase().includes(val)||(a.description||'').toLowerCase().includes(val)||(a.country||'').toLowerCase().includes(val));
-        // ✅ GA4: Search track (only if 3+ chars)
-        if(val.length >= 3) trackEvent('search', { search_term: val });
+
+    if (!val) {
+        // No search — normal mode
+        if (activeSort === 'nearest' && userLocation) {
+            filtered = sortByProximity(filtered);
+        } else {
+            filtered = filtered.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+        }
+        displayedAds = filtered;
+        renderAds(displayedAds);
+        document.getElementById('loadMoreContainer').style.display = hasMoreAds ? 'block' : 'none';
+        return;
     }
-    if(activeSort==='nearest'&&userLocation){
-        filtered=sortByProximity(filtered);
-    } else {
-        filtered=filtered.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+
+    // Search active — Firestore queries
+    if (val.length < 2) {
+        // Too short, just client-side filter
+        filtered = filtered.filter(a =>
+            (a.location || '').toLowerCase().includes(valLower) ||
+            (a.title || '').toLowerCase().includes(valLower) ||
+            (a.country || '').toLowerCase().includes(valLower)
+        );
+        displayedAds = filtered;
+        renderAds(displayedAds);
+        document.getElementById('loadMoreContainer').style.display = 'none';
+        return;
     }
-    displayedAds=filtered;
-    renderAds(displayedAds);
-    document.getElementById('loadMoreContainer').style.display=(activeFilter==='all'&&!val&&hasMoreAds)?'block':'none';
+
+    // Show loading state
+    document.getElementById('propertyList').innerHTML = `
+        <div style="text-align:center;padding:60px 20px;">
+            <div class="loading-spinner" style="border-top-color:#2e7d32;border-color:rgba(46,125,50,0.2);width:36px;height:36px;margin:0 auto 15px;"></div>
+            <div style="font-size:14px;color:#888;font-weight:600;">Searching...</div>
+        </div>`;
+    document.getElementById('loadMoreContainer').style.display = 'none';
+
+    const valEnd = val + '\uf8ff';
+    const valCapitalized = val.charAt(0).toUpperCase() + val.slice(1).toLowerCase();
+    const valUpper = val.toUpperCase();
+
+    const makeQuery = (field, startVal) =>
+        db.collection('properties')
+            .where('status', '==', 'active')
+            .where(field, '>=', startVal)
+            .where(field, '<=', startVal + '\uf8ff')
+            .limit(50)
+            .get();
+
+    Promise.all([
+        makeQuery('country', val),
+        makeQuery('country', valCapitalized),
+        makeQuery('country', valUpper),
+        makeQuery('location', val),
+        makeQuery('location', valCapitalized),
+        makeQuery('location', valUpper),
+        makeQuery('title', val),
+        makeQuery('title', valCapitalized),
+    ]).then(snapshots => {
+        const seen = new Set();
+        let results = [];
+
+        // Add allAds client-side matches first
+        allAds.forEach(a => {
+            if (
+                (a.location || '').toLowerCase().includes(valLower) ||
+                (a.title || '').toLowerCase().includes(valLower) ||
+                (a.country || '').toLowerCase().includes(valLower) ||
+                (a.description || '').toLowerCase().includes(valLower)
+            ) {
+                if (!seen.has(a.id)) {
+                    seen.add(a.id);
+                    results.push(a);
+                }
+            }
+        });
+
+        // Add Firestore results
+        snapshots.forEach(snap => {
+            snap.docs.forEach(doc => {
+                if (!seen.has(doc.id)) {
+                    const data = { id: doc.id, ...doc.data() };
+                    // Filter expired
+                    if (data.isExpired === true) return;
+                    if (data.expiryDate && data.expiryDate.toDate() < new Date()) return;
+                    seen.add(doc.id);
+                    results.push(data);
+                }
+            });
+        });
+
+        // Apply purpose filter on results
+        if (activeFilter !== 'all') {
+            results = results.filter(a => {
+                const p = (a.purpose || '').toLowerCase();
+                if (activeFilter === 'buy') return p === 'sell';
+                if (activeFilter === 'rent') return p === 'rent';
+                if (activeFilter === 'rentsell') return p === 'rentsell';
+                if (activeFilter === 'plot') return p === 'plot';
+                if (activeFilter === 'commercial') return p === 'commercial';
+                if (activeFilter === 'pg') return p === 'pg' || p === 'pg/hostel';
+                return true;
+            });
+        }
+
+        // Sort
+        if (activeSort === 'nearest' && userLocation) {
+            results = sortByProximity(results);
+        } else {
+            results = results.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+        }
+
+        displayedAds = results;
+        renderAds(displayedAds);
+
+        if (val.length >= 3) trackEvent('search', { search_term: val });
+
+    }).catch(err => {
+        console.error('Search error:', err);
+        // Fallback to client-side only
+        const fallback = allAds.filter(a =>
+            (a.location || '').toLowerCase().includes(valLower) ||
+            (a.title || '').toLowerCase().includes(valLower) ||
+            (a.country || '').toLowerCase().includes(valLower)
+        );
+        displayedAds = fallback;
+        renderAds(displayedAds);
+    });
 }
 
 function filterAds() { clearTimeout(searchTimeout); searchTimeout=setTimeout(applyFilterAndSearch,300); }
