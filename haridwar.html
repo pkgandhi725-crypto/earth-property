@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Property in Haridwar | Flats, Rooms & Plots for Sale & Rent – The Earth Property</title>
+  <meta name="description" content="Find verified properties in Haridwar – flats for rent, rooms, 2BHK, 3BHK, commercial spaces, plots for sale. No broker. Direct owner listings on The Earth Property." />
+  <meta name="keywords" content="property in haridwar, flats for rent in haridwar, room for rent haridwar, 2bhk haridwar, 3bhk haridwar, plots in haridwar, buy flat haridwar, pg in haridwar, commercial space haridwar, property haridwar no broker, rishikesh property, jwalapur flat, shivalik nagar house, har ki pauri property" />
+  <link rel="canonical" href="https://theearthproperty.com/haridwar" />
+
+  <meta property="og:title" content="Properties in Haridwar – The Earth Property" />
+  <meta property="og:description" content="Browse flats, rooms, PG, plots & commercial properties in Haridwar. Direct owner listings, no brokerage." />
+  <meta property="og:url" content="https://theearthproperty.com/haridwar" />
+  <meta property="og:type" content="website" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    "name": "The Earth Property – Haridwar",
+    "description": "Real estate listings in Haridwar including flats, rooms, PG, plots and commercial properties. Direct owner listings with no brokerage.",
+    "url": "https://theearthproperty.com/haridwar",
+    "areaServed": {
+      "@type": "City",
+      "name": "Haridwar",
+      "containedInPlace": {
+        "@type": "State",
+        "name": "Uttarakhand",
+        "containedInPlace": {
+          "@type": "Country",
+          "name": "India"
+        }
+      }
+    }
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
+      authDomain: "earth-properties-c3c56.firebaseapp.com",
+      databaseURL: "https://earth-properties-c3c56-default-rtdb.firebaseio.com",
+      projectId: "earth-properties-c3c56",
+      storageBucket: "earth-properties-c3c56.firebasestorage.app",
+      messagingSenderId: "677407721236",
+      appId: "1:677407721236:web:2964262087105819e6a401"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    window._db = db;
+    window._firestoreModules = { collection, query, where, orderBy, getDocs };
+    window.dispatchEvent(new Event("firebaseReady"));
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black: #0a0a0a;
+      --white: #fafaf8;
+      --cream: #f5f0e8;
+      --gold: #c9a84c;
+      --gold-light: #e8c96a;
+      --gray: #6b6b6b;
+      --gray-light: #e8e5df;
+      --card-bg: #ffffff;
+      --shadow: 0 2px 20px rgba(0,0,0,0.08);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--white);
+      color: var(--black);
+      overflow-x: hidden;
+    }
+
+    /* RTL support */
+    [dir="rtl"] .nav-logo { letter-spacing: 0; }
+    [dir="rtl"] .hero-title { text-align: right; }
+    [dir="rtl"] .hero-sub { text-align: right; }
+    [dir="rtl"] .card-location { flex-direction: row-reverse; }
+    [dir="rtl"] .card-meta { flex-direction: row-reverse; }
+    [dir="rtl"] .nearby-chips { direction: rtl; }
+
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      background: rgba(10,10,10,0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .nav-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      color: var(--gold);
+      letter-spacing: 2px;
+      text-decoration: none;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .lang-switcher { position: relative; }
+
+    .lang-btn {
+      background: rgba(201,168,76,0.15);
+      border: 1px solid rgba(201,168,76,0.3);
+      color: var(--gold-light);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 50px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .lang-btn svg { flex-shrink: 0; }
+
+    .lang-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: #1a1a1a;
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 12px;
+      overflow: hidden;
+      min-width: 160px;
+      z-index: 200;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .lang-dropdown.open { display: block; }
+
+    .lang-option {
+      display: block;
+      padding: 10px 16px;
+      font-size: 0.82rem;
+      color: rgba(250,250,248,0.75);
+      cursor: pointer;
+      transition: background 0.15s;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    [dir="rtl"] .lang-option { text-align: right; }
+
+    .lang-option:hover { background: rgba(201,168,76,0.12); color: var(--gold-light); }
+    .lang-option.selected { color: var(--gold); font-weight: 600; }
+
+    .nav-cta {
+      background: var(--gold);
+      color: var(--black);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 50px;
+      text-decoration: none;
+      letter-spacing: 0.5px;
+    }
+
+    .hero {
+      min-height: 100svh;
+      background: var(--black);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 0 20px 48px;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 80%, rgba(201,168,76,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 20%, rgba(201,168,76,0.08) 0%, transparent 50%);
+    }
+
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(201,168,76,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,168,76,0.06) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(201,168,76,0.15);
+      border: 1px solid rgba(201,168,76,0.3);
+      color: var(--gold-light);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 50px;
+      margin-bottom: 20px;
+      width: fit-content;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .hero-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3.2rem, 14vw, 6rem);
+      color: var(--white);
+      line-height: 0.95;
+      letter-spacing: 1px;
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+
+    .hero-title span {
+      color: var(--gold);
+      font-family: 'DM Serif Display', serif;
+      font-style: italic;
+      display: block;
+    }
+
+    .hero-sub {
+      color: rgba(250,250,248,0.55);
+      font-size: 0.95rem;
+      font-weight: 300;
+      line-height: 1.6;
+      margin-top: 16px;
+      max-width: 340px;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 24px;
+      margin-top: 28px;
+      animation: fadeUp 0.6s 0.3s ease both;
+    }
+
+    .stat { display: flex; flex-direction: column; }
+
+    .stat-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      color: var(--gold);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.65rem;
+      color: rgba(250,250,248,0.45);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .hero-scroll {
+      position: absolute;
+      bottom: 24px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      color: rgba(250,250,248,0.3);
+      font-size: 0.6rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      animation: fadeUp 0.6s 0.5s ease both;
+    }
+
+    .scroll-line {
+      width: 1px;
+      height: 40px;
+      background: linear-gradient(to bottom, var(--gold), transparent);
+      animation: scrollPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes scrollPulse {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+
+    .city-desc {
+      background: var(--cream);
+      padding: 40px 20px;
+      border-bottom: 1px solid var(--gray-light);
+    }
+
+    .city-desc h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.4rem;
+      color: var(--black);
+      margin-bottom: 12px;
+    }
+
+    .city-desc p {
+      font-size: 0.88rem;
+      color: var(--gray);
+      line-height: 1.7;
+      margin-bottom: 10px;
+    }
+
+    .filters-wrap {
+      position: sticky;
+      top: 52px;
+      z-index: 90;
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-light);
+      padding: 0 20px;
+    }
+
+    .filters {
+      display: flex;
+      gap: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .filters::-webkit-scrollbar { display: none; }
+
+    .filter-btn {
+      flex-shrink: 0;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      padding: 14px 16px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--gray);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .filter-btn.active {
+      color: var(--black);
+      border-bottom-color: var(--gold);
+    }
+
+    .listings-section {
+      padding: 28px 16px 60px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.3rem;
+      color: var(--black);
+    }
+
+    .listing-count {
+      font-size: 0.75rem;
+      color: var(--gray);
+    }
+
+    .cards-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .prop-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--gray-light);
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .prop-card:active { transform: scale(0.98); }
+
+    .card-img-wrap {
+      position: relative;
+      height: 200px;
+      overflow: hidden;
+      background: var(--cream);
+    }
+
+    .card-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .card-img-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #f0ebe0, #e5ddd0);
+      font-size: 2.5rem;
+    }
+
+    .card-purpose-tag {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: var(--black);
+      color: var(--gold);
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 50px;
+    }
+
+    .card-purpose-tag.rent { background: #1a3a1a; color: #6fcf6f; }
+    .card-purpose-tag.pg { background: #1a1a3a; color: #6f9fcf; }
+    .card-purpose-tag.sell { background: #3a1a1a; color: #cf6f6f; }
+
+    .verified-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(201,168,76,0.95);
+      color: var(--black);
+      font-size: 0.6rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 50px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .card-body { padding: 14px 16px 16px; }
+
+    .card-price {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem;
+      color: var(--black);
+      letter-spacing: 0.5px;
+      line-height: 1;
+    }
+
+    .card-price span {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 400;
+      color: var(--gray);
+      letter-spacing: 0;
+    }
+
+    .card-title {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--black);
+      margin-top: 6px;
+      line-height: 1.3;
+    }
+
+    .card-location {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 6px;
+      font-size: 0.75rem;
+      color: var(--gray);
+    }
+
+    .card-location svg { flex-shrink: 0; }
+
+    .card-meta {
+      display: flex;
+      gap: 12px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--gray-light);
+      font-size: 0.72rem;
+      color: var(--gray);
+    }
+
+    .card-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      gap: 16px;
+    }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 2px solid var(--gray-light);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-state p { font-size: 0.8rem; color: var(--gray); }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      display: none;
+    }
+
+    .empty-state .empty-icon { font-size: 3rem; margin-bottom: 16px; }
+
+    .empty-state h3 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.2rem;
+      margin-bottom: 8px;
+    }
+
+    .empty-state p {
+      font-size: 0.82rem;
+      color: var(--gray);
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .cta-banner {
+      margin: 8px 0 0;
+      background: var(--black);
+      border-radius: 16px;
+      padding: 24px 20px;
+      text-align: center;
+    }
+
+    .cta-banner h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem;
+      color: var(--gold);
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .cta-banner p {
+      font-size: 0.8rem;
+      color: rgba(250,250,248,0.6);
+      margin-bottom: 16px;
+    }
+
+    .cta-btn {
+      display: inline-block;
+      background: var(--gold);
+      color: var(--black);
+      font-weight: 700;
+      font-size: 0.82rem;
+      padding: 12px 28px;
+      border-radius: 50px;
+      text-decoration: none;
+      letter-spacing: 0.5px;
+    }
+
+    .nearby-section {
+      padding: 0 16px 40px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .nearby-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.1rem;
+      margin-bottom: 14px;
+      color: var(--black);
+    }
+
+    .nearby-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .nearby-chip {
+      background: var(--cream);
+      border: 1px solid var(--gray-light);
+      color: var(--black);
+      font-size: 0.78rem;
+      font-weight: 500;
+      padding: 8px 16px;
+      border-radius: 50px;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .nearby-chip:active { background: var(--gray-light); }
+
+    footer {
+      background: var(--black);
+      color: rgba(250,250,248,0.4);
+      text-align: center;
+      padding: 24px 20px;
+      font-size: 0.72rem;
+      line-height: 1.8;
+    }
+
+    footer a { color: var(--gold); text-decoration: none; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in { animation: fadeUp 0.5s ease both; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="/" class="nav-logo">TEP</a>
+    <div class="nav-right">
+      <div class="lang-switcher">
+        <button class="lang-btn" id="langBtn" aria-label="Change language">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+          <span id="langLabel">EN</span>
+        </button>
+        <div class="lang-dropdown" id="langDropdown"></div>
+      </div>
+      <a href="/add-property.html" class="nav-cta">+ List Free</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-tag">
+      <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="#c9a84c"/></svg>
+      Uttarakhand · India
+    </div>
+    <h1 class="hero-title">
+      Property<br>in
+      <span>Haridwar</span>
+    </h1>
+    <p class="hero-sub">
+      Verified flats, rooms, PG, plots & commercial spaces. Direct owner listings — no broker, no commission.
+    </p>
+    <div class="hero-stats">
+      <div class="stat">
+        <span class="stat-num" id="heroCount">—</span>
+        <span class="stat-label">Listings</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">0</span>
+        <span class="stat-label">Brokerage</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">Free</span>
+        <span class="stat-label">To List</span>
+      </div>
+    </div>
+    <div class="hero-scroll">
+      <div class="scroll-line"></div>
+      scroll
+    </div>
+  </section>
+
+  <div class="city-desc">
+    <h2>Find Your Perfect Property in Haridwar</h2>
+    <p>
+      Haridwar is one of India's holiest cities, nestled at the foothills of the Himalayas where the Ganges descends into the plains. Known as the Gateway to the Gods, it attracts pilgrims, tourists, and residents seeking a peaceful yet well-connected lifestyle in Uttarakhand.
+    </p>
+    <p>
+      On The Earth Property, you can browse and list properties in Haridwar for free — flats for rent, rooms, PG, residential plots, and commercial spaces. All listings are direct from owners with no brokerage charges.
+    </p>
+    <p>
+      Popular areas: <strong>Har Ki Pauri, Jwalapur, Shivalik Nagar, Ranipur, BHEL Township, Kankhal, Mayapur, Roshanabad, Bahadrabad.</strong>
+    </p>
+  </div>
+
+  <div class="filters-wrap">
+    <div class="filters" id="filterTabs">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="Rent">For Rent</button>
+      <button class="filter-btn" data-filter="Sell">For Sale</button>
+      <button class="filter-btn" data-filter="PG">PG / Hostel</button>
+      <button class="filter-btn" data-filter="Commercial">Commercial</button>
+      <button class="filter-btn" data-filter="Plot">Plots</button>
+    </div>
+  </div>
+
+  <section class="listings-section">
+    <div class="section-header">
+      <h2 class="section-title">Haridwar Properties</h2>
+      <span class="listing-count" id="listingCount">Loading...</span>
+    </div>
+
+    <div id="listingsContainer">
+      <div class="loading-state" id="loadingState">
+        <div class="spinner"></div>
+        <p>Finding properties...</p>
+      </div>
+    </div>
+
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">🕉️</div>
+      <h3>No listings yet</h3>
+      <p>Be the first to list a property in Haridwar. It's free and takes just 2 minutes.</p>
+      <a href="/add-property.html" class="cta-btn">List Your Property</a>
+    </div>
+
+    <div class="cta-banner" id="ctaBanner" style="display:none;">
+      <h3>Own Property in Haridwar?</h3>
+      <p>List it free — reach thousands of buyers & tenants directly.</p>
+      <a href="/add-property.html" class="cta-btn">List for Free →</a>
+    </div>
+  </section>
+
+  <section class="nearby-section">
+    <h3 class="nearby-title">Properties in Nearby Cities</h3>
+    <div class="nearby-chips">
+      <a href="/dehradun.html" class="nearby-chip">Dehradun</a>
+      <a href="/rishikesh.html" class="nearby-chip">Rishikesh</a>
+      <a href="/roorkee.html" class="nearby-chip">Roorkee</a>
+      <a href="/meerut.html" class="nearby-chip">Meerut</a>
+      <a href="/noida.html" class="nearby-chip">Noida</a>
+      <a href="/delhi.html" class="nearby-chip">Delhi</a>
+    </div>
+  </section>
+
+  <footer>
+    <p>© 2025 <a href="/">The Earth Property</a> · Free property listings worldwide</p>
+    <p>Haridwar · Uttarakhand · India</p>
+    <p style="margin-top:8px;">
+      <a href="/">Home</a> &nbsp;·&nbsp;
+      <a href="/add-property.html">List Property</a> &nbsp;·&nbsp;
+      <a href="/index.html">All Listings</a>
+    </p>
+  </footer>
+
+  <!-- Language Switcher Logic -->
+  <script>
+    const LANGUAGES = [
+      { code: 'en',    label: 'English',    native: 'English',         dir: 'ltr' },
+      { code: 'hi',    label: 'Hindi',      native: 'हिन्दी',           dir: 'ltr' },
+      { code: 'ml',    label: 'Malayalam',  native: 'മലയാളം',           dir: 'ltr' },
+      { code: 'ta',    label: 'Tamil',      native: 'தமிழ்',            dir: 'ltr' },
+      { code: 'te',    label: 'Telugu',     native: 'తెలుగు',           dir: 'ltr' },
+      { code: 'kn',    label: 'Kannada',    native: 'ಕನ್ನಡ',            dir: 'ltr' },
+      { code: 'mr',    label: 'Marathi',    native: 'मराठी',            dir: 'ltr' },
+      { code: 'gu',    label: 'Gujarati',   native: 'ગુજરાતી',          dir: 'ltr' },
+      { code: 'bn',    label: 'Bengali',    native: 'বাংলা',            dir: 'ltr' },
+      { code: 'pa',    label: 'Punjabi',    native: 'ਪੰਜਾਬੀ',           dir: 'ltr' },
+      { code: 'ur',    label: 'Urdu',       native: 'اردو',             dir: 'rtl' },
+      { code: 'ar',    label: 'Arabic',     native: 'العربية',          dir: 'rtl' },
+      { code: 'fa',    label: 'Persian',    native: 'فارسی',            dir: 'rtl' },
+      { code: 'id',    label: 'Indonesian', native: 'Bahasa Indonesia',  dir: 'ltr' },
+      { code: 'ms',    label: 'Malay',      native: 'Bahasa Melayu',    dir: 'ltr' },
+      { code: 'th',    label: 'Thai',       native: 'ภาษาไทย',          dir: 'ltr' },
+      { code: 'vi',    label: 'Vietnamese', native: 'Tiếng Việt',       dir: 'ltr' },
+      { code: 'zh',    label: 'Chinese',    native: '中文',              dir: 'ltr' },
+      { code: 'ja',    label: 'Japanese',   native: '日本語',            dir: 'ltr' },
+      { code: 'ko',    label: 'Korean',     native: '한국어',            dir: 'ltr' },
+      { code: 'ru',    label: 'Russian',    native: 'Русский',          dir: 'ltr' },
+      { code: 'de',    label: 'German',     native: 'Deutsch',          dir: 'ltr' },
+      { code: 'fr',    label: 'French',     native: 'Français',         dir: 'ltr' },
+      { code: 'es',    label: 'Spanish',    native: 'Español',          dir: 'ltr' },
+      { code: 'pt',    label: 'Portuguese', native: 'Português',        dir: 'ltr' },
+      { code: 'it',    label: 'Italian',    native: 'Italiano',         dir: 'ltr' },
+      { code: 'tr',    label: 'Turkish',    native: 'Türkçe',           dir: 'ltr' },
+      { code: 'pl',    label: 'Polish',     native: 'Polski',           dir: 'ltr' },
+      { code: 'nl',    label: 'Dutch',      native: 'Nederlands',       dir: 'ltr' },
+    ];
+
+    const LANG_KEY = 'tep_lang';
+
+    function getCurrentLang() {
+      return localStorage.getItem(LANG_KEY) || 'en';
+    }
+
+    function applyLang(code) {
+      const lang = LANGUAGES.find(l => l.code === code) || LANGUAGES[0];
+      document.documentElement.setAttribute('lang', code);
+      document.documentElement.setAttribute('dir', lang.dir);
+      localStorage.setItem(LANG_KEY, code);
+      document.getElementById('langLabel').textContent = code.toUpperCase();
+      document.querySelectorAll('.lang-option').forEach(opt => {
+        opt.classList.toggle('selected', opt.dataset.code === code);
+      });
+      if (window.setLanguage) window.setLanguage(code);
+    }
+
+    function buildDropdown() {
+      const dropdown = document.getElementById('langDropdown');
+      const current = getCurrentLang();
+      dropdown.innerHTML = LANGUAGES.map(l => `
+        <button class="lang-option ${l.code === current ? 'selected' : ''}" data-code="${l.code}">
+          ${l.native}
+        </button>
+      `).join('');
+      dropdown.addEventListener('click', (e) => {
+        const btn = e.target.closest('.lang-option');
+        if (!btn) return;
+        applyLang(btn.dataset.code);
+        dropdown.classList.remove('open');
+      });
+    }
+
+    document.getElementById('langBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('langDropdown').classList.toggle('open');
+    });
+
+    document.addEventListener('click', () => {
+      document.getElementById('langDropdown').classList.remove('open');
+    });
+
+    buildDropdown();
+    applyLang(getCurrentLang());
+  </script>
+
+  <!-- Firestore Listings Logic -->
+  <script type="module">
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function formatPrice(price, currency, purpose) {
+      if (!price) return 'Price on request';
+      const sym = currency || '₹';
+      const num = Number(price);
+      let formatted = '';
+      if (num >= 10000000) formatted = (num / 10000000).toFixed(1) + ' Cr';
+      else if (num >= 100000) formatted = (num / 100000).toFixed(1) + ' L';
+      else if (num >= 1000) formatted = (num / 1000).toFixed(0) + 'K';
+      else formatted = num.toLocaleString();
+      const suffix = (purpose === 'Rent' || purpose === 'PG') ? '/mo' : '';
+      return `${sym}${formatted}${suffix}`;
+    }
+
+    function purposeClass(purpose) {
+      if (!purpose) return '';
+      const p = purpose.toLowerCase();
+      if (p === 'rent') return 'rent';
+      if (p === 'pg') return 'pg';
+      if (p === 'sell') return 'sell';
+      return '';
+    }
+
+    function getImgUrl(images) {
+      if (!images || !images.length) return null;
+      const first = images[0];
+      if (typeof first === 'string') return first;
+      if (first && first.url) return first.url;
+      return null;
+    }
+
+    function renderCard(prop) {
+      const id = prop.id;
+      const d = prop.data;
+      const imgUrl = getImgUrl(d.images);
+      const pClass = purposeClass(d.purpose);
+
+      const imgHtml = imgUrl
+        ? `<img src="${escHtml(imgUrl)}" alt="${escHtml(d.title || 'Property in Haridwar')}" loading="lazy" />`
+        : `<div class="card-img-placeholder">🕉️</div>`;
+
+      const verifiedBadge = d.isVerified
+        ? `<span class="verified-badge">✓ Verified</span>` : '';
+
+      const bhk = d.bedrooms ? `<span class="card-meta-item">🛏 ${escHtml(String(d.bedrooms))} BHK</span>` : '';
+      const area = d.floorArea || d.area ? `<span class="card-meta-item">📐 ${escHtml(String(d.floorArea || d.area))} sqft</span>` : '';
+      const type = d.propertyType ? `<span class="card-meta-item">🏠 ${escHtml(d.propertyType)}</span>` : '';
+
+      return `
+        <a href="/property-detail.html?id=${escHtml(id)}" class="prop-card fade-in">
+          <div class="card-img-wrap">
+            ${imgHtml}
+            <span class="card-purpose-tag ${pClass}">${escHtml(d.purpose || 'Property')}</span>
+            ${verifiedBadge}
+          </div>
+          <div class="card-body">
+            <div class="card-price">
+              ${escHtml(formatPrice(d.price, d.currency, d.purpose))}
+              <span>${d.purpose === 'Rent' || d.purpose === 'PG' ? 'per month' : ''}</span>
+            </div>
+            <div class="card-title">${escHtml(d.title || 'Property in Haridwar')}</div>
+            <div class="card-location">
+              <svg width="11" height="13" viewBox="0 0 11 13" fill="none">
+                <path d="M5.5 0C3.01 0 1 2.01 1 4.5c0 3.375 4.5 8.5 4.5 8.5S10 7.875 10 4.5C10 2.01 7.99 0 5.5 0zm0 6.125A1.625 1.625 0 1 1 5.5 2.875a1.625 1.625 0 0 1 0 3.25z" fill="#6b6b6b"/>
+              </svg>
+              ${escHtml(d.location || d.locality || d.city || 'Haridwar')}
+            </div>
+            ${(bhk || area || type) ? `<div class="card-meta">${bhk}${area}${type}</div>` : ''}
+          </div>
+        </a>`;
+    }
+
+    let allListings = [];
+    let activeFilter = 'all';
+
+    function renderListings(filter) {
+      const container = document.getElementById('listingsContainer');
+      const emptyState = document.getElementById('emptyState');
+      const ctaBanner = document.getElementById('ctaBanner');
+      const countEl = document.getElementById('listingCount');
+
+      const filtered = filter === 'all'
+        ? allListings
+        : allListings.filter(p => p.data.purpose === filter);
+
+      countEl.textContent = `${filtered.length} listing${filtered.length !== 1 ? 's' : ''}`;
+
+      if (filtered.length === 0) {
+        container.innerHTML = '';
+        emptyState.style.display = 'block';
+        ctaBanner.style.display = 'none';
+      } else {
+        emptyState.style.display = 'none';
+        const grid = document.createElement('div');
+        grid.className = 'cards-grid';
+        grid.innerHTML = filtered.map(renderCard).join('');
+        container.innerHTML = '';
+        container.appendChild(grid);
+        ctaBanner.style.display = 'block';
+      }
+
+      document.getElementById('heroCount').textContent = allListings.length || '0';
+    }
+
+    async function loadListings() {
+      try {
+        const db = window._db;
+        const { collection, query, where, orderBy, getDocs } = window._firestoreModules;
+
+        const q = query(
+          collection(db, 'properties'),
+          where('city', '==', 'Haridwar'),
+          where('isExpired', '==', false),
+          orderBy('createdAt', 'desc')
+        );
+
+        const snapshot = await getDocs(q);
+        allListings = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
+
+        // Legacy fallback
+        if (allListings.length === 0) {
+          const allSnap = await getDocs(
+            query(collection(db, 'properties'), where('isExpired', '==', false))
+          );
+          allListings = allSnap.docs
+            .map(doc => ({ id: doc.id, data: doc.data() }))
+            .filter(p => {
+              const loc = (p.data.location || '').toLowerCase();
+              return loc.includes('haridwar') || loc.includes('hardwar');
+            });
+        }
+
+        document.getElementById('loadingState').style.display = 'none';
+        renderListings(activeFilter);
+
+      } catch (err) {
+        console.error('Firestore error:', err);
+        document.getElementById('loadingState').innerHTML =
+          `<p style="color:#c0392b;font-size:0.82rem;">Could not load listings. Please refresh.</p>`;
+      }
+    }
+
+    document.getElementById('filterTabs').addEventListener('click', (e) => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeFilter = btn.dataset.filter;
+      renderListings(activeFilter);
+    });
+
+    window.addEventListener('firebaseReady', loadListings);
+    if (window._db) loadListings();
+  </script>
+
+</body>
+</html>
