@@ -1146,13 +1146,16 @@ if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 const urlParams = new URLSearchParams(window.location.search);
-const propertyId = urlParams.get('id');
+let propertyId = urlParams.get('id');
 let propertyData = null;
 let currentUser = null;
 let isFav = false;
 let galleryIndex = 0;
 let galleryItems = [];
 let descExpanded = false;
+let siblingIds = [];
+let siblingIndex = -1;
+let isNavigating = false;
 
 // Currency symbol map
 const CURRENCY_SYMBOLS = {
@@ -1419,23 +1422,105 @@ document.addEventListener('keydown', e => {
 });
 
 // ── LOAD PROPERTY ──
-async function loadProperty() {
-    if (!propertyId) { showNotFound(); return; }
+async function loadProperty(id, isSwipeNav = false) {
+    const targetId = id || propertyId;
+    if (!targetId) { showNotFound(); return; }
     try {
-        const doc = await db.collection('properties').doc(propertyId).get();
-        if (!doc.exists) { showNotFound(); return; }
+        const doc = await db.collection('properties').doc(targetId).get();
+        if (!doc.exists) {
+            if (isSwipeNav) { showToast('Property not found', 'error'); isNavigating = false; }
+            else showNotFound();
+            return;
+        }
         propertyData = { id: doc.id, ...doc.data() };
+        propertyId = doc.id;
 
-        if (propertyData.isExpired) { showExpired(); return; }
+        if (propertyData.isExpired && !isSwipeNav) { showExpired(); return; }
+
+        if (isSwipeNav) resetForNewProperty();
 
         renderProperty();
         loadSellerInfo();
         checkFav();
         document.getElementById('loadingScreen').style.display = 'none';
+
+        if (!isSwipeNav) {
+            loadSiblingProperties();
+        } else {
+            siblingIndex = siblingIds.indexOf(propertyId);
+        }
+        isNavigating = false;
     } catch (e) {
         console.error(e);
-        showNotFound();
+        isNavigating = false;
+        if (!isSwipeNav) showNotFound();
     }
+}
+
+function resetForNewProperty() {
+    galleryIndex = 0;
+    descExpanded = false;
+    window.scrollTo({ top: 0, behavior: 'instant' });
+
+    ['quickStats','dualPriceCard','areaCard','detailsCard','descCard','amenitiesCard','locationCard','sellerCard'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+    });
+    document.getElementById('detailsGrid').innerHTML = '';
+    document.getElementById('areaHighlight').innerHTML = '';
+    document.getElementById('amenitiesList').innerHTML = '';
+    document.getElementById('dualPriceInner').innerHTML = '';
+    document.getElementById('descText').classList.add('collapsed');
+    document.getElementById('readMoreBtn').style.display = 'block';
+
+    const existingExpiry = document.querySelector('.expiry-info');
+    if (existingExpiry) existingExpiry.remove();
+
+    isFav = false;
+
+    const newUrl = window.location.pathname + '?id=' + propertyId;
+    history.pushState({ propertyId }, '', newUrl);
+}
+
+async function loadSiblingProperties() {
+    const d = propertyData;
+    if (!d) return;
+    try {
+        let ids = [];
+        if (d.city) {
+            const snap = await db.collection('properties')
+                .where('city', '==', d.city)
+                .where('isExpired', '==', false)
+                .orderBy('createdAt', 'desc')
+                .get();
+            ids = snap.docs.map(doc => doc.id);
+        }
+        if (ids.length === 0) {
+            const locKey = (d.location || d.city || '').toLowerCase();
+            if (locKey) {
+                const allSnap = await db.collection('properties').where('isExpired', '==', false).get();
+                ids = allSnap.docs
+                    .filter(doc => (doc.data().location || '').toLowerCase().includes(locKey))
+                    .map(doc => doc.id);
+            }
+        }
+        siblingIds = ids;
+        siblingIndex = siblingIds.indexOf(propertyId);
+    } catch (e) {
+        console.error('Sibling load error:', e);
+        siblingIds = [];
+        siblingIndex = -1;
+    }
+}
+
+function goToSibling(direction) {
+    if (isNavigating) return;
+    if (siblingIndex === -1 || siblingIds.length <= 1) return;
+    const newIndex = siblingIndex + direction;
+    if (newIndex < 0) { showToast('This is the first property', 'info'); return; }
+    if (newIndex >= siblingIds.length) { showToast('No more properties', 'info'); return; }
+    isNavigating = true;
+    loadProperty(siblingIds[newIndex], true);
 }
 
 function renderProperty() {
@@ -1826,6 +1911,23 @@ window.addEventListener('scroll', () => {
 }, { passive: true });
 
 // ── INIT ──
+let pageSwipeStartX = 0;
+let pageSwipeStartY = 0;
+
+document.addEventListener('touchstart', e => {
+    if (e.target.closest('.gallery-wrap') || e.target.closest('.photo-viewer') || e.target.closest('.share-sheet')) return;
+    pageSwipeStartX = e.touches[0].clientX;
+    pageSwipeStartY = e.touches[0].clientY;
+}, { passive: true });
+
+document.addEventListener('touchend', e => {
+    if (e.target.closest('.gallery-wrap') || e.target.closest('.photo-viewer') || e.target.closest('.share-sheet')) return;
+    const dx = pageSwipeStartX - e.changedTouches[0].clientX;
+    const dy = pageSwipeStartY - e.changedTouches[0].clientY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 60) {
+        goToSibling(dx > 0 ? 1 : -1);
+    }
+}, { passive: true });
 firebase.auth().onAuthStateChanged(user => {
     currentUser = user;
     loadProperty();
