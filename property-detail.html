@@ -1479,7 +1479,7 @@ function resetForNewProperty() {
     isFav = false;
 
     const newUrl = window.location.pathname + '?id=' + propertyId;
-    history.pushState({ propertyId }, '', newUrl);
+    history.replaceState({ propertyId }, '', newUrl);
 }
 
 async function loadSiblingProperties() {
