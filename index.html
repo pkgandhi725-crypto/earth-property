@@ -1374,6 +1374,8 @@ function sanitize(str) {
 }
 
 let activeSort = 'latest';
+let nearestFullyLoaded = false;
+
 function setSort(type) {
     activeSort = type;
     document.getElementById('sort-latest').style.background = type === 'latest' ? '#2e7d32' : 'white';
@@ -1382,29 +1384,57 @@ function setSort(type) {
     document.getElementById('sort-nearest').style.background = type === 'nearest' ? '#2e7d32' : 'white';
     document.getElementById('sort-nearest').style.color = type === 'nearest' ? 'white' : '#555';
     document.getElementById('sort-nearest').style.borderColor = type === 'nearest' ? '#2e7d32' : '#ddd';
-    // ✅ GA4: Sort track
     trackEvent('sort_click', { sort_type: type });
+
     if (type === 'nearest') {
-        if (!userLocation) {
-            if (!navigator.geolocation) { showToast('📍 GPS not supported on this device.'); setSort('latest'); return; }
-            showToast('📍 Fetching your location...');
-            navigator.geolocation.getCurrentPosition(
-                pos => { userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }; applyFilterAndSearch(); showToast('✅ Showing nearest properties!'); },
-                () => {
-                    showToast('📍 Location access denied. Please allow from browser settings.');
-                    activeSort = 'latest';
-                    document.getElementById('sort-latest').style.background = '#2e7d32';
-                    document.getElementById('sort-latest').style.color = 'white';
-                    document.getElementById('sort-latest').style.borderColor = '#2e7d32';
-                    document.getElementById('sort-nearest').style.background = 'white';
-                    document.getElementById('sort-nearest').style.color = '#555';
-                    document.getElementById('sort-nearest').style.borderColor = '#ddd';
-                }
-            );
-            return;
-        }
+        if (!navigator.geolocation) { showToast('📍 GPS not supported on this device.'); setSort('latest'); return; }
+        showToast('📍 Fetching your location...');
+        navigator.geolocation.getCurrentPosition(
+            pos => {
+                userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                loadAllForNearest();
+            },
+            () => {
+                showToast('📍 Location access denied. Please allow from browser settings.');
+                activeSort = 'latest';
+                document.getElementById('sort-latest').style.background = '#2e7d32';
+                document.getElementById('sort-latest').style.color = 'white';
+                document.getElementById('sort-latest').style.borderColor = '#2e7d32';
+                document.getElementById('sort-nearest').style.background = 'white';
+                document.getElementById('sort-nearest').style.color = '#555';
+                document.getElementById('sort-nearest').style.borderColor = '#ddd';
+            }
+        );
+        return;
     }
+
     applyFilterAndSearch();
+}
+
+async function loadAllForNearest() {
+    document.getElementById('propertyList').innerHTML = `
+        <div style="text-align:center;padding:60px 20px;">
+            <div class="loading-spinner" style="border-top-color:#2e7d32;border-color:rgba(46,125,50,0.2);width:36px;height:36px;margin:0 auto 15px;"></div>
+            <div style="font-size:14px;color:#888;font-weight:600;">📍 Finding nearest properties...</div>
+        </div>`;
+    document.getElementById('loadMoreContainer').style.display = 'none';
+
+    try {
+        const snap = await db.collection('properties').where('status', '==', 'active').get();
+        const all = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(ad => {
+            if (ad.isExpired === true) return false;
+            if (ad.expiryDate && ad.expiryDate.toDate() < new Date()) return false;
+            return true;
+        });
+        allAds = all;
+        hasMoreAds = false;
+        nearestFullyLoaded = true;
+        applyFilterAndSearch();
+        showToast('✅ Showing nearest properties!');
+    } catch (e) {
+        console.error('Nearest load error:', e);
+        showToast('Error loading properties. Try again.');
+    }
 }
 
 function initLocationCard() {
