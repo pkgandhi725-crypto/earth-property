@@ -56,27 +56,32 @@
     <changefreq>daily</changefreq>
   </url>
   <url>
-    <loc>https://theearthproperty.com/bangalore</loc>
+    <loc>https://theearthproperty.com/bangalore.html</loc>
     <priority>0.8</priority>
     <changefreq>daily</changefreq>
   </url>
   <url>
-  <loc>https://theearthproperty.com/bhubaneswar.html</loc>
-  <changefreq>daily</changefreq>
-  <priority>0.8</priority>
-</url>
+    <loc>https://theearthproperty.com/bhubaneswar.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
   <url>
-  <loc>https://theearthproperty.com/meerut</loc>
-  <changefreq>daily</changefreq>
-  <priority>0.8</priority>
-</url>
+    <loc>https://theearthproperty.com/meerut.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
   <url>
-  <loc>https://theearthproperty.com/dehradun</loc>
-  <changefreq>daily</changefreq>
-  <priority>0.8</priority>
-</url>
+    <loc>https://theearthproperty.com/dehradun.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
   <url>
-    <loc>https://theearthproperty.com/haridwar</loc>
+    <loc>https://theearthproperty.com/haridwar.html</loc>
+    <priority>0.8</priority>
+    <changefreq>daily</changefreq>
+  </url>
+  <url>
+    <loc>https://theearthproperty.com/panchkula.html</loc>
     <priority>0.8</priority>
     <changefreq>daily</changefreq>
   </url>
@@ -86,10 +91,10 @@
     <changefreq>daily</changefreq>
   </url>
   <url>
-  <loc>https://theearthproperty.com/kampala.html</loc>
-  <changefreq>daily</changefreq>
-  <priority>0.8</priority>
-</url>
+    <loc>https://theearthproperty.com/kampala.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
   <url>
     <loc>https://theearthproperty.com/dubai.html</loc>
     <priority>0.8</priority>
