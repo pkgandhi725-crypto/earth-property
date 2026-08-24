@@ -46,6 +46,19 @@
         }
         .empty-state i { font-size: 36px; opacity: 0.4; }
 
+        /* ✅ Date separator (WhatsApp-style) */
+        .date-separator {
+            align-self: center;
+            background: rgba(225, 245, 254, 0.95);
+            color: #555;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 5px 14px;
+            border-radius: 8px;
+            margin: 6px 0;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+        }
+
         .msg {
             max-width: 80%; padding: 8px 12px; border-radius: 12px;
             font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);
@@ -465,6 +478,37 @@ function getChatId() {
         : `${partnerId}_${currentUserId}`;
 }
 
+// ✅ Date separator helper — Today / Yesterday / DD Mon (YYYY if not this year)
+function isSameDay(d1, d2) {
+    return d1.getFullYear() === d2.getFullYear() &&
+           d1.getMonth() === d2.getMonth() &&
+           d1.getDate() === d2.getDate();
+}
+
+function formatDateSeparator(timestamp) {
+    if (!timestamp || !timestamp.seconds) return null;
+    const date = new Date(timestamp.seconds * 1000);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+
+    if (isSameDay(date, today)) return "Today";
+    if (isSameDay(date, yesterday)) return "Yesterday";
+
+    return date.toLocaleDateString([], {
+        day: 'numeric',
+        month: 'short',
+        year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
+    });
+}
+
+function insertDateSeparator(label, chatBox) {
+    const sep = document.createElement('div');
+    sep.className = 'date-separator';
+    sep.textContent = label;
+    chatBox.appendChild(sep);
+}
+
 function listenMessages() {
     const chatId = getChatId();
 
@@ -495,7 +539,17 @@ function listenMessages() {
                 chatBox.innerHTML = `<div class="empty-state"><i class="fa fa-comments"></i><span>No messages yet. Say hi! 👋</span></div>`;
                 return;
             }
-            snap.forEach(doc => renderMessage(doc, chatBox));
+
+            let lastDateLabel = null;
+            snap.forEach(doc => {
+                const m = doc.data();
+                const dateLabel = formatDateSeparator(m.timestamp);
+                if (dateLabel && dateLabel !== lastDateLabel) {
+                    insertDateSeparator(dateLabel, chatBox);
+                    lastDateLabel = dateLabel;
+                }
+                renderMessage(doc, chatBox);
+            });
             scrollToBottom();
         });
 }
