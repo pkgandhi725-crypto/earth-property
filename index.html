@@ -1508,11 +1508,15 @@ async function loadAllForNearest() {
         allAds = all;
         hasMoreAds = false;
         nearestFullyLoaded = true;
+        isDataLoaded = true;
         applyFilterAndSearch();
         showToast('✅ Showing nearest properties!');
     } catch (e) {
         console.error('Nearest load error:', e);
-        showToast('Error loading properties. Try again.');
+        showToast('Could not load nearest properties. Showing latest instead.');
+        activeSort = 'latest';
+        updateSortButtonsUI('latest');
+        loadProperties();
     }
 }
 
