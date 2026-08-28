@@ -659,21 +659,76 @@ const languages = [
     { code: 'sw', name: 'Swahili', flag: '🇰🇪' }
 ];
 
-if (navigator.permissions) {
-    navigator.permissions.query({ name: 'geolocation' }).then(result => {
-        if (result.state === 'granted') {
-            navigator.geolocation.getCurrentPosition(
-                pos => { userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }; if (displayedAds.length > 0) { displayedAds = sortByProximity(displayedAds); renderAds(displayedAds); } },
-                () => {}
-            );
-        }
-    }).catch(() => {});
-} else if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-        pos => { userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }; if (displayedAds.length > 0) { displayedAds = sortByProximity(displayedAds); renderAds(displayedAds); } },
-        () => {}, { timeout: 1 }
-    );
+// =============================================
+// 📍 AUTO LOCATION DETECTION (GPS -> IP fallback)
+// Runs on every page load, no permission required for the IP step.
+// =============================================
+let locationSource = null; // 'gps' | 'ip' | null
+
+function withTimeout(promise, ms) {
+    return Promise.race([
+        promise,
+        new Promise(resolve => setTimeout(() => resolve(null), ms))
+    ]);
 }
+
+function tryGPSLocation(timeoutMs) {
+    return new Promise(resolve => {
+        if (!navigator.geolocation) { resolve(null); return; }
+        let settled = false;
+        const timer = setTimeout(() => { if (!settled) { settled = true; resolve(null); } }, timeoutMs);
+        navigator.geolocation.getCurrentPosition(
+            pos => { if (!settled) { settled = true; clearTimeout(timer); resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, source: 'gps' }); } },
+            () => { if (!settled) { settled = true; clearTimeout(timer); resolve(null); } },
+            { timeout: timeoutMs, maximumAge: 600000 }
+        );
+    });
+}
+
+async function tryIPLocation() {
+    try {
+        const res = await fetch('https://ipwho.is/');
+        if (!res.ok) throw new Error('ipwho failed');
+        const data = await res.json();
+        if (data && data.success !== false && data.latitude && data.longitude) {
+            return { lat: data.latitude, lng: data.longitude, source: 'ip' };
+        }
+        throw new Error('no coords');
+    } catch (e) {
+        try {
+            const res2 = await fetch('https://get.geojs.io/v1/ip/geo.json');
+            const data2 = await res2.json();
+            if (data2 && data2.latitude && data2.longitude) {
+                return { lat: parseFloat(data2.latitude), lng: parseFloat(data2.longitude), source: 'ip' };
+            }
+        } catch (e2) {}
+        return null;
+    }
+}
+
+async function detectUserLocation() {
+    // Step 1: GPS only if permission was already granted earlier (no prompt shown)
+    if (navigator.permissions) {
+        try {
+            const perm = await navigator.permissions.query({ name: 'geolocation' });
+            if (perm.state === 'granted') {
+                const gps = await tryGPSLocation(4000);
+                if (gps) return gps;
+            }
+        } catch (e) {}
+    }
+    // Step 2: GPS not available/granted -> approximate IP-based location (no permission needed)
+    const ip = await tryIPLocation();
+    if (ip) return ip;
+    // Step 3: both failed -> caller falls back to latest-first
+    return null;
+}
+
+// Kick off detection immediately; resolves within ~6s max either way.
+let locationReady = withTimeout(detectUserLocation(), 6000).then(loc => {
+    if (loc) { userLocation = { lat: loc.lat, lng: loc.lng }; locationSource = loc.source; }
+    return loc;
+});
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
     const R = 6371;
@@ -938,7 +993,15 @@ auth.onAuthStateChanged(user=>{
         if(adminSideBtn) adminSideBtn.style.display='none';
     }
     runCleanupIfNeeded();
-    loadProperties();
+    locationReady.then(() => {
+        if (userLocation) {
+            activeSort = 'nearest';
+            updateSortButtonsUI('nearest');
+            loadAllForNearest();
+        } else {
+            loadProperties();
+        }
+    });
 });
 
 function handleLogout() {
@@ -1379,33 +1442,46 @@ function sanitize(str) {
 let activeSort = 'latest';
 let nearestFullyLoaded = false;
 
-function setSort(type) {
-    activeSort = type;
+function updateSortButtonsUI(type) {
     document.getElementById('sort-latest').style.background = type === 'latest' ? '#2e7d32' : 'white';
     document.getElementById('sort-latest').style.color = type === 'latest' ? 'white' : '#555';
     document.getElementById('sort-latest').style.borderColor = type === 'latest' ? '#2e7d32' : '#ddd';
     document.getElementById('sort-nearest').style.background = type === 'nearest' ? '#2e7d32' : 'white';
     document.getElementById('sort-nearest').style.color = type === 'nearest' ? 'white' : '#555';
     document.getElementById('sort-nearest').style.borderColor = type === 'nearest' ? '#2e7d32' : '#ddd';
+}
+
+function setSort(type) {
+    activeSort = type;
+    updateSortButtonsUI(type);
     trackEvent('sort_click', { sort_type: type });
 
     if (type === 'nearest') {
-        if (!navigator.geolocation) { showToast('📍 GPS not supported on this device.'); setSort('latest'); return; }
+        // Already have a location (GPS or IP, from auto-detect) — just re-sort/reload
+        if (userLocation) { loadAllForNearest(); return; }
+
+        if (!navigator.geolocation) {
+            showToast('📍 GPS not supported. Trying approximate location...');
+            tryIPLocation().then(loc => {
+                if (loc) { userLocation = { lat: loc.lat, lng: loc.lng }; locationSource = 'ip'; loadAllForNearest(); }
+                else { showToast('Could not detect your location.'); activeSort = 'latest'; updateSortButtonsUI('latest'); }
+            });
+            return;
+        }
+
         showToast('📍 Fetching your location...');
         navigator.geolocation.getCurrentPosition(
             pos => {
                 userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                locationSource = 'gps';
                 loadAllForNearest();
             },
             () => {
-                showToast('📍 Location access denied. Please allow from browser settings.');
-                activeSort = 'latest';
-                document.getElementById('sort-latest').style.background = '#2e7d32';
-                document.getElementById('sort-latest').style.color = 'white';
-                document.getElementById('sort-latest').style.borderColor = '#2e7d32';
-                document.getElementById('sort-nearest').style.background = 'white';
-                document.getElementById('sort-nearest').style.color = '#555';
-                document.getElementById('sort-nearest').style.borderColor = '#ddd';
+                showToast('📍 GPS denied. Using approximate location...');
+                tryIPLocation().then(loc => {
+                    if (loc) { userLocation = { lat: loc.lat, lng: loc.lng }; locationSource = 'ip'; loadAllForNearest(); }
+                    else { showToast('Could not detect your location.'); activeSort = 'latest'; updateSortButtonsUI('latest'); }
+                });
             }
         );
         return;
@@ -1451,7 +1527,14 @@ function initLocationCard() {
 function requestLocationPermission() {
     document.getElementById('locationCard').style.display = 'none';
     navigator.geolocation.getCurrentPosition(
-        pos => { userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude }; if (displayedAds.length > 0) { displayedAds = sortByProximity(displayedAds); renderAds(displayedAds); } showToast('📍 Location allowed! Showing nearest properties first.'); },
+        pos => {
+            userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            locationSource = 'gps';
+            activeSort = 'nearest';
+            updateSortButtonsUI('nearest');
+            loadAllForNearest();
+            showToast('📍 Location allowed! Showing nearest properties first.');
+        },
         () => { showToast('Location access denied.'); }
     );
 }
