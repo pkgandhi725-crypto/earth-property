@@ -126,6 +126,7 @@
         .icon-btn { background: rgba(255,255,255,0.9); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .icon-btn.fav { color: #ff5252; }
         .icon-btn.share { background: #1976d2; color: white; }
+        .icon-btn.direction { background: #00897b; color: white; }
         .info { padding: 15px; }
         .price { font-size: 22px; font-weight: 800; color: var(--primary); }
         .converted-price { font-size: 11px; color: #888; font-weight: 600; margin-top: 2px; display: flex; align-items: center; gap: 4px; }
@@ -1105,7 +1106,8 @@ function renderAds(ads, append=false) {
         let distHTML='';
         if(userLocation&&p.latitude&&p.longitude){
             const d=calculateDistance(userLocation.lat,userLocation.lng,p.latitude,p.longitude);
-            distHTML=`<div class="distance-badge"><i class="fa fa-location-arrow"></i> ${d.toFixed(1)} km away</div>`;
+            const approxNote = locationSource === 'ip' ? ' <span style="opacity:0.7;">(approx)</span>' : '';
+            distHTML=`<div class="distance-badge"><i class="fa fa-location-arrow"></i> ${d.toFixed(1)} km away${approxNote}</div>`;
         }
 
         const propCurrency = p.currency || 'INR';
@@ -1148,6 +1150,7 @@ function renderAds(ads, append=false) {
 <div class="img-box" id="imgbox-${sid}">
     <img src="${images[0]}" id="cardimg-${sid}" alt="${stitle}" onerror="this.src='https://via.placeholder.com/400x210?text=No+Image'">
     <div class="card-actions">
+        ${(p.latitude && p.longitude) ? `<button class="icon-btn direction" id="dir-${sid}" title="Get Directions"><i class="fa-solid fa-diamond-turn-right"></i></button>` : ''}
         <button class="icon-btn share" id="share-${sid}"><i class="fa fa-share-alt"></i></button>
         <button class="icon-btn fav" id="fav-${sid}"><i class="${favIcon}"></i></button>
     </div>
@@ -1161,6 +1164,7 @@ function renderAds(ads, append=false) {
     </div>
     <div class="location"><i class="fa-solid fa-location-dot"></i> ${sloc}</div>
     ${distHTML}
+    <button class="report-link" id="report-${sid}" style="background:none;border:none;color:#999;font-size:11px;font-weight:600;cursor:pointer;padding:5px 0 0;display:inline-flex;align-items:center;gap:4px;"><i class="fa fa-flag"></i> Report this listing</button>
     ${p.size ? `<div style="font-size:12px;color:#555;margin-top:4px;"><i class="fa fa-ruler-combined" style="color:#2e7d32;margin-right:4px;"></i>${sanitize(String(p.size))}</div>` : ''}
     ${descHTML}
     <div class="btn-group">
@@ -1209,6 +1213,20 @@ function renderAds(ads, append=false) {
 
         // ✅ Favourite + GA4 track (handled inside toggleFavorite)
         document.getElementById('fav-'+sid).addEventListener('click',e=>{e.stopPropagation();toggleFavorite(p.id);});
+
+        // ✅ Directions + GA4 track
+        const dirBtn=document.getElementById('dir-'+sid);
+        if(dirBtn) dirBtn.addEventListener('click',e=>{
+            e.stopPropagation();
+            trackEvent('get_directions',{property_id:p.id});
+            window.open(`https://www.google.com/maps/dir/?api=1&destination=${p.latitude},${p.longitude}`,'_blank');
+        });
+
+        // ✅ Report listing
+        document.getElementById('report-'+sid).addEventListener('click',e=>{
+            e.stopPropagation();
+            openReportModal(p.id,p.title||'');
+        });
 
         // ✅ Call + GA4 track
         document.getElementById('call-'+sid).addEventListener('click',()=>{
@@ -1548,6 +1566,68 @@ function dismissLocationCard() {
     localStorage.setItem('locationCardDismissed', '1');
 }
 
+// =============================================
+// 🚩 REPORT LISTING
+// =============================================
+const REPORT_REASONS = ['Fake / Fraud listing','Already Sold or Rented','Wrong price or details','Broker posing as owner','Duplicate listing','Spam / Inappropriate','Other'];
+let reportPropId = null, reportPropTitle = '', selectedReportReason = null;
+
+function openReportModal(propId, title) {
+    reportPropId = propId; reportPropTitle = title; selectedReportReason = null;
+    document.getElementById('reportPropTitle').innerText = title;
+    document.getElementById('reportDetails').value = '';
+    const list = document.getElementById('reportReasonsList');
+    list.innerHTML = REPORT_REASONS.map((r,i) => `
+        <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:10px;cursor:pointer;font-size:13px;color:#444;font-weight:600;" id="reasonLabel-${i}" onclick="selectReportReason(${i})">
+            <input type="radio" name="reportReason" style="accent-color:#c62828;" />
+            ${r}
+        </label>`).join('');
+    document.getElementById('reportModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function selectReportReason(i) {
+    selectedReportReason = REPORT_REASONS[i];
+    REPORT_REASONS.forEach((_,idx) => {
+        const lbl = document.getElementById('reasonLabel-'+idx);
+        const radio = lbl.querySelector('input');
+        radio.checked = idx === i;
+        lbl.style.borderColor = idx === i ? '#c62828' : '#e0e0e0';
+        lbl.style.background = idx === i ? '#ffebee' : 'white';
+    });
+}
+
+function closeReportModal() {
+    document.getElementById('reportModal').style.display = 'none';
+    document.body.style.overflow = ''; document.body.style.position=''; document.body.style.width='';
+}
+
+async function submitReport() {
+    if (!selectedReportReason) { showToast('Please select a reason'); return; }
+    const btn = document.getElementById('reportSubmitBtn');
+    btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span>';
+    try {
+        await db.collection('reports').add({
+            propertyId: reportPropId,
+            propertyTitle: reportPropTitle,
+            reason: selectedReportReason,
+            details: document.getElementById('reportDetails').value.trim(),
+            reporterId: currentUser ? currentUser.uid : null,
+            reporterEmail: currentUser ? currentUser.email : null,
+            status: 'pending',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        trackEvent('report_property', { property_id: reportPropId, reason: selectedReportReason });
+        closeReportModal();
+        showToast('✅ Report submitted. Thank you!');
+    } catch (e) {
+        console.error('Report error:', e);
+        showToast('Could not submit report. Try again.');
+    } finally {
+        btn.disabled = false; btn.innerHTML = 'Submit Report';
+    }
+}
+
 // ✅ ADD THIS BLOCK
 window.addEventListener('load', () => {
     const pos = sessionStorage.getItem('tepScrollPos');
@@ -1622,19 +1702,12 @@ setTimeout(initLocationCard, 2000);
   </div>
 </div>
 
-<!-- About Modal -->
-<div id="aboutModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);display:none;justify-content:center;align-items:center;z-index:9999;">
-  <div style="background:#fff;width:92%;max-width:420px;border-radius:16px;padding:22px;box-shadow:0 12px 40px rgba(0,0,0,0.25);animation:aboutSlideUp 0.35s ease;">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <div style="font-size:19px;font-weight:800;color:#2e7d32;">The Earth Property</div>
-      <div onclick="closeAboutModal()" style="font-size:26px;cursor:pointer;color:#666;">&times;</div>
+<!-- Report Property Modal -->
+<div id="reportModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);display:none;justify-content:center;align-items:center;z-index:9999;" onclick="if(event.target===this)closeReportModal()">
+  <div style="background:#fff;width:92%;max-width:400px;max-height:88vh;overflow-y:auto;border-radius:20px;overflow-x:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:postModalSlideUp 0.35s ease;">
+    <div style="background:linear-gradient(135deg,#c62828,#b71c1c);padding:22px;text-align:center;">
+      <div style="color:white;font-size:18px;font-weight:800;"><i class="fa fa-flag" style="margin-right:8px;"></i>Report Listing</div>
+      <div id="reportPropTitle" style="color:rgba(255,255,255,0.85);font-size:12px;margin-top:5px;font-weight:600;"></div>
     </div>
-    <div style="margin-top:15px;font-size:14px;color:#333;line-height:1.6;">
-      The Earth Property is your trusted real estate platform to buy, sell, and rent properties worldwide.
-      <br><br>
-      Our mission is to make property transactions simple, secure, and accessible.
-      <div style="margin-top:18px;padding:12px;background:#f1f3f4;border-radius:10px;font-weight:700;">
-        📧 Contact: <a href="mailto:contact@theearthproperty.com" style="color:#2e7d32;text-decoration:none;">contact@theearthproperty.com</a>
-      </div>
-    </div>
-    <button onclick="closeAboutModal()" style="width:100%;
+    <div style="padding:20px;">
+      <div style="font-size:13p
