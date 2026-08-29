@@ -466,6 +466,27 @@
         }
         .map-placeholder i { font-size: 28px; color: var(--primary); }
 
+        /* ── DIRECTION BTN ── */
+        .direction-btn {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            margin-top: 12px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            box-shadow: 0 4px 15px rgba(46,125,50,0.3);
+        }
+        .direction-btn:active { transform: scale(0.98); }
+
         /* ── SELLER CARD ── */
         .seller-card {
             display: flex;
@@ -1035,6 +1056,7 @@
             <i class="fa fa-map-marker-alt" style="color:var(--primary);"></i>
             <span id="locationText"></span>
         </div>
+        <button class="direction-btn" id="directionBtn" onclick="openDirections()"><i class="fa-solid fa-diamond-turn-right"></i> Get Directions</button>
     </div>
 
     <!-- Seller -->
@@ -1105,6 +1127,20 @@
                 <span>More</span>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Report Sheet -->
+<div class="share-sheet" id="reportSheet">
+    <div class="share-backdrop" onclick="closeReportSheet()"></div>
+    <div class="share-panel" style="max-height:80vh;overflow-y:auto;">
+        <div class="share-handle"></div>
+        <div class="share-title" style="color:#c62828;"><i class="fa fa-flag"></i> Report this Listing</div>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">Why are you reporting this?</div>
+        <div id="reportReasonsList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;"></div>
+        <textarea id="reportDetails" placeholder="Additional details (optional)" style="width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px;font-size:13px;min-height:70px;resize:vertical;outline:none;font-family:'DM Sans',sans-serif;margin-bottom:14px;"></textarea>
+        <button id="reportSubmitBtn" onclick="submitReport()" style="width:100%;background:linear-gradient(135deg,#c62828,#b71c1c);color:#fff;border:none;padding:13px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Submit Report</button>
+        <button onclick="closeReportSheet()" style="width:100%;background:transparent;color:#999;border:none;padding:10px;margin-top:6px;font-size:13px;cursor:pointer;font-weight:600;font-family:'DM Sans',sans-serif;">Cancel</button>
     </div>
 </div>
 
@@ -1722,8 +1758,10 @@ function renderProperty() {
     document.getElementById('locationText').textContent = [d.location, d.country].filter(Boolean).join(', ');
     if (d.latitude && d.longitude) {
         document.getElementById('mapWrap').innerHTML = `<iframe src="https://www.openstreetmap.org/export/embed.html?bbox=${d.longitude-0.005},${d.latitude-0.005},${d.longitude+0.005},${d.latitude+0.005}&layer=mapnik&marker=${d.latitude},${d.longitude}" loading="lazy"></iframe>`;
+        document.getElementById('directionBtn').style.display = 'flex';
     } else {
         document.getElementById('mapWrap').innerHTML = `<div class="map-placeholder"><i class="fa fa-map-marker-alt"></i><span>Location map not available</span></div>`;
+        document.getElementById('directionBtn').style.display = 'none';
     }
     locationCard.classList.remove('hidden');
 
@@ -1817,21 +1855,72 @@ function callSeller() {
     window.location.href = `tel:+${propertyData.phone}`;
 }
 
+function openDirections() {
+    const d = propertyData;
+    if (!d || !d.latitude || !d.longitude) return;
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${d.latitude},${d.longitude}`, '_blank');
+}
+
 function openChat() {
     if (!currentUser) { showToast('Please login to chat', 'info'); setTimeout(() => location.href = 'login.html', 1200); return; }
     if (propertyData?.ownerId === currentUser.uid) { showToast("This is your own listing!", 'info'); return; }
     window.location.href = `chat.html?with=${propertyData.ownerId}&property=${propertyId}`;
 }
 
+// ── REPORT LISTING ──
+const REPORT_REASONS = ['Fake / Fraud listing','Already Sold or Rented','Wrong price or details','Duplicate listing','Inappropriate / Spam','Other'];
+let selectedReportReason = null;
+
 function reportProperty() {
-    if (!currentUser) { showToast('Please login to report', 'info'); return; }
-    if (confirm('Report this listing as spam or misleading?')) {
-        db.collection('reports').add({
+    if (!currentUser) { showToast('Please login to report', 'info'); setTimeout(() => location.href = 'login.html', 1200); return; }
+    selectedReportReason = null;
+    document.getElementById('reportDetails').value = '';
+    const list = document.getElementById('reportReasonsList');
+    list.innerHTML = REPORT_REASONS.map((r,i) => `
+        <label style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;color:#444;font-weight:600;font-family:'DM Sans',sans-serif;" id="reasonLabel-${i}" onclick="selectReportReason(${i})">
+            <input type="radio" name="reportReason" style="accent-color:#c62828;" />
+            ${r}
+        </label>`).join('');
+    document.getElementById('reportSheet').classList.add('open');
+}
+
+function selectReportReason(i) {
+    selectedReportReason = REPORT_REASONS[i];
+    REPORT_REASONS.forEach((_, idx) => {
+        const lbl = document.getElementById('reasonLabel-'+idx);
+        const radio = lbl.querySelector('input');
+        radio.checked = idx === i;
+        lbl.style.borderColor = idx === i ? '#c62828' : 'var(--border)';
+        lbl.style.background = idx === i ? '#ffebee' : 'transparent';
+    });
+}
+
+function closeReportSheet() {
+    document.getElementById('reportSheet').classList.remove('open');
+}
+
+async function submitReport() {
+    if (!selectedReportReason) { showToast('Please select a reason', 'info'); return; }
+    const btn = document.getElementById('reportSubmitBtn');
+    btn.disabled = true; btn.textContent = 'Submitting...';
+    try {
+        await db.collection('reports').add({
             propertyId,
-            reportedBy: currentUser.uid,
+            propertyTitle: propertyData?.title || '',
+            reason: selectedReportReason,
+            details: document.getElementById('reportDetails').value.trim(),
+            reporterId: currentUser.uid,
+            reporterEmail: currentUser.email || '',
+            status: 'pending',
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(() => showToast('Report submitted. Thank you!', 'success'))
-          .catch(() => showToast('Could not submit report', 'error'));
+        });
+        closeReportSheet();
+        showToast('Report submitted. Thank you!', 'success');
+    } catch (e) {
+        console.error('Report error:', e);
+        showToast('Could not submit report', 'error');
+    } finally {
+        btn.disabled = false; btn.textContent = 'Submit Report';
     }
 }
 
