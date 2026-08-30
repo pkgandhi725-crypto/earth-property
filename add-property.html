@@ -244,7 +244,6 @@
     <label style="font-size:13px;">City <span style="color:#d32f2f;">*</span></label>
     <input type="text" id="city" placeholder="e.g. Gurugram, Mumbai, Dubai">
 </div>
-        </div>
         <button type="button" class="get-map-btn" id="btnGetMap" onclick="geocodeAddress()">
             <span id="getMapBtnIcon">🗺️</span><span id="getMapBtnText">Get on Map</span>
         </button>
@@ -975,4 +974,5 @@ function confirmGPSCapture(){
     const btn=document.getElementById('btnGPS');
     const btnText=document.getElementById('gpsButtonText');
     const btnIcon=document.getElementById('gpsButtonIcon');
-    btnText.textContent='Getting location...';btnIcon.textContent='⏳';btn.di
+    btnText.textContent='Getting location...';btnIcon.textContent='⏳';btn.disabled=true;
+  
