@@ -444,6 +444,14 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script>
+// ── TEMP DEBUG: surface any JS error as a visible toast (remove once issue is found) ──
+window.addEventListener('error', function(e){
+    try{ showToast('⚠️ JS Error: '+e.message+' (line '+e.lineno+')','error'); }catch(_){}
+});
+window.addEventListener('unhandledrejection', function(e){
+    try{ showToast('⚠️ Promise Error: '+(e.reason&&e.reason.message?e.reason.message:e.reason),'error'); }catch(_){}
+});
+
 const firebaseConfig={apiKey:"AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",authDomain:"earth-properties-c3c56.firebaseapp.com",projectId:"earth-properties-c3c56"};
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
@@ -968,11 +976,4 @@ function showNormalGPSModal(icon,title,desc,yesBtn,settingsBtn,manualBtn){icon.t
 function closeGPSModal(){document.getElementById('gpsModal').style.display='none';}
 function openLocationSettings(){closeGPSModal();showToast('Go to Settings → Privacy → Location → Enable for your browser','info');}
 
-function confirmGPSCapture(){
-    closeGPSModal();
-    if(!navigator.geolocation){showToast('GPS not supported. Please enter address manually.','error');return;}
-    const btn=document.getElementById('btnGPS');
-    const btnText=document.getElementById('gpsButtonText');
-    const btnIcon=document.getElementById('gpsButtonIcon');
-    btnText.textContent='Getting location...';btnIcon.textContent='⏳';btn.disabled=true;
-  
+function co
