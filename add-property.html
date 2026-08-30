@@ -444,6 +444,14 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script>
+// ── TEMP DEBUG: surface any JS error as a visible toast ──
+window.addEventListener('error', function(e){
+    try{ showToast('⚠️ JS Error: '+e.message+' (line '+e.lineno+')','error'); }catch(_){ alert('JS Error: '+e.message+' (line '+e.lineno+')'); }
+});
+window.addEventListener('unhandledrejection', function(e){
+    try{ showToast('⚠️ Promise Error: '+(e.reason&&e.reason.message?e.reason.message:e.reason),'error'); }catch(_){ alert('Promise Error: '+e.reason); }
+});
+
 const firebaseConfig={apiKey:"AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",authDomain:"earth-properties-c3c56.firebaseapp.com",projectId:"earth-properties-c3c56"};
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
@@ -966,13 +974,4 @@ function getT(key){const lang=localStorage.getItem('selectedLanguage')||'en';ret
 function showGPSConfirmModal(){const modal=document.getElementById('gpsModal');const title=document.getElementById('gpsModalTitle');const desc=document.getElementById('gpsModalDesc');const yesBtn=document.getElementById('gpsYesBtn');const manualBtn=document.getElementById('gpsManualBtn');const settingsBtn=document.getElementById('gpsSettingsBtn');const icon=document.getElementById('gpsModalIcon');if(navigator.permissions){navigator.permissions.query({name:'geolocation'}).then(function(result){if(result.state==='denied'){icon.textContent='🚫';title.textContent=getT('gpsModalTitle')||'Location Permission Denied';desc.textContent='Please enable location permission from your browser/phone settings to use GPS.';yesBtn.style.display='none';settingsBtn.style.display='block';settingsBtn.textContent='⚙️ Open Settings Guide';}else{showNormalGPSModal(icon,title,desc,yesBtn,settingsBtn,manualBtn);}modal.style.display='flex';}).catch(function(){showNormalGPSModal(icon,title,desc,yesBtn,settingsBtn,manualBtn);modal.style.display='flex';});}else{showNormalGPSModal(icon,title,desc,yesBtn,settingsBtn,manualBtn);modal.style.display='flex';}}
 function showNormalGPSModal(icon,title,desc,yesBtn,settingsBtn,manualBtn){icon.textContent='📍';title.textContent=getT('gpsModalTitle')||'Are you at the property?';desc.textContent=getT('gpsModalDesc')||'GPS captures YOUR current location. Use only if standing at the property.';yesBtn.style.display='block';yesBtn.textContent=getT('gpsYesBtn')||"Yes, I'm at the property";settingsBtn.style.display='none';manualBtn.textContent=getT('gpsManualBtn')||'Enter Address Manually';}
 function closeGPSModal(){document.getElementById('gpsModal').style.display='none';}
-function openLocationSettings(){closeGPSModal();showToast('Go to Settings → Privacy → Location → Enable for your browser','info');}
-
-function confirmGPSCapture(){
-    closeGPSModal();
-    if(!navigator.geolocation){showToast('GPS not supported. Please enter address manually.','error');return;}
-    const btn=document.getElementById('btnGPS');
-    const btnText=document.getElementById('gpsButtonText');
-    const btnIcon=document.getElementById('gpsButtonIcon');
-    btnText.textContent='Getting location...';btnIcon.textContent='⏳';btn.disabled=true;
-  
+function openLocationSettings(){closeGPSModal();showToast('Go to Settings → Privac
