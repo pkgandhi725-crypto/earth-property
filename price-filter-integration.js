@@ -3,13 +3,18 @@
    Wires the PriceFilter panel (price-filter.js) into index.html's
    existing client-side filter/search logic.
 
+   BEHAVIOUR: tapping any purpose button (Buy/Rent/Rent+Sell/Plot/
+   Commercial/PG) automatically opens the price-range panel for
+   that category — no separate "Price" button needed. Tapping
+   "All" clears both the purpose filter and the price filter.
+
    HOW TO USE:
    1. Make sure price-filter.js is included BEFORE this file.
    2. Include this file with a normal <script> tag, placed
       AFTER index.html's main inline <script> block (i.e. right
-      before </body>). It safely re-defines applyFilterAndSearch()
-      with price filtering added — no need to edit the big
-      existing script by hand.
+      before </body>). It safely re-defines setFilter() and
+      applyFilterAndSearch() with price filtering added — no
+      need to edit the big existing script by hand.
    ========================================================== */
 
 let activePriceRange = null; // {min, max} or null
@@ -27,12 +32,33 @@ function mapActiveFilterToPurpose() {
     }
 }
 
-function openPriceFilterPanel() {
+// ---------- Re-definition of setFilter (original + auto price panel) ----------
+// Tapping a purpose button shows purpose-filtered results immediately,
+// then opens the matching price-range panel so the person can narrow further.
+function setFilter(type) {
+    activeFilter = type;
+    ['all', 'buy', 'rent', 'rentsell', 'plot', 'commercial', 'pg'].forEach(f => {
+        const b = document.getElementById('filter-' + f);
+        if (!b) return;
+        if (f === type) b.classList.add('active-filter'); else b.classList.remove('active-filter');
+    });
+    trackEvent('filter_click', { filter_type: type });
+
+    if (type === 'all') {
+        activePriceRange = null; // reset price filter too when going back to All
+        applyFilterAndSearch();
+        return;
+    }
+
+    // Show purpose-only results right away (don't make user wait on the panel)
+    applyFilterAndSearch();
+
+    // Then open the price range panel for this category
     const purpose = mapActiveFilterToPurpose();
     PriceFilter.open(purpose, function (range) {
         activePriceRange = range; // null if user tapped "Clear Selection"
-        updatePriceButtonUI();
         trackEvent('price_filter_apply', {
+            filter_type: type,
             min: range ? range.min : null,
             max: range ? (range.max ?? 'open') : null
         });
@@ -205,4 +231,3 @@ function applyFilterAndSearch() {
         renderAds(displayedAds);
     });
 }
-
