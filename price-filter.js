@@ -49,9 +49,9 @@
   function injectStyles() {
     if (document.getElementById("pf-styles")) return;
     const css = `
-    .pf-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9500;display:none;align-items:flex-end;justify-content:center;}
+    .pf-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9500;display:none;align-items:flex-end;justify-content:center;touch-action:none;overscroll-behavior:none;}
     .pf-overlay.open{display:flex;}
-    .pf-sheet{background:#fff;width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:18px 18px 22px;box-shadow:0 -6px 24px rgba(0,0,0,0.25);animation:pfSlideUp 0.25s ease;max-height:80vh;overflow-y:auto;box-sizing:border-box;}
+    .pf-sheet{background:#fff;width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:18px 18px 22px;box-shadow:0 -6px 24px rgba(0,0,0,0.25);animation:pfSlideUp 0.25s ease;max-height:80vh;overflow-y:auto;box-sizing:border-box;touch-action:pan-y;overscroll-behavior:contain;}
     @keyframes pfSlideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
     .pf-handle{width:40px;height:4px;background:#ddd;border-radius:4px;margin:0 auto 14px;}
     .pf-title{font-size:16px;font-weight:700;color:#2e7d32;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;}
@@ -77,7 +77,28 @@
   }
 
   // ---------- 3. BUILD PANEL DOM (once) ----------
-  let overlayEl, selectedRange = null, activeCallback = null;
+  let overlayEl, selectedRange = null, activeCallback = null, savedScrollY = 0;
+
+  // Locks the background page so it can't scroll/jump while the sheet is open.
+  // This is what stops the sheet from "lifting up" and the listings behind
+  // it from sliding — both are caused by the body scrolling under a fixed overlay.
+  function lockBodyScroll() {
+    savedScrollY = window.scrollY || window.pageYOffset || 0;
+    document.body.style.position = "fixed";
+    document.body.style.top = -savedScrollY + "px";
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    document.body.style.width = "100%";
+  }
+
+  function unlockBodyScroll() {
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.left = "";
+    document.body.style.right = "";
+    document.body.style.width = "";
+    window.scrollTo(0, savedScrollY);
+  }
 
   function buildPanel() {
     if (document.getElementById("pfOverlay")) return;
@@ -91,8 +112,7 @@
           <span id="pfTitle">Select Price Range</span>
           <span class="pf-close" id="pfCloseBtn">&times;</span>
         </div>
-        <div class="pf-sub">Tap a range, or enter your own below</div>
-        <div id="pfOptionsList"></div>
+        <div class="pf-sub">Enter your own range, or tap a preset below</div>
         <div class="pf-option" id="pfCustomToggle">
           <div class="pf-radio"></div>
           <span>Custom Range</span>
@@ -101,6 +121,7 @@
           <input type="number" id="pfCustomMin" placeholder="Min ₹" min="0">
           <input type="number" id="pfCustomMax" placeholder="Max ₹" min="0">
         </div>
+        <div id="pfOptionsList"></div>
         <button class="pf-apply" id="pfApplyBtn" disabled>Apply Filter</button>
         <button class="pf-clear" id="pfClearBtn">Clear Selection</button>
       </div>
@@ -110,6 +131,12 @@
 
     document.getElementById("pfCloseBtn").onclick = closePanel;
     wrap.addEventListener("click", (e) => { if (e.target === wrap) closePanel(); });
+
+    // Stop drags on the dark backdrop from scrolling the page behind it.
+    // Drags inside the sheet itself are left alone (it scrolls on its own).
+    wrap.addEventListener("touchmove", (e) => {
+      if (e.target === wrap) e.preventDefault();
+    }, { passive: false });
 
     document.getElementById("pfCustomToggle").onclick = function () {
       selectedRange = { custom: true };
@@ -165,6 +192,7 @@
 
   function closePanel() {
     overlayEl.classList.remove("open");
+    unlockBodyScroll();
   }
 
   // ---------- 4. PUBLIC API ----------
@@ -207,6 +235,7 @@
       document.getElementById("pfCustomBox").classList.remove("open");
       document.getElementById("pfApplyBtn").disabled = true;
 
+      lockBodyScroll();
       overlayEl.classList.add("open");
     }
   };
