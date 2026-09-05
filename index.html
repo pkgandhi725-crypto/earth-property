@@ -1748,11 +1748,17 @@ setTimeout(initLocationCard, 2000);
 
     <script>
 // =============================================
-// 👉 SMOOTH DRAG-FOLLOW SWIPE FOR SIDE DRAWER (v3 - fixes conflict with tap handlers)
+// 👉 SMOOTH DRAG-FOLLOW SWIPE FOR SIDE DRAWER (v4)
+// Fixes over v3:
+//   ✔ Android Back button closes drawer instead of navigating away (popstate)
+//   ✔ Mid-animation touch no longer causes state mismatch (animation-interrupt handling)
+//   ✔ touchcancel handled (gesture interruption cleanup)
+//   ✔ Drawer width read dynamically from DOM instead of hardcoded
+//   ✔ Scroll position saved/restored properly around body-fixed lock
+//   ✔ Extra fingers (multi-touch) ignored during a drag
 // =============================================
 (function() {
     const EDGE_ZONE = 25;
-    const DRAWER_WIDTH = 280;
     const OPEN_SNAP_RATIO = 0.35;
     const SNAP_DURATION = 280;
     const MOVE_THRESHOLD = 8; // px of movement before we treat it as a real drag (not a tap)
@@ -1760,12 +1766,62 @@ setTimeout(initLocationCard, 2000);
     const drawer = document.getElementById('sideDrawer');
     const overlay = document.getElementById('overlay');
 
+    let drawerWidth = drawer.getBoundingClientRect().width || 280;
+    // Keep it in sync if viewport/CSS changes (orientation change, resize, etc.)
+    window.addEventListener('resize', function() {
+        drawerWidth = drawer.getBoundingClientRect().width || drawerWidth;
+    });
+
     let touchStartX = 0, touchStartY = 0, currentX = 0;
     let isDragging = false; // candidate drag started
     let hasMoved = false;   // confirmed real horizontal drag (crossed threshold)
     let dragMode = null;
+    let isAnimating = false; // true while a snap transition is in flight
+    let savedScrollY = 0;
+
+    function getCurrentLeft() {
+        // Reads the *actual* rendered left position (works even mid-transition)
+        const style = window.getComputedStyle(drawer);
+        const matrix = style.transform;
+        // We're animating the `left` property, not transform, so just parse `left`
+        const leftVal = parseFloat(style.left);
+        return isNaN(leftVal) ? (drawer.classList.contains('open') ? 0 : -drawerWidth) : leftVal;
+    }
+
+    function lockBodyScroll() {
+        savedScrollY = window.scrollY || window.pageYOffset || 0;
+        document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.top = -savedScrollY + 'px';
+        document.body.style.width = '100%';
+    }
+
+    function unlockBodyScroll() {
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        window.scrollTo(0, savedScrollY);
+    }
 
     document.addEventListener('touchstart', function(e) {
+        // Ignore multi-touch gestures entirely
+        if (e.touches.length > 1) {
+            isDragging = false;
+            dragMode = null;
+            return;
+        }
+
+        // If a snap animation is mid-flight, interrupt it cleanly and
+        // continue dragging from wherever it currently visually is.
+        if (isAnimating) {
+            const liveLeft = getCurrentLeft();
+            drawer.style.transition = 'none';
+            overlay.style.transition = 'none';
+            drawer.style.left = liveLeft + 'px';
+            isAnimating = false;
+        }
+
         const isDrawerOpen = drawer.classList.contains('open');
         const touch = e.touches[0];
         touchStartX = touch.clientX;
@@ -1775,11 +1831,11 @@ setTimeout(initLocationCard, 2000);
         if (!isDrawerOpen && touchStartX <= EDGE_ZONE) {
             dragMode = 'open';
             isDragging = true;
-            currentX = -DRAWER_WIDTH;
+            currentX = getCurrentLeft();
         } else if (isDrawerOpen) {
             dragMode = 'close';
             isDragging = true;
-            currentX = 0;
+            currentX = getCurrentLeft();
         } else {
             isDragging = false;
             dragMode = null;
@@ -1788,6 +1844,8 @@ setTimeout(initLocationCard, 2000);
 
     document.addEventListener('touchmove', function(e) {
         if (!isDragging) return;
+        if (e.touches.length > 1) return; // ignore second finger mid-drag
+
         const touch = e.touches[0];
         const dx = touch.clientX - touchStartX;
         const dy = touch.clientY - touchStartY;
@@ -1811,18 +1869,18 @@ setTimeout(initLocationCard, 2000);
 
         let leftPos;
         if (dragMode === 'open') {
-            leftPos = Math.min(0, Math.max(-DRAWER_WIDTH, -DRAWER_WIDTH + dx));
+            leftPos = Math.min(0, Math.max(-drawerWidth, -drawerWidth + dx));
         } else {
-            leftPos = Math.min(0, Math.max(-DRAWER_WIDTH, dx));
+            leftPos = Math.min(0, Math.max(-drawerWidth, currentX + dx));
         }
         currentX = leftPos;
         drawer.style.left = leftPos + 'px';
 
-        const openRatio = Math.max(0, Math.min(1, 1 + (leftPos / DRAWER_WIDTH)));
+        const openRatio = Math.max(0, Math.min(1, 1 + (leftPos / drawerWidth)));
         overlay.style.opacity = openRatio;
     }, { passive: false });
 
-    document.addEventListener('touchend', function(e) {
+    function endDrag(e, isCancel) {
         if (!isDragging) return;
         isDragging = false;
 
@@ -1833,21 +1891,34 @@ setTimeout(initLocationCard, 2000);
             return;
         }
 
-        e.preventDefault(); // stop the ghost click that would fire old onclick handlers
+        if (e && e.cancelable) e.preventDefault(); // stop the ghost click
 
-        const openRatio = Math.max(0, Math.min(1, 1 + (currentX / DRAWER_WIDTH)));
+        if (isCancel) {
+            // Gesture was interrupted by the system — snap back to whatever
+            // state we started this drag from, rather than guessing intent.
+            const cameFromOpen = dragMode === 'close';
+            snapTo(cameFromOpen);
+            dragMode = null;
+            return;
+        }
+
+        const openRatio = Math.max(0, Math.min(1, 1 + (currentX / drawerWidth)));
         const shouldOpen = dragMode === 'open'
             ? openRatio >= OPEN_SNAP_RATIO
             : openRatio >= (1 - OPEN_SNAP_RATIO);
 
         snapTo(shouldOpen);
         dragMode = null;
-    }, { passive: false });
+    }
+
+    document.addEventListener('touchend', function(e) { endDrag(e, false); }, { passive: false });
+    document.addEventListener('touchcancel', function(e) { endDrag(e, true); }, { passive: false });
 
     function snapTo(shouldOpen) {
-        const targetLeft = shouldOpen ? 0 : -DRAWER_WIDTH;
+        const targetLeft = shouldOpen ? 0 : -drawerWidth;
         const targetOpacity = shouldOpen ? 1 : 0;
 
+        isAnimating = true;
         drawer.style.transition = 'left ' + SNAP_DURATION + 'ms cubic-bezier(0.4,0,0.2,1)';
         overlay.style.transition = 'opacity ' + SNAP_DURATION + 'ms ease';
 
@@ -1860,6 +1931,7 @@ setTimeout(initLocationCard, 2000);
         const cleanup = () => {
             if (finished) return;
             finished = true;
+            isAnimating = false;
             drawer.style.transition = '';
             drawer.style.left = '';
             overlay.style.transition = '';
@@ -1869,16 +1941,12 @@ setTimeout(initLocationCard, 2000);
             if (shouldOpen) {
                 drawer.classList.add('open');
                 overlay.style.display = 'block';
-                document.body.style.overflow = 'hidden';
-                document.body.style.position = 'fixed';
-                document.body.style.width = '100%';
-                window.history.pushState({drawer:true}, null, window.location.href);
+                lockBodyScroll();
+                window.history.pushState({ drawer: true }, null, window.location.href);
             } else {
                 drawer.classList.remove('open');
                 overlay.style.display = 'none';
-                document.body.style.overflow = '';
-                document.body.style.position = '';
-                document.body.style.width = '';
+                unlockBodyScroll();
             }
         };
         function onTransEnd(ev) {
@@ -1887,8 +1955,20 @@ setTimeout(initLocationCard, 2000);
         drawer.addEventListener('transitionend', onTransEnd);
         setTimeout(cleanup, SNAP_DURATION + 100);
     }
+
+    // Android/browser Back button while drawer is open -> close drawer, don't navigate away
+    window.addEventListener('popstate', function() {
+        if (drawer.classList.contains('open')) {
+            snapTo(false);
+        }
+    });
+
+    // Expose so your existing hamburger/overlay onclick handlers can reuse the same
+    // snap logic instead of duplicating open/close code elsewhere on the page.
+    window.sideDrawerSnapTo = snapTo;
 })();
 </script>
+
 
 <script src="price-filter-integration.js"></script>
 
