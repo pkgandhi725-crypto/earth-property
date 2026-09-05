@@ -1720,6 +1720,31 @@ setTimeout(initLocationCard, 2000);
     </div>
   </div>
 </div>
+   
+ <!-- About Us Modal -->
+<div id="aboutModal" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);display:none;justify-content:center;align-items:center;z-index:9999;">
+  <div style="background:#fff;width:92%;max-width:380px;max-height:85vh;overflow-y:auto;border-radius:20px;overflow-x:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:aboutSlideUp 0.35s ease;">
+    <div style="background:linear-gradient(135deg,#2e7d32,#1b5e20);padding:28px 22px 22px;text-align:center;position:relative;">
+      <div onclick="closeAboutModal()" style="position:absolute;top:14px;right:16px;color:white;font-size:22px;cursor:pointer;line-height:1;">&times;</div>
+      <div style="background:white;border-radius:16px;padding:10px 16px;display:inline-block;margin-bottom:12px;">
+        <img src="logo.png" alt="The Earth Property" style="height:60px;width:auto;object-fit:contain;display:block;" onerror="this.style.display='none';">
+      </div>
+      <div style="color:white;font-size:18px;font-weight:800;">About The Earth Property</div>
+    </div>
+    <div style="padding:22px;">
+      <p style="font-size:13px;color:#555;line-height:1.7;margin-bottom:14px;">
+        The Earth Property is a free international real estate listing platform connecting buyers, sellers and renters directly — no brokers, no commission.
+      </p>
+      <p style="font-size:13px;color:#555;line-height:1.7;margin-bottom:14px;">
+        Post your property free, reach genuine buyers worldwide, and manage everything from one simple app.
+      </p>
+      <p style="font-size:12px;color:#888;">
+        📧 contact@theearthproperty.com
+      </p>
+      <button onclick="closeAboutModal()" style="width:100%;background:#2e7d32;color:white;border:none;padding:12px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-top:16px;">Close</button>
+    </div>
+  </div>
+</div>
 
 <script src="price-filter-integration.js"></script>
 
