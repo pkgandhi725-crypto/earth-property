@@ -1746,6 +1746,74 @@ setTimeout(initLocationCard, 2000);
   </div>
 </div>
 
+    <script>
+// =============================================
+// 👉 SWIPE GESTURES FOR SIDE DRAWER
+// Swipe right from left screen-edge -> OPEN
+// Swipe left anywhere on open drawer -> CLOSE
+// =============================================
+(function() {
+    const EDGE_ZONE = 25;      // px from left edge that counts as "edge" touch
+    const SWIPE_THRESHOLD = 60; // min horizontal px movement to trigger action
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let trackingEdgeSwipe = false;
+    let trackingDrawerSwipe = false;
+
+    document.addEventListener('touchstart', function(e) {
+        const drawer = document.getElementById('sideDrawer');
+        const isDrawerOpen = drawer.classList.contains('open');
+        const touch = e.touches[0];
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+
+        if (!isDrawerOpen && touchStartX <= EDGE_ZONE) {
+            // Touch started right at the left edge -> candidate to open
+            trackingEdgeSwipe = true;
+            trackingDrawerSwipe = false;
+        } else if (isDrawerOpen) {
+            // Any touch while drawer is open -> candidate to close on swipe-left
+            trackingDrawerSwipe = true;
+            trackingEdgeSwipe = false;
+        } else {
+            trackingEdgeSwipe = false;
+            trackingDrawerSwipe = false;
+        }
+    }, { passive: true });
+
+    document.addEventListener('touchend', function(e) {
+        if (!trackingEdgeSwipe && !trackingDrawerSwipe) return;
+
+        const touch = e.changedTouches[0];
+        const dx = touch.clientX - touchStartX;
+        const dy = touch.clientY - touchStartY;
+
+        // Ignore mostly-vertical swipes (scrolling)
+        if (Math.abs(dx) < Math.abs(dy)) {
+            trackingEdgeSwipe = false;
+            trackingDrawerSwipe = false;
+            return;
+        }
+
+        const drawer = document.getElementById('sideDrawer');
+
+        if (trackingEdgeSwipe && dx > SWIPE_THRESHOLD) {
+            // Swiped right from the edge -> open
+            if (!drawer.classList.contains('open')) toggleDrawer();
+        }
+
+        if (trackingDrawerSwipe && dx < -SWIPE_THRESHOLD) {
+            // Swiped left while drawer open -> close
+            if (drawer.classList.contains('open')) toggleDrawer();
+        }
+
+        trackingEdgeSwipe = false;
+        trackingDrawerSwipe = false;
+    }, { passive: true });
+})();
+</script>
+
 <script src="price-filter-integration.js"></script>
 
 </body>
