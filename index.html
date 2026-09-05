@@ -1806,6 +1806,33 @@ setTimeout(initLocationCard, 2000);
     }
 
     document.addEventListener('touchstart', function(e) {
+        // Safety net: if a previous gesture never got a touchend/touchcancel
+        // (e.g. another swipe handler on the page — like a photo gallery —
+        // swallowed it via stopPropagation), the drawer would be stuck at a
+        // half-dragged position forever. Force-reset before starting fresh.
+        if (isDragging) {
+            isDragging = false;
+            hasMoved = false;
+            dragMode = null;
+            isAnimating = false;
+            drawer.style.transition = '';
+            drawer.style.left = '';
+            overlay.style.transition = '';
+            overlay.style.opacity = '';
+            overlay.style.display = drawer.classList.contains('open') ? 'block' : 'none';
+        }
+
+        // Never hijack touches that belong to any photo gallery / swipeable
+        // carousel / fullscreen viewer / bottom sheet on the site — let their
+        // own swipe handlers work exactly as before, untouched. (The card
+        // gallery's touchend calls stopPropagation() when it detects a real
+        // swipe, which is what was causing the drawer to get stuck.)
+        if (e.target.closest('.img-box, .gallery-wrap, .gallery-modal, .photo-viewer, .share-sheet')) {
+            isDragging = false;
+            dragMode = null;
+            return;
+        }
+
         // Ignore multi-touch gestures entirely
         if (e.touches.length > 1) {
             isDragging = false;
