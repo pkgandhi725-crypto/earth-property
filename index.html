@@ -1748,21 +1748,21 @@ setTimeout(initLocationCard, 2000);
 
     <script>
 // =============================================
-// 👉 SMOOTH DRAG-FOLLOW SWIPE FOR SIDE DRAWER (v2 - fixed snap animation)
+// 👉 SMOOTH DRAG-FOLLOW SWIPE FOR SIDE DRAWER (v3 - fixes conflict with tap handlers)
 // =============================================
 (function() {
     const EDGE_ZONE = 25;
-    const DRAWER_WIDTH = 280;    // must match .drawer width in CSS
+    const DRAWER_WIDTH = 280;
     const OPEN_SNAP_RATIO = 0.35;
-    const SNAP_DURATION = 280;   // ms, matches transition below
+    const SNAP_DURATION = 280;
+    const MOVE_THRESHOLD = 8; // px of movement before we treat it as a real drag (not a tap)
 
     const drawer = document.getElementById('sideDrawer');
     const overlay = document.getElementById('overlay');
 
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let currentX = 0;
-    let isDragging = false;
+    let touchStartX = 0, touchStartY = 0, currentX = 0;
+    let isDragging = false; // candidate drag started
+    let hasMoved = false;   // confirmed real horizontal drag (crossed threshold)
     let dragMode = null;
 
     document.addEventListener('touchstart', function(e) {
@@ -1770,20 +1770,15 @@ setTimeout(initLocationCard, 2000);
         const touch = e.touches[0];
         touchStartX = touch.clientX;
         touchStartY = touch.clientY;
+        hasMoved = false;
 
         if (!isDrawerOpen && touchStartX <= EDGE_ZONE) {
             dragMode = 'open';
             isDragging = true;
-            drawer.style.transition = 'none';
-            overlay.style.transition = 'none';
-            overlay.style.display = 'block';
-            overlay.style.opacity = '0';
             currentX = -DRAWER_WIDTH;
         } else if (isDrawerOpen) {
             dragMode = 'close';
             isDragging = true;
-            drawer.style.transition = 'none';
-            overlay.style.transition = 'none';
             currentX = 0;
         } else {
             isDragging = false;
@@ -1797,7 +1792,22 @@ setTimeout(initLocationCard, 2000);
         const dx = touch.clientX - touchStartX;
         const dy = touch.clientY - touchStartY;
 
-        if (Math.abs(dy) > Math.abs(dx) && Math.abs(dx) < 15) return;
+        if (!hasMoved) {
+            if (Math.abs(dx) < MOVE_THRESHOLD && Math.abs(dy) < MOVE_THRESHOLD) return;
+            if (Math.abs(dy) > Math.abs(dx)) {
+                // vertical intent (scrolling) -> cancel our drag tracking, let native scroll happen
+                isDragging = false;
+                dragMode = null;
+                return;
+            }
+            // confirmed horizontal drag starts now
+            hasMoved = true;
+            drawer.style.transition = 'none';
+            overlay.style.transition = 'none';
+            overlay.style.display = 'block';
+        }
+
+        e.preventDefault(); // stop page/list scroll while actively dragging the drawer
 
         let leftPos;
         if (dragMode === 'open') {
@@ -1810,11 +1820,20 @@ setTimeout(initLocationCard, 2000);
 
         const openRatio = Math.max(0, Math.min(1, 1 + (leftPos / DRAWER_WIDTH)));
         overlay.style.opacity = openRatio;
-    }, { passive: true });
+    }, { passive: false });
 
     document.addEventListener('touchend', function(e) {
         if (!isDragging) return;
         isDragging = false;
+
+        if (!hasMoved) {
+            // it was just a tap, not a swipe -> do nothing here,
+            // let the existing onclick handlers (hamburger/overlay/items) handle it normally
+            dragMode = null;
+            return;
+        }
+
+        e.preventDefault(); // stop the ghost click that would fire old onclick handlers
 
         const openRatio = Math.max(0, Math.min(1, 1 + (currentX / DRAWER_WIDTH)));
         const shouldOpen = dragMode === 'open'
@@ -1823,7 +1842,7 @@ setTimeout(initLocationCard, 2000);
 
         snapTo(shouldOpen);
         dragMode = null;
-    }, { passive: true });
+    }, { passive: false });
 
     function snapTo(shouldOpen) {
         const targetLeft = shouldOpen ? 0 : -DRAWER_WIDTH;
@@ -1832,8 +1851,7 @@ setTimeout(initLocationCard, 2000);
         drawer.style.transition = 'left ' + SNAP_DURATION + 'ms cubic-bezier(0.4,0,0.2,1)';
         overlay.style.transition = 'opacity ' + SNAP_DURATION + 'ms ease';
 
-        // force browser to register current position before animating (prevents "stuck" jump)
-        void drawer.offsetWidth;
+        void drawer.offsetWidth; // force reflow so transition registers current position
 
         drawer.style.left = targetLeft + 'px';
         overlay.style.opacity = targetOpacity;
@@ -1867,7 +1885,6 @@ setTimeout(initLocationCard, 2000);
             if (ev.propertyName === 'left') cleanup();
         }
         drawer.addEventListener('transitionend', onTransEnd);
-        // safety fallback in case transitionend doesn't fire
         setTimeout(cleanup, SNAP_DURATION + 100);
     }
 })();
