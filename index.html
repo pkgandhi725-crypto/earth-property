@@ -1748,68 +1748,108 @@ setTimeout(initLocationCard, 2000);
 
     <script>
 // =============================================
-// 👉 SWIPE GESTURES FOR SIDE DRAWER
-// Swipe right from left screen-edge -> OPEN
-// Swipe left anywhere on open drawer -> CLOSE
+// 👉 SMOOTH DRAG-FOLLOW SWIPE FOR SIDE DRAWER
+// Drawer follows your finger in real time while swiping.
+// Release: snaps fully open or fully closed based on distance.
 // =============================================
 (function() {
-    const EDGE_ZONE = 25;      // px from left edge that counts as "edge" touch
-    const SWIPE_THRESHOLD = 60; // min horizontal px movement to trigger action
+    const EDGE_ZONE = 25;        // px from left edge that counts as "edge" touch (for opening)
+    const DRAWER_WIDTH = 280;    // must match .drawer width in CSS
+    const OPEN_SNAP_RATIO = 0.35; // drag past 35% of width -> snap open
+
+    const drawer = document.getElementById('sideDrawer');
+    const overlay = document.getElementById('overlay');
 
     let touchStartX = 0;
     let touchStartY = 0;
-    let trackingEdgeSwipe = false;
-    let trackingDrawerSwipe = false;
+    let currentX = 0;
+    let isDragging = false;
+    let dragMode = null; // 'open' or 'close'
+    let startedOpen = false;
 
     document.addEventListener('touchstart', function(e) {
-        const drawer = document.getElementById('sideDrawer');
         const isDrawerOpen = drawer.classList.contains('open');
         const touch = e.touches[0];
         touchStartX = touch.clientX;
         touchStartY = touch.clientY;
+        startedOpen = isDrawerOpen;
 
         if (!isDrawerOpen && touchStartX <= EDGE_ZONE) {
-            // Touch started right at the left edge -> candidate to open
-            trackingEdgeSwipe = true;
-            trackingDrawerSwipe = false;
+            dragMode = 'open';
+            isDragging = true;
+            drawer.style.transition = 'none';
+            overlay.style.display = 'block';
+            overlay.style.transition = 'none';
+            overlay.style.opacity = '0';
         } else if (isDrawerOpen) {
-            // Any touch while drawer is open -> candidate to close on swipe-left
-            trackingDrawerSwipe = true;
-            trackingEdgeSwipe = false;
+            dragMode = 'close';
+            isDragging = true;
+            drawer.style.transition = 'none';
+            overlay.style.transition = 'none';
         } else {
-            trackingEdgeSwipe = false;
-            trackingDrawerSwipe = false;
+            isDragging = false;
+            dragMode = null;
         }
     }, { passive: true });
 
-    document.addEventListener('touchend', function(e) {
-        if (!trackingEdgeSwipe && !trackingDrawerSwipe) return;
-
-        const touch = e.changedTouches[0];
+    document.addEventListener('touchmove', function(e) {
+        if (!isDragging) return;
+        const touch = e.touches[0];
         const dx = touch.clientX - touchStartX;
         const dy = touch.clientY - touchStartY;
 
-        // Ignore mostly-vertical swipes (scrolling)
-        if (Math.abs(dx) < Math.abs(dy)) {
-            trackingEdgeSwipe = false;
-            trackingDrawerSwipe = false;
-            return;
+        // If swipe is more vertical than horizontal, let normal scroll happen
+        if (Math.abs(dy) > Math.abs(dx) && Math.abs(dx) < 15) return;
+
+        let leftPos;
+        if (dragMode === 'open') {
+            leftPos = Math.min(0, Math.max(-DRAWER_WIDTH, -DRAWER_WIDTH + dx));
+        } else {
+            leftPos = Math.min(0, Math.max(-DRAWER_WIDTH, dx));
+        }
+        currentX = leftPos;
+        drawer.style.left = leftPos + 'px';
+
+        const openRatio = 1 + (leftPos / DRAWER_WIDTH); // 0 = fully closed, 1 = fully open
+        overlay.style.opacity = Math.max(0, Math.min(1, openRatio)) * 0.5 / 0.5; // 0..1
+        overlay.style.background = 'rgba(0,0,0,' + (0.5 * Math.max(0, Math.min(1, openRatio))) + ')';
+    }, { passive: true });
+
+    document.addEventListener('touchend', function(e) {
+        if (!isDragging) return;
+        isDragging = false;
+
+        drawer.style.transition = '';
+        overlay.style.transition = '';
+
+        const openRatio = 1 + (currentX / DRAWER_WIDTH);
+        const shouldOpen = dragMode === 'open'
+            ? openRatio >= OPEN_SNAP_RATIO
+            : openRatio >= (1 - OPEN_SNAP_RATIO);
+
+        // Reset inline styles so CSS classes take back over
+        drawer.style.left = '';
+        overlay.style.background = '';
+        overlay.style.opacity = '';
+
+        if (shouldOpen && !drawer.classList.contains('open')) {
+            drawer.classList.add('open');
+            overlay.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            if (!startedOpen) window.history.pushState({drawer:true}, null, window.location.href);
+        } else if (!shouldOpen && drawer.classList.contains('open')) {
+            drawer.classList.remove('open');
+            overlay.style.display = 'none';
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+        } else if (!shouldOpen) {
+            overlay.style.display = 'none';
         }
 
-        const drawer = document.getElementById('sideDrawer');
-
-        if (trackingEdgeSwipe && dx > SWIPE_THRESHOLD) {
-            // Swiped right from the edge -> open
-            if (!drawer.classList.contains('open')) toggleDrawer();
-        }
-
-        if (trackingDrawerSwipe && dx < -SWIPE_THRESHOLD) {
-            // Swiped left while drawer open -> close
-            if (drawer.classList.contains('open')) toggleDrawer();
-        }
-
-        trackingEdgeSwipe = false;
-        trackingDrawerSwipe = false;
+        dragMode = null;
     }, { passive: true });
 })();
 </script>
