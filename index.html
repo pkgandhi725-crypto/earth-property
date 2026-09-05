@@ -1773,6 +1773,7 @@ setTimeout(initLocationCard, 2000);
     });
 
     let touchStartX = 0, touchStartY = 0, currentX = 0;
+    let dragStartLeft = 0;  // fixed baseline captured once per gesture — never re-added to itself
     let isDragging = false; // candidate drag started
     let hasMoved = false;   // confirmed real horizontal drag (crossed threshold)
     let dragMode = null;
@@ -1831,11 +1832,13 @@ setTimeout(initLocationCard, 2000);
         if (!isDrawerOpen && touchStartX <= EDGE_ZONE) {
             dragMode = 'open';
             isDragging = true;
-            currentX = getCurrentLeft();
+            dragStartLeft = getCurrentLeft();
+            currentX = dragStartLeft;
         } else if (isDrawerOpen) {
             dragMode = 'close';
             isDragging = true;
-            currentX = getCurrentLeft();
+            dragStartLeft = getCurrentLeft();
+            currentX = dragStartLeft;
         } else {
             isDragging = false;
             dragMode = null;
@@ -1867,12 +1870,9 @@ setTimeout(initLocationCard, 2000);
 
         e.preventDefault(); // stop page/list scroll while actively dragging the drawer
 
-        let leftPos;
-        if (dragMode === 'open') {
-            leftPos = Math.min(0, Math.max(-drawerWidth, -drawerWidth + dx));
-        } else {
-            leftPos = Math.min(0, Math.max(-drawerWidth, currentX + dx));
-        }
+        // Always baseline + cumulative delta — never re-add a previous frame's
+        // computed value, or the position drifts/doubles every frame.
+        const leftPos = Math.min(0, Math.max(-drawerWidth, dragStartLeft + dx));
         currentX = leftPos;
         drawer.style.left = leftPos + 'px';
 
@@ -1968,7 +1968,6 @@ setTimeout(initLocationCard, 2000);
     window.sideDrawerSnapTo = snapTo;
 })();
 </script>
-
 
 <script src="price-filter-integration.js"></script>
 
