@@ -1014,8 +1014,22 @@ function handleLogout() {
     }
 }
 
+function showOfflineState() {
+    isDataLoaded = true;
+    isLoading = false;
+    document.getElementById('propertyList').innerHTML = `
+        <div style="text-align:center;padding:60px 30px;">
+            <i class="fa fa-wifi" style="font-size:50px;opacity:0.25;display:block;margin-bottom:20px;color:#888;"></i>
+            <div style="font-size:17px;font-weight:700;color:#555;margin-bottom:8px;">No Internet Connection</div>
+            <div style="font-size:13px;color:#999;margin-bottom:18px;">Please check your connection and try again</div>
+            <button onclick="location.reload()" style="background:#2e7d32;color:white;border:none;padding:11px 26px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;">🔄 Retry</button>
+        </div>`;
+    document.getElementById('loadMoreContainer').style.display = 'none';
+}
+
 function loadProperties(isLoadMore=false) {
     if(isLoading) return;
+    if(!navigator.onLine) { showOfflineState(); return; }
     isLoading=true;
     const btn=document.getElementById('loadMoreBtn');
     if(isLoadMore&&btn){btn.disabled=true;btn.innerHTML='<span class="loading-spinner"></span>';}
@@ -1510,6 +1524,7 @@ function setSort(type) {
 }
 
 async function loadAllForNearest() {
+    if(!navigator.onLine) { showOfflineState(); return; }
     document.getElementById('propertyList').innerHTML = `
         <div style="text-align:center;padding:60px 20px;">
             <div class="loading-spinner" style="border-top-color:#2e7d32;border-color:rgba(46,125,50,0.2);width:36px;height:36px;margin:0 auto 15px;"></div>
@@ -1641,6 +1656,14 @@ window.addEventListener('load', () => {
 loadLanguageDropdown();
 applyLanguage();
 setTimeout(initLocationCard, 2000);
+
+// ✅ Auto-retry when connection comes back
+window.addEventListener('online', () => {
+    if (!isDataLoaded || document.getElementById('propertyList').innerHTML.includes('No Internet Connection')) {
+        showToast('✅ Back online! Loading properties...');
+        loadProperties();
+    }
+});
 </script>
 
 <!-- Help Auth Modal -->
@@ -1998,7 +2021,7 @@ setTimeout(initLocationCard, 2000);
 
 <script src="price-filter-integration.js"></script>
 
-    <script>
+<script>
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
@@ -2006,7 +2029,7 @@ if ('serviceWorker' in navigator) {
             .catch(err => console.warn('SW registration failed:', err));
     });
 }
-    </script>
+</script>
 
 </body>
 </html>
