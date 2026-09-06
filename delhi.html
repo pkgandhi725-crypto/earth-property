@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -25,8 +25,12 @@
       "@type": "City",
       "name": "Delhi",
       "containedInPlace": {
-        "@type": "Country",
-        "name": "India"
+        "@type": "State",
+        "name": "Delhi",
+        "containedInPlace": {
+          "@type": "Country",
+          "name": "India"
+        }
       }
     }
   }
@@ -81,6 +85,14 @@
       overflow-x: hidden;
     }
 
+    /* RTL support */
+    [dir="rtl"] .nav-logo { letter-spacing: 0; }
+    [dir="rtl"] .hero-title { text-align: right; }
+    [dir="rtl"] .hero-sub { text-align: right; }
+    [dir="rtl"] .card-location { flex-direction: row-reverse; }
+    [dir="rtl"] .card-meta { flex-direction: row-reverse; }
+    [dir="rtl"] .nearby-chips { direction: rtl; }
+
     nav {
       position: fixed;
       top: 0; left: 0; right: 0;
@@ -101,6 +113,72 @@
       letter-spacing: 2px;
       text-decoration: none;
     }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Language Switcher */
+    .lang-switcher {
+      position: relative;
+    }
+
+    .lang-btn {
+      background: rgba(201,168,76,0.15);
+      border: 1px solid rgba(201,168,76,0.3);
+      color: var(--gold-light);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 50px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .lang-btn svg { flex-shrink: 0; }
+
+    .lang-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: #1a1a1a;
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: 12px;
+      overflow: hidden;
+      min-width: 160px;
+      z-index: 200;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+
+    .lang-dropdown.open { display: block; }
+
+    .lang-option {
+      display: block;
+      padding: 10px 16px;
+      font-size: 0.82rem;
+      color: rgba(250,250,248,0.75);
+      cursor: pointer;
+      transition: background 0.15s;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    [dir="rtl"] .lang-option { text-align: right; }
+
+    .lang-option:hover { background: rgba(201,168,76,0.12); color: var(--gold-light); }
+    .lang-option.selected { color: var(--gold); font-weight: 600; }
 
     .nav-cta {
       background: var(--gold);
@@ -582,7 +660,22 @@
 
   <nav>
     <a href="/" class="nav-logo">TEP</a>
-    <a href="/add-property.html" class="nav-cta">+ List Free</a>
+    <div class="nav-right">
+      <!-- Language Switcher -->
+      <div class="lang-switcher">
+        <button class="lang-btn" id="langBtn" aria-label="Change language">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+          <span id="langLabel">EN</span>
+        </button>
+        <div class="lang-dropdown" id="langDropdown">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+      <a href="/add-property.html" class="nav-cta">+ List Free</a>
+    </div>
   </nav>
 
   <section class="hero">
@@ -692,6 +785,98 @@
     </p>
   </footer>
 
+  <!-- Language Switcher Logic -->
+  <script>
+    // All 29 languages — same as translations.js supports
+    const LANGUAGES = [
+      { code: 'en',    label: 'English',    native: 'English',      dir: 'ltr' },
+      { code: 'hi',    label: 'Hindi',      native: 'हिन्दी',        dir: 'ltr' },
+      { code: 'ml',    label: 'Malayalam',  native: 'മലയാളം',        dir: 'ltr' },
+      { code: 'ta',    label: 'Tamil',      native: 'தமிழ்',         dir: 'ltr' },
+      { code: 'te',    label: 'Telugu',     native: 'తెలుగు',        dir: 'ltr' },
+      { code: 'kn',    label: 'Kannada',    native: 'ಕನ್ನಡ',         dir: 'ltr' },
+      { code: 'mr',    label: 'Marathi',    native: 'मराठी',         dir: 'ltr' },
+      { code: 'gu',    label: 'Gujarati',   native: 'ગુજરાતી',       dir: 'ltr' },
+      { code: 'bn',    label: 'Bengali',    native: 'বাংলা',         dir: 'ltr' },
+      { code: 'pa',    label: 'Punjabi',    native: 'ਪੰਜਾਬੀ',        dir: 'ltr' },
+      { code: 'ur',    label: 'Urdu',       native: 'اردو',          dir: 'rtl' },
+      { code: 'ar',    label: 'Arabic',     native: 'العربية',       dir: 'rtl' },
+      { code: 'fa',    label: 'Persian',    native: 'فارسی',         dir: 'rtl' },
+      { code: 'id',    label: 'Indonesian', native: 'Bahasa Indonesia', dir: 'ltr' },
+      { code: 'ms',    label: 'Malay',      native: 'Bahasa Melayu', dir: 'ltr' },
+      { code: 'th',    label: 'Thai',       native: 'ภาษาไทย',       dir: 'ltr' },
+      { code: 'vi',    label: 'Vietnamese', native: 'Tiếng Việt',    dir: 'ltr' },
+      { code: 'zh',    label: 'Chinese',    native: '中文',           dir: 'ltr' },
+      { code: 'ja',    label: 'Japanese',   native: '日本語',         dir: 'ltr' },
+      { code: 'ko',    label: 'Korean',     native: '한국어',         dir: 'ltr' },
+      { code: 'ru',    label: 'Russian',    native: 'Русский',       dir: 'ltr' },
+      { code: 'de',    label: 'German',     native: 'Deutsch',       dir: 'ltr' },
+      { code: 'fr',    label: 'French',     native: 'Français',      dir: 'ltr' },
+      { code: 'es',    label: 'Spanish',    native: 'Español',       dir: 'ltr' },
+      { code: 'pt',    label: 'Portuguese', native: 'Português',     dir: 'ltr' },
+      { code: 'it',    label: 'Italian',    native: 'Italiano',      dir: 'ltr' },
+      { code: 'tr',    label: 'Turkish',    native: 'Türkçe',        dir: 'ltr' },
+      { code: 'pl',    label: 'Polish',     native: 'Polski',        dir: 'ltr' },
+      { code: 'nl',    label: 'Dutch',      native: 'Nederlands',    dir: 'ltr' },
+    ];
+
+    const LANG_KEY = 'tep_lang';
+
+    function getCurrentLang() {
+      return localStorage.getItem(LANG_KEY) || 'en';
+    }
+
+    function applyLang(code) {
+      const lang = LANGUAGES.find(l => l.code === code) || LANGUAGES[0];
+      document.documentElement.setAttribute('lang', code);
+      document.documentElement.setAttribute('dir', lang.dir);
+      localStorage.setItem(LANG_KEY, code);
+      document.getElementById('langLabel').textContent = code.toUpperCase();
+
+      // Mark selected in dropdown
+      document.querySelectorAll('.lang-option').forEach(opt => {
+        opt.classList.toggle('selected', opt.dataset.code === code);
+      });
+
+      // If translations.js is loaded on this page, trigger it
+      if (window.setLanguage) {
+        window.setLanguage(code);
+      }
+    }
+
+    function buildDropdown() {
+      const dropdown = document.getElementById('langDropdown');
+      const current = getCurrentLang();
+      dropdown.innerHTML = LANGUAGES.map(l => `
+        <button class="lang-option ${l.code === current ? 'selected' : ''}"
+                data-code="${l.code}">
+          ${l.native}
+        </button>
+      `).join('');
+
+      dropdown.addEventListener('click', (e) => {
+        const btn = e.target.closest('.lang-option');
+        if (!btn) return;
+        applyLang(btn.dataset.code);
+        dropdown.classList.remove('open');
+      });
+    }
+
+    // Toggle dropdown
+    document.getElementById('langBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('langDropdown').classList.toggle('open');
+    });
+
+    document.addEventListener('click', () => {
+      document.getElementById('langDropdown').classList.remove('open');
+    });
+
+    buildDropdown();
+    applyLang(getCurrentLang());
+  </script>
+
+  <!-- Firestore Listings Logic -->
   <script type="module">
     function escHtml(str) {
       if (!str) return '';
