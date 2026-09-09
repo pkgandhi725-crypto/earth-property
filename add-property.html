@@ -158,6 +158,9 @@
         .same-toggle-box { width: 16px; height: 16px; border: 2px solid #ccc; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: 0.2s; background: #fff; flex-shrink: 0; }
         .same-toggle-box.checked { background: var(--primary); border-color: var(--primary); color: #fff; font-size: 10px; }
         input[readonly].wa-readonly { background: #f0f0f0; color: #777; }
+        .phone-country-picker { margin-bottom: 8px; }
+        .phone-country-picker .country-search-wrap input { font-size: 12px; padding: 9px 30px 9px 10px; }
+        .phone-country-note { font-size: 10px; color: #999; margin-top: 3px; }
         #propertyMap { height: 220px; border-radius: 12px; margin-top: 12px; display: none; border: 1.5px solid #c8e6c9; position: relative; z-index: 1; }
         .get-map-btn { width: 100%; padding: 11px; background: linear-gradient(135deg, #2e7d32, #388e3c); color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; box-sizing: border-box; }
         .get-map-btn:disabled { background: #aaa; cursor: not-allowed; }
@@ -315,6 +318,15 @@
 
     <div class="form-group">
         <label>📞 Calling Number</label>
+        <div class="phone-country-picker">
+            <div class="country-search-wrap phone-country-search-wrap">
+                <input type="text" id="phoneCountrySearch" placeholder="🔍 Phone country (defaults to property country)" autocomplete="off" oninput="filterPhoneCountries()" onfocus="showPhoneCountryDropdown()" onblur="hidePhoneCountryDropdown()">
+                <button class="clear-btn" id="phoneCountryClearBtn" onclick="clearPhoneCountry()" type="button">×</button>
+                <div class="country-dropdown" id="phoneCountryDropdown"></div>
+            </div>
+            <input type="hidden" id="selectedPhoneCountry" value="">
+            <div class="phone-country-note">📱 Your number's country — only tap this if it's different from the property's country</div>
+        </div>
         <div class="phone-input-wrap">
             <div class="phone-code-badge" id="phoneCodeBadge">🇮🇳 +91</div>
             <input type="text" inputmode="numeric" maxlength="12" id="phone" placeholder="Enter number without country code" style="flex:1;">
@@ -477,6 +489,15 @@ const urlParams=new URLSearchParams(window.location.search),editId=urlParams.get
 
 // ---- CALLING / WHATSAPP NUMBER TOGGLE ----
 let sameAsCallingNumber = true;
+let phoneCountryManuallySet = false;
+
+function filterPhoneCountries(){const q=document.getElementById('phoneCountrySearch').value.toLowerCase().trim();const dd=document.getElementById('phoneCountryDropdown');const cb=document.getElementById('phoneCountryClearBtn');cb.style.display=q?'block':'none';renderPhoneCountryDropdown(q?COUNTRIES.filter(c=>c.name.toLowerCase().includes(q)):COUNTRIES);dd.style.display='block';}
+function showPhoneCountryDropdown(){const q=document.getElementById('phoneCountrySearch').value.toLowerCase().trim();renderPhoneCountryDropdown(q?COUNTRIES.filter(c=>c.name.toLowerCase().includes(q)):COUNTRIES);document.getElementById('phoneCountryDropdown').style.display='block';}
+function hidePhoneCountryDropdown(){setTimeout(()=>{document.getElementById('phoneCountryDropdown').style.display='none';},200);}
+function renderPhoneCountryDropdown(list){const dd=document.getElementById('phoneCountryDropdown');const sel=document.getElementById('selectedPhoneCountry').value;if(list.length===0){dd.innerHTML='<div style="padding:12px;text-align:center;color:#999;font-size:13px;">No country found</div>';return;}dd.innerHTML=list.map(c=>`<div class="c-item ${sel===c.name?'active':''}" onmousedown="selectPhoneCountry('${c.name}','${c.flag}',true)"><span class="flag">${c.flag}</span> ${c.name}</div>`).join('');}
+function selectPhoneCountry(name,flag,isManual){document.getElementById('phoneCountrySearch').value=flag+' '+name;document.getElementById('selectedPhoneCountry').value=name;document.getElementById('phoneCountryClearBtn').style.display='block';document.getElementById('phoneCountryDropdown').style.display='none';if(isManual)phoneCountryManuallySet=true;applyPhoneCountryCode(name,flag);}
+function clearPhoneCountry(){document.getElementById('phoneCountrySearch').value='';document.getElementById('selectedPhoneCountry').value='';document.getElementById('phoneCountryClearBtn').style.display='none';phoneCountryManuallySet=false;const propCountry=document.getElementById('selectedCountry').value;if(propCountry){const c=COUNTRIES.find(x=>x.name===propCountry);if(c)selectPhoneCountry(c.name,c.flag,false);}else{document.getElementById('phoneCodeBadge').textContent='🌍 +?';document.getElementById('phoneHintText').textContent='Select a country to auto-set the phone code 🌍';syncWhatsappCode();}}
+function applyPhoneCountryCode(countryName,countryFlag){const code=COUNTRY_CODES[countryName]||'';const badge=document.getElementById('phoneCodeBadge');if(code){badge.textContent=countryFlag+' '+code;document.getElementById('phoneHintText').textContent=countryName+' code set! Enter remaining digits only 📱';document.getElementById('phone').placeholder='e.g. 9876543210';}else{badge.textContent='🌍 +?';document.getElementById('phoneHintText').textContent='Enter number with country code';}syncWhatsappCode();}
 
 function syncWhatsappCode(){
     document.getElementById('whatsappCodeBadge').textContent = document.getElementById('phoneCodeBadge').textContent;
@@ -778,21 +799,16 @@ const COUNTRY_CODES={"Afghanistan":"+93","Albania":"+355","Algeria":"+213","Ando
 const COUNTRIES=[{name:"Afghanistan",flag:"🇦🇫"},{name:"Albania",flag:"🇦🇱"},{name:"Algeria",flag:"🇩🇿"},{name:"Andorra",flag:"🇦🇩"},{name:"Angola",flag:"🇦🇴"},{name:"Antigua and Barbuda",flag:"🇦🇬"},{name:"Argentina",flag:"🇦🇷"},{name:"Armenia",flag:"🇦🇲"},{name:"Australia",flag:"🇦🇺"},{name:"Austria",flag:"🇦🇹"},{name:"Azerbaijan",flag:"🇦🇿"},{name:"Bahamas",flag:"🇧🇸"},{name:"Bahrain",flag:"🇧🇭"},{name:"Bangladesh",flag:"🇧🇩"},{name:"Barbados",flag:"🇧🇧"},{name:"Belarus",flag:"🇧🇾"},{name:"Belgium",flag:"🇧🇪"},{name:"Belize",flag:"🇧🇿"},{name:"Benin",flag:"🇧🇯"},{name:"Bhutan",flag:"🇧🇹"},{name:"Bolivia",flag:"🇧🇴"},{name:"Bosnia and Herzegovina",flag:"🇧🇦"},{name:"Botswana",flag:"🇧🇼"},{name:"Brazil",flag:"🇧🇷"},{name:"Brunei",flag:"🇧🇳"},{name:"Bulgaria",flag:"🇧🇬"},{name:"Burkina Faso",flag:"🇧🇫"},{name:"Burundi",flag:"🇧🇮"},{name:"Cambodia",flag:"🇰🇭"},{name:"Cameroon",flag:"🇨🇲"},{name:"Canada",flag:"🇨🇦"},{name:"Cape Verde",flag:"🇨🇻"},{name:"Central African Republic",flag:"🇨🇫"},{name:"Chad",flag:"🇹🇩"},{name:"Chile",flag:"🇨🇱"},{name:"China",flag:"🇨🇳"},{name:"Colombia",flag:"🇨🇴"},{name:"Comoros",flag:"🇰🇲"},{name:"Congo",flag:"🇨🇬"},{name:"Costa Rica",flag:"🇨🇷"},{name:"Croatia",flag:"🇭🇷"},{name:"Cuba",flag:"🇨🇺"},{name:"Cyprus",flag:"🇨🇾"},{name:"Czech Republic",flag:"🇨🇿"},{name:"DR Congo",flag:"🇨🇩"},{name:"Denmark",flag:"🇩🇰"},{name:"Djibouti",flag:"🇩🇯"},{name:"Dominican Republic",flag:"🇩🇴"},{name:"Ecuador",flag:"🇪🇨"},{name:"Egypt",flag:"🇪🇬"},{name:"El Salvador",flag:"🇸🇻"},{name:"Equatorial Guinea",flag:"🇬🇶"},{name:"Eritrea",flag:"🇪🇷"},{name:"Estonia",flag:"🇪🇪"},{name:"Eswatini",flag:"🇸🇿"},{name:"Ethiopia",flag:"🇪🇹"},{name:"Fiji",flag:"🇫🇯"},{name:"Finland",flag:"🇫🇮"},{name:"France",flag:"🇫🇷"},{name:"Gabon",flag:"🇬🇦"},{name:"Gambia",flag:"🇬🇲"},{name:"Georgia",flag:"🇬🇪"},{name:"Germany",flag:"🇩🇪"},{name:"Ghana",flag:"🇬🇭"},{name:"Greece",flag:"🇬🇷"},{name:"Grenada",flag:"🇬🇩"},{name:"Guatemala",flag:"🇬🇹"},{name:"Guinea",flag:"🇬🇳"},{name:"Guinea-Bissau",flag:"🇬🇼"},{name:"Guyana",flag:"🇬🇾"},{name:"Haiti",flag:"🇭🇹"},{name:"Honduras",flag:"🇭🇳"},{name:"Hungary",flag:"🇭🇺"},{name:"Iceland",flag:"🇮🇸"},{name:"India",flag:"🇮🇳"},{name:"Indonesia",flag:"🇮🇩"},{name:"Iran",flag:"🇮🇷"},{name:"Iraq",flag:"🇮🇶"},{name:"Ireland",flag:"🇮🇪"},{name:"Israel",flag:"🇮🇱"},{name:"Italy",flag:"🇮🇹"},{name:"Ivory Coast",flag:"🇨🇮"},{name:"Jamaica",flag:"🇯🇲"},{name:"Japan",flag:"🇯🇵"},{name:"Jordan",flag:"🇯🇴"},{name:"Kazakhstan",flag:"🇰🇿"},{name:"Kenya",flag:"🇰🇪"},{name:"Kiribati",flag:"🇰🇮"},{name:"Kuwait",flag:"🇰🇼"},{name:"Kyrgyzstan",flag:"🇰🇬"},{name:"Laos",flag:"🇱🇦"},{name:"Latvia",flag:"🇱🇻"},{name:"Lebanon",flag:"🇱🇧"},{name:"Lesotho",flag:"🇱🇸"},{name:"Liberia",flag:"🇱🇷"},{name:"Libya",flag:"🇱🇾"},{name:"Liechtenstein",flag:"🇱🇮"},{name:"Lithuania",flag:"🇱🇹"},{name:"Luxembourg",flag:"🇱🇺"},{name:"Madagascar",flag:"🇲🇬"},{name:"Malawi",flag:"🇲🇼"},{name:"Malaysia",flag:"🇲🇾"},{name:"Maldives",flag:"🇲🇻"},{name:"Mali",flag:"🇲🇱"},{name:"Malta",flag:"🇲🇹"},{name:"Marshall Islands",flag:"🇲🇭"},{name:"Mauritania",flag:"🇲🇷"},{name:"Mauritius",flag:"🇲🇺"},{name:"Mexico",flag:"🇲🇽"},{name:"Micronesia",flag:"🇫🇲"},{name:"Moldova",flag:"🇲🇩"},{name:"Monaco",flag:"🇲🇨"},{name:"Mongolia",flag:"🇲🇳"},{name:"Montenegro",flag:"🇲🇪"},{name:"Morocco",flag:"🇲🇦"},{name:"Mozambique",flag:"🇲🇿"},{name:"Myanmar",flag:"🇲🇲"},{name:"Namibia",flag:"🇳🇦"},{name:"Nauru",flag:"🇳🇷"},{name:"Nepal",flag:"🇳🇵"},{name:"Netherlands",flag:"🇳🇱"},{name:"New Zealand",flag:"🇳🇿"},{name:"Nicaragua",flag:"🇳🇮"},{name:"Niger",flag:"🇳🇪"},{name:"Nigeria",flag:"🇳🇬"},{name:"North Korea",flag:"🇰🇵"},{name:"North Macedonia",flag:"🇲🇰"},{name:"Norway",flag:"🇳🇴"},{name:"Oman",flag:"🇴🇲"},{name:"Pakistan",flag:"🇵🇰"},{name:"Palau",flag:"🇵🇼"},{name:"Palestine",flag:"🇵🇸"},{name:"Panama",flag:"🇵🇦"},{name:"Papua New Guinea",flag:"🇵🇬"},{name:"Paraguay",flag:"🇵🇾"},{name:"Peru",flag:"🇵🇪"},{name:"Philippines",flag:"🇵🇭"},{name:"Poland",flag:"🇵🇱"},{name:"Portugal",flag:"🇵🇹"},{name:"Qatar",flag:"🇶🇦"},{name:"Romania",flag:"🇷🇴"},{name:"Russia",flag:"🇷🇺"},{name:"Rwanda",flag:"🇷🇼"},{name:"Saint Kitts and Nevis",flag:"🇰🇳"},{name:"Saint Lucia",flag:"🇱🇨"},{name:"Saint Vincent and the Grenadines",flag:"🇻🇨"},{name:"Samoa",flag:"🇼🇸"},{name:"San Marino",flag:"🇸🇲"},{name:"Sao Tome and Principe",flag:"🇸🇹"},{name:"Saudi Arabia",flag:"🇸🇦"},{name:"Senegal",flag:"🇸🇳"},{name:"Serbia",flag:"🇷🇸"},{name:"Seychelles",flag:"🇸🇨"},{name:"Sierra Leone",flag:"🇸🇱"},{name:"Singapore",flag:"🇸🇬"},{name:"Slovakia",flag:"🇸🇰"},{name:"Slovenia",flag:"🇸🇮"},{name:"Solomon Islands",flag:"🇸🇧"},{name:"Somalia",flag:"🇸🇴"},{name:"South Africa",flag:"🇿🇦"},{name:"South Korea",flag:"🇰🇷"},{name:"South Sudan",flag:"🇸🇸"},{name:"Spain",flag:"🇪🇸"},{name:"Sri Lanka",flag:"🇱🇰"},{name:"Sudan",flag:"🇸🇩"},{name:"Suriname",flag:"🇸🇷"},{name:"Sweden",flag:"🇸🇪"},{name:"Switzerland",flag:"🇨🇭"},{name:"Syria",flag:"🇸🇾"},{name:"Taiwan",flag:"🇹🇼"},{name:"Tajikistan",flag:"🇹🇯"},{name:"Tanzania",flag:"🇹🇿"},{name:"Thailand",flag:"🇹🇭"},{name:"Timor-Leste",flag:"🇹🇱"},{name:"Togo",flag:"🇹🇬"},{name:"Tonga",flag:"🇹🇴"},{name:"Trinidad and Tobago",flag:"🇹🇹"},{name:"Tunisia",flag:"🇹🇳"},{name:"Turkey",flag:"🇹🇷"},{name:"Turkmenistan",flag:"🇹🇲"},{name:"Tuvalu",flag:"🇹🇻"},{name:"UAE",flag:"🇦🇪"},{name:"Uganda",flag:"🇺🇬"},{name:"Ukraine",flag:"🇺🇦"},{name:"United Kingdom",flag:"🇬🇧"},{name:"United States",flag:"🇺🇸"},{name:"Uruguay",flag:"🇺🇾"},{name:"Uzbekistan",flag:"🇺🇿"},{name:"Vanuatu",flag:"🇻🇺"},{name:"Vatican City",flag:"🇻🇦"},{name:"Venezuela",flag:"🇻🇪"},{name:"Vietnam",flag:"🇻🇳"},{name:"Yemen",flag:"🇾🇪"},{name:"Zambia",flag:"🇿🇲"},{name:"Zimbabwe",flag:"🇿🇼"}];
 
 function updatePhoneCode(countryName, countryFlag) {
-    const code = COUNTRY_CODES[countryName] || '';
-    const badge = document.getElementById('phoneCodeBadge');
-    if (code) {
-        badge.textContent = countryFlag + ' ' + code;
-        document.getElementById('phoneHintText').textContent = countryName + ' code auto-set! Enter remaining digits only 📱';
-        document.getElementById('phone').placeholder = 'e.g. 9876543210';
-    } else {
-        badge.textContent = '🌍 +?';
-        document.getElementById('phoneHintText').textContent = 'Enter number with country code';
-    }
     // Auto-set currency
     const curr = COUNTRY_CURRENCY[countryName];
     if (curr) setAllCurrencies(curr);
-    // Keep WhatsApp code badge in sync with calling code
-    syncWhatsappCode();
+    // Auto-fill phone country to match property country — UNLESS user already picked their own phone country
+    if (!phoneCountryManuallySet) {
+        document.getElementById('phoneCountrySearch').value = countryFlag + ' ' + countryName;
+        document.getElementById('selectedPhoneCountry').value = countryName;
+        document.getElementById('phoneCountryClearBtn').style.display = 'block';
+        applyPhoneCountryCode(countryName, countryFlag);
+    }
 }
 
 function filterCountries(){const q=document.getElementById('countrySearch').value.toLowerCase().trim();const dd=document.getElementById('countryDropdown');const cb=document.getElementById('countryClearBtn');cb.style.display=q?'block':'none';renderDropdown(q?COUNTRIES.filter(c=>c.name.toLowerCase().includes(q)):COUNTRIES);dd.style.display='block';}
@@ -800,7 +816,7 @@ function showCountryDropdown(){const q=document.getElementById('countrySearch').
 function hideCountryDropdown(){setTimeout(()=>{document.getElementById('countryDropdown').style.display='none';},200);}
 function renderDropdown(list){const dd=document.getElementById('countryDropdown');const sel=document.getElementById('selectedCountry').value;if(list.length===0){dd.innerHTML='<div style="padding:12px;text-align:center;color:#999;font-size:13px;">No country found</div>';return;}dd.innerHTML=list.map(c=>`<div class="c-item ${sel===c.name?'active':''}" onmousedown="selectCountry('${c.name}','${c.flag}')"><span class="flag">${c.flag}</span> ${c.name}</div>`).join('');}
 function selectCountry(name,flag){document.getElementById('countrySearch').value=flag+' '+name;document.getElementById('selectedCountry').value=name;document.getElementById('countryClearBtn').style.display='block';document.getElementById('countryDropdown').style.display='none';updatePhoneCode(name,flag);}
-function clearCountry(){document.getElementById('countrySearch').value='';document.getElementById('selectedCountry').value='';document.getElementById('countryClearBtn').style.display='none';document.getElementById('countrySearch').focus();document.getElementById('phoneCodeBadge').textContent='🌍 +?';document.getElementById('phoneHintText').textContent='Select a country to auto-set the phone code 🌍';}
+function clearCountry(){document.getElementById('countrySearch').value='';document.getElementById('selectedCountry').value='';document.getElementById('countryClearBtn').style.display='none';document.getElementById('countrySearch').focus();if(!phoneCountryManuallySet){document.getElementById('phoneCountrySearch').value='';document.getElementById('selectedPhoneCountry').value='';document.getElementById('phoneCountryClearBtn').style.display='none';document.getElementById('phoneCodeBadge').textContent='🌍 +?';document.getElementById('phoneHintText').textContent='Select a country to auto-set the phone code 🌍';syncWhatsappCode();}}
 function switchSlotMode(slot,mode){slotMode[slot]=mode;const pb=document.getElementById(`togglePhoto${slot}`);const vb=document.getElementById(`toggleVideo${slot}`);const pd=document.getElementById(`photoMode${slot}`);const vd=document.getElementById(`videoMode${slot}`);if(mode==='photo'){pb.classList.add('active');vb.classList.remove('active');pd.style.display='block';vd.style.display='none';if(uploadedImages[slot]&&uploadedImages[slot].type==='video')uploadedImages[slot]=null;}else{vb.classList.add('active');pb.classList.remove('active');pd.style.display='none';vd.style.display='block';if(uploadedImages[slot]&&uploadedImages[slot].type!=='video')removeImage(slot);const vui=document.getElementById(`videoVerifiedUI${slot}`);const lui=document.getElementById(`videoLockedUI${slot}`);if(currentUserVerified){if(vui)vui.style.display='block';if(lui)lui.style.display='none';}else{if(vui)vui.style.display='none';if(lui)lui.style.display='block';}}}
 function getYouTubeId(url){const m=url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);return m?m[1]:null;}
 function getVimeoId(url){const m=url.match(/vimeo\.com\/(\d+)/);return m?m[1]:null;}
@@ -834,12 +850,17 @@ async function loadEditData(id,uid){
     else{if(data.price)document.getElementById('price').value=data.price;if(data.currency)document.getElementById('currency').value=data.currency;}
     document.getElementById('location').value=data.location||'';document.getElementById('city').value=data.city||'';document.getElementById('desc').value=data.description||'';document.getElementById('size').value=data.size||'';document.getElementById('nearby').value=data.nearby||'';document.getElementById('lotArea').value=data.lotArea||'';document.getElementById('floorArea').value=data.floorArea||'';
     if(data.country){const c=COUNTRIES.find(x=>x.name===data.country);if(c)selectCountry(c.name,c.flag);else{document.getElementById('countrySearch').value=data.country;document.getElementById('selectedCountry').value=data.country;document.getElementById('countryClearBtn').style.display='block';}}
-    if(data.phone){const country=data.country||'India';const code=(COUNTRY_CODES[country]||'+91').replace('+','');const ph=String(data.phone);document.getElementById('phone').value=ph.startsWith(code)?ph.slice(code.length):ph;}
+    // Restore phone country (independent from property country) — fallback to property country for older listings
+    const savedPhoneCountry = data.phoneCountry || data.country || 'India';
+    const pc = COUNTRIES.find(x=>x.name===savedPhoneCountry);
+    if(pc) selectPhoneCountry(pc.name, pc.flag, data.phoneCountry ? true : false);
+    const phoneDialCode=(COUNTRY_CODES[savedPhoneCountry]||'+91').replace('+','');
+    if(data.phone){const ph=String(data.phone);document.getElementById('phone').value=ph.startsWith(phoneDialCode)?ph.slice(phoneDialCode.length):ph;}
     // Load WhatsApp number — if it differs from calling number, switch toggle off
     if(data.whatsapp && data.whatsapp !== data.phone){
         if(sameAsCallingNumber) toggleSameNumber(); // switch to independent mode
-        const country=data.country||'India';const code=(COUNTRY_CODES[country]||'+91').replace('+','');const wa=String(data.whatsapp);
-        document.getElementById('whatsapp').value=wa.startsWith(code)?wa.slice(code.length):wa;
+        const wa=String(data.whatsapp);
+        document.getElementById('whatsapp').value=wa.startsWith(phoneDialCode)?wa.slice(phoneDialCode.length):wa;
     } else {
         document.getElementById('whatsapp').value=document.getElementById('phone').value;
         syncWhatsappCode();
@@ -1006,7 +1027,8 @@ async function submitProperty(){
     const purpose=document.getElementById('purpose').value;
     const finalImages=uploadedImages.map(img=>img||null);
     if(!country)return showToast("Please select a country","error");
-    const countryDialCode=(COUNTRY_CODES[country]||'+91').replace('+','');
+    const phoneCountry=document.getElementById('selectedPhoneCountry').value.trim()||country;
+    const countryDialCode=(COUNTRY_CODES[phoneCountry]||'+91').replace('+','');
     const phone=countryDialCode+rawPhone.replace(/\D/g,'');
     if(!/^\d{7,15}$/.test(phone))return showToast("Enter valid phone number","error");
     const whatsapp=sameAsCallingNumber?phone:(countryDialCode+rawWhatsapp.replace(/\D/g,''));
@@ -1016,7 +1038,7 @@ async function submitProperty(){
     if(purpose==='RentSell'||purpose==='CommercialRentSell'){priceValue=Number(document.getElementById('rsSellPrice').value);currencyValue=document.getElementById('rsSelCurrency').value;rentPriceValue=Number(document.getElementById('rsRentPrice').value);rentCurrencyValue=document.getElementById('rsRentCurrency').value;if(priceValue<=0||rentPriceValue<=0)return showToast("Please enter both Sell Price and Rent Price","error");if(priceValue>1000000000000||rentPriceValue>1000000000000)return showToast("Price too large.","error");}
     else if(purpose==='Rent'||purpose==='PG'||purpose==='CommercialRent'){priceValue=Number(document.getElementById('rentPrice').value);currencyValue=document.getElementById('rentCurrency').value;if(priceValue<=0)return showToast("Please enter a valid price","error");if(priceValue>1000000000000)return showToast("Price too large.","error");}
     else{priceValue=Number(document.getElementById('price').value);currencyValue=document.getElementById('currency').value;if(priceValue<=0)return showToast("Please enter a valid price","error");if(priceValue>1000000000000)return showToast("Price too large.","error");}
-    const propertyData={title,price:priceValue,currency:currencyValue,phone,whatsapp,sameAsCallingNumber,purpose,size:document.getElementById('size').value,lotArea:document.getElementById('lotArea').value.trim(),floorArea:document.getElementById('floorArea').value.trim(),location,country,city: document.getElementById('city').value.trim(),description:document.getElementById('desc').value.trim(),nearby:document.getElementById('nearby').value,images:finalImages,latitude:currentCoords.lat,longitude:currentCoords.lng,amenities:Array.from(selectedAmenities),status:"active",updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+    const propertyData={title,price:priceValue,currency:currencyValue,phone,whatsapp,phoneCountry,sameAsCallingNumber,purpose,size:document.getElementById('size').value,lotArea:document.getElementById('lotArea').value.trim(),floorArea:document.getElementById('floorArea').value.trim(),location,country,city: document.getElementById('city').value.trim(),description:document.getElementById('desc').value.trim(),nearby:document.getElementById('nearby').value,images:finalImages,latitude:currentCoords.lat,longitude:currentCoords.lng,amenities:Array.from(selectedAmenities),status:"active",updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
     if(purpose==='RentSell'||purpose==='CommercialRentSell'){propertyData.sellPrice=priceValue;propertyData.sellCurrency=currencyValue;propertyData.rentPrice=rentPriceValue;propertyData.rentCurrency=rentCurrencyValue;}
     if(purpose==='Rent')propertyData.rentDetails={furnished:document.getElementById('furnished').value,bills:document.getElementById('bills').value,advance:document.getElementById('advance').value,maintenance:document.getElementById('maintenance').value};
     if(purpose==='Plot')propertyData.plotDetails={area:document.getElementById('plotArea').value,roadFacing:document.getElementById('plotRoadFacing').value,corner:document.getElementById('plotCorner').value};
@@ -1075,7 +1097,7 @@ function confirmGPSCapture(){
     },{enableHighAccuracy:true,timeout:10000,maximumAge:0});
 }
 
-document.addEventListener('DOMContentLoaded',function(){document.addEventListener('click',function(e){if(!e.target.closest('.country-search-wrap'))document.getElementById('countryDropdown').style.display='none';if(!e.target.closest('.address-search-wrap'))document.getElementById('addressDropdown').style.display='none';});});
+document.addEventListener('DOMContentLoaded',function(){document.addEventListener('click',function(e){if(!e.target.closest('.country-search-wrap'))document.getElementById('countryDropdown').style.display='none';if(!e.target.closest('.phone-country-search-wrap'))document.getElementById('phoneCountryDropdown').style.display='none';if(!e.target.closest('.address-search-wrap'))document.getElementById('addressDropdown').style.display='none';});});
 </script>
 </body>
 </html>
