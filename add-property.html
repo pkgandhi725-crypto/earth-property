@@ -151,6 +151,13 @@
         .dual-price-label { font-size: 12px; font-weight: 700; color: #7b1fa2; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
         .phone-input-wrap { display: flex; gap: 6px; align-items: center; }
         .phone-code-badge { background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 10px; padding: 12px 10px; font-size: 13px; font-weight: 700; color: #2e7d32; white-space: nowrap; min-width: 60px; text-align: center; }
+        .phone-label-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+        .phone-label-row label { margin-bottom: 0; }
+        .same-number-toggle { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #777; cursor: pointer; user-select: none; white-space: nowrap; }
+        .same-number-toggle.active { color: var(--primary); }
+        .same-toggle-box { width: 16px; height: 16px; border: 2px solid #ccc; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: 0.2s; background: #fff; flex-shrink: 0; }
+        .same-toggle-box.checked { background: var(--primary); border-color: var(--primary); color: #fff; font-size: 10px; }
+        input[readonly].wa-readonly { background: #f0f0f0; color: #777; }
         #propertyMap { height: 220px; border-radius: 12px; margin-top: 12px; display: none; border: 1.5px solid #c8e6c9; position: relative; z-index: 1; }
         .get-map-btn { width: 100%; padding: 11px; background: linear-gradient(135deg, #2e7d32, #388e3c); color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; box-sizing: border-box; }
         .get-map-btn:disabled { background: #aaa; cursor: not-allowed; }
@@ -307,12 +314,26 @@
     </div>
 
     <div class="form-group">
-        <label>📞 Contact Number (WhatsApp)</label>
+        <label>📞 Calling Number</label>
         <div class="phone-input-wrap">
             <div class="phone-code-badge" id="phoneCodeBadge">🇮🇳 +91</div>
             <input type="text" inputmode="numeric" maxlength="12" id="phone" placeholder="Enter number without country code" style="flex:1;">
         </div>
         <div class="phone-hint" id="phoneHintText">Select a country to auto-set the phone code 🌍</div>
+    </div>
+    <div class="form-group">
+        <div class="phone-label-row">
+            <label style="margin-bottom:0;">💬 WhatsApp Number</label>
+            <div class="same-number-toggle active" id="sameNumberToggle" onclick="toggleSameNumber()">
+                <div class="same-toggle-box checked" id="sameToggleBox"><i class="fa fa-check" id="sameToggleCheck" style="display:inline;"></i></div>
+                Same as calling number
+            </div>
+        </div>
+        <div class="phone-input-wrap">
+            <div class="phone-code-badge" id="whatsappCodeBadge">🇮🇳 +91</div>
+            <input type="text" inputmode="numeric" maxlength="12" id="whatsapp" placeholder="Enter number without country code" style="flex:1;" readonly class="wa-readonly">
+        </div>
+        <div class="phone-hint" id="whatsappHintText">Same as calling number ✓</div>
     </div>
     <div class="form-group">
         <label>Property Size</label>
@@ -453,6 +474,39 @@ let uploadedImages=[null,null,null,null,null,null,null],uploadingCount=0,activeS
 let currentCoords={lat:null,lng:null},slotMode=[null,null,null,'photo','photo','photo','photo'];
 let currentUserVerified=false,currentUserBizName="",currentUserEpId="";
 const urlParams=new URLSearchParams(window.location.search),editId=urlParams.get('edit');
+
+// ---- CALLING / WHATSAPP NUMBER TOGGLE ----
+let sameAsCallingNumber = true;
+
+function syncWhatsappCode(){
+    document.getElementById('whatsappCodeBadge').textContent = document.getElementById('phoneCodeBadge').textContent;
+}
+
+function toggleSameNumber(){
+    sameAsCallingNumber = !sameAsCallingNumber;
+    const box = document.getElementById('sameToggleBox');
+    const check = document.getElementById('sameToggleCheck');
+    const toggleEl = document.getElementById('sameNumberToggle');
+    const waInput = document.getElementById('whatsapp');
+    const waHint = document.getElementById('whatsappHintText');
+    if(sameAsCallingNumber){
+        box.classList.add('checked');
+        check.style.display='inline';
+        toggleEl.classList.add('active');
+        waInput.value = document.getElementById('phone').value;
+        waInput.readOnly = true;
+        waInput.classList.add('wa-readonly');
+        waHint.textContent = 'Same as calling number ✓';
+        syncWhatsappCode();
+    } else {
+        box.classList.remove('checked');
+        check.style.display='none';
+        toggleEl.classList.remove('active');
+        waInput.readOnly = false;
+        waInput.classList.remove('wa-readonly');
+        waHint.textContent = 'Enter WhatsApp number if different from calling number';
+    }
+}
 
 // Leaflet vars
 let leafletMap=null,leafletMarker=null;
@@ -737,6 +791,8 @@ function updatePhoneCode(countryName, countryFlag) {
     // Auto-set currency
     const curr = COUNTRY_CURRENCY[countryName];
     if (curr) setAllCurrencies(curr);
+    // Keep WhatsApp code badge in sync with calling code
+    syncWhatsappCode();
 }
 
 function filterCountries(){const q=document.getElementById('countrySearch').value.toLowerCase().trim();const dd=document.getElementById('countryDropdown');const cb=document.getElementById('countryClearBtn');cb.style.display=q?'block':'none';renderDropdown(q?COUNTRIES.filter(c=>c.name.toLowerCase().includes(q)):COUNTRIES);dd.style.display='block';}
@@ -757,7 +813,8 @@ firebase.auth().onAuthStateChanged(async user=>{
     try{const ud=await db.collection("users").doc(user.uid).get();if(ud.exists){const d=ud.data();if(d.isVerified===true){currentUserVerified=true;currentUserBizName=d.businessName||"";document.getElementById('verifiedDealerBanner').style.display='flex';}currentUserEpId=d.epId||"";}}catch(e){console.error(e);}
     if(editId)loadEditData(editId,user.uid);
     document.getElementById('title').addEventListener('input',function(){document.getElementById('titleCount').innerText=this.value.length+'/100';});
-    document.getElementById('phone').addEventListener('input',function(){this.value=this.value.replace(/\D/g,'').slice(0,12);});
+    document.getElementById('phone').addEventListener('input',function(){this.value=this.value.replace(/\D/g,'').slice(0,12);if(sameAsCallingNumber){document.getElementById('whatsapp').value=this.value;}});
+    document.getElementById('whatsapp').addEventListener('input',function(){this.value=this.value.replace(/\D/g,'').slice(0,12);});
     togglePurposeFields();
     renderAmenities();
 });
@@ -778,6 +835,15 @@ async function loadEditData(id,uid){
     document.getElementById('location').value=data.location||'';document.getElementById('city').value=data.city||'';document.getElementById('desc').value=data.description||'';document.getElementById('size').value=data.size||'';document.getElementById('nearby').value=data.nearby||'';document.getElementById('lotArea').value=data.lotArea||'';document.getElementById('floorArea').value=data.floorArea||'';
     if(data.country){const c=COUNTRIES.find(x=>x.name===data.country);if(c)selectCountry(c.name,c.flag);else{document.getElementById('countrySearch').value=data.country;document.getElementById('selectedCountry').value=data.country;document.getElementById('countryClearBtn').style.display='block';}}
     if(data.phone){const country=data.country||'India';const code=(COUNTRY_CODES[country]||'+91').replace('+','');const ph=String(data.phone);document.getElementById('phone').value=ph.startsWith(code)?ph.slice(code.length):ph;}
+    // Load WhatsApp number — if it differs from calling number, switch toggle off
+    if(data.whatsapp && data.whatsapp !== data.phone){
+        if(sameAsCallingNumber) toggleSameNumber(); // switch to independent mode
+        const country=data.country||'India';const code=(COUNTRY_CODES[country]||'+91').replace('+','');const wa=String(data.whatsapp);
+        document.getElementById('whatsapp').value=wa.startsWith(code)?wa.slice(code.length):wa;
+    } else {
+        document.getElementById('whatsapp').value=document.getElementById('phone').value;
+        syncWhatsappCode();
+    }
     if(p==='Rent'&&data.rentDetails){document.getElementById('furnished').value=data.rentDetails.furnished||'Unfurnished';document.getElementById('bills').value=data.rentDetails.bills||'Extra';document.getElementById('advance').value=data.rentDetails.advance||'';document.getElementById('maintenance').value=data.rentDetails.maintenance||'Not Applicable';}
     if(p==='Plot'&&data.plotDetails){document.getElementById('plotArea').value=data.plotDetails.area||'';document.getElementById('plotRoadFacing').value=data.plotDetails.roadFacing||'No';document.getElementById('plotCorner').value=data.plotDetails.corner||'No';}
     if((p==='Commercial'||p==='CommercialSell'||p==='CommercialRent'||p==='CommercialRentSell')&&data.commercialDetails){document.getElementById('commercialType').value=data.commercialDetails.type||'Shop';document.getElementById('commercialFloor').value=data.commercialDetails.floor||'';document.getElementById('commercialFurnished').value=data.commercialDetails.furnished||'Unfurnished';document.getElementById('commercialBills').value=data.commercialDetails.bills||'Extra';}
@@ -934,6 +1000,7 @@ async function submitProperty(){
     if(!user){showToast("Session expired. Please login again.","error");setTimeout(()=>location.href='login.html',1500);return;}
     const title=document.getElementById('title').value.trim();
     const rawPhone=document.getElementById('phone').value.trim();
+    const rawWhatsapp=document.getElementById('whatsapp').value.trim();
     const location=document.getElementById('location').value.trim();
     const country=document.getElementById('selectedCountry').value.trim();
     const purpose=document.getElementById('purpose').value;
@@ -942,12 +1009,14 @@ async function submitProperty(){
     const countryDialCode=(COUNTRY_CODES[country]||'+91').replace('+','');
     const phone=countryDialCode+rawPhone.replace(/\D/g,'');
     if(!/^\d{7,15}$/.test(phone))return showToast("Enter valid phone number","error");
+    const whatsapp=sameAsCallingNumber?phone:(countryDialCode+rawWhatsapp.replace(/\D/g,''));
+    if(!/^\d{7,15}$/.test(whatsapp))return showToast("Enter valid WhatsApp number","error");
     if(!title||!location)return showToast("Please fill all required fields: Title, Location","error");
     let priceValue=0,currencyValue='INR',rentPriceValue=0,rentCurrencyValue='INR';
     if(purpose==='RentSell'||purpose==='CommercialRentSell'){priceValue=Number(document.getElementById('rsSellPrice').value);currencyValue=document.getElementById('rsSelCurrency').value;rentPriceValue=Number(document.getElementById('rsRentPrice').value);rentCurrencyValue=document.getElementById('rsRentCurrency').value;if(priceValue<=0||rentPriceValue<=0)return showToast("Please enter both Sell Price and Rent Price","error");if(priceValue>1000000000000||rentPriceValue>1000000000000)return showToast("Price too large.","error");}
     else if(purpose==='Rent'||purpose==='PG'||purpose==='CommercialRent'){priceValue=Number(document.getElementById('rentPrice').value);currencyValue=document.getElementById('rentCurrency').value;if(priceValue<=0)return showToast("Please enter a valid price","error");if(priceValue>1000000000000)return showToast("Price too large.","error");}
     else{priceValue=Number(document.getElementById('price').value);currencyValue=document.getElementById('currency').value;if(priceValue<=0)return showToast("Please enter a valid price","error");if(priceValue>1000000000000)return showToast("Price too large.","error");}
-    const propertyData={title,price:priceValue,currency:currencyValue,phone,purpose,size:document.getElementById('size').value,lotArea:document.getElementById('lotArea').value.trim(),floorArea:document.getElementById('floorArea').value.trim(),location,country,city: document.getElementById('city').value.trim(),description:document.getElementById('desc').value.trim(),nearby:document.getElementById('nearby').value,images:finalImages,latitude:currentCoords.lat,longitude:currentCoords.lng,amenities:Array.from(selectedAmenities),status:"active",updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+    const propertyData={title,price:priceValue,currency:currencyValue,phone,whatsapp,sameAsCallingNumber,purpose,size:document.getElementById('size').value,lotArea:document.getElementById('lotArea').value.trim(),floorArea:document.getElementById('floorArea').value.trim(),location,country,city: document.getElementById('city').value.trim(),description:document.getElementById('desc').value.trim(),nearby:document.getElementById('nearby').value,images:finalImages,latitude:currentCoords.lat,longitude:currentCoords.lng,amenities:Array.from(selectedAmenities),status:"active",updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
     if(purpose==='RentSell'||purpose==='CommercialRentSell'){propertyData.sellPrice=priceValue;propertyData.sellCurrency=currencyValue;propertyData.rentPrice=rentPriceValue;propertyData.rentCurrency=rentCurrencyValue;}
     if(purpose==='Rent')propertyData.rentDetails={furnished:document.getElementById('furnished').value,bills:document.getElementById('bills').value,advance:document.getElementById('advance').value,maintenance:document.getElementById('maintenance').value};
     if(purpose==='Plot')propertyData.plotDetails={area:document.getElementById('plotArea').value,roadFacing:document.getElementById('plotRoadFacing').value,corner:document.getElementById('plotCorner').value};
