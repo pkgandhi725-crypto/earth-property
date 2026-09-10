@@ -1208,10 +1208,18 @@ function formatPrice(amount, currency) {
     const sym = CURRENCY_SYMBOLS[currency] || currency || '';
     const n = Number(amount);
     let formatted;
-    if (n >= 10000000) formatted = (n/10000000).toFixed(2).replace(/\.?0+$/, '') + ' Cr';
-    else if (n >= 100000) formatted = (n/100000).toFixed(2).replace(/\.?0+$/, '') + ' L';
-    else if (n >= 1000) formatted = (n/1000).toFixed(1).replace(/\.?0+$/, '') + 'K';
-    else formatted = n.toLocaleString();
+    if (currency === 'INR') {
+        // Lakh/Crore formatting is an Indian-Rupee-only convention — never apply it to other currencies
+        if (n >= 10000000) formatted = (n/10000000).toFixed(2).replace(/\.?0+$/, '') + ' Cr';
+        else if (n >= 100000) formatted = (n/100000).toFixed(2).replace(/\.?0+$/, '') + ' L';
+        else if (n >= 1000) formatted = (n/1000).toFixed(1).replace(/\.?0+$/, '') + 'K';
+        else formatted = n.toLocaleString();
+    } else {
+        // All other currencies: plain comma-formatted number, with M/K abbreviation for large amounts
+        if (n >= 1000000) formatted = (n/1000000).toFixed(2).replace(/\.?0+$/, '') + 'M';
+        else if (n >= 1000) formatted = (n/1000).toFixed(1).replace(/\.?0+$/, '') + 'K';
+        else formatted = n.toLocaleString();
+    }
     return sym + ' ' + formatted;
 }
 
