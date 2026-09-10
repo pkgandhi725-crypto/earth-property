@@ -500,6 +500,7 @@ function onWhatsappCodeSelect(name){
     if(!c)return;
     whatsappCountryManuallySet=true;
     document.getElementById('selectedWhatsappCountry').value=name;
+    document.getElementById('whatsapp').value=''; // clear old digits — they belonged to the previous country's code
     document.getElementById('whatsappHintText').textContent=name+' code set! Enter remaining digits only 📱';
     document.getElementById('whatsapp').placeholder='e.g. 9876543210';
 }
