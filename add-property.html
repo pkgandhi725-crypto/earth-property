@@ -151,6 +151,8 @@
         .dual-price-label { font-size: 12px; font-weight: 700; color: #7b1fa2; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
         .phone-input-wrap { display: flex; gap: 6px; align-items: center; }
         .phone-code-badge { background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 10px; padding: 12px 10px; font-size: 13px; font-weight: 700; color: #2e7d32; white-space: nowrap; min-width: 60px; text-align: center; }
+        .phone-code-badge.select-badge { appearance: none; -webkit-appearance: none; -moz-appearance: none; cursor: pointer; padding-right: 24px; background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%232e7d32' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 6px center; background-size: 14px; }
+        .phone-code-badge.select-badge:disabled { cursor: not-allowed; opacity: 1; color: #789a7b; background-image: none; padding-right: 10px; }
         .phone-label-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
         .phone-label-row label { margin-bottom: 0; }
         .same-number-toggle { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #777; cursor: pointer; user-select: none; white-space: nowrap; }
@@ -158,9 +160,6 @@
         .same-toggle-box { width: 16px; height: 16px; border: 2px solid #ccc; border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: 0.2s; background: #fff; flex-shrink: 0; }
         .same-toggle-box.checked { background: var(--primary); border-color: var(--primary); color: #fff; font-size: 10px; }
         input[readonly].wa-readonly { background: #f0f0f0; color: #777; }
-        .phone-country-picker { margin-bottom: 8px; }
-        .phone-country-picker .country-search-wrap input { font-size: 12px; padding: 9px 30px 9px 10px; }
-        .phone-country-note { font-size: 10px; color: #999; margin-top: 3px; }
         #propertyMap { height: 220px; border-radius: 12px; margin-top: 12px; display: none; border: 1.5px solid #c8e6c9; position: relative; z-index: 1; }
         .get-map-btn { width: 100%; padding: 11px; background: linear-gradient(135deg, #2e7d32, #388e3c); color: #fff; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; box-sizing: border-box; }
         .get-map-btn:disabled { background: #aaa; cursor: not-allowed; }
@@ -316,23 +315,18 @@
         </div>
     </div>
 
+    <!-- CALLING NUMBER — locked to property country, no manual override -->
     <div class="form-group">
         <label>📞 Calling Number</label>
-        <div class="phone-country-picker">
-            <div class="country-search-wrap phone-country-search-wrap">
-                <input type="text" id="phoneCountrySearch" placeholder="🔍 Phone country (defaults to property country)" autocomplete="off" oninput="filterPhoneCountries()" onfocus="showPhoneCountryDropdown()" onblur="hidePhoneCountryDropdown()">
-                <button class="clear-btn" id="phoneCountryClearBtn" onclick="clearPhoneCountry()" type="button">×</button>
-                <div class="country-dropdown" id="phoneCountryDropdown"></div>
-            </div>
-            <input type="hidden" id="selectedPhoneCountry" value="">
-            <div class="phone-country-note">📱 Your number's country — only tap this if it's different from the property's country</div>
-        </div>
+        <input type="hidden" id="selectedPhoneCountry" value="">
         <div class="phone-input-wrap">
             <div class="phone-code-badge" id="phoneCodeBadge">🇮🇳 +91</div>
             <input type="text" inputmode="numeric" maxlength="12" id="phone" placeholder="Enter number without country code" style="flex:1;">
         </div>
         <div class="phone-hint" id="phoneHintText">Select a country to auto-set the phone code 🌍</div>
     </div>
+
+    <!-- WHATSAPP NUMBER — same-as-calling toggle + independent country dropdown -->
     <div class="form-group">
         <div class="phone-label-row">
             <label style="margin-bottom:0;">💬 WhatsApp Number</label>
@@ -341,17 +335,9 @@
                 Same as calling number
             </div>
         </div>
-        <div class="phone-country-picker" id="whatsappCountryPicker" style="display:none;">
-            <div class="country-search-wrap whatsapp-country-search-wrap">
-                <input type="text" id="whatsappCountrySearch" placeholder="🔍 WhatsApp number's country" autocomplete="off" oninput="filterWhatsappCountries()" onfocus="showWhatsappCountryDropdown()" onblur="hideWhatsappCountryDropdown()">
-                <button class="clear-btn" id="whatsappCountryClearBtn" onclick="clearWhatsappCountry()" type="button">×</button>
-                <div class="country-dropdown" id="whatsappCountryDropdown"></div>
-            </div>
-            <input type="hidden" id="selectedWhatsappCountry" value="">
-            <div class="phone-country-note">📱 Country for this WhatsApp number</div>
-        </div>
+        <input type="hidden" id="selectedWhatsappCountry" value="">
         <div class="phone-input-wrap">
-            <div class="phone-code-badge" id="whatsappCodeBadge">🇮🇳 +91</div>
+            <select class="phone-code-badge select-badge" id="whatsappCodeBadge" onchange="onWhatsappCodeSelect(this.value)" disabled></select>
             <input type="text" inputmode="numeric" maxlength="12" id="whatsapp" placeholder="Enter number without country code" style="flex:1;" readonly class="wa-readonly">
         </div>
         <div class="phone-hint" id="whatsappHintText">Same as calling number ✓</div>
@@ -496,31 +482,36 @@ let currentCoords={lat:null,lng:null},slotMode=[null,null,null,'photo','photo','
 let currentUserVerified=false,currentUserBizName="",currentUserEpId="";
 const urlParams=new URLSearchParams(window.location.search),editId=urlParams.get('edit');
 
-// ---- CALLING / WHATSAPP NUMBER TOGGLE ----
-let sameAsCallingNumber = true;
-let phoneCountryManuallySet = false;
-
-function filterPhoneCountries(){const q=document.getElementById('phoneCountrySearch').value.toLowerCase().trim();const dd=document.getElementById('phoneCountryDropdown');const cb=document.getElementById('phoneCountryClearBtn');cb.style.display=q?'block':'none';renderPhoneCountryDropdown(q?COUNTRIES.filter(c=>c.name.toLowerCase().includes(q)):COUNTRIES);dd.style.display='block';}
-function showPhoneCountryDropdown(){const q=document.getElementById('phoneCountrySearch').value.toLowerCase().trim();renderPhoneCountryDropdown(q?COUNTRIES.filter(c=>c.name.toLowerCase().includes(q)):COUNTRIES);document.getElementById('phoneCountryDropdown').style.display='block';}
-function hidePhoneCountryDropdown(){setTimeout(()=>{document.getElementById('phoneCountryDropdown').style.display='none';},200);}
-function renderPhoneCountryDropdown(list){const dd=document.getElementById('phoneCountryDropdown');const sel=document.getElementById('selectedPhoneCountry').value;if(list.length===0){dd.innerHTML='<div style="padding:12px;text-align:center;color:#999;font-size:13px;">No country found</div>';return;}dd.innerHTML=list.map(c=>`<div class="c-item ${sel===c.name?'active':''}" onmousedown="selectPhoneCountry('${c.name}','${c.flag}',true)"><span class="flag">${c.flag}</span> ${c.name}</div>`).join('');}
-function selectPhoneCountry(name,flag,isManual){document.getElementById('phoneCountrySearch').value=flag+' '+name;document.getElementById('selectedPhoneCountry').value=name;document.getElementById('phoneCountryClearBtn').style.display='block';document.getElementById('phoneCountryDropdown').style.display='none';if(isManual)phoneCountryManuallySet=true;applyPhoneCountryCode(name,flag);}
-function clearPhoneCountry(){document.getElementById('phoneCountrySearch').value='';document.getElementById('selectedPhoneCountry').value='';document.getElementById('phoneCountryClearBtn').style.display='none';phoneCountryManuallySet=false;const propCountry=document.getElementById('selectedCountry').value;if(propCountry){const c=COUNTRIES.find(x=>x.name===propCountry);if(c)selectPhoneCountry(c.name,c.flag,false);}else{document.getElementById('phoneCodeBadge').textContent='🌍 +?';document.getElementById('phoneHintText').textContent='Select a country to auto-set the phone code 🌍';syncWhatsappCode();}}
+// ---- CALLING NUMBER — locked to property country, applied automatically ----
 function applyPhoneCountryCode(countryName,countryFlag){const code=COUNTRY_CODES[countryName]||'';const badge=document.getElementById('phoneCodeBadge');if(code){badge.textContent=countryFlag+' '+code;document.getElementById('phoneHintText').textContent=countryName+' code set! Enter remaining digits only 📱';document.getElementById('phone').placeholder='e.g. 9876543210';}else{badge.textContent='🌍 +?';document.getElementById('phoneHintText').textContent='Enter number with country code';}syncWhatsappCode();}
 
-// ---- WHATSAPP-SPECIFIC COUNTRY (only used when WhatsApp number is independent) ----
+// ---- WHATSAPP-SPECIFIC COUNTRY (independent dropdown, only editable when "same as calling" is OFF) ----
 let whatsappCountryManuallySet = false;
 
-function filterWhatsappCountries(){const q=document.getElementById('whatsappCountrySearch').value.toLowerCase().trim();const dd=document.getElementById('whatsappCountryDropdown');const cb=document.getElementById('whatsappCountryClearBtn');cb.style.display=q?'block':'none';renderWhatsappCountryDropdown(q?COUNTRIES.filter(c=>c.name.toLowerCase().includes(q)):COUNTRIES);dd.style.display='block';}
-function showWhatsappCountryDropdown(){const q=document.getElementById('whatsappCountrySearch').value.toLowerCase().trim();renderWhatsappCountryDropdown(q?COUNTRIES.filter(c=>c.name.toLowerCase().includes(q)):COUNTRIES);document.getElementById('whatsappCountryDropdown').style.display='block';}
-function hideWhatsappCountryDropdown(){setTimeout(()=>{document.getElementById('whatsappCountryDropdown').style.display='none';},200);}
-function renderWhatsappCountryDropdown(list){const dd=document.getElementById('whatsappCountryDropdown');const sel=document.getElementById('selectedWhatsappCountry').value;if(list.length===0){dd.innerHTML='<div style="padding:12px;text-align:center;color:#999;font-size:13px;">No country found</div>';return;}dd.innerHTML=list.map(c=>`<div class="c-item ${sel===c.name?'active':''}" onmousedown="selectWhatsappCountry('${c.name}','${c.flag}')"><span class="flag">${c.flag}</span> ${c.name}</div>`).join('');}
-function selectWhatsappCountry(name,flag){document.getElementById('whatsappCountrySearch').value=flag+' '+name;document.getElementById('selectedWhatsappCountry').value=name;document.getElementById('whatsappCountryClearBtn').style.display='block';document.getElementById('whatsappCountryDropdown').style.display='none';whatsappCountryManuallySet=true;const code=COUNTRY_CODES[name]||'';const badge=document.getElementById('whatsappCodeBadge');if(code){badge.textContent=flag+' '+code;document.getElementById('whatsappHintText').textContent=name+' code set! Enter remaining digits only 📱';document.getElementById('whatsapp').placeholder='e.g. 9876543210';}}
-function clearWhatsappCountry(){document.getElementById('whatsappCountrySearch').value='';document.getElementById('selectedWhatsappCountry').value='';document.getElementById('whatsappCountryClearBtn').style.display='none';whatsappCountryManuallySet=false;syncWhatsappCode();}
+function populateWhatsappCountrySelect(){
+    const sel=document.getElementById('whatsappCodeBadge');
+    sel.innerHTML=COUNTRIES.map(c=>{const code=COUNTRY_CODES[c.name]||'';return `<option value="${c.name}">${c.flag} ${code}</option>`;}).join('');
+    sel.value='India';
+}
+
+function onWhatsappCodeSelect(name){
+    if(!name)return;
+    const c=COUNTRIES.find(x=>x.name===name);
+    if(!c)return;
+    whatsappCountryManuallySet=true;
+    document.getElementById('selectedWhatsappCountry').value=name;
+    document.getElementById('whatsappHintText').textContent=name+' code set! Enter remaining digits only 📱';
+    document.getElementById('whatsapp').placeholder='e.g. 9876543210';
+}
 
 function syncWhatsappCode(){
     if (whatsappCountryManuallySet) return; // WhatsApp has its own country set — don't overwrite
-    document.getElementById('whatsappCodeBadge').textContent = document.getElementById('phoneCodeBadge').textContent;
+    const phoneCountry=document.getElementById('selectedPhoneCountry').value;
+    const sel=document.getElementById('whatsappCodeBadge');
+    if(!sel.options.length)return;
+    if(phoneCountry){
+        for(let i=0;i<sel.options.length;i++){if(sel.options[i].value===phoneCountry){sel.selectedIndex=i;break;}}
+    }
 }
 
 function toggleSameNumber(){
@@ -530,7 +521,7 @@ function toggleSameNumber(){
     const toggleEl = document.getElementById('sameNumberToggle');
     const waInput = document.getElementById('whatsapp');
     const waHint = document.getElementById('whatsappHintText');
-    const waCountryPicker = document.getElementById('whatsappCountryPicker');
+    const waSelect = document.getElementById('whatsappCodeBadge');
     if(sameAsCallingNumber){
         box.classList.add('checked');
         check.style.display='inline';
@@ -539,8 +530,9 @@ function toggleSameNumber(){
         waInput.readOnly = true;
         waInput.classList.add('wa-readonly');
         waHint.textContent = 'Same as calling number ✓';
-        waCountryPicker.style.display = 'none';
+        waSelect.disabled = true;
         whatsappCountryManuallySet = false;
+        document.getElementById('selectedWhatsappCountry').value = '';
         syncWhatsappCode();
     } else {
         box.classList.remove('checked');
@@ -549,9 +541,12 @@ function toggleSameNumber(){
         waInput.readOnly = false;
         waInput.classList.remove('wa-readonly');
         waHint.textContent = 'Enter WhatsApp number if different from calling number';
-        waCountryPicker.style.display = 'block';
+        waSelect.disabled = false;
+        syncWhatsappCode(); // starts matching the calling number's country — user can now change it via the dropdown
     }
 }
+
+let sameAsCallingNumber = true;
 
 // Leaflet vars
 let leafletMap=null,leafletMarker=null;
@@ -826,13 +821,9 @@ function updatePhoneCode(countryName, countryFlag) {
     // Auto-set currency
     const curr = COUNTRY_CURRENCY[countryName];
     if (curr) setAllCurrencies(curr);
-    // Auto-fill phone country to match property country — UNLESS user already picked their own phone country
-    if (!phoneCountryManuallySet) {
-        document.getElementById('phoneCountrySearch').value = countryFlag + ' ' + countryName;
-        document.getElementById('selectedPhoneCountry').value = countryName;
-        document.getElementById('phoneCountryClearBtn').style.display = 'block';
-        applyPhoneCountryCode(countryName, countryFlag);
-    }
+    // Calling number's country always follows the property's country — no manual override
+    document.getElementById('selectedPhoneCountry').value = countryName;
+    applyPhoneCountryCode(countryName, countryFlag);
 }
 
 function filterCountries(){const q=document.getElementById('countrySearch').value.toLowerCase().trim();const dd=document.getElementById('countryDropdown');const cb=document.getElementById('countryClearBtn');cb.style.display=q?'block':'none';renderDropdown(q?COUNTRIES.filter(c=>c.name.toLowerCase().includes(q)):COUNTRIES);dd.style.display='block';}
@@ -840,7 +831,16 @@ function showCountryDropdown(){const q=document.getElementById('countrySearch').
 function hideCountryDropdown(){setTimeout(()=>{document.getElementById('countryDropdown').style.display='none';},200);}
 function renderDropdown(list){const dd=document.getElementById('countryDropdown');const sel=document.getElementById('selectedCountry').value;if(list.length===0){dd.innerHTML='<div style="padding:12px;text-align:center;color:#999;font-size:13px;">No country found</div>';return;}dd.innerHTML=list.map(c=>`<div class="c-item ${sel===c.name?'active':''}" onmousedown="selectCountry('${c.name}','${c.flag}')"><span class="flag">${c.flag}</span> ${c.name}</div>`).join('');}
 function selectCountry(name,flag){document.getElementById('countrySearch').value=flag+' '+name;document.getElementById('selectedCountry').value=name;document.getElementById('countryClearBtn').style.display='block';document.getElementById('countryDropdown').style.display='none';updatePhoneCode(name,flag);}
-function clearCountry(){document.getElementById('countrySearch').value='';document.getElementById('selectedCountry').value='';document.getElementById('countryClearBtn').style.display='none';document.getElementById('countrySearch').focus();if(!phoneCountryManuallySet){document.getElementById('phoneCountrySearch').value='';document.getElementById('selectedPhoneCountry').value='';document.getElementById('phoneCountryClearBtn').style.display='none';document.getElementById('phoneCodeBadge').textContent='🌍 +?';document.getElementById('phoneHintText').textContent='Select a country to auto-set the phone code 🌍';syncWhatsappCode();}}
+function clearCountry(){
+    document.getElementById('countrySearch').value='';
+    document.getElementById('selectedCountry').value='';
+    document.getElementById('countryClearBtn').style.display='none';
+    document.getElementById('countrySearch').focus();
+    document.getElementById('selectedPhoneCountry').value='';
+    document.getElementById('phoneCodeBadge').textContent='🌍 +?';
+    document.getElementById('phoneHintText').textContent='Select a country to auto-set the phone code 🌍';
+    syncWhatsappCode();
+}
 function switchSlotMode(slot,mode){slotMode[slot]=mode;const pb=document.getElementById(`togglePhoto${slot}`);const vb=document.getElementById(`toggleVideo${slot}`);const pd=document.getElementById(`photoMode${slot}`);const vd=document.getElementById(`videoMode${slot}`);if(mode==='photo'){pb.classList.add('active');vb.classList.remove('active');pd.style.display='block';vd.style.display='none';if(uploadedImages[slot]&&uploadedImages[slot].type==='video')uploadedImages[slot]=null;}else{vb.classList.add('active');pb.classList.remove('active');pd.style.display='none';vd.style.display='block';if(uploadedImages[slot]&&uploadedImages[slot].type!=='video')removeImage(slot);const vui=document.getElementById(`videoVerifiedUI${slot}`);const lui=document.getElementById(`videoLockedUI${slot}`);if(currentUserVerified){if(vui)vui.style.display='block';if(lui)lui.style.display='none';}else{if(vui)vui.style.display='none';if(lui)lui.style.display='block';}}}
 function getYouTubeId(url){const m=url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);return m?m[1]:null;}
 function getVimeoId(url){const m=url.match(/vimeo\.com\/(\d+)/);return m?m[1]:null;}
@@ -850,6 +850,7 @@ function handleVideoFile(e,slot){const file=e.target.files[0];if(!file)return;if
 
 firebase.auth().onAuthStateChanged(async user=>{
     if(!user)return location.href='login.html';
+    populateWhatsappCountrySelect();
     try{const ud=await db.collection("users").doc(user.uid).get();if(ud.exists){const d=ud.data();if(d.isVerified===true){currentUserVerified=true;currentUserBizName=d.businessName||"";document.getElementById('verifiedDealerBanner').style.display='flex';}currentUserEpId=d.epId||"";}}catch(e){console.error(e);}
     if(editId)loadEditData(editId,user.uid);
     document.getElementById('title').addEventListener('input',function(){document.getElementById('titleCount').innerText=this.value.length+'/100';});
@@ -874,18 +875,27 @@ async function loadEditData(id,uid){
     else{if(data.price)document.getElementById('price').value=data.price;if(data.currency)document.getElementById('currency').value=data.currency;}
     document.getElementById('location').value=data.location||'';document.getElementById('city').value=data.city||'';document.getElementById('desc').value=data.description||'';document.getElementById('size').value=data.size||'';document.getElementById('nearby').value=data.nearby||'';document.getElementById('lotArea').value=data.lotArea||'';document.getElementById('floorArea').value=data.floorArea||'';
     if(data.country){const c=COUNTRIES.find(x=>x.name===data.country);if(c)selectCountry(c.name,c.flag);else{document.getElementById('countrySearch').value=data.country;document.getElementById('selectedCountry').value=data.country;document.getElementById('countryClearBtn').style.display='block';}}
-    // Restore phone country (independent from property country) — fallback to property country for older listings
+    // Restore calling number's country (always follows saved phoneCountry, fallback to property country)
     const savedPhoneCountry = data.phoneCountry || data.country || 'India';
     const pc = COUNTRIES.find(x=>x.name===savedPhoneCountry);
-    if(pc) selectPhoneCountry(pc.name, pc.flag, data.phoneCountry ? true : false);
+    if(pc){
+        document.getElementById('selectedPhoneCountry').value = pc.name;
+        applyPhoneCountryCode(pc.name, pc.flag);
+    }
     const phoneDialCode=(COUNTRY_CODES[savedPhoneCountry]||'+91').replace('+','');
     if(data.phone){const ph=String(data.phone);document.getElementById('phone').value=ph.startsWith(phoneDialCode)?ph.slice(phoneDialCode.length):ph;}
-    // Load WhatsApp number — if it differs from calling number, switch toggle off
+    // Load WhatsApp number — if it differs from calling number, switch toggle off and restore its own country
     if(data.whatsapp && data.whatsapp !== data.phone){
         if(sameAsCallingNumber) toggleSameNumber(); // switch to independent mode
         const savedWaCountry = data.whatsappCountry || savedPhoneCountry;
         const wc = COUNTRIES.find(x=>x.name===savedWaCountry);
-        if(wc) selectWhatsappCountry(wc.name, wc.flag);
+        if(wc){
+            whatsappCountryManuallySet = true;
+            document.getElementById('selectedWhatsappCountry').value = wc.name;
+            const sel = document.getElementById('whatsappCodeBadge');
+            for(let i=0;i<sel.options.length;i++){if(sel.options[i].value===wc.name){sel.selectedIndex=i;break;}}
+            document.getElementById('whatsappHintText').textContent = wc.name+' code set! Enter remaining digits only 📱';
+        }
         const waDialCode=(COUNTRY_CODES[savedWaCountry]||'+91').replace('+','');
         const wa=String(data.whatsapp);
         document.getElementById('whatsapp').value=wa.startsWith(waDialCode)?wa.slice(waDialCode.length):wa;
@@ -1127,7 +1137,7 @@ function confirmGPSCapture(){
     },{enableHighAccuracy:true,timeout:10000,maximumAge:0});
 }
 
-document.addEventListener('DOMContentLoaded',function(){document.addEventListener('click',function(e){if(!e.target.closest('.country-search-wrap'))document.getElementById('countryDropdown').style.display='none';if(!e.target.closest('.phone-country-search-wrap'))document.getElementById('phoneCountryDropdown').style.display='none';if(!e.target.closest('.whatsapp-country-search-wrap'))document.getElementById('whatsappCountryDropdown').style.display='none';if(!e.target.closest('.address-search-wrap'))document.getElementById('addressDropdown').style.display='none';});});
+document.addEventListener('DOMContentLoaded',function(){document.addEventListener('click',function(e){if(!e.target.closest('.country-search-wrap'))document.getElementById('countryDropdown').style.display='none';if(!e.target.closest('.address-search-wrap'))document.getElementById('addressDropdown').style.display='none';});});
 </script>
 </body>
 </html>
