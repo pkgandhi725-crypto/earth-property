@@ -253,6 +253,7 @@
 <div class="form-group" style="margin-bottom:10px;">
     <label style="font-size:13px;">City <span style="color:#d32f2f;">*</span></label>
     <input type="text" id="city" placeholder="e.g. Gurugram, Mumbai, Dubai">
+    <input type="hidden" id="detectedState" value="">
 </div>
         <button type="button" class="get-map-btn" id="btnGetMap" onclick="geocodeAddress()">
             <span id="getMapBtnIcon">🗺️</span><span id="getMapBtnText">Get on Map</span>
@@ -482,6 +483,95 @@ let uploadedImages=[null,null,null,null,null,null,null],uploadingCount=0,activeS
 let currentCoords={lat:null,lng:null},slotMode=[null,null,null,'photo','photo','photo','photo'];
 let currentUserVerified=false,currentUserBizName="",currentUserEpId="";
 const urlParams=new URLSearchParams(window.location.search),editId=urlParams.get('edit');
+
+// =============================================
+// 💱 USD NORMALIZATION — for accurate cross-currency price filtering later
+// (city.html / homepage can filter on priceUSD instead of converting at query time)
+// =============================================
+const RATES_CACHE_KEY = 'tep_usd_rates';
+const RATES_CACHE_TIME_KEY = 'tep_usd_rates_time';
+const RATES_CACHE_HOURS = 24;
+let usdRates = null;
+
+async function loadUSDRates() {
+    try {
+        const cachedTime = localStorage.getItem(RATES_CACHE_TIME_KEY);
+        const cachedRates = localStorage.getItem(RATES_CACHE_KEY);
+        const now = Date.now();
+        if (cachedTime && cachedRates && (now - parseInt(cachedTime)) < RATES_CACHE_HOURS * 3600 * 1000) {
+            usdRates = JSON.parse(cachedRates); return;
+        }
+        const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+        if (!res.ok) throw new Error('rate fetch failed');
+        const data = await res.json();
+        usdRates = data.rates;
+        localStorage.setItem(RATES_CACHE_KEY, JSON.stringify(usdRates));
+        localStorage.setItem(RATES_CACHE_TIME_KEY, now.toString());
+    } catch (e) {
+        // Fallback approximate USD rates — good enough to keep filtering roughly usable
+        usdRates = { INR:83, USD:1, GBP:0.79, EUR:0.92, AED:3.67, SAR:3.75, PKR:278, BDT:110, SGD:1.34, MYR:4.7, CAD:1.36, AUD:1.52, NGN:1550, GHS:15.5, KES:129, UGX:3700, RWF:1300, NPR:133, LKR:300, ZAR:18.5, TZS:2500, PHP:56, IDR:15700, THB:35, VND:24500, TRY:32, BRL:5.1, MXN:17, KWD:0.31, QAR:3.64, OMR:0.38, BHD:0.38, JOD:0.71, EGP:48, MAD:10, CNY:7.2, JPY:150, KRW:1330, RUB:92, CHF:0.88, SEK:10.4, NOK:10.6, DKK:6.9, PLN:4 };
+    }
+}
+loadUSDRates();
+
+function toUSD(amount, currencyCode) {
+    if (!amount || !usdRates) return null;
+    const rate = usdRates[currencyCode];
+    if (!rate) return null;
+    return Number((amount / rate).toFixed(2));
+}
+
+// =============================================
+// 🏙️ NEW-CITY AUTO-CREATION — client-side, no Cloud Function/Blaze needed
+// Creates a `cities/{slug}` doc the first time a property is posted for a
+// city that doesn't have one yet, so city.html?name=slug works immediately.
+// =============================================
+function normalizeSlug(str) {
+    return String(str || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+function toTitleCase(str) {
+    return String(str || '').trim().toLowerCase().split(' ').filter(Boolean)
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
+async function ensureCityExists(cityName, countryName, stateName, lat, lng) {
+    if (!cityName || !countryName) return;
+    const slug = [countryName, stateName, cityName].filter(Boolean).map(normalizeSlug).join('-');
+    if (!slug) return;
+    try {
+        const ref = db.collection('cities').doc(slug);
+        const snap = await ref.get();
+        if (snap.exists) return; // already there — nothing to do
+
+        let cLat = lat, cLng = lng;
+        if (!cLat || !cLng) {
+            // This listing had no coords (no GPS/address-pin) — try a free
+            // geocode as a last resort, and only create the page if a real
+            // place is confirmed (avoids junk/typo city pages).
+            try {
+                const q = encodeURIComponent(`${cityName}, ${countryName}`);
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`);
+                const data = await res.json();
+                if (data && data[0]) { cLat = parseFloat(data[0].lat); cLng = parseFloat(data[0].lon); }
+            } catch (e) { /* geocode failed — city creation skipped below */ }
+        }
+        if (!cLat || !cLng) return; // couldn't confirm a real place — don't create a junk page
+
+        await ref.set({
+            name: toTitleCase(cityName),
+            slug,
+            state: stateName || '',
+            country: countryName,
+            lat: cLat,
+            lng: cLng,
+            isActive: true,
+            createdAt: new Date().toISOString()
+        });
+    } catch (e) {
+        console.warn('City auto-create skipped:', e.message);
+        // Never block property submission over this
+    }
+}
 
 // ---- CALLING NUMBER — locked to property country, applied automatically ----
 function applyPhoneCountryCode(countryName,countryFlag){const code=COUNTRY_CODES[countryName]||'';const badge=document.getElementById('phoneCodeBadge');if(code){badge.textContent=countryFlag+' '+code;document.getElementById('phoneHintText').textContent=countryName+' code set! Enter remaining digits only 📱';document.getElementById('phone').placeholder='e.g. 9876543210';}else{badge.textContent='🌍 +?';document.getElementById('phoneHintText').textContent='Enter number with country code';}syncWhatsappCode();}
@@ -876,6 +966,7 @@ async function loadEditData(id,uid){
     else if(p==='Rent'||p==='PG'||p==='CommercialRent'){if(data.price)document.getElementById('rentPrice').value=data.price;if(data.currency)document.getElementById('rentCurrency').value=data.currency;}
     else{if(data.price)document.getElementById('price').value=data.price;if(data.currency)document.getElementById('currency').value=data.currency;}
     document.getElementById('location').value=data.location||'';document.getElementById('city').value=data.city||'';document.getElementById('desc').value=data.description||'';document.getElementById('size').value=data.size||'';document.getElementById('nearby').value=data.nearby||'';document.getElementById('lotArea').value=data.lotArea||'';document.getElementById('floorArea').value=data.floorArea||'';
+    if(data.state)document.getElementById('detectedState').value=data.state;
     if(data.country){const c=COUNTRIES.find(x=>x.name===data.country);if(c)selectCountry(c.name,c.flag);else{document.getElementById('countrySearch').value=data.country;document.getElementById('selectedCountry').value=data.country;document.getElementById('countryClearBtn').style.display='block';}}
     // Restore calling number's country (always follows saved phoneCountry, fallback to property country)
     const savedPhoneCountry = data.phoneCountry || data.country || 'India';
@@ -1029,6 +1120,7 @@ function selectAddressSuggestion(i){
         const a=s.address;
         const countryName=a.country||'';
         const cityVal=a.city||a.town||a.village||a.county||'';
+        if(a.state)document.getElementById('detectedState').value=a.state;
         if(countryName){const found=COUNTRIES.find(c=>c.name.toLowerCase()===countryName.toLowerCase());if(found)selectCountry(found.name,found.flag);}
         if(cityVal)document.getElementById('city').value=cityVal;
     }
@@ -1080,14 +1172,18 @@ async function submitProperty(){
     if(purpose==='RentSell'||purpose==='CommercialRentSell'){priceValue=Number(document.getElementById('rsSellPrice').value);currencyValue=document.getElementById('rsSelCurrency').value;rentPriceValue=Number(document.getElementById('rsRentPrice').value);rentCurrencyValue=document.getElementById('rsRentCurrency').value;if(priceValue<=0||rentPriceValue<=0)return showToast("Please enter both Sell Price and Rent Price","error");if(priceValue>1000000000000||rentPriceValue>1000000000000)return showToast("Price too large.","error");}
     else if(purpose==='Rent'||purpose==='PG'||purpose==='CommercialRent'){priceValue=Number(document.getElementById('rentPrice').value);currencyValue=document.getElementById('rentCurrency').value;if(priceValue<=0)return showToast("Please enter a valid price","error");if(priceValue>1000000000000)return showToast("Price too large.","error");}
     else{priceValue=Number(document.getElementById('price').value);currencyValue=document.getElementById('currency').value;if(priceValue<=0)return showToast("Please enter a valid price","error");if(priceValue>1000000000000)return showToast("Price too large.","error");}
-    const propertyData={title,price:priceValue,currency:currencyValue,phone,whatsapp,phoneCountry,whatsappCountry:(sameAsCallingNumber?phoneCountry:whatsappCountry),sameAsCallingNumber,purpose,size:document.getElementById('size').value,lotArea:document.getElementById('lotArea').value.trim(),floorArea:document.getElementById('floorArea').value.trim(),location,country,city: document.getElementById('city').value.trim(),description:document.getElementById('desc').value.trim(),nearby:document.getElementById('nearby').value,images:finalImages,latitude:currentCoords.lat,longitude:currentCoords.lng,amenities:Array.from(selectedAmenities),status:"active",updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
-    if(purpose==='RentSell'||purpose==='CommercialRentSell'){propertyData.sellPrice=priceValue;propertyData.sellCurrency=currencyValue;propertyData.rentPrice=rentPriceValue;propertyData.rentCurrency=rentCurrencyValue;}
+    const cityValue = document.getElementById('city').value.trim();
+    const stateValue = document.getElementById('detectedState').value.trim();
+    const propertyData={title,price:priceValue,currency:currencyValue,priceUSD:toUSD(priceValue,currencyValue),phone,whatsapp,phoneCountry,whatsappCountry:(sameAsCallingNumber?phoneCountry:whatsappCountry),sameAsCallingNumber,purpose,size:document.getElementById('size').value,lotArea:document.getElementById('lotArea').value.trim(),floorArea:document.getElementById('floorArea').value.trim(),location,country,city:cityValue,state:stateValue,description:document.getElementById('desc').value.trim(),nearby:document.getElementById('nearby').value,images:finalImages,latitude:currentCoords.lat,longitude:currentCoords.lng,amenities:Array.from(selectedAmenities),status:"active",updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+    if(purpose==='RentSell'||purpose==='CommercialRentSell'){propertyData.sellPrice=priceValue;propertyData.sellCurrency=currencyValue;propertyData.sellPriceUSD=toUSD(priceValue,currencyValue);propertyData.rentPrice=rentPriceValue;propertyData.rentCurrency=rentCurrencyValue;propertyData.rentPriceUSD=toUSD(rentPriceValue,rentCurrencyValue);}
     if(purpose==='Rent')propertyData.rentDetails={furnished:document.getElementById('furnished').value,bills:document.getElementById('bills').value,advance:document.getElementById('advance').value,maintenance:document.getElementById('maintenance').value};
     if(purpose==='Plot')propertyData.plotDetails={area:document.getElementById('plotArea').value,roadFacing:document.getElementById('plotRoadFacing').value,corner:document.getElementById('plotCorner').value};
     if(purpose==='CommercialSell'||purpose==='CommercialRent'||purpose==='CommercialRentSell')propertyData.commercialDetails={type:document.getElementById('commercialType').value,floor:document.getElementById('commercialFloor').value,furnished:document.getElementById('commercialFurnished').value,bills:document.getElementById('commercialBills').value};
     if(purpose==='PG')propertyData.pgDetails={sharing:document.getElementById('pgSharing').value,food:document.getElementById('pgFood').value,bedding:document.getElementById('pgBedding').value,ac:document.getElementById('pgAC').value,laundry:document.getElementById('pgLaundry').value,bills:document.getElementById('pgBills').value,advance:document.getElementById('pgAdvance').value};
     try{
         document.getElementById('postBtn').disabled=true;document.getElementById('postBtn').innerText="Processing...";
+        // Auto-create this city's page (if it's new) — never blocks submission if it fails
+        ensureCityExists(cityValue, country, stateValue, currentCoords.lat, currentCoords.lng).catch(()=>{});
         if(editId){await db.collection("properties").doc(editId).update(propertyData);showToast('Property Updated Successfully! ✓','success');}
         else{propertyData.coverImage=(uploadedImages[0]&&uploadedImages[0].url)?uploadedImages[0].url:null;propertyData.ownerId=user.uid;propertyData.ownerEpId=currentUserEpId;propertyData.createdAt=firebase.firestore.FieldValue.serverTimestamp();propertyData.isExpired=false;const expiry=new Date();const is30Days=(purpose==='Rent'||purpose==='PG'||purpose==='CommercialRent');expiry.setDate(expiry.getDate()+(is30Days?30:180));propertyData.expiryDate=firebase.firestore.Timestamp.fromDate(expiry);const deletion=new Date(expiry);deletion.setDate(deletion.getDate()+30);propertyData.deletionDate=firebase.firestore.Timestamp.fromDate(deletion);if(currentUserVerified){propertyData.isVerified=true;propertyData.dealerName=currentUserBizName;}else{propertyData.isVerified=false;}const docRef=await db.collection("properties").add(propertyData);showToast('Property Posted Successfully! 🎉','success');window.location.replace("property-success.html?id="+docRef.id);return;}
         window.location.href="my-ads.html";
@@ -1124,6 +1220,7 @@ function confirmGPSCapture(){
                 const state=a.state||a.state_district||'';
                 const city=a.city||a.town||a.village||'';
                 const area=a.suburb||a.neighbourhood||a.county||'';
+                if(state)document.getElementById('detectedState').value=state;
                 if(countryName){const found=COUNTRIES.find(c=>c.name.toLowerCase()===countryName.toLowerCase());if(found)selectCountry(found.name,found.flag);else{document.getElementById('countrySearch').value=countryName;document.getElementById('selectedCountry').value=countryName;document.getElementById('countryClearBtn').style.display='block';updatePhoneCode(countryName,'🌍');}}
                 const parts=[area,city,state].filter(Boolean);
                 if(parts.length>0)document.getElementById('location').value=parts.join(', ');
