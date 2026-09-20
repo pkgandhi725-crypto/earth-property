@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title id="pageTitle">Properties | The Earth Property</title>
+  <meta id="metaDesc" name="description" content="Find verified properties. Direct owner listings on The Earth Property." />
+  <link id="canonicalLink" rel="canonical" href="https://theearthproperty.com/city.html" />
+
+  <meta id="ogTitle" property="og:title" content="The Earth Property" />
+  <meta id="ogDesc" property="og:description" content="Direct owner listings, no brokerage." />
+  <meta id="ogUrl" property="og:url" content="https://theearthproperty.com/city.html" />
+  <meta property="og:type" content="website" />
+
+  <script id="jsonLd" type="application/ld+json">{}</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+
+  <!-- Shared geo/price utilities (plain script, loads before the module below) -->
+  <script src="geo-utils.js"></script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
+      authDomain: "earth-properties-c3c56.firebaseapp.com",
+      databaseURL: "https://earth-properties-c3c56-default-rtdb.firebaseio.com",
+      projectId: "earth-properties-c3c56",
+      storageBucket: "earth-properties-c3c56.firebasestorage.app",
+      messagingSenderId: "677407721236",
+      appId: "1:677407721236:web:2964262087105819e6a401"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    window._db = db;
+    window._firestoreModules = { collection, query, where, orderBy, getDocs };
+    window.dispatchEvent(new Event("firebaseReady"));
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black: #0a0a0a;
+      --white: #fafaf8;
+      --cream: #f5f0e8;
+      --gold: #c9a84c;
+      --gold-light: #e8c96a;
+      --gray: #6b6b6b;
+      --gray-light: #e8e5df;
+      --card-bg: #ffffff;
+      --shadow: 0 2px 20px rgba(0,0,0,0.08);
+    }
+
+    html { scroll-behavior: smooth; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--white); color: var(--black); overflow-x: hidden; }
+
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px; background: rgba(10,10,10,0.92);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    }
+    .nav-logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; color: var(--gold); letter-spacing: 2px; text-decoration: none; }
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    .nav-cta { background: var(--gold); color: var(--black); font-size: 0.75rem; font-weight: 600; padding: 8px 16px; border-radius: 50px; text-decoration: none; letter-spacing: 0.5px; }
+
+    .hero { min-height: 70vh; background: var(--black); position: relative; display: flex; flex-direction: column; justify-content: flex-end; padding: 90px 20px 40px; overflow: hidden; }
+    .hero-bg { position: absolute; inset: 0; background: radial-gradient(ellipse 80% 60% at 20% 80%, rgba(201,168,76,0.18) 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 80% 20%, rgba(201,168,76,0.08) 0%, transparent 50%); }
+    .hero-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(201,168,76,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.06) 1px, transparent 1px); background-size: 40px 40px; }
+    .hero-tag { display: inline-flex; align-items: center; gap: 6px; background: rgba(201,168,76,0.15); border: 1px solid rgba(201,168,76,0.3); color: var(--gold-light); font-size: 0.7rem; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; padding: 6px 14px; border-radius: 50px; margin-bottom: 20px; width: fit-content; }
+    .hero-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(3rem, 13vw, 5.5rem); color: var(--white); line-height: 0.95; letter-spacing: 1px; }
+    .hero-title span { color: var(--gold); font-family: 'DM Serif Display', serif; font-style: italic; display: block; }
+    .hero-sub { color: rgba(250,250,248,0.55); font-size: 0.9rem; font-weight: 300; line-height: 1.6; margin-top: 16px; max-width: 340px; }
+    .hero-stats { display: flex; gap: 24px; margin-top: 24px; }
+    .stat { display: flex; flex-direction: column; }
+    .stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 1.7rem; color: var(--gold); line-height: 1; }
+    .stat-label { font-size: 0.62rem; color: rgba(250,250,248,0.45); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 2px; }
+
+    .city-desc { background: var(--cream); padding: 32px 20px; border-bottom: 1px solid var(--gray-light); }
+    .city-desc h2 { font-family: 'DM Serif Display', serif; font-size: 1.3rem; margin-bottom: 10px; }
+    .city-desc p { font-size: 0.85rem; color: var(--gray); line-height: 1.7; margin-bottom: 8px; }
+
+    .filters-wrap { position: sticky; top: 0; z-index: 90; background: var(--white); border-bottom: 1px solid var(--gray-light); padding: 0 20px; }
+    .filters { display: flex; gap: 0; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .filters::-webkit-scrollbar { display: none; }
+    .filter-btn { flex-shrink: 0; background: none; border: none; border-bottom: 2px solid transparent; padding: 14px 16px; font-size: 0.8rem; font-weight: 500; color: var(--gray); cursor: pointer; white-space: nowrap; }
+    .filter-btn.active { color: var(--black); border-bottom-color: var(--gold); }
+
+    .sort-row { display: flex; justify-content: flex-end; gap: 8px; padding: 10px 20px; border-bottom: 1px solid var(--gray-light); }
+    .sort-btn { padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--gray-light); background: white; color: var(--gray); font-size: 0.7rem; font-weight: 700; cursor: pointer; }
+    .sort-btn.active { background: var(--black); color: var(--gold); border-color: var(--black); }
+
+    .listings-section { padding: 24px 16px 50px; max-width: 480px; margin: 0 auto; }
+    .section-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 18px; }
+    .section-title { font-family: 'DM Serif Display', serif; font-size: 1.2rem; }
+    .listing-count { font-size: 0.75rem; color: var(--gray); }
+
+    .cards-grid { display: flex; flex-direction: column; gap: 16px; }
+    .prop-card { background: var(--card-bg); border-radius: 16px; overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--gray-light); }
+    .card-img-wrap { position: relative; height: 190px; overflow: hidden; background: var(--cream); }
+    .card-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; cursor: pointer; }
+    .card-img-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f0ebe0, #e5ddd0); font-size: 2.3rem; }
+    .card-purpose-tag { position: absolute; top: 12px; left: 12px; background: var(--black); color: var(--gold); font-size: 0.6rem; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 10px; border-radius: 50px; }
+    .verified-badge { position: absolute; top: 12px; right: 12px; background: rgba(201,168,76,0.95); color: var(--black); font-size: 0.58rem; font-weight: 700; padding: 3px 8px; border-radius: 50px; }
+    .card-body { padding: 14px 16px 16px; }
+    .card-price { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; color: var(--black); }
+    .card-title { font-size: 0.88rem; font-weight: 500; margin-top: 6px; cursor: pointer; }
+    .card-location { font-size: 0.74rem; color: var(--gray); margin-top: 6px; }
+    .card-distance { font-size: 0.72rem; color: #2e7d32; font-weight: 600; margin-top: 4px; }
+    .btn-group { display: flex; gap: 8px; margin-top: 12px; }
+    .btn { flex: 1; padding: 11px; border-radius: 10px; border: none; font-weight: 700; font-size: 0.78rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; text-decoration: none; }
+    .btn-call { background: var(--cream); color: var(--black); }
+    .btn-wa { background: #25D366; color: white; }
+
+    .loading-state { display: flex; flex-direction: column; align-items: center; padding: 50px 20px; gap: 14px; }
+    .spinner { width: 32px; height: 32px; border: 2px solid var(--gray-light); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty-state { text-align: center; padding: 50px 20px; display: none; }
+    .empty-state .empty-icon { font-size: 2.6rem; margin-bottom: 14px; }
+    .cta-btn { display: inline-block; background: var(--gold); color: var(--black); font-weight: 700; font-size: 0.8rem; padding: 12px 26px; border-radius: 50px; text-decoration: none; margin-top: 14px; }
+
+    .nearby-section { padding: 0 16px 40px; max-width: 480px; margin: 0 auto; display: none; }
+    .nearby-title { font-family: 'DM Serif Display', serif; font-size: 1.05rem; margin-bottom: 12px; }
+    .nearby-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .nearby-chip { background: var(--cream); border: 1px solid var(--gray-light); color: var(--black); font-size: 0.76rem; font-weight: 500; padding: 8px 16px; border-radius: 50px; text-decoration: none; }
+
+    footer { background: var(--black); color: rgba(250,250,248,0.4); text-align: center; padding: 22px 20px; font-size: 0.7rem; line-height: 1.8; }
+    footer a { color: var(--gold); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="/" class="nav-logo">TEP</a>
+    <a href="/add-property.html" class="nav-cta">+ List Free</a>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-tag" id="heroTag">Loading...</div>
+    <h1 class="hero-title">Property<br>in <span id="heroCityName">—</span></h1>
+    <p class="hero-sub">Verified flats, rooms, PG, plots & commercial spaces. Direct owner listings — no broker, no commission.</p>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-num" id="heroCount">—</span><span class="stat-label">Listings</span></div>
+      <div class="stat"><span class="stat-num">0</span><span class="stat-label">Brokerage</span></div>
+      <div class="stat"><span class="stat-num">Free</span><span class="stat-label">To List</span></div>
+    </div>
+  </section>
+
+  <div class="city-desc" id="cityDescBlock" style="display:none;">
+    <h2 id="cityDescTitle"></h2>
+    <p id="cityDescBody"></p>
+    <p id="cityAreasLine"></p>
+  </div>
+
+  <div class="filters-wrap">
+    <div class="filters" id="filterTabs">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="Rent">For Rent</button>
+      <button class="filter-btn" data-filter="Sell">For Sale</button>
+      <button class="filter-btn" data-filter="PG">PG / Hostel</button>
+      <button class="filter-btn" data-filter="Commercial">Commercial</button>
+      <button class="filter-btn" data-filter="Plot">Plots</button>
+    </div>
+  </div>
+
+  <div class="sort-row">
+    <span style="font-size:0.7rem;color:var(--gray);font-weight:600;align-self:center;">Sort:</span>
+    <button class="sort-btn active" id="sortLatestBtn">Latest</button>
+    <button class="sort-btn" id="sortNearestBtn">📍 Nearest</button>
+  </div>
+
+  <section class="listings-section">
+    <div class="section-header">
+      <h2 class="section-title" id="listingsTitle">Properties</h2>
+      <span class="listing-count" id="listingCount">Loading...</span>
+    </div>
+    <div id="listingsContainer">
+      <div class="loading-state" id="loadingState">
+        <div class="spinner"></div>
+        <p style="font-size:0.8rem;color:var(--gray);">Finding properties...</p>
+      </div>
+    </div>
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">🏠</div>
+      <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:8px;">No listings yet</h3>
+      <p style="font-size:0.8rem;color:var(--gray);">Be the first to list a property here. It's free.</p>
+      <a href="/add-property.html" class="cta-btn">List Your Property</a>
+    </div>
+  </section>
+
+  <section class="nearby-section" id="nearbySection">
+    <h3 class="nearby-title">Properties in Nearby Cities</h3>
+    <div class="nearby-chips" id="nearbyChips"></div>
+  </section>
+
+  <footer>
+    <p>© 2026 <a href="/">The Earth Property</a> · Free property listings worldwide</p>
+    <p id="footerLocLine"></p>
+    <p style="margin-top:8px;"><a href="/">Home</a> &nbsp;·&nbsp; <a href="/add-property.html">List Property</a></p>
+  </footer>
+
+  <script type="module">
+    const { collection, query, where, orderBy, getDocs } = window._firestoreModules || {};
+
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+    function normalizeSlug(str) {
+      return String(str || '').trim().toLowerCase().replace(/\s+/g, '-');
+    }
+    function toTitleCase(str) {
+      return String(str || '').trim().toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const citySlug = normalizeSlug(params.get('name') || '');
+
+    let cityData = null;
+    let allListings = [];
+    let activeFilter = 'all';
+    let activeSort = 'latest';
+    let userLocation = null;
+
+    function purposeTagClass() { return ''; }
+
+    function getImgUrl(images) {
+      if (!images || !images.length) return null;
+      const first = images[0];
+      if (typeof first === 'string') return first;
+      if (first && first.url) return first.url;
+      return null;
+    }
+
+    function renderCard(prop) {
+      const id = prop.id;
+      const d = prop.data;
+      const imgUrl = getImgUrl(d.images);
+      const imgHtml = imgUrl
+        ? `<img src="${escHtml(imgUrl)}" alt="${escHtml(d.title || 'Property')}" loading="lazy" onclick="window.location.href='/property-detail.html?id=${escHtml(id)}'" />`
+        : `<div class="card-img-placeholder">🏠</div>`;
+
+      const verifiedBadge = d.isVerified ? `<span class="verified-badge">✓ Verified</span>` : '';
+      const priceDisplay = window.TEPGeo.formatPrice(Number(d.price || 0), d.currency || 'INR');
+
+      let distHTML = '';
+      if (userLocation && d.latitude && d.longitude) {
+        const dist = window.TEPGeo.calculateDistance(userLocation.lat, userLocation.lng, d.latitude, d.longitude);
+        distHTML = `<div class="card-distance">📍 ${dist.toFixed(1)} km away</div>`;
+      }
+
+      const phone = d.phone || '';
+      let waLink = '#', callLink = '#';
+      if (phone) {
+        let clean = String(phone).replace(/\D/g, '');
+        if (clean.length === 10) clean = '91' + clean;
+        waLink = `https://wa.me/${clean}?text=${encodeURIComponent('Hi, I am interested in: ' + (d.title || ''))}`;
+        callLink = `tel:+${clean}`;
+      }
+
+      return `
+        <div class="prop-card">
+          <div class="card-img-wrap">
+            ${imgHtml}
+            <span class="card-purpose-tag">${escHtml(d.purpose || 'Property')}</span>
+            ${verifiedBadge}
+          </div>
+          <div class="card-body">
+            <div class="card-price">${escHtml(priceDisplay)}</div>
+            <div class="card-title" onclick="window.location.href='/property-detail.html?id=${escHtml(id)}'">${escHtml(d.title || 'Property')}</div>
+            <div class="card-location">📍 ${escHtml(d.location || d.locality || cityData?.name || '')}</div>
+            ${distHTML}
+            <div class="btn-group">
+              <a class="btn btn-call" href="${callLink}">📞 Call</a>
+              <a class="btn btn-wa" href="${waLink}" target="_blank" rel="noopener">WhatsApp</a>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function renderListings() {
+      const container = document.getElementById('listingsContainer');
+      const emptyState = document.getElementById('emptyState');
+      const countEl = document.getElementById('listingCount');
+
+      let filtered = activeFilter === 'all' ? allListings : allListings.filter(p => p.data.purpose === activeFilter);
+
+      if (activeSort === 'nearest' && userLocation) {
+        filtered = window.TEPGeo.sortByProximity(filtered, userLocation.lat, userLocation.lng, p => p.data.latitude, p => p.data.longitude);
+      }
+
+      countEl.textContent = `${filtered.length} listing${filtered.length !== 1 ? 's' : ''}`;
+      document.getElementById('heroCount').textContent = allListings.length || '0';
+
+      if (filtered.length === 0) {
+        container.innerHTML = '';
+        emptyState.style.display = 'block';
+      } else {
+        emptyState.style.display = 'none';
+        container.innerHTML = `<div class="cards-grid">${filtered.map(renderCard).join('')}</div>`;
+      }
+    }
+
+    async function loadListings() {
+      try {
+        const db = window._db;
+        const cityVariants = [cityData.name, cityData.name.toLowerCase(), cityData.name.toUpperCase(), toTitleCase(cityData.name)];
+        let results = [];
+        const seen = new Set();
+
+        for (const variant of [...new Set(cityVariants)]) {
+          const q = query(collection(db, 'properties'), where('city', '==', variant));
+          const snap = await getDocs(q);
+          snap.docs.forEach(doc => {
+            if (seen.has(doc.id)) return;
+            const data = doc.data();
+            if (data.isExpired === true) return;
+            if (data.status && data.status !== 'active') return;
+            seen.add(doc.id);
+            results.push({ id: doc.id, data });
+          });
+        }
+
+        // Legacy fallback: nothing found via city field, search location string
+        if (results.length === 0) {
+          const allSnap = await getDocs(query(collection(db, 'properties')));
+          const needle = cityData.name.toLowerCase();
+          allSnap.docs.forEach(doc => {
+            const data = doc.data();
+            if (data.isExpired === true) return;
+            const loc = (data.location || '').toLowerCase();
+            if (loc.includes(needle)) results.push({ id: doc.id, data });
+          });
+        }
+
+        allListings = results;
+        document.getElementById('loadingState').style.display = 'none';
+        renderListings();
+      } catch (err) {
+        console.error('Firestore error:', err);
+        document.getElementById('loadingState').innerHTML = `<p style="color:#c0392b;font-size:0.82rem;">Could not load listings. Please refresh.</p>`;
+      }
+    }
+
+    async function loadNearbyCities() {
+      try {
+        const db = window._db;
+        const snap = await getDocs(query(collection(db, 'cities'), where('isActive', '==', true)));
+        const others = snap.docs
+          .map(doc => ({ id: doc.id, ...doc.data() }))
+          .filter(c => c.slug !== citySlug && c.lat && c.lng);
+
+        if (!cityData.lat || !cityData.lng || others.length === 0) return;
+
+        const withDist = others.map(c => ({
+          ...c,
+          dist: window.TEPGeo.calculateDistance(cityData.lat, cityData.lng, c.lat, c.lng)
+        })).sort((a, b) => a.dist - b.dist).slice(0, 6);
+
+        if (withDist.length === 0) return;
+
+        document.getElementById('nearbyChips').innerHTML = withDist
+          .map(c => `<a href="/city.html?name=${escHtml(c.slug)}" class="nearby-chip">${escHtml(c.name)}</a>`)
+          .join('');
+        document.getElementById('nearbySection').style.display = 'block';
+      } catch (err) {
+        console.warn('Nearby cities error:', err);
+      }
+    }
+
+    function populateSEO() {
+      const title = cityData.seoTitle || `Property in ${cityData.name} | The Earth Property`;
+      const desc = cityData.seoDescription || `Find verified properties in ${cityData.name} – flats, rooms, plots, commercial. No broker. Direct owner listings.`;
+      const url = `https://theearthproperty.com/city.html?name=${citySlug}`;
+
+      document.getElementById('pageTitle').textContent = title;
+      document.title = title;
+      document.getElementById('metaDesc').setAttribute('content', desc);
+      document.getElementById('canonicalLink').setAttribute('href', url);
+      document.getElementById('ogTitle').setAttribute('content', title);
+      document.getElementById('ogDesc').setAttribute('content', desc);
+      document.getElementById('ogUrl').setAttribute('content', url);
+
+      document.getElementById('jsonLd').textContent = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "RealEstateAgent",
+        "name": `The Earth Property – ${cityData.name}`,
+        "description": desc,
+        "url": url,
+        "areaServed": {
+          "@type": "City",
+          "name": cityData.name,
+          "containedInPlace": {
+            "@type": "State",
+            "name": cityData.state || '',
+            "containedInPlace": { "@type": "Country", "name": cityData.country || '' }
+          }
+        }
+      });
+    }
+
+    function populateHero() {
+      document.getElementById('heroTag').textContent = [cityData.state, cityData.country].filter(Boolean).join(' · ') || cityData.name;
+      document.getElementById('heroCityName').textContent = cityData.name;
+      document.getElementById('listingsTitle').textContent = `${cityData.name} Properties`;
+      document.getElementById('footerLocLine').textContent = [cityData.name, cityData.state, cityData.country].filter(Boolean).join(' · ');
+
+      if (cityData.longDescription || cityData.popularAreas) {
+        document.getElementById('cityDescBlock').style.display = 'block';
+        document.getElementById('cityDescTitle').textContent = `Find Your Perfect Property in ${cityData.name}`;
+        document.getElementById('cityDescBody').textContent = cityData.longDescription ||
+          `Browse and list properties in ${cityData.name} for free — flats for rent, rooms, PG, residential plots, and commercial offices. All listings are direct from owners with no brokerage charges.`;
+        if (cityData.popularAreas && cityData.popularAreas.length) {
+          document.getElementById('cityAreasLine').innerHTML = `Popular areas: <strong>${escHtml(cityData.popularAreas.join(', '))}</strong>`;
+        }
+      }
+    }
+
+    function showNotFound() {
+      document.getElementById('heroCityName').textContent = 'City Not Found';
+      document.getElementById('heroTag').textContent = 'Oops';
+      document.getElementById('loadingState').innerHTML =
+        `<p style="font-size:0.85rem;color:var(--gray);text-align:center;">This city page doesn't exist yet.<br><a href="/" style="color:var(--gold);">Go to Homepage →</a></p>`;
+    }
+
+    document.getElementById('filterTabs').addEventListener('click', (e) => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeFilter = btn.dataset.filter;
+      renderListings();
+    });
+
+    document.getElementById('sortLatestBtn').addEventListener('click', () => {
+      activeSort = 'latest';
+      document.getElementById('sortLatestBtn').classList.add('active');
+      document.getElementById('sortNearestBtn').classList.remove('active');
+      renderListings();
+    });
+
+    document.getElementById('sortNearestBtn').addEventListener('click', async () => {
+      activeSort = 'nearest';
+      document.getElementById('sortNearestBtn').classList.add('active');
+      document.getElementById('sortLatestBtn').classList.remove('active');
+      if (!userLocation) {
+        const loc = await window.TEPGeo.withTimeout(window.TEPGeo.detectUserLocation(), 6000);
+        if (loc) userLocation = { lat: loc.lat, lng: loc.lng };
+      }
+      renderListings();
+    });
+
+    async function init() {
+      if (!citySlug) { showNotFound(); return; }
+      try {
+        const db = window._db;
+        const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+        const snap = await getDoc(doc(db, 'cities', citySlug));
+        if (!snap.exists()) { showNotFound(); return; }
+        cityData = { slug: citySlug, ...snap.data() };
+        populateSEO();
+        populateHero();
+        await loadListings();
+        loadNearbyCities();
+      } catch (err) {
+        console.error('City load error:', err);
+        showNotFound();
+      }
+    }
+
+    window.addEventListener('firebaseReady', init);
+    if (window._db) init();
+  </script>
+</body>
+</html>
