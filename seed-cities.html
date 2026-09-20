@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>TEP — Seed Cities (one-time admin tool)</title>
+<style>
+  body { font-family: sans-serif; padding: 20px; background: #f0f2f5; }
+  button { background: #2e7d32; color: white; border: none; padding: 14px 24px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; margin-bottom: 16px; }
+  button:disabled { background: #ccc; }
+  #log { background: white; border-radius: 10px; padding: 16px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; max-height: 70vh; overflow-y: auto; }
+  .ok { color: #2e7d32; } .err { color: #c0392b; } .skip { color: #999; }
+</style>
+</head>
+<body>
+<h2>TEP — Seed Cities Tool</h2>
+<p style="font-size:13px;color:#666;margin-bottom:16px;">Run this ONCE to backfill your existing city pages into the Firestore <code>cities</code> collection. Review/edit the CITIES array below before running if any details look off (state/coordinates are best-effort — adjust as needed).</p>
+<button id="runBtn" onclick="runSeed()">Run Seed (one-time)</button>
+<div id="log">Ready. Click "Run Seed" to start.</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
+    authDomain: "earth-properties-c3c56.firebaseapp.com",
+    databaseURL: "https://earth-properties-c3c56-default-rtdb.firebaseio.com",
+    projectId: "earth-properties-c3c56",
+    storageBucket: "earth-properties-c3c56.firebasestorage.app",
+    messagingSenderId: "677407721236",
+    appId: "1:677407721236:web:2964262087105819e6a401"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // Best-effort data pulled from your existing pages/drawer list.
+  // ⚠️ Review state/lat/lng before running — adjust anything that looks wrong.
+  const CITIES = [
+    { slug: "india-haryana-gurugram",  name: "Gurugram",    state: "Haryana",        country: "India",   lat: 28.4595, lng: 77.0266 },
+    { slug: "india-haryana-manesar",   name: "Manesar",     state: "Haryana",        country: "India",   lat: 28.3540, lng: 76.9350 },
+    { slug: "india-rajasthan-jaipur",  name: "Jaipur",      state: "Rajasthan",      country: "India",   lat: 26.9124, lng: 75.7873 },
+    { slug: "india-delhi-delhi",       name: "Delhi",       state: "Delhi",          country: "India",   lat: 28.7041, lng: 77.1025 },
+    { slug: "india-haryana-panchkula", name: "Panchkula",   state: "Haryana",        country: "India",   lat: 30.6942, lng: 76.8606 },
+    { slug: "india-up-noida",          name: "Noida",       state: "Uttar Pradesh",  country: "India",   lat: 28.5355, lng: 77.3910 },
+    { slug: "india-up-kanpur",         name: "Kanpur",      state: "Uttar Pradesh",  country: "India",   lat: 26.4499, lng: 80.3319 },
+    { slug: "india-up-varanasi",       name: "Varanasi",    state: "Uttar Pradesh",  country: "India",   lat: 25.3176, lng: 82.9739 },
+    { slug: "india-tn-chennai",        name: "Chennai",     state: "Tamil Nadu",     country: "India",   lat: 13.0827, lng: 80.2707 },
+    { slug: "india-kerala-kochi",      name: "Kochi",       state: "Kerala",         country: "India",   lat: 9.9312,  lng: 76.2673,
+      seoTitle: "Property in Kochi | Flats, Rooms & Plots for Sale & Rent – The Earth Property",
+      seoDescription: "Find verified properties in Kochi – flats for rent, rooms, 2BHK, 3BHK, commercial spaces, plots for sale. No broker. Direct owner listings on The Earth Property.",
+      longDescription: "Kochi (Cochin) is Kerala's commercial capital and one of South India's fastest-growing cities. Known as the Queen of the Arabian Sea, Kochi offers a vibrant mix of heritage charm and modern urban living — from the colonial lanes of Fort Kochi to the IT corridors of Kakkanad and Infopark.",
+      popularAreas: ["Fort Kochi", "Ernakulam", "Maradu", "Kakkanad", "Edapally", "Aluva", "Vyttila", "Palarivattom", "Thripunithura", "Kalamassery"] },
+    { slug: "india-karnataka-bangalore", name: "Bangalore",  state: "Karnataka",      country: "India",   lat: 12.9716, lng: 77.5946 },
+    { slug: "india-odisha-bhubaneswar",  name: "Bhubaneswar",state: "Odisha",         country: "India",   lat: 20.2961, lng: 85.8245 },
+    { slug: "india-up-meerut",         name: "Meerut",      state: "Uttar Pradesh",  country: "India",   lat: 28.9845, lng: 77.7064 },
+    { slug: "india-uk-dehradun",       name: "Dehradun",    state: "Uttarakhand",    country: "India",   lat: 30.3165, lng: 78.0322 },
+    { slug: "india-uk-haridwar",       name: "Haridwar",    state: "Uttarakhand",    country: "India",   lat: 29.9457, lng: 78.1642 },
+    { slug: "indonesia-bali-bali",     name: "Bali",        state: "Bali",           country: "Indonesia", lat: -8.3405, lng: 115.0920 },
+    { slug: "uganda-central-kampala",  name: "Kampala",     state: "Central Region", country: "Uganda",  lat: 0.3476,  lng: 32.5825 },
+    { slug: "uae-dubai-dubai",         name: "Dubai",       state: "Dubai",          country: "UAE",     lat: 25.2048, lng: 55.2708 }
+  ];
+
+  window.runSeed = async function () {
+    const btn = document.getElementById('runBtn');
+    const log = document.getElementById('log');
+    btn.disabled = true;
+    log.innerHTML = '';
+
+    function line(msg, cls) {
+      const d = document.createElement('div');
+      if (cls) d.className = cls;
+      d.textContent = msg;
+      log.appendChild(d);
+    }
+
+    for (const city of CITIES) {
+      try {
+        const ref = doc(db, 'cities', city.slug);
+        const existing = await getDoc(ref);
+        if (existing.exists()) {
+          line(`⏭ Skipped (already exists): ${city.name}`, 'skip');
+          continue;
+        }
+        await setDoc(ref, { ...city, isActive: true, createdAt: new Date().toISOString() });
+        line(`✅ Created: ${city.name} (${city.slug})`, 'ok');
+      } catch (err) {
+        line(`❌ Failed: ${city.name} — ${err.message}`, 'err');
+      }
+    }
+    line('\nDone. You can now delete/hide this file once confirmed in Firestore console.');
+    btn.disabled = false;
+  };
+</script>
+</body>
+</html>
