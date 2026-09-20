@@ -205,7 +205,7 @@
     </div>
     <div class="drawer-footer">
         <div class="drawer-item" onclick="location.href='my-ads.html'"><i class="fa fa-layer-group" style="color:var(--primary);"></i><span id="myAdsText">My Ads</span></div>
-        <div class="drawer-item" onclick="var s=document.getElementById('citySubmenu');s.style.display=s.style.display==='none'?'block':'none';this.querySelector('.city-arrow').textContent=s.style.display==='none'?'▼':'▲'">
+        <div class="drawer-item" onclick="var s=document.getElementById('citySubmenu');var willOpen=s.style.display==='none';s.style.display=willOpen?'block':'none';this.querySelector('.city-arrow').textContent=willOpen?'▲':'▼';if(willOpen)loadCityDrawerList();">
     <i class="fa fa-map-marker-alt" style="color:#e91e63;"></i>
     <span>Explore by City</span>
     <span class="city-arrow" style="margin-left:auto;">▼</span>
@@ -1600,6 +1600,34 @@ window.addEventListener('load', () => {
     }
 });
 
+    function normalizeSlug(str) {
+    return String(str || '').trim().toLowerCase().replace(/\s+/g, '-');
+}
+
+let cityDrawerLoaded = false;
+function loadCityDrawerList() {
+    if (cityDrawerLoaded) return;
+    cityDrawerLoaded = true;
+    db.collection('cities').where('isActive', '==', true).get()
+        .then(snap => {
+            const container = document.getElementById('citySubmenu');
+            if (snap.empty) {
+                container.innerHTML = '<div class="drawer-item" style="padding-left:35px;color:#999;">No cities yet</div>';
+                return;
+            }
+            const cities = snap.docs.map(d => d.data()).sort((a, b) => a.name.localeCompare(b.name));
+            container.innerHTML = cities.map(c => `
+                <div class="drawer-item" style="padding-left:35px;" onclick="location.href='city.html?name=${normalizeSlug(c.slug)}'">
+                    <span>🏙️ ${c.name}</span>
+                </div>
+            `).join('');
+        })
+        .catch(err => {
+            console.error('City drawer load error:', err);
+            document.getElementById('citySubmenu').innerHTML =
+                '<div class="drawer-item" style="padding-left:35px;color:#c0392b;">Could not load cities</div>';
+        });
+}
 loadLanguageDropdown();
 applyLanguage();
 setTimeout(initLocationCard, 2000);
