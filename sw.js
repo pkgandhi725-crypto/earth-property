@@ -23,7 +23,11 @@ messaging.onBackgroundMessage(function(payload) {
 // ═══════════════════════════════════════════════
 // 📦 PWA CACHE — app shell + slow-network fallback
 // ═══════════════════════════════════════════════
-const CACHE_NAME = "the-earth-property-v3";
+// ⚠️ BUMP THIS NUMBER every time you deploy changed code
+// (city.html, price-filter.js, geo-utils.js, index.html, etc.)
+// Bumping it forces old cached files to be purged on next app open —
+// without this, installed-app users can get stuck on stale code.
+const CACHE_NAME = "the-earth-property-v4";
 const NAV_TIMEOUT_MS = 5000; // if network takes longer than this on a page load, fall back to cache
 
 const urlsToCache = [
@@ -38,6 +42,13 @@ const urlsToCache = [
   "/icon-512.png",
   "/offline.html"
 ];
+
+// File types that change often during active development — always try
+// the network first so code updates show up immediately, falling back
+// to cache only if the network is slow/unavailable.
+function isFreshnessCritical(url) {
+  return /\.js(\?|$)/.test(url) || /\.html(\?|$)/.test(url) || /\.css(\?|$)/.test(url);
+}
 
 // ── INSTALL: pre-cache the shell ──
 self.addEventListener("install", (e) => {
@@ -59,8 +70,9 @@ self.addEventListener("activate", (e) => {
   );
 });
 
-// ── FETCH: network-first (with timeout) for page navigations,
-//           cache-first for everything else (images, css, js) ──
+// ── FETCH: network-first (with timeout) for page navigations AND for
+//           js/html/css (so deploys show up right away); cache-first
+//           only for truly static assets (images, icons, fonts) ──
 self.addEventListener("fetch", (e) => {
   const req = e.request;
 
@@ -76,8 +88,9 @@ self.addEventListener("fetch", (e) => {
     return;
   }
 
-  // ── Page loads (typing URL, clicking a link, opening the app) ──
-  if (req.mode === "navigate") {
+  const networkFirst = req.mode === "navigate" || isFreshnessCritical(req.url);
+
+  if (networkFirst) {
     e.respondWith(
       Promise.race([
         fetch(req).then((res) => {
@@ -89,13 +102,13 @@ self.addEventListener("fetch", (e) => {
           setTimeout(() => reject(new Error("network-timeout")), NAV_TIMEOUT_MS)
         )
       ]).catch(() =>
-        caches.match(req).then((cached) => cached || caches.match("/offline.html"))
+        caches.match(req).then((cached) => cached || (req.mode === "navigate" ? caches.match("/offline.html") : undefined))
       )
     );
     return;
   }
 
-  // ── Static assets (logo, icons, css, js) ──
+  // ── Truly static assets (logo, icons) — cache-first is fine, these rarely change ──
   e.respondWith(
     caches.match(req).then((cached) =>
       cached || fetch(req).catch(() => caches.match("/offline.html"))
