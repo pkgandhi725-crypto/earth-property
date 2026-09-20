@@ -20,6 +20,9 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+  const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
@@ -32,6 +35,26 @@
   };
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  const authBox = document.createElement('div');
+  authBox.style.cssText = 'background:white;border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:13px;font-weight:600;';
+  document.getElementById('runBtn').insertAdjacentElement('beforebegin', authBox);
+  authBox.textContent = 'Checking login status...';
+
+  onAuthStateChanged(auth, (user) => {
+    const btn = document.getElementById('runBtn');
+    if (!user) {
+      authBox.innerHTML = '❌ <span style="color:#c0392b;">Not logged in.</span> Open <a href="/login.html">login.html</a> in THIS SAME TAB, log in with the admin account, then come back to this page (do not open a new tab).';
+      btn.disabled = true;
+    } else if (user.uid !== ADMIN_UID) {
+      authBox.innerHTML = `❌ <span style="color:#c0392b;">Wrong account logged in.</span><br>Logged in as: ${user.email || user.uid}<br>UID: ${user.uid}<br>Expected admin UID: ${ADMIN_UID}<br><br>Log out and log back in with the correct admin account, then reload this page.`;
+      btn.disabled = true;
+    } else {
+      authBox.innerHTML = `✅ <span style="color:#2e7d32;">Logged in as admin</span> (${user.email || user.uid}). Safe to run seed.`;
+      btn.disabled = false;
+    }
+  });
 
   // Best-effort data pulled from your existing pages/drawer list.
   // ⚠️ Review state/lat/lng before running — adjust anything that looks wrong.
