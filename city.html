@@ -21,6 +21,7 @@
 
   <!-- Shared geo/price utilities (plain script, loads before the module below) -->
   <script src="geo-utils.js"></script>
+  <script src="price-filter.js"></script>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -231,6 +232,30 @@
     let activeFilter = 'all';
     let activeSort = 'latest';
     let userLocation = null;
+    let activePriceRange = null; // {min, max} or null
+
+    // city.html purpose values match the actual `purpose` field directly
+    // (unlike index.html's lowercase filter keys), so map straight through.
+    function mapFilterToPriceCategory(filter) {
+      switch (filter) {
+        case 'Rent': return 'Rent';
+        case 'PG': return 'PG';
+        case 'Commercial': return 'CommercialSell';
+        case 'Plot': return 'Plot';
+        case 'Sell': return 'Sell';
+        default: return 'Sell';
+      }
+    }
+
+    function applyPriceRangeFilter(arr) {
+      if (!activePriceRange) return arr;
+      return arr.filter(p => {
+        const price = Number(p.data.price || 0);
+        if (typeof activePriceRange.min === 'number' && price < activePriceRange.min) return false;
+        if (typeof activePriceRange.max === 'number' && activePriceRange.max !== null && price > activePriceRange.max) return false;
+        return true;
+      });
+    }
 
     function purposeTagClass() { return ''; }
 
@@ -294,6 +319,7 @@
       const countEl = document.getElementById('listingCount');
 
       let filtered = activeFilter === 'all' ? allListings : allListings.filter(p => p.data.purpose === activeFilter);
+      filtered = applyPriceRangeFilter(filtered);
 
       if (activeSort === 'nearest' && userLocation) {
         filtered = window.TEPGeo.sortByProximity(filtered, userLocation.lat, userLocation.lng, p => p.data.latitude, p => p.data.longitude);
@@ -439,7 +465,20 @@
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       activeFilter = btn.dataset.filter;
+
+      if (activeFilter === 'all') {
+        activePriceRange = null;
+        renderListings();
+        return;
+      }
+
+      // Show purpose-filtered results immediately, then open price-range panel
       renderListings();
+      const category = mapFilterToPriceCategory(activeFilter);
+      window.PriceFilter.open(category, (range) => {
+        activePriceRange = range; // null if user tapped "Clear Selection"
+        renderListings();
+      });
     });
 
     document.getElementById('sortLatestBtn').addEventListener('click', () => {
