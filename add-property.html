@@ -555,7 +555,7 @@ async function ensureCityExists(cityName, countryName, stateName, lat, lng) {
                 if (data && data[0]) { cLat = parseFloat(data[0].lat); cLng = parseFloat(data[0].lon); }
             } catch (e) { /* geocode failed — city creation skipped below */ }
         }
-        if (!cLat || !cLng) return; // couldn't confirm a real place — don't create a junk page
+        if (cLat == null || cLng == null) return; // couldn't confirm a real place — don't create a junk page
 
         await ref.set({
             name: toTitleCase(cityName),
