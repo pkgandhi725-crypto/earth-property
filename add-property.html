@@ -544,7 +544,7 @@ async function ensureCityExists(cityName, countryName, stateName, lat, lng) {
         if (snap.exists) return; // already there — nothing to do
 
         let cLat = lat, cLng = lng;
-        if (!cLat || !cLng) {
+        if (cLat == null || cLng == null) {
             // This listing had no coords (no GPS/address-pin) — try a free
             // geocode as a last resort, and only create the page if a real
             // place is confirmed (avoids junk/typo city pages).
