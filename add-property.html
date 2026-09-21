@@ -1167,7 +1167,7 @@ async function submitProperty(){
     const whatsappDialCode=(COUNTRY_CODES[whatsappCountry]||'+91').replace('+','');
     const whatsapp=sameAsCallingNumber?phone:(whatsappDialCode+rawWhatsapp.replace(/\D/g,''));
     if(!/^\d{7,15}$/.test(whatsapp))return showToast("Enter valid WhatsApp number","error");
-    if(!title||!location)return showToast("Please fill all required fields: Title, Location","error");
+    if(!title||!location||!cityValue)return showToast("Please fill all required fields: Title, Location and City","error");
     let priceValue=0,currencyValue='INR',rentPriceValue=0,rentCurrencyValue='INR';
     if(purpose==='RentSell'||purpose==='CommercialRentSell'){priceValue=Number(document.getElementById('rsSellPrice').value);currencyValue=document.getElementById('rsSelCurrency').value;rentPriceValue=Number(document.getElementById('rsRentPrice').value);rentCurrencyValue=document.getElementById('rsRentCurrency').value;if(priceValue<=0||rentPriceValue<=0)return showToast("Please enter both Sell Price and Rent Price","error");if(priceValue>1000000000000||rentPriceValue>1000000000000)return showToast("Price too large.","error");}
     else if(purpose==='Rent'||purpose==='PG'||purpose==='CommercialRent'){priceValue=Number(document.getElementById('rentPrice').value);currencyValue=document.getElementById('rentCurrency').value;if(priceValue<=0)return showToast("Please enter a valid price","error");if(priceValue>1000000000000)return showToast("Price too large.","error");}
