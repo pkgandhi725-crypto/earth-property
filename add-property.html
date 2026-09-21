@@ -1158,6 +1158,8 @@ async function submitProperty(){
     const country=document.getElementById('selectedCountry').value.trim();
     const purpose=document.getElementById('purpose').value;
     const finalImages=uploadedImages.map(img=>img||null);
+    const cityValue = document.getElementById('city').value.trim();
+    const stateValue = document.getElementById('detectedState').value.trim();
     if(!country)return showToast("Please select a country","error");
     const phoneCountry=document.getElementById('selectedPhoneCountry').value.trim()||country;
     const countryDialCode=(COUNTRY_CODES[phoneCountry]||'+91').replace('+','');
