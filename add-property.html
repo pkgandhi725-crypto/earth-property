@@ -534,28 +534,56 @@ function toTitleCase(str) {
         .map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
 
+    // State khali ho (manual address) to coords ya city+country se state nikaalo
+async function resolveState(cityName, countryName, lat, lng) {
+    if (lat != null && lng != null) {
+        try {
+            const res = await fetch(`https://us1.locationiq.com/v1/reverse?key=${LOCATIONIQ_KEY}&lat=${lat}&lon=${lng}&format=json`);
+            const data = await res.json();
+            if (data && data.address) {
+                const s = data.address.state || data.address.state_district || '';
+                if (s) return s;
+            }
+        } catch (e) {}
+    }
+    try {
+        const q = encodeURIComponent(`${cityName}, ${countryName}`);
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1&addressdetails=1`);
+        const data = await res.json();
+        if (data && data[0] && data[0].address) {
+            return data[0].address.state || data[0].address.state_district || '';
+        }
+    } catch (e) {}
+    return '';
+}
+
 async function ensureCityExists(cityName, countryName, stateName, lat, lng) {
-    if (!cityName || !countryName) return;
+    const dbg = (m) => console.log('[CITY]', m);
+    if (!cityName || !countryName) { dbg('City ya country empty hai'); return; }
     const slug = [countryName, stateName, cityName].filter(Boolean).map(normalizeSlug).join('-');
-    if (!slug) return;
+    if (!slug) { dbg('Slug empty bana'); return; }
     try {
         const ref = db.collection('cities').doc(slug);
         const snap = await ref.get();
-        if (snap.exists) return; // already there — nothing to do
+        if (snap.exists) { dbg('Pehle se exist karta hai: ' + slug); return; }
+
+        // Same naam + country ka city kisi aur slug mein already ho to skip
+        const dupe = await db.collection('cities')
+            .where('country', '==', countryName)
+            .where('name', '==', toTitleCase(cityName))
+            .limit(1).get();
+        if (!dupe.empty) { dbg('Same naam ka city pehle se hai: ' + dupe.docs[0].id); return; }
 
         let cLat = lat, cLng = lng;
         if (cLat == null || cLng == null) {
-            // This listing had no coords (no GPS/address-pin) — try a free
-            // geocode as a last resort, and only create the page if a real
-            // place is confirmed (avoids junk/typo city pages).
             try {
                 const q = encodeURIComponent(`${cityName}, ${countryName}`);
                 const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`);
                 const data = await res.json();
                 if (data && data[0]) { cLat = parseFloat(data[0].lat); cLng = parseFloat(data[0].lon); }
-            } catch (e) { /* geocode failed — city creation skipped below */ }
+            } catch (e) {}
         }
-        if (cLat == null || cLng == null) return; // couldn't confirm a real place — don't create a junk page
+        if (cLat == null || cLng == null) { dbg('Coords nahi mile, city skip: ' + slug); return; }
 
         await ref.set({
             name: toTitleCase(cityName),
@@ -567,9 +595,9 @@ async function ensureCityExists(cityName, countryName, stateName, lat, lng) {
             isActive: true,
             createdAt: new Date().toISOString()
         });
+        dbg('Ban gaya: ' + slug);
     } catch (e) {
-        console.warn('City auto-create skipped:', e.message);
-        // Never block property submission over this
+        console.warn('City auto-create skipped:', e.code || '', e.message);
     }
 }
 
