@@ -1187,7 +1187,7 @@ async function submitProperty(){
     const purpose=document.getElementById('purpose').value;
     const finalImages=uploadedImages.map(img=>img||null);
     const cityValue = document.getElementById('city').value.trim();
-    const stateValue = document.getElementById('detectedState').value.trim();
+    let stateValue = document.getElementById('detectedState').value.trim();
     if(!country)return showToast("Please select a country","error");
     const phoneCountry=document.getElementById('selectedPhoneCountry').value.trim()||country;
     const countryDialCode=(COUNTRY_CODES[phoneCountry]||'+91').replace('+','');
@@ -1202,6 +1202,11 @@ async function submitProperty(){
     if(purpose==='RentSell'||purpose==='CommercialRentSell'){priceValue=Number(document.getElementById('rsSellPrice').value);currencyValue=document.getElementById('rsSelCurrency').value;rentPriceValue=Number(document.getElementById('rsRentPrice').value);rentCurrencyValue=document.getElementById('rsRentCurrency').value;if(priceValue<=0||rentPriceValue<=0)return showToast("Please enter both Sell Price and Rent Price","error");if(priceValue>1000000000000||rentPriceValue>1000000000000)return showToast("Price too large.","error");}
     else if(purpose==='Rent'||purpose==='PG'||purpose==='CommercialRent'){priceValue=Number(document.getElementById('rentPrice').value);currencyValue=document.getElementById('rentCurrency').value;if(priceValue<=0)return showToast("Please enter a valid price","error");if(priceValue>1000000000000)return showToast("Price too large.","error");}
     else{priceValue=Number(document.getElementById('price').value);currencyValue=document.getElementById('currency').value;if(priceValue<=0)return showToast("Please enter a valid price","error");if(priceValue>1000000000000)return showToast("Price too large.","error");}
+    if(!editId && !stateValue){
+    document.getElementById('postBtn').disabled=true;
+    document.getElementById('postBtn').innerText="Processing...";
+    stateValue = await resolveState(cityValue, country, currentCoords.lat, currentCoords.lng);
+    }
     const propertyData={title,price:priceValue,currency:currencyValue,priceUSD:toUSD(priceValue,currencyValue),phone,whatsapp,phoneCountry,whatsappCountry:(sameAsCallingNumber?phoneCountry:whatsappCountry),sameAsCallingNumber,purpose,size:document.getElementById('size').value,lotArea:document.getElementById('lotArea').value.trim(),floorArea:document.getElementById('floorArea').value.trim(),location,country,city:cityValue,state:stateValue,description:document.getElementById('desc').value.trim(),nearby:document.getElementById('nearby').value,images:finalImages,latitude:currentCoords.lat,longitude:currentCoords.lng,amenities:Array.from(selectedAmenities),status:"active",updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
     if(purpose==='RentSell'||purpose==='CommercialRentSell'){propertyData.sellPrice=priceValue;propertyData.sellCurrency=currencyValue;propertyData.sellPriceUSD=toUSD(priceValue,currencyValue);propertyData.rentPrice=rentPriceValue;propertyData.rentCurrency=rentCurrencyValue;propertyData.rentPriceUSD=toUSD(rentPriceValue,rentCurrencyValue);}
     if(purpose==='Rent')propertyData.rentDetails={furnished:document.getElementById('furnished').value,bills:document.getElementById('bills').value,advance:document.getElementById('advance').value,maintenance:document.getElementById('maintenance').value};
