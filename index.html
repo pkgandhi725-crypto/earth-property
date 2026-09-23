@@ -1622,13 +1622,17 @@ window.addEventListener('load', () => {
 }
 
 let allCitiesCache = [];
+
 function preloadCitiesForSearch() {
     db.collection('cities').where('isActive', '==', true).get()
         .then(snap => {
             allCitiesCache = snap.docs.map(d => d.data());
+
+            console.log('[CITY CACHE]', allCitiesCache);
         })
         .catch(err => console.warn('City preload error:', err));
 }
+
 preloadCitiesForSearch();
     
 let cityDrawerLoaded = false;
