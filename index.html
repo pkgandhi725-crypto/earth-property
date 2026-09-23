@@ -1628,7 +1628,6 @@ function preloadCitiesForSearch() {
         .then(snap => {
             allCitiesCache = snap.docs.map(d => d.data());
 
-            console.log('[CITY CACHE]', allCitiesCache);
         .catch(err => console.warn('City preload error:', err));
 }
 
