@@ -1256,6 +1256,15 @@ function setFilter(type) {
 
 function applyFilterAndSearch() {
     const val = document.getElementById('searchInput').value.trim();
+    const banner = document.getElementById('cityMatchBanner');
+const matchedCity = val ? allCitiesCache.find(c => c.name.toLowerCase() === val.toLowerCase()) : null;
+if (matchedCity) {
+    document.getElementById('cityMatchName').innerText = matchedCity.name;
+    banner.style.display = 'flex';
+    banner.onclick = () => location.href = 'city.html?name=' + matchedCity.slug;
+} else {
+    banner.style.display = 'none';
+}
     const valLower = val.toLowerCase();
 
     let filtered = [...allAds];
