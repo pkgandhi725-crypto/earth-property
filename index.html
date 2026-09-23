@@ -1604,6 +1604,16 @@ window.addEventListener('load', () => {
     return String(str || '').trim().toLowerCase().replace(/\s+/g, '-');
 }
 
+let allCitiesCache = [];
+function preloadCitiesForSearch() {
+    db.collection('cities').where('isActive', '==', true).get()
+        .then(snap => {
+            allCitiesCache = snap.docs.map(d => d.data());
+        })
+        .catch(err => console.warn('City preload error:', err));
+}
+preloadCitiesForSearch();
+    
 let cityDrawerLoaded = false;
 function loadCityDrawerList() {
     if (cityDrawerLoaded) return;
