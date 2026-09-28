@@ -384,14 +384,14 @@
         const snap = await getDocs(query(collection(db, 'cities'), where('isActive', '==', true)));
         const others = snap.docs
           .map(doc => ({ id: doc.id, ...doc.data() }))
-          .filter(c => c.slug !== citySlug && c.lat && c.lng);
+          .filter(c => c.id !== citySlug && c.slug !== citySlug && c.lat && c.lng);
 
         if (!cityData.lat || !cityData.lng || others.length === 0) return;
 
         const withDist = others.map(c => ({
           ...c,
           dist: window.TEPGeo.calculateDistance(cityData.lat, cityData.lng, c.lat, c.lng)
-        })).sort((a, b) => a.dist - b.dist).slice(0, 6);
+        })).filter(c => c.dist <= 500).sort((a, b) => a.dist - b.dist).slice(0, 6);
 
         if (withDist.length === 0) return;
 
