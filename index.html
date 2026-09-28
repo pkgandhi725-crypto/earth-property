@@ -1633,26 +1633,87 @@ function preloadCitiesForSearch() {
 
 preloadCitiesForSearch();
     
-let cityDrawerLoaded = false;
+let cityTree = null;
+let cityDrawerLoading = false;
+
+function cdRow(inner, attrs, extraStyle) {
+    return '<div class="drawer-item" ' + (attrs || '') + ' style="padding-left:35px;' + (extraStyle || '') + '">' + inner + '</div>';
+}
+function cdCount(n) {
+    return '<span style="margin-left:auto;font-size:12px;color:#999;">' + n + ' ›</span>';
+}
+
+function cdShowCountries() {
+    const box = document.getElementById('citySubmenu');
+    const keys = Object.keys(cityTree || {}).sort((a, b) => cityTree[a].name.localeCompare(cityTree[b].name));
+    if (!keys.length) { box.innerHTML = cdRow('No cities yet', '', 'color:#999;'); return; }
+    box.innerHTML = keys.map(ck => {
+        const total = Object.values(cityTree[ck].states).reduce((s, st) => s + st.cities.length, 0);
+        return cdRow('<span>🌍 ' + sanitize(cityTree[ck].name) + '</span>' + cdCount(total), 'data-country="' + sanitize(ck) + '"');
+    }).join('');
+}
+
+function cdShowStates(ck) {
+    const box = document.getElementById('citySubmenu');
+    const country = cityTree && cityTree[ck];
+    if (!country) { cdShowCountries(); return; }
+    const keys = Object.keys(country.states).sort((a, b) => country.states[a].name.localeCompare(country.states[b].name));
+    if (keys.length === 1) { cdShowCities(ck, keys[0]); return; }
+    box.innerHTML =
+        cdRow('<span>‹ ' + sanitize(country.name) + '</span>', 'data-back="countries"', 'color:#2e7d32;background:#eef5ee;') +
+        keys.map(sk => cdRow('<span>📍 ' + sanitize(country.states[sk].name) + '</span>' + cdCount(country.states[sk].cities.length),
+            'data-country="' + sanitize(ck) + '" data-state="' + sanitize(sk) + '"')).join('');
+}
+
+function cdShowCities(ck, sk) {
+    const box = document.getElementById('citySubmenu');
+    const country = cityTree && cityTree[ck];
+    const st = country && country.states[sk];
+    if (!st) { cdShowCountries(); return; }
+    const single = Object.keys(country.states).length === 1;
+    const backLabel = single ? country.name : st.name;
+    const backAttrs = single ? 'data-back="countries"' : 'data-back="states" data-country="' + sanitize(ck) + '"';
+    const list = [...st.cities].sort((a, b) => a.name.localeCompare(b.name));
+    box.innerHTML =
+        cdRow('<span>‹ ' + sanitize(backLabel) + '</span>', backAttrs, 'color:#2e7d32;background:#eef5ee;') +
+        list.map(c => cdRow('<span>🏙️ ' + sanitize(c.name) + '</span>', 'data-slug="' + sanitize(c.slug) + '"')).join('');
+}
+
+document.getElementById('citySubmenu').addEventListener('click', function (e) {
+    const row = e.target.closest('.drawer-item');
+    if (!row) return;
+    const d = row.dataset;
+    if (d.slug) { location.href = 'city.html?name=' + encodeURIComponent(normalizeSlug(d.slug)); return; }
+    if (d.back === 'countries') { cdShowCountries(); return; }
+    if (d.back === 'states') { cdShowStates(d.country); return; }
+    if (d.country && d.state) { cdShowCities(d.country, d.state); return; }
+    if (d.country) { cdShowStates(d.country); }
+});
+
 function loadCityDrawerList() {
-    if (cityDrawerLoaded) return;
-    cityDrawerLoaded = true;
+    if (cityTree) { cdShowCountries(); return; }
+    if (cityDrawerLoading) return;
+    cityDrawerLoading = true;
     db.collection('cities').where('isActive', '==', true).get()
         .then(snap => {
-            const container = document.getElementById('citySubmenu');
-            if (snap.empty) {
-                container.innerHTML = '<div class="drawer-item" style="padding-left:35px;color:#999;">No cities yet</div>';
-                return;
-            }
-            const cities = snap.docs.map(d => d.data()).sort((a, b) => a.name.localeCompare(b.name));
-            container.innerHTML = cities.map(c => `
-                <div class="drawer-item" style="padding-left:35px;" onclick="location.href='city.html?name=${normalizeSlug(c.slug)}'">
-                    <span>🏙️ ${c.name}</span>
-                </div>
-            `).join('');
+            const tree = {};
+            snap.docs.forEach(d => {
+                const c = d.data();
+                if (!c.name) return;
+                const slug = c.slug || d.id;
+                const cName = String(c.country || '').trim() || 'Other';
+                const sName = String(c.state || '').trim() || 'Other';
+                const ck = cName.toLowerCase(), sk = sName.toLowerCase();
+                if (!tree[ck]) tree[ck] = { name: cName, states: {} };
+                if (!tree[ck].states[sk]) tree[ck].states[sk] = { name: sName, cities: [] };
+                tree[ck].states[sk].cities.push({ name: c.name, slug: slug });
+            });
+            cityTree = tree;
+            cdShowCountries();
         })
         .catch(err => {
             console.error('City drawer load error:', err);
+            cityDrawerLoading = false;
             document.getElementById('citySubmenu').innerHTML =
                 '<div class="drawer-item" style="padding-left:35px;color:#c0392b;">Could not load cities</div>';
         });
