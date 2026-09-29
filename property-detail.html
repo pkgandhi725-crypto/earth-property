@@ -1500,9 +1500,10 @@ async function loadProperty(id, isSwipeNav = false, dir = 0) {
         if (oldFace) playCube(oldFace, makeSnapshot(), dir);
 
         if (!isSwipeNav) {
-            loadSiblingProperties();
+            loadSiblingProperties().then(preloadNeighbors);
         } else {
             siblingIndex = siblingIds.indexOf(propertyId);
+            preloadNeighbors();
         }
         isNavigating = false;
     } catch (e) {
