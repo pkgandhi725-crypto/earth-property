@@ -1261,7 +1261,10 @@ const matchedCity = val ? allCitiesCache.find(c => c.name.toLowerCase() === val.
 if (matchedCity) {
     document.getElementById('cityMatchName').innerText = matchedCity.name;
     banner.style.display = 'flex';
-    banner.onclick = () => location.href = 'city.html?name=' + matchedCity.slug;
+    banner.onclick = () => {
+    trackEvent('city_banner_click', { city: matchedCity.name, slug: matchedCity.slug });
+    location.href = 'city.html?name=' + encodeURIComponent(normalizeSlug(matchedCity.slug));
+};
 } else {
     banner.style.display = 'none';
 }
@@ -1626,7 +1629,9 @@ let allCitiesCache = [];
 function preloadCitiesForSearch() {
     db.collection('cities').where('isActive', '==', true).get()
         .then(snap => {
-            allCitiesCache = snap.docs.map(d => d.data());
+            allCitiesCache = snap.docs
+    .map(d => { const c = d.data(); return { ...c, slug: c.slug || d.id }; })
+    .filter(c => c.name);
         })
         .catch(err => console.warn('City preload error:', err));
 }
