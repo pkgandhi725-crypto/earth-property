@@ -1475,7 +1475,7 @@ document.addEventListener('keydown', e => {
 });
 
 // ── LOAD PROPERTY ──
-async function loadProperty(id, isSwipeNav = false) {
+async function loadProperty(id, isSwipeNav = false, dir = 0) {
     const targetId = id || propertyId;
     if (!targetId) { showNotFound(); return; }
     try {
@@ -1490,12 +1490,14 @@ async function loadProperty(id, isSwipeNav = false) {
 
         if (propertyData.isExpired && !isSwipeNav) { showExpired(); return; }
 
+        const oldFace = (isSwipeNav && dir) ? makeSnapshot() : null;
         if (isSwipeNav) resetForNewProperty();
 
         renderProperty();
         loadSellerInfo();
         checkFav();
         document.getElementById('loadingScreen').style.display = 'none';
+        if (oldFace) playCube(oldFace, makeSnapshot(), dir);
 
         if (!isSwipeNav) {
             loadSiblingProperties();
