@@ -260,7 +260,7 @@
     </div>
     <div class="search-box">
         <i class="fa fa-search" style="color:#999;"></i>
-        <input type="text" id="searchInput" placeholder="Search country, city, area, location..." oninput="filterAds()">
+        <input type="text" enterkeyhint="search" id="searchInput" placeholder="Search country, city, area, location..." oninput="filterAds()">
     </div>
 </header>
 
@@ -1723,6 +1723,15 @@ function loadCityDrawerList() {
                 '<div class="drawer-item" style="padding-left:35px;color:#c0392b;">Could not load cities</div>';
         });
 }
+    // Search/Enter key support
+document.getElementById('searchInput').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        clearTimeout(searchTimeout);
+        applyFilterAndSearch();
+        this.blur();
+    }
+});
 loadLanguageDropdown();
 applyLanguage();
 setTimeout(initLocationCard, 2000);
