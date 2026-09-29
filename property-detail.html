@@ -1566,6 +1566,38 @@ async function loadSiblingProperties() {
     }
 }
 
+    function makeSnapshot() {
+    const stage = document.getElementById('pageStage');
+    const face = document.createElement('div');
+    face.className = 'cube-face';
+    const inner = stage.cloneNode(true);
+    inner.removeAttribute('id');
+    inner.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+    inner.style.transform = 'translateY(' + (-window.scrollY) + 'px)';
+    face.appendChild(inner);
+    return face;
+}
+
+function playCube(oldFace, newFace, dir) {
+    const w = window.innerWidth;
+    const side = dir > 0 ? 90 : -90;
+    const scene = document.createElement('div');
+    scene.className = 'cube-scene';
+    const cube = document.createElement('div');
+    cube.className = 'cube';
+    oldFace.style.transform = 'translateZ(' + (w / 2) + 'px)';
+    newFace.style.transform = 'rotateY(' + side + 'deg) translateZ(' + (w / 2) + 'px)';
+    cube.style.transform = 'translateZ(' + (-w / 2) + 'px)';
+    cube.appendChild(oldFace);
+    cube.appendChild(newFace);
+    scene.appendChild(cube);
+    document.body.appendChild(scene);
+    cube.getBoundingClientRect();
+    cube.style.transition = 'transform 0.45s cubic-bezier(0.4,0,0.2,1)';
+    cube.style.transform = 'translateZ(' + (-w / 2) + 'px) rotateY(' + (-side) + 'deg)';
+    setTimeout(() => scene.remove(), 500);
+}
+
 function goToSibling(direction) {
     if (isNavigating) return;
     if (siblingIndex === -1 || siblingIds.length <= 1) return;
