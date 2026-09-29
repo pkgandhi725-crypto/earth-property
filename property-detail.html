@@ -1185,6 +1185,23 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 
+    <script>
+window.addEventListener('error', function(e) {
+    alert(
+        'JavaScript Error:\n\n' +
+        e.message +
+        '\n\nLine: ' +
+        e.lineno
+    );
+});
+
+window.addEventListener('unhandledrejection', function(e) {
+    alert(
+        'Promise Error:\n\n' +
+        (e.reason?.message || e.reason || 'Unknown error')
+    );
+});
+    </script>
 <script>
 const firebaseConfig = { apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50", authDomain: "earth-properties-c3c56.firebaseapp.com", projectId: "earth-properties-c3c56" };
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
