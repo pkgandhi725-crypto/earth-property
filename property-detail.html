@@ -1514,6 +1514,7 @@ async function loadProperty(id, isSwipeNav = false, dir = 0) {
 
 function resetForNewProperty() {
     galleryIndex = 0;
+    document.getElementById('gallerySlides').style.transform = 'translateX(0)';
     descExpanded = false;
     window.scrollTo({ top: 0, behavior: 'instant' });
 
@@ -1601,13 +1602,13 @@ function playCube(oldFace, newFace, dir) {
 }
 
 function goToSibling(direction) {
-    if (isNavigating) return;
+    if (isNavigating || document.querySelector('.cube-scene')) return;
     if (siblingIndex === -1 || siblingIds.length <= 1) return;
     const newIndex = siblingIndex + direction;
     if (newIndex < 0) { showToast('This is the first property', 'info'); return; }
     if (newIndex >= siblingIds.length) { showToast('No more properties', 'info'); return; }
     isNavigating = true;
-    loadProperty(siblingIds[newIndex], true);
+    loadProperty(siblingIds[newIndex], true, direction);
 }
 
 function renderProperty() {
