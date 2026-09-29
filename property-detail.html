@@ -2206,6 +2206,11 @@ document.addEventListener('touchstart', swipeStart, { passive: true });
 document.addEventListener('touchmove', swipeMove, { passive: true });
 document.addEventListener('touchend', swipeEnd, { passive: true });
 document.addEventListener('touchcancel', swipeCancel, { passive: true });
+    // ── INITIALIZE PAGE ──
+firebase.auth().onAuthStateChanged(user => {
+    currentUser = user;
+    loadProperty();
+});
 </script>
 </body>
 </html>
