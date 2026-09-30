@@ -787,6 +787,7 @@
         .cube-scene { position: fixed; inset: 0; z-index: 90; perspective: 1200px; overflow: hidden; background: #000; }
         .cube { position: absolute; inset: 0; transform-style: preserve-3d; }
         .cube-face { position: absolute; inset: 0; overflow: hidden; background: var(--bg); backface-visibility: hidden; }
+        .cube-face * { animation: none !important; }
 
         /* ═══════════════════════════════════════
            FULLSCREEN PHOTO VIEWER
@@ -1584,6 +1585,7 @@ async function loadSiblingProperties() {
     const inner = stage.cloneNode(true);
     inner.removeAttribute('id');
     inner.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+    inner.querySelectorAll('iframe').forEach(f => f.remove());   
     inner.style.transform = 'translateY(' + (-window.scrollY) + 'px)';
     face.appendChild(inner);
     return face;
