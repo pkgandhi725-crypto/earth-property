@@ -1280,15 +1280,6 @@ function buildGallery(images) {
     if (hint) {
         setTimeout(() => hint.classList.add('hidden'), 3000);
     }
-
-    // Swipe support on gallery
-    let startX = 0;
-    const wrap = document.getElementById('galleryWrap');
-    wrap.addEventListener('touchstart', e => startX = e.touches[0].clientX, {passive:true});
-    wrap.addEventListener('touchend', e => {
-        const diff = startX - e.changedTouches[0].clientX;
-        if (Math.abs(diff) > 40) goSlide(diff > 0 ? galleryIndex + 1 : galleryIndex - 1);
-    }, {passive:true});
 }
 
 function goSlide(idx) {
@@ -1299,7 +1290,23 @@ function goSlide(idx) {
     const count = document.getElementById('galleryCount');
     if (count) count.textContent = `${galleryIndex + 1} / ${galleryItems.length}`;
 }
+let galStartX = 0;
 
+(function () {
+    const wrap = document.getElementById('galleryWrap');
+
+    wrap.addEventListener('touchstart', e => {
+        galStartX = e.touches[0].clientX;
+    }, { passive: true });
+
+    wrap.addEventListener('touchend', e => {
+        const diff = galStartX - e.changedTouches[0].clientX;
+
+        if (Math.abs(diff) > 40) {
+            goSlide(diff > 0 ? galleryIndex + 1 : galleryIndex - 1);
+        }
+    }, { passive: true });
+})();
 function openVideo(url) {
     window.open(url, '_blank');
 }
@@ -2096,14 +2103,54 @@ function buildPreviewFace(d) {
 // ── LIVE DRAG CUBE ──
 let swipe = null;
 
+function swipeAbort() {
+    if (!swipe) return;
+
+    const s = swipe;
+    swipe = null;
+
+    if (s.scene) {
+        s.cube.style.transition = 'transform 0.25s ease';
+        s.cube.style.transform =
+            'translateZ(' + (-s.w / 2) + 'px) rotateY(0deg)';
+
+        setTimeout(() => s.scene.remove(), 260);
+    }
+}
+
 function swipeStart(e) {
-    if (e.target.closest('.gallery-wrap') || e.target.closest('.photo-viewer') ||
-        e.target.closest('.share-sheet') || e.target.closest('.cube-scene')) { swipe = null; return; }
-    if (isNavigating || e.touches.length > 1) { swipe = null; return; }
-    swipe = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now(), mode: 'pending', dir: 0, dx: 0 };
+    if (e.touches.length > 1) {
+        swipeAbort();
+        return;
+    }
+
+    if (isNavigating) return;
+
+    document.querySelectorAll('.cube-scene').forEach(el => el.remove());
+
+    if (e.target.closest('.gallery-wrap') ||
+        e.target.closest('.photo-viewer') ||
+        e.target.closest('.share-sheet')) {
+        swipe = null;
+        return;
+    }
+
+    swipe = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        t: Date.now(),
+        mode: 'pending',
+        dir: 0,
+        dx: 0
+    };
 }
 
 function swipeMove(e) {
+    if (e.touches.length > 1) {
+        swipeAbort();
+        return;
+    }
+
     if (!swipe) return;
     const dx = e.touches[0].clientX - swipe.x;
     const dy = e.touches[0].clientY - swipe.y;
@@ -2180,15 +2227,10 @@ function swipeEnd() {
     }
 }
 
-function swipeCancel() {
-    if (swipe && swipe.scene) swipe.scene.remove();
-    swipe = null;
-}
-
 document.addEventListener('touchstart', swipeStart, { passive: true });
 document.addEventListener('touchmove', swipeMove, { passive: true });
 document.addEventListener('touchend', swipeEnd, { passive: true });
-document.addEventListener('touchcancel', swipeCancel, { passive: true });
+document.addEventListener('touchcancel', swipeAbort, { passive: true });
     // ── INITIALIZE PAGE ──
 firebase.auth().onAuthStateChanged(user => {
     currentUser = user;
