@@ -9,8 +9,8 @@
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; padding: 20px; }
         .container { max-width: 800px; margin: auto; }
         .card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-left: 5px solid #2e7d32; position: relative; }
-        .doc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0; }
-        .doc-grid img { width: 100%; height: 200px; object-fit: cover; border-radius: 10px; border: 1px solid #ddd; cursor: pointer; }
+        .doc-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin: 15px 0; }
+        .doc-grid img { width: 100%; height: 220px; object-fit: cover; border-radius: 10px; border: 1px solid #ddd; cursor: pointer; }
         .btn-group { display: flex; gap: 10px; }
         .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         .btn-approve { background: #2e7d32; color: white; }
@@ -18,6 +18,11 @@
         .btn:disabled { background: #ccc; cursor: not-allowed; }
         .status-badge { position: absolute; top: 20px; right: 20px; padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; background: #e8f5e9; color: #2e7d32; }
         .doc-label { font-size: 12px; color: #888; font-weight: 600; text-align: center; margin-top: 5px; }
+        .user-info { background: #f1f8e9; border-radius: 10px; padding: 12px 14px; margin: 12px 0; font-size: 14px; color: #333; }
+        .user-info div { margin-bottom: 6px; word-break: break-all; }
+        .user-info div:last-child { margin-bottom: 0; }
+        .user-info i { color: #2e7d32; width: 18px; }
+        .user-info b { color: #555; }
     </style>
 </head>
 <body>
@@ -33,7 +38,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
 import { 
-    getFirestore, collection, doc, setDoc, addDoc, updateDoc, 
+    getFirestore, collection, doc, setDoc, addDoc, updateDoc, getDoc,
     onSnapshot, query, where, writeBatch, getDocs, serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
@@ -49,6 +54,13 @@ const auth = getAuth(app);
 
 const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
 
+// HTML escape (user ka data safely dikhane ke liye)
+function esc(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+}
+
 onAuthStateChanged(auth, (user) => {
     if (!user || user.uid !== ADMIN_UID) {
         alert("Restricted Access: Admin Only!");
@@ -58,36 +70,80 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
+// Request mein fields na ho (purani requests) to users doc se le aao
+async function getUserDetails(uid, d) {
+    let name = d.displayName || '';
+    let email = d.email || '';
+    let epId = d.epId || '';
+
+    if (!name || !email || !epId) {
+        try {
+            const uSnap = await getDoc(doc(db, "users", uid));
+            if (uSnap.exists()) {
+                const u = uSnap.data();
+                name = name || u.displayName || '';
+                email = email || u.email || '';
+                epId = epId || u.epId || '';
+            }
+        } catch (e) {
+            console.warn("User fetch failed for", uid, e);
+        }
+    }
+    return { name, email, epId };
+}
+
 function loadRequests() {
     const q = query(collection(db, "verification_requests"), where("status", "==", "pending"));
     
-    onSnapshot(q, (snap) => {
+    onSnapshot(q, async (snap) => {
         const list = document.getElementById('requestList');
-        list.innerHTML = snap.empty ? '<div class="card">No pending requests found.</div>' : '';
-        
-        snap.forEach(docSnap => {
+
+        if (snap.empty) {
+            list.innerHTML = '<div class="card">No pending requests found.</div>';
+            return;
+        }
+
+        const items = await Promise.all(snap.docs.map(async (docSnap) => {
             const d = docSnap.data();
-            const uid = docSnap.id;
-            
+            const info = await getUserDetails(docSnap.id, d);
+            return { uid: docSnap.id, d, info };
+        }));
+
+        list.innerHTML = '';
+
+        items.forEach(({ uid, d, info }) => {
             const card = document.createElement('div');
             card.className = 'card';
             card.innerHTML = `
                 <span class="status-badge">PENDING</span>
-                <h3>${d.businessName || 'Unnamed Business'}</h3>
-                <p style="font-size:12px; color:#666;">User ID: ${uid}</p>
+                <h3>${esc(d.businessName || 'Unnamed Business')}</h3>
+
+                <div class="user-info">
+                    <div><i class="fa fa-user"></i> <b>Name:</b> ${esc(info.name || '—')}</div>
+                    <div><i class="fa fa-envelope"></i> <b>Email:</b> ${esc(info.email || '—')}</div>
+                    <div><i class="fa fa-hashtag"></i> <b>TEP ID:</b> ${esc(info.epId || '—')}</div>
+                    <div><i class="fa fa-id-card"></i> <b>ID Type:</b> ${esc(d.idType || '—')}</div>
+                </div>
+
+                <p style="font-size:12px; color:#666;">User ID: ${esc(uid)}</p>
                 <p style="font-size:12px; color:#999;">
                     Submitted: ${d.submittedAt ? d.submittedAt.toDate().toLocaleString('en-IN') : '—'}
                 </p>
+
                 <div class="doc-grid">
                     <div>
-                        <img src="${d.idProofUrl}" onclick="window.open(this.src)" title="Click to view full image">
+                        <img src="${esc(d.idProofUrl)}" onclick="window.open(this.src)" title="Click to view full image">
                         <div class="doc-label">📄 ID Proof</div>
                     </div>
+
+                    <!-- PAYMENT BOX — HIDDEN (payment system aane par uncomment karna)
                     <div>
-                        <img src="${d.paymentUrl}" onclick="window.open(this.src)" title="Click to view full image">
+                        <img src="${esc(d.paymentUrl)}" onclick="window.open(this.src)" title="Click to view full image">
                         <div class="doc-label">💳 Payment Screenshot</div>
                     </div>
+                    -->
                 </div>
+
                 <div class="btn-group">
                     <button class="btn btn-approve" id="app-${uid}">
                         <i class="fa fa-check"></i> APPROVE DEALER
@@ -146,7 +202,7 @@ async function approveDealer(uid, bizName) {
             await batch.commit();
         }
 
-        // ✅ Step 4: Save Approval Notification for User
+        // Step 4: Save Approval Notification for User
         await addDoc(collection(db, "notifications"), {
             recipientId: uid,
             type: "verification_approved",
@@ -178,7 +234,7 @@ async function rejectDealer(uid, bizName) {
             rejectedAt: serverTimestamp()
         });
 
-        // ✅ Step 2: Save Rejection Notification for User
+        // Step 2: Save Rejection Notification for User
         await addDoc(collection(db, "notifications"), {
             recipientId: uid,
             type: "verification_rejected",
