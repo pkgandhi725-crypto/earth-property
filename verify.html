@@ -455,9 +455,20 @@ document.getElementById('submitBtn').onclick = async () => {
     try {
         const idUrl = await uploadToCloudinary(idFile);
 
-        await setDoc(doc(db, "verification_requests", user.uid), {
-            userId: user.uid,
-            businessName: bizName,
+let profile = {};
+try {
+    const uSnap = await getDoc(doc(db, "users", user.uid));
+    if (uSnap.exists()) profile = uSnap.data();
+} catch (e) {
+    console.warn("Profile fetch failed:", e);
+}
+
+await setDoc(doc(db, "verification_requests", user.uid), {
+    userId: user.uid,
+    displayName: profile.displayName || user.displayName || "",
+    email: profile.email || user.email || "",
+    epId: profile.epId || "",
+    businessName: bizName,
             idType: idType,
             idProofUrl: idUrl,
             // paymentUrl: null — hidden for now, will be added when payment re-enabled
