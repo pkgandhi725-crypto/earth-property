@@ -1191,12 +1191,6 @@ function renderAds(ads, append=false) {
             window.open(`https://www.google.com/maps/dir/?api=1&destination=${p.latitude},${p.longitude}`,'_blank');
         });
 
-        // ✅ Report listing
-        document.getElementById('report-'+sid).addEventListener('click',e=>{
-            e.stopPropagation();
-            openReportModal(p.id,p.title||'');
-        });
-
         // ✅ Call + GA4 track
         document.getElementById('call-'+sid).addEventListener('click',()=>{
             trackEvent('contact_call', { property_id: p.id });
