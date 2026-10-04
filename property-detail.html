@@ -1967,15 +1967,17 @@ async function submitReport() {
     btn.disabled = true; btn.textContent = 'Submitting...';
     try {
         await db.collection('reports').add({
-            propertyId,
-            propertyTitle: propertyData?.title || '',
-            reason: selectedReportReason,
-            details: document.getElementById('reportDetails').value.trim(),
-            reporterId: currentUser.uid,
-            reporterEmail: currentUser.email || '',
-            status: 'pending',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+    propertyId,
+    propertyTitle: propertyData?.title || '',
+    reason: selectedReportReason,
+    details: document.getElementById('reportDetails').value.trim(),
+    reporterId: currentUser.uid,
+    reporter: currentUser.uid,
+    reporterEmail: currentUser.email || '',
+    status: 'pending',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+});
         closeReportSheet();
         showToast('Report submitted. Thank you!', 'success');
     } catch (e) {
