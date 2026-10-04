@@ -1134,7 +1134,6 @@ function renderAds(ads, append=false) {
     </div>
     <div class="location"><i class="fa-solid fa-location-dot"></i> ${sloc}</div>
     ${distHTML}
-    <button class="report-link" id="report-${sid}" style="background:none;border:none;color:#999;font-size:11px;font-weight:600;cursor:pointer;padding:5px 0 0;display:inline-flex;align-items:center;gap:4px;"><i class="fa fa-flag"></i> Report this listing</button>
     ${p.size ? `<div style="font-size:12px;color:#555;margin-top:4px;"><i class="fa fa-ruler-combined" style="color:#2e7d32;margin-right:4px;"></i>${sanitize(String(p.size))}</div>` : ''}
     ${descHTML}
     <div class="btn-group">
