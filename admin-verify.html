@@ -19,7 +19,7 @@
         .status-badge { position: absolute; top: 20px; right: 20px; padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; background: #e8f5e9; color: #2e7d32; }
         .doc-label { font-size: 12px; color: #888; font-weight: 600; text-align: center; margin-top: 5px; }
         .user-info { background: #f1f8e9; border-radius: 10px; padding: 12px 14px; margin: 12px 0; font-size: 14px; color: #333; }
-        .user-info div { margin-bottom: 6px; word-break: break-all; }
+        .user-info div { margin-bottom: 6px; word-break: break-word; }
         .user-info div:last-child { margin-bottom: 0; }
         .user-info i { color: #2e7d32; width: 18px; }
         .user-info b { color: #555; }
@@ -92,6 +92,41 @@ async function getUserDetails(uid, d) {
     return { name, email, epId };
 }
 
+// ID images ka HTML (jitni sides upload hui hain utni)
+function buildDocsHtml(d) {
+    const isNew = d.idFrontUrl !== undefined;             // naye requests mein ye field hota hai
+    const frontUrl = isNew ? d.idFrontUrl : d.idProofUrl;  // purani requests: idProofUrl hi front hai
+    const backUrl = d.idBackUrl || '';
+    let html = '';
+
+    if (frontUrl) {
+        html += `
+            <div>
+                <img src="${esc(frontUrl)}" onclick="window.open(this.src)" title="Click to view full image">
+                <div class="doc-label">📄 ${isNew ? 'ID Front' : 'ID Proof'}</div>
+            </div>`;
+    }
+    if (backUrl) {
+        html += `
+            <div>
+                <img src="${esc(backUrl)}" onclick="window.open(this.src)" title="Click to view full image">
+                <div class="doc-label">📄 ID Back</div>
+            </div>`;
+    }
+
+    // PAYMENT BOX — HIDDEN (payment system aane par uncomment karna)
+    // if (d.paymentUrl) {
+    //     html += `
+    //         <div>
+    //             <img src="${esc(d.paymentUrl)}" onclick="window.open(this.src)" title="Click to view full image">
+    //             <div class="doc-label">💳 Payment Screenshot</div>
+    //         </div>`;
+    // }
+
+    if (!html) html = '<div class="doc-label">No ID image uploaded</div>';
+    return html;
+}
+
 function loadRequests() {
     const q = query(collection(db, "verification_requests"), where("status", "==", "pending"));
     
@@ -112,6 +147,10 @@ function loadRequests() {
         list.innerHTML = '';
 
         items.forEach(({ uid, d, info }) => {
+            const businessText = d.isIndividual
+                ? 'Individual owner (no business)'
+                : (d.businessName || '—');
+
             const card = document.createElement('div');
             card.className = 'card';
             card.innerHTML = `
@@ -119,9 +158,11 @@ function loadRequests() {
                 <h3>${esc(d.businessName || 'Unnamed Business')}</h3>
 
                 <div class="user-info">
-                    <div><i class="fa fa-user"></i> <b>Name:</b> ${esc(info.name || '—')}</div>
+                    <div><i class="fa fa-user"></i> <b>Name (entered on form):</b> ${esc(d.fullName || '—')}</div>
+                    <div><i class="fa fa-user-circle"></i> <b>Account Name:</b> ${esc(info.name || '—')}</div>
                     <div><i class="fa fa-envelope"></i> <b>Email:</b> ${esc(info.email || '—')}</div>
                     <div><i class="fa fa-hashtag"></i> <b>TEP ID:</b> ${esc(info.epId || '—')}</div>
+                    <div><i class="fa fa-building"></i> <b>Business:</b> ${esc(businessText)}</div>
                     <div><i class="fa fa-id-card"></i> <b>ID Type:</b> ${esc(d.idType || '—')}</div>
                 </div>
 
@@ -131,17 +172,7 @@ function loadRequests() {
                 </p>
 
                 <div class="doc-grid">
-                    <div>
-                        <img src="${esc(d.idProofUrl)}" onclick="window.open(this.src)" title="Click to view full image">
-                        <div class="doc-label">📄 ID Proof</div>
-                    </div>
-
-                    <!-- PAYMENT BOX — HIDDEN (payment system aane par uncomment karna)
-                    <div>
-                        <img src="${esc(d.paymentUrl)}" onclick="window.open(this.src)" title="Click to view full image">
-                        <div class="doc-label">💳 Payment Screenshot</div>
-                    </div>
-                    -->
+                    ${buildDocsHtml(d)}
                 </div>
 
                 <div class="btn-group">
