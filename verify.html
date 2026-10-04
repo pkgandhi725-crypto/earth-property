@@ -62,6 +62,11 @@
         .rejected-reason { background: #ffebee; border-radius: 10px; padding: 15px; margin: 15px 0; text-align: left; border-left: 4px solid #d32f2f; }
         .rejected-reason p { margin: 5px 0; font-size: 14px; color: #333; }
         .rejected-reason strong { color: #d32f2f; }
+        .checkbox-row { display:flex; align-items:center; gap:8px; margin-bottom:12px; font-size:14px; color:#333; cursor:pointer; font-weight:normal; }
+        .checkbox-row input { width:auto; margin:0; }
+         input:disabled { background:#eee; cursor:not-allowed; }
+        .upload-btn.disabled { opacity:0.5; pointer-events:none; filter:grayscale(1); }
+        .upload-hint { font-size:12px; color:#888; margin-bottom:10px; }
     </style>
 </head>
 <body>
@@ -86,9 +91,19 @@
             <div class="tp"><i class="fa fa-gift"></i> Completely FREE — valid for 1 year</div>
         </div>
 
+        <!-- Full Name -->
+        <div class="form-group">
+            <label><i class="fa fa-user" style="color:#2e7d32;margin-right:6px;"></i>Your Full Name (as on ID)</label>
+            <input type="text" id="fullName" placeholder="e.g. Rahul Sharma">
+        </div>
+
         <!-- Business Name -->
         <div class="form-group">
             <label><i class="fa fa-building" style="color:#2e7d32;margin-right:6px;"></i>Business Name / Dealer Name</label>
+            <label class="checkbox-row">
+                <input type="checkbox" id="noBusiness">
+                I don't have a business (Individual owner)
+            </label>
             <input type="text" id="bizName" placeholder="e.g. Earth Real Estate">
         </div>
 
@@ -285,12 +300,21 @@
         <!-- ID Upload -->
         <div class="form-group">
             <label><i class="fa fa-upload" style="color:#2e7d32;margin-right:6px;"></i>Upload ID Photo</label>
-            <div class="upload-btn" onclick="document.getElementById('idInput').click()">
+            <div class="upload-hint">Pehle ID type select karo. Kam se kam 1 side upload karo (agar ID mein dono side details hain to dono karo).</div>
+
+            <div class="upload-btn disabled" id="frontBox" onclick="document.getElementById('idFrontInput').click()">
                 <i class="fa fa-id-card"></i> <br>
-                <span id="idLabel">Select ID Image</span>
-                <div id="idName" class="file-name"></div>
+                <span>ID Front Side</span>
+                <div id="frontName" class="file-name"></div>
             </div>
-            <input type="file" id="idInput" hidden accept="image/*">
+            <input type="file" id="idFrontInput" hidden accept="image/*">
+
+            <div class="upload-btn disabled" id="backBox" onclick="document.getElementById('idBackInput').click()">
+                <i class="fa fa-id-card"></i> <br>
+                <span>ID Back Side</span>
+                <div id="backName" class="file-name"></div>
+            </div>
+            <input type="file" id="idBackInput" hidden accept="image/*">
         </div>
 
         <!-- ===== PAYMENT SECTION — HIDDEN ===== -->
@@ -305,7 +329,7 @@
             <input type="file" id="payInput" hidden accept="image/*">
         </div>
 
-        <button class="btn-submit" id="submitBtn">
+        <button class="btn-submit" id="submitBtn" disabled>
             <i class="fa fa-paper-plane" style="margin-right:6px;"></i>Submit for Review
         </button>
 
@@ -413,10 +437,37 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-document.getElementById('idInput').onchange = (e) => {
-    idFile = e.target.files[0];
-    if (idFile) document.getElementById('idName').innerText = "Selected: " + idFile.name;
+let idFrontFile = null;
+let idBackFile = null;
+
+function updateUploadState() {
+    const typeChosen = !!document.getElementById('idType').value;
+    document.getElementById('frontBox').classList.toggle('disabled', !typeChosen);
+    document.getElementById('backBox').classList.toggle('disabled', !typeChosen);
+    document.getElementById('submitBtn').disabled = !(typeChosen && (idFrontFile || idBackFile));
+}
+
+document.getElementById('idType').onchange = updateUploadState;
+
+document.getElementById('idFrontInput').onchange = (e) => {
+    idFrontFile = e.target.files[0] || null;
+    document.getElementById('frontName').innerText = idFrontFile ? "Selected: " + idFrontFile.name : "";
+    updateUploadState();
 };
+
+document.getElementById('idBackInput').onchange = (e) => {
+    idBackFile = e.target.files[0] || null;
+    document.getElementById('backName').innerText = idBackFile ? "Selected: " + idBackFile.name : "";
+    updateUploadState();
+};
+
+document.getElementById('noBusiness').onchange = (e) => {
+    const biz = document.getElementById('bizName');
+    biz.disabled = e.target.checked;
+    if (e.target.checked) biz.value = '';
+};
+
+updateUploadState();
 
 // Payment file listener — kept for future use
 const payInput = document.getElementById('payInput');
@@ -441,36 +492,47 @@ async function uploadToCloudinary(file) {
 
 document.getElementById('submitBtn').onclick = async () => {
     const user = auth.currentUser;
-    const bizName = document.getElementById('bizName').value.trim();
+    const fullName = document.getElementById('fullName').value.trim();
+    const isIndividual = document.getElementById('noBusiness').checked;
+    const bizInput = document.getElementById('bizName').value.trim();
     const idType = document.getElementById('idType').value;
 
-    if (!bizName) return alert("Please enter your Business / Dealer Name!");
+    if (!fullName) return alert("Please enter your full name!");
+    if (!isIndividual && !bizInput) return alert("Please enter your Business / Dealer Name, or tick 'I don't have a business'.");
     if (!idType) return alert("Please select your ID type!");
-    if (!idFile) return alert("Please upload your ID photo!");
+    if (!idFrontFile && !idBackFile) return alert("Please upload at least one side of your ID!");
+
+    // Individual ho to full name hi dealer name ban jayega
+    const bizName = isIndividual ? fullName : bizInput;
 
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;
     btn.innerText = "Uploading... Please wait";
 
     try {
-        const idUrl = await uploadToCloudinary(idFile);
+        const idFrontUrl = idFrontFile ? await uploadToCloudinary(idFrontFile) : "";
+        const idBackUrl = idBackFile ? await uploadToCloudinary(idBackFile) : "";
 
-let profile = {};
-try {
-    const uSnap = await getDoc(doc(db, "users", user.uid));
-    if (uSnap.exists()) profile = uSnap.data();
-} catch (e) {
-    console.warn("Profile fetch failed:", e);
-}
+        let profile = {};
+        try {
+            const uSnap = await getDoc(doc(db, "users", user.uid));
+            if (uSnap.exists()) profile = uSnap.data();
+        } catch (e) {
+            console.warn("Profile fetch failed:", e);
+        }
 
-await setDoc(doc(db, "verification_requests", user.uid), {
-    userId: user.uid,
-    displayName: profile.displayName || user.displayName || "",
-    email: profile.email || user.email || "",
-    epId: profile.epId || "",
-    businessName: bizName,
+        await setDoc(doc(db, "verification_requests", user.uid), {
+            userId: user.uid,
+            displayName: profile.displayName || user.displayName || "",
+            email: profile.email || user.email || "",
+            epId: profile.epId || "",
+            fullName: fullName,
+            isIndividual: isIndividual,
+            businessName: bizName,
             idType: idType,
-            idProofUrl: idUrl,
+            idProofUrl: idFrontUrl || idBackUrl,
+            idFrontUrl: idFrontUrl,
+            idBackUrl: idBackUrl,
             // paymentUrl: null — hidden for now, will be added when payment re-enabled
             status: "pending",
             freeVerification: true,
@@ -482,8 +544,8 @@ await setDoc(doc(db, "verification_requests", user.uid), {
     } catch(e) {
         console.error("Submit Error:", e);
         alert("Error: " + e.message);
-        btn.disabled = false;
-        btn.innerText = "Submit for Review";
+        btn.innerHTML = '<i class="fa fa-paper-plane" style="margin-right:6px;"></i>Submit for Review';
+        updateUploadState();
     }
 };
 </script>
