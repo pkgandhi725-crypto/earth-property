@@ -1228,7 +1228,7 @@ async function submitProperty(){
     if(purpose==='RentSell'||purpose==='CommercialRentSell'){priceValue=Number(document.getElementById('rsSellPrice').value);currencyValue=document.getElementById('rsSelCurrency').value;rentPriceValue=Number(document.getElementById('rsRentPrice').value);rentCurrencyValue=document.getElementById('rsRentCurrency').value;if(priceValue<=0||rentPriceValue<=0)return showToast("Please enter both Sell Price and Rent Price","error");if(priceValue>1000000000000||rentPriceValue>1000000000000)return showToast("Price too large.","error");}
     else if(purpose==='Rent'||purpose==='PG'||purpose==='CommercialRent'){priceValue=Number(document.getElementById('rentPrice').value);currencyValue=document.getElementById('rentCurrency').value;if(priceValue<=0)return showToast("Please enter a valid price","error");if(priceValue>1000000000000)return showToast("Price too large.","error");}
     else{priceValue=Number(document.getElementById('price').value);currencyValue=document.getElementById('currency').value;if(priceValue<=0)return showToast("Please enter a valid price","error");if(priceValue>1000000000000)return showToast("Price too large.","error");}
-    if (isNonLatin(cityValue) || isNonLatin(stateValue)) {
+    {
     document.getElementById('postBtn').disabled=true;
     document.getElementById('postBtn').innerText="Processing...";
     const canon = await canonicalizeCity(cityValue, country, currentCoords.lat, currentCoords.lng);
