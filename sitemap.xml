@@ -164,13 +164,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://theearthproperty.com/city.html?name=india-haryana-</loc>
+    <loc>https://theearthproperty.com/city.html?name=india-haryana-dharuhera</loc>
     <lastmod>2026-10-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://theearthproperty.com/city.html?name=india-haryana-dharuhera</loc>
+    <loc>https://theearthproperty.com/city.html?name=india-haryana-gurgaon</loc>
     <lastmod>2026-10-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -279,6 +279,12 @@
   </url>
   <url>
     <loc>https://theearthproperty.com/city.html?name=indonesia-java-depok</loc>
+    <lastmod>2026-10-12</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://theearthproperty.com/city.html?name=mexico-quintana-roo-puerto-aventuras</loc>
     <lastmod>2026-10-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
