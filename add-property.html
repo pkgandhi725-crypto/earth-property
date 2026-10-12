@@ -1139,7 +1139,7 @@ function onAddressInput(){
 }
 
 async function fetchAddressSuggestions(query){
-    const url=`https://api.locationiq.com/v1/autocomplete?key=${LOCATIONIQ_KEY}&q=${encodeURIComponent(query)}&addressdetails=&limit=6&format=json&accept-language=en`;
+    const url=`https://api.locationiq.com/v1/autocomplete?key=${LOCATIONIQ_KEY}&q=${encodeURIComponent(query)}&addressdetails=1&limit=6&format=json&accept-language=en`;
     try{
         const res=await fetch(url);
         if(!res.ok){document.getElementById('addressDropdown').style.display='none';return;}
