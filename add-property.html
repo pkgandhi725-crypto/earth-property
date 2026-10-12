@@ -538,7 +538,7 @@ function toTitleCase(str) {
 async function resolveState(cityName, countryName, lat, lng) {
     if (lat != null && lng != null) {
         try {
-            const res = await fetch(`https://us1.locationiq.com/v1/reverse?key=${LOCATIONIQ_KEY}&lat=${lat}&lon=${lng}&format=json`);
+            const res = await fetch(`https://us1.locationiq.com/v1/reverse?key=${LOCATIONIQ_KEY}&lat=${lat}&lon=${lng}&format=json&accept-language=en`);
             const data = await res.json();
             if (data && data.address) {
                 const s = data.address.state || data.address.state_district || '';
@@ -548,7 +548,7 @@ async function resolveState(cityName, countryName, lat, lng) {
     }
     try {
         const q = encodeURIComponent(`${cityName}, ${countryName}`);
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1&addressdetails=1`);
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1&addressdetails=1&accept-language=en`);
         const data = await res.json();
         if (data && data[0] && data[0].address) {
             return data[0].address.state || data[0].address.state_district || '';
@@ -557,10 +557,31 @@ async function resolveState(cityName, countryName, lat, lng) {
     return '';
 }
 
+    function isNonLatin(s){ return /[^\u0000-\u024F\u1E00-\u1EFF\u2000-\u206F]/.test(String(s||'')); }
+
+async function canonicalizeCity(cityName, countryName, lat, lng) {
+    try {
+        let a = null, lt = lat, ln = lng;
+        if (lat != null && lng != null) {
+            const r = await fetch(`https://us1.locationiq.com/v1/reverse?key=${LOCATIONIQ_KEY}&lat=${lat}&lon=${lng}&format=json&addressdetails=1&accept-language=en`);
+            const d = await r.json(); a = d && d.address;
+        } else {
+            const r = await fetch(`https://us1.locationiq.com/v1/search?key=${LOCATIONIQ_KEY}&q=${encodeURIComponent(cityName + ', ' + countryName)}&format=json&limit=1&addressdetails=1&accept-language=en`);
+            const d = await r.json();
+            if (d && d[0]) { a = d[0].address; lt = parseFloat(d[0].lat); ln = parseFloat(d[0].lon); }
+        }
+        if (a) return { city: a.city || a.town || a.village || a.municipality || a.county || '', state: a.state || a.state_district || '', lat: lt, lng: ln };
+    } catch (e) { console.warn('canonicalizeCity failed:', e); }
+    return { city: '', state: '', lat, lng };
+}
+    
 async function ensureCityExists(cityName, countryName, stateName, lat, lng) {
     const dbg = (m) => console.log('[CITY]', m);
     if (!cityName || !countryName) { dbg('City ya country empty hai'); return; }
-    const slug = [countryName, stateName, cityName].filter(Boolean).map(normalizeSlug).join('-');
+    let cityPart = normalizeSlug(cityName);
+if (!cityPart && lat != null && lng != null) cityPart = normalizeSlug('loc ' + lat.toFixed(2) + ' ' + lng.toFixed(2));
+if (!cityPart) { dbg('City slug nahi bana, skip'); return; }
+const slug = [normalizeSlug(countryName), normalizeSlug(stateName), cityPart].filter(Boolean).join('-');
     if (!slug) { dbg('Slug empty bana'); return; }
     try {
         const ref = db.collection('cities').doc(slug);
@@ -1118,7 +1139,7 @@ function onAddressInput(){
 }
 
 async function fetchAddressSuggestions(query){
-    const url=`https://api.locationiq.com/v1/autocomplete?key=${LOCATIONIQ_KEY}&q=${encodeURIComponent(query)}&addressdetails=1&limit=6&format=json`;
+    const url=`https://api.locationiq.com/v1/autocomplete?key=${LOCATIONIQ_KEY}&q=${encodeURIComponent(query)}&addressdetails=&limit=6&format=json&accept-language=en`;
     try{
         const res=await fetch(url);
         if(!res.ok){document.getElementById('addressDropdown').style.display='none';return;}
@@ -1186,7 +1207,7 @@ async function submitProperty(){
     const country=document.getElementById('selectedCountry').value.trim();
     const purpose=document.getElementById('purpose').value;
     const finalImages=uploadedImages.map(img=>img||null);
-    const cityValue = document.getElementById('city').value.trim();
+    let cityValue = document.getElementById('city').value.trim();
     let stateValue = document.getElementById('detectedState').value.trim();
     if(!country)return showToast("Please select a country","error");
     const phoneCountry=document.getElementById('selectedPhoneCountry').value.trim()||country;
@@ -1202,6 +1223,14 @@ async function submitProperty(){
     if(purpose==='RentSell'||purpose==='CommercialRentSell'){priceValue=Number(document.getElementById('rsSellPrice').value);currencyValue=document.getElementById('rsSelCurrency').value;rentPriceValue=Number(document.getElementById('rsRentPrice').value);rentCurrencyValue=document.getElementById('rsRentCurrency').value;if(priceValue<=0||rentPriceValue<=0)return showToast("Please enter both Sell Price and Rent Price","error");if(priceValue>1000000000000||rentPriceValue>1000000000000)return showToast("Price too large.","error");}
     else if(purpose==='Rent'||purpose==='PG'||purpose==='CommercialRent'){priceValue=Number(document.getElementById('rentPrice').value);currencyValue=document.getElementById('rentCurrency').value;if(priceValue<=0)return showToast("Please enter a valid price","error");if(priceValue>1000000000000)return showToast("Price too large.","error");}
     else{priceValue=Number(document.getElementById('price').value);currencyValue=document.getElementById('currency').value;if(priceValue<=0)return showToast("Please enter a valid price","error");if(priceValue>1000000000000)return showToast("Price too large.","error");}
+    if (isNonLatin(cityValue) || isNonLatin(stateValue)) {
+    document.getElementById('postBtn').disabled=true;
+    document.getElementById('postBtn').innerText="Processing...";
+    const canon = await canonicalizeCity(cityValue, country, currentCoords.lat, currentCoords.lng);
+    if (canon.city && !isNonLatin(canon.city)) { cityValue = canon.city; document.getElementById('city').value = cityValue; }
+    if (canon.state && !isNonLatin(canon.state)) stateValue = canon.state;
+}
+
     if(!editId && !stateValue){
     document.getElementById('postBtn').disabled=true;
     document.getElementById('postBtn').innerText="Processing...";
@@ -1244,7 +1273,7 @@ function confirmGPSCapture(){
         btn.disabled=false;btnIcon.textContent='✅';btnText.textContent='GPS Captured';
         try{
             btnText.textContent='Fetching address...';
-            const url=`https://us1.locationiq.com/v1/reverse?key=${LOCATIONIQ_KEY}&lat=${currentCoords.lat}&lon=${currentCoords.lng}&format=json`;
+            const url=`https://us1.locationiq.com/v1/reverse?key=${LOCATIONIQ_KEY}&lat=${currentCoords.lat}&lon=${currentCoords.lng}&format=json&accept-language=en`;
             const res=await fetch(url);
             const data=await res.json();
             if(data&&data.address){
