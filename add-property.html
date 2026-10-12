@@ -560,21 +560,26 @@ async function resolveState(cityName, countryName, lat, lng) {
     function isNonLatin(s){ return /[^\u0000-\u024F\u1E00-\u1EFF\u2000-\u206F]/.test(String(s||'')); }
 
 async function canonicalizeCity(cityName, countryName, lat, lng) {
+    const out = { city: '', strong: false, state: '' };
     try {
-        let a = null, lt = lat, ln = lng;
+        let a = null;
         if (lat != null && lng != null) {
             const r = await fetch(`https://us1.locationiq.com/v1/reverse?key=${LOCATIONIQ_KEY}&lat=${lat}&lon=${lng}&format=json&addressdetails=1&accept-language=en`);
             const d = await r.json(); a = d && d.address;
         } else {
             const r = await fetch(`https://us1.locationiq.com/v1/search?key=${LOCATIONIQ_KEY}&q=${encodeURIComponent(cityName + ', ' + countryName)}&format=json&limit=1&addressdetails=1&accept-language=en`);
-            const d = await r.json();
-            if (d && d[0]) { a = d[0].address; lt = parseFloat(d[0].lat); ln = parseFloat(d[0].lon); }
+            const d = await r.json(); a = d && d[0] && d[0].address;
         }
-        if (a) return { city: a.city || a.town || a.village || a.municipality || a.county || '', state: a.state || a.state_district || '', lat: lt, lng: ln };
+        if (a) {
+            const strong = a.city || a.town || a.municipality || '';
+            const weak = a.village || a.county || '';
+            out.city = strong || weak;
+            out.strong = !!strong;
+            out.state = a.state || a.state_district || '';
+        }
     } catch (e) { console.warn('canonicalizeCity failed:', e); }
-    return { city: '', state: '', lat, lng };
-}
-    
+    return out;
+}    
 async function ensureCityExists(cityName, countryName, stateName, lat, lng) {
     const dbg = (m) => console.log('[CITY]', m);
     if (!cityName || !countryName) { dbg('City ya country empty hai'); return; }
@@ -1227,7 +1232,10 @@ async function submitProperty(){
     document.getElementById('postBtn').disabled=true;
     document.getElementById('postBtn').innerText="Processing...";
     const canon = await canonicalizeCity(cityValue, country, currentCoords.lat, currentCoords.lng);
-    if (canon.city && !isNonLatin(canon.city)) { cityValue = canon.city; document.getElementById('city').value = cityValue; }
+    if (canon.city && !isNonLatin(canon.city) && (canon.strong || isNonLatin(cityValue))) {
+        cityValue = canon.city;
+        document.getElementById('city').value = cityValue;
+    }
     if (canon.state && !isNonLatin(canon.state)) stateValue = canon.state;
 }
 
