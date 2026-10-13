@@ -1232,6 +1232,7 @@ async function submitProperty(){
     document.getElementById('postBtn').disabled=true;
     document.getElementById('postBtn').innerText="Processing...";
     const canon = await canonicalizeCity(cityValue, country, currentCoords.lat, currentCoords.lng);
+        alert('DBG typed=' + cityValue + ' | ' + JSON.stringify(canon) + ' | pin=' + currentCoords.lat + ',' + currentCoords.lng);
     if (canon.city && !isNonLatin(canon.city) && (canon.strong || isNonLatin(cityValue))) {
         cityValue = canon.city;
         document.getElementById('city').value = cityValue;
