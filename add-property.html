@@ -483,6 +483,7 @@ let uploadedImages=[null,null,null,null,null,null,null],uploadingCount=0,activeS
 let currentCoords={lat:null,lng:null},slotMode=[null,null,null,'photo','photo','photo','photo'];
 let currentUserVerified=false,currentUserBizName="",currentUserEpId="";
 const urlParams=new URLSearchParams(window.location.search),editId=urlParams.get('edit');
+let originalCity='';
 
 // =============================================
 // 💱 USD NORMALIZATION — for accurate cross-currency price filtering later
@@ -1042,6 +1043,7 @@ async function loadEditData(id,uid){
     else{if(data.price)document.getElementById('price').value=data.price;if(data.currency)document.getElementById('currency').value=data.currency;}
     document.getElementById('location').value=data.location||'';document.getElementById('city').value=data.city||'';document.getElementById('desc').value=data.description||'';document.getElementById('size').value=data.size||'';document.getElementById('nearby').value=data.nearby||'';document.getElementById('lotArea').value=data.lotArea||'';document.getElementById('floorArea').value=data.floorArea||'';
     if(data.state)document.getElementById('detectedState').value=data.state;
+    originalCity=(data.city||'').trim();
     if(data.country){const c=COUNTRIES.find(x=>x.name===data.country);if(c)selectCountry(c.name,c.flag);else{document.getElementById('countrySearch').value=data.country;document.getElementById('selectedCountry').value=data.country;document.getElementById('countryClearBtn').style.display='block';}}
     // Restore calling number's country (always follows saved phoneCountry, fallback to property country)
     const savedPhoneCountry = data.phoneCountry || data.country || 'India';
@@ -1252,12 +1254,15 @@ async function submitProperty(){
     {
     document.getElementById('postBtn').disabled=true;
     document.getElementById('postBtn').innerText="Processing...";
-    const canon = await canonicalizeCity(cityValue, country, currentCoords.lat, currentCoords.lng);
-    if (canon.city && !isNonLatin(canon.city) && (canon.strong || isNonLatin(cityValue))) {
-        cityValue = canon.city;
-        document.getElementById('city').value = cityValue;
+        const cityManuallyEdited = !!editId && cityValue !== originalCity;
+    if (!cityManuallyEdited) {
+        const canon = await canonicalizeCity(cityValue, country, currentCoords.lat, currentCoords.lng);
+        if (canon.city && !isNonLatin(canon.city) && (canon.strong || isNonLatin(cityValue))) {
+            cityValue = canon.city;
+            document.getElementById('city').value = cityValue;
+        }
+        if (canon.state && !isNonLatin(canon.state)) stateValue = canon.state;
     }
-    if (canon.state && !isNonLatin(canon.state)) stateValue = canon.state;
             cityValue = applyCityAlias(cityValue, country);
     document.getElementById('city').value = cityValue;
 }
