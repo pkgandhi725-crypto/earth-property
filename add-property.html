@@ -558,6 +558,27 @@ async function resolveState(cityName, countryName, lat, lng) {
 }
 
     function isNonLatin(s){ return /[^\u0000-\u024F\u1E00-\u1EFF\u2000-\u206F]/.test(String(s||'')); }
+    const CITY_ALIASES = {
+    "India": {
+        "gurgaon":"Gurugram", "bombay":"Mumbai", "bangalore":"Bengaluru",
+        "banaras":"Varanasi", "benares":"Varanasi", "calcutta":"Kolkata",
+        "madras":"Chennai", "poona":"Pune", "allahabad":"Prayagraj",
+        "baroda":"Vadodara", "trivandrum":"Thiruvananthapuram",
+        "cochin":"Kochi", "pondicherry":"Puducherry",
+        "mysore":"Mysuru", "mangalore":"Mangaluru"
+    },
+    "Myanmar": { "rangoon":"Yangon" },
+    "Ukraine": { "kiev":"Kyiv" },
+    "Vietnam": { "saigon":"Ho Chi Minh City" },
+    "China": { "peking":"Beijing" }
+};
+
+function applyCityAlias(city, country) {
+    const map = CITY_ALIASES[country];
+    if (!map) return city;
+    const key = String(city || '').trim().toLowerCase();
+    return map[key] || city;
+}
 
 async function canonicalizeCity(cityName, countryName, lat, lng) {
     const out = { city: '', strong: false, state: '' };
