@@ -958,15 +958,14 @@ auth.onAuthStateChanged(user=>{
         if(adminIcon) adminIcon.style.display='none';
         if(adminSideBtn) adminSideBtn.style.display='none';
     }
-    locationReady.then(() => {
-        if (userLocation) {
-            activeSort = 'nearest';
-            updateSortButtonsUI('nearest');
-            loadAllForNearest();
-        } else {
-            loadProperties();
-        }
-    });
+        if (!window._tepFirstLoad) {
+        window._tepFirstLoad = true;
+        loadProperties(); // hamesha 20 latest
+        locationReady.then(() => {
+            // location aate hi sirf distance badge ke liye dobara render (0 reads)
+            if (userLocation && isDataLoaded && !nearMode && window.scrollY < 200) renderAds(displayedAds);
+        });
+    }
 });
 
 function handleLogout() {
