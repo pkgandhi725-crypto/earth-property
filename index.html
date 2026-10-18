@@ -1049,7 +1049,11 @@ function loadProperties(isLoadMore=false) {
     });
 }
 
-function loadMoreProperties() { if(hasMoreAds&&!isLoading) loadProperties(true); }
+function loadMoreProperties() {
+    if (isLoading) return;
+    if (nearMode) { if (nearHasMore) loadAllForNearest(true); return; }
+    if (hasMoreAds) loadProperties(true);
+}
 
 function formatPrice(price, currency) {
     const sym = CURRENCY_SYMBOLS[currency] || currency || '₹';
