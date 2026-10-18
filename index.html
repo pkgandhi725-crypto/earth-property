@@ -871,19 +871,10 @@ async function toggleFavorite(propId) {
 }
 
 function listenForNotifications(uid) {
-    db.collection("notifications")
-        .where("recipientId", "==", uid)
-        .where("read", "==", false)
-        .limit(20)
-        .onSnapshot(snap => {
-            const b = document.getElementById('bellBadge');
-            if (snap.size > 0) {
-                b.innerText = snap.size >= 20 ? '20+' : snap.size;
-                b.style.display = 'flex';
-            } else {
-                b.style.display = 'none';
-            }
-        });
+    db.collection("notifications").where("recipientId","==",uid).where("read","==",false).onSnapshot(snap=>{
+        const b=document.getElementById('bellBadge');
+        if(snap.size>0){b.innerText=snap.size;b.style.display='flex';}else b.style.display='none';
+    });
 }
 
 async function assignEpIdIfNew(user) {
@@ -958,14 +949,16 @@ auth.onAuthStateChanged(user=>{
         if(adminIcon) adminIcon.style.display='none';
         if(adminSideBtn) adminSideBtn.style.display='none';
     }
-        if (!window._tepFirstLoad) {
-        window._tepFirstLoad = true;
-        loadProperties(); // hamesha 20 latest
-        locationReady.then(() => {
-            // location aate hi sirf distance badge ke liye dobara render (0 reads)
-            if (userLocation && isDataLoaded && !nearMode && window.scrollY < 200) renderAds(displayedAds);
-        });
-    }
+    runCleanupIfNeeded();
+    locationReady.then(() => {
+        if (userLocation) {
+            activeSort = 'nearest';
+            updateSortButtonsUI('nearest');
+            loadAllForNearest();
+        } else {
+            loadProperties();
+        }
+    });
 });
 
 function handleLogout() {
@@ -992,10 +985,6 @@ function showOfflineState() {
 function loadProperties(isLoadMore=false) {
     if(isLoading) return;
     if(!navigator.onLine) { showOfflineState(); return; }
-    if (!isLoadMore) {
-    lastVisible = null;
-    hasMoreAds = true;
-    }
     isLoading=true;
     const btn=document.getElementById('loadMoreBtn');
     if(isLoadMore&&btn){btn.disabled=true;btn.innerHTML='<span class="loading-spinner"></span>';}
@@ -1022,16 +1011,11 @@ function loadProperties(isLoadMore=false) {
             lastVisible=snap.docs[snap.docs.length-1];
             document.getElementById('loadMoreContainer').style.display='block';
         }
-        if (userLocation && activeSort === 'nearest') {
-    displayedAds = sortByProximity(displayedAds);
-}
+        if(userLocation) displayedAds=sortByProximity(displayedAds);
         isDataLoaded=true;
 
         if(isLoadMore){
-            const toRender =
-    (userLocation && activeSort === 'nearest')
-        ? sortByProximity(newAds)
-        : newAds;
+            const toRender = userLocation ? sortByProximity(newAds) : newAds;
             renderAds(toRender, true);
         } else {
             renderAds(displayedAds, false);
@@ -1049,11 +1033,7 @@ function loadProperties(isLoadMore=false) {
     });
 }
 
-function loadMoreProperties() {
-    if (isLoading) return;
-    if (nearMode) { if (nearHasMore) loadAllForNearest(true); return; }
-    if (hasMoreAds) loadProperties(true);
-}
+function loadMoreProperties() { if(hasMoreAds&&!isLoading) loadProperties(true); }
 
 function formatPrice(price, currency) {
     const sym = CURRENCY_SYMBOLS[currency] || currency || '₹';
@@ -1313,7 +1293,7 @@ if (matchedCity) {
     }
 
     // Search active — Firestore queries
-    if (val.length < 3) {
+    if (val.length < 2) {
         // Too short, just client-side filter
         filtered = filtered.filter(a =>
             (a.location || '').toLowerCase().includes(valLower) ||
@@ -1334,24 +1314,28 @@ if (matchedCity) {
         </div>`;
     document.getElementById('loadMoreContainer').style.display = 'none';
 
-        const titleCase = val.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    const valEnd = val + '\uf8ff';
+    const valCapitalized = val.charAt(0).toUpperCase() + val.slice(1).toLowerCase();
+    const valUpper = val.toUpperCase();
 
-    // "starts with" search, koi composite index nahi chahiye (status neeche client-side check hota hai)
-    const prefixQuery = (field, startVal) =>
+    const makeQuery = (field, startVal) =>
         db.collection('properties')
+            .where('status', '==', 'active')
             .where(field, '>=', startVal)
             .where(field, '<=', startVal + '\uf8ff')
-            .limit(15)
-            .get()
-            .catch(err => { console.warn('Search query failed:', field, err.message); return { docs: [] }; });
+            .limit(50)
+            .get();
 
-    const tries = [['city', titleCase], ['city', val.toLowerCase()], ['location', titleCase], ['location', val], ['title', titleCase], ['country', titleCase]];
-    const seenQ = new Set();
-    const jobs = tries
-        .filter(([f, v]) => { const k = f + '|' + v; if (seenQ.has(k)) return false; seenQ.add(k); return true; })
-        .map(([f, v]) => prefixQuery(f, v));
-
-    Promise.all(jobs).then(snapshots => {
+    Promise.all([
+        makeQuery('country', val),
+        makeQuery('country', valCapitalized),
+        makeQuery('country', valUpper),
+        makeQuery('location', val),
+        makeQuery('location', valCapitalized),
+        makeQuery('location', valUpper),
+        makeQuery('title', val),
+        makeQuery('title', valCapitalized),
+    ]).then(snapshots => {
         const seen = new Set();
         let results = [];
 
@@ -1375,7 +1359,6 @@ if (matchedCity) {
             snap.docs.forEach(doc => {
                 if (!seen.has(doc.id)) {
                     const data = { id: doc.id, ...doc.data() };
-                    if (data.status && data.status !== 'active') return;
                     // Filter expired
                     if (data.isExpired === true) return;
                     if (data.expiryDate && data.expiryDate.toDate() < new Date()) return;
@@ -1424,7 +1407,7 @@ if (matchedCity) {
     });
 }
 
-function filterAds() { clearTimeout(searchTimeout); searchTimeout=setTimeout(applyFilterAndSearch,700); }
+function filterAds() { clearTimeout(searchTimeout); searchTimeout=setTimeout(applyFilterAndSearch,300); }
 
 function contact(num,type,title) {
     if(!num||num==='undefined'||num==='null'||String(num).trim()===''){showToast('No contact number available');return;}
@@ -1496,183 +1479,40 @@ function setSort(type) {
         );
         return;
     }
-        if (type === 'latest' && nearMode) {
-        exitNearMode();
-        loadProperties();
-        return;
-        }
 
     applyFilterAndSearch();
 }
 
-// ===== NEAR ME: sirf 20 posts =====
-const CITIES_CACHE_KEY = 'tep_cities_v1';
-const CITIES_TTL = 6 * 60 * 60 * 1000;
-const NEAR_MIN_ADS = 8; // itni se kam mili toh latest dikhayenge
-let citiesPromise = null;
-let nearCityLoaded = false;
-
-function getCities() {
-    if (citiesPromise) return citiesPromise;
-    citiesPromise = (async () => {
-        try {
-            const raw = localStorage.getItem(CITIES_CACHE_KEY);
-            if (raw) {
-                const o = JSON.parse(raw);
-                if (o && Array.isArray(o.d) && Date.now() - o.t < CITIES_TTL) return o.d;
-            }
-        } catch (e) {}
-        const snap = await db.collection('cities').where('isActive', '==', true).get();
-        const list = snap.docs.map(d => {
-            const c = d.data();
-            return { name: c.name, slug: c.slug || d.id, lat: c.lat, lng: c.lng, country: c.country || '', state: c.state || '' };
-        }).filter(c => c.name);
-        try { localStorage.setItem(CITIES_CACHE_KEY, JSON.stringify({ t: Date.now(), d: list })); } catch (e) {}
-        return list;
-    })().catch(err => {
-        console.warn('Cities load error:', err);
-        citiesPromise = null;
-        return [];
-    });
-    return citiesPromise;
-}
-
-function nearestCity(cities) {
-    if (!userLocation) return null;
-    let best = null, bestD = Infinity;
-    cities.forEach(c => {
-        const lat = Number(c.lat), lng = Number(c.lng);
-        if (!lat || !lng) return;
-        const d = calculateDistance(userLocation.lat, userLocation.lng, lat, lng);
-        if (d < bestD) { bestD = d; best = c; }
-    });
-    return (best && bestD <= 100) ? best : null;
-}
-
-function cityNameVariants(name) {
-    const title = String(name).trim().toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-    return [...new Set([name, name.toLowerCase(), name.toUpperCase(), title])];
-}
-
-// ===== NEARBY: 20-20, latest se kabhi nahi bharega =====
-let nearMode = false;
-let nearCity = null;
-let nearLast = null;
-let nearHasMore = false;
-let nearLocKey = null;
-
-function exitNearMode() {
-    nearMode = false; nearCity = null; nearLast = null; nearHasMore = false; nearLocKey = null;
-    const bar = document.getElementById('nearCityBar');
-    if (bar) bar.style.display = 'none';
-}
-
-function showNearBar(city) {
-    let bar = document.getElementById('nearCityBar');
-    if (!bar) {
-        bar = document.createElement('div');
-        bar.id = 'nearCityBar';
-        const list = document.getElementById('propertyList');
-        list.parentNode.insertBefore(bar, list);
-    }
-    const btnStyle = 'padding:7px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;';
-    bar.style.cssText = 'margin:12px;padding:12px 14px;background:white;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,0.06);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;';
-    bar.innerHTML =
-        '<div style="font-size:13px;font-weight:700;color:#333;">' + (city ? '📍 Near ' + sanitize(city.name) : '📍 No city page near you yet') + '</div>' +
-        '<div style="display:flex;gap:8px;">' +
-        (city ? '<button id="nearCityGo" style="' + btnStyle + 'border:none;background:#2e7d32;color:white;">All in city</button>' : '') +
-        '<button id="nearCityAll" style="' + btnStyle + 'border:1.5px solid #ddd;background:white;color:#555;">Latest</button></div>';
-    const go = document.getElementById('nearCityGo');
-    if (go) go.onclick = () => { location.href = 'city.html?name=' + encodeURIComponent(normalizeSlug(city.slug)); };
-    document.getElementById('nearCityAll').onclick = () => {
-        exitNearMode();
-        activeSort = 'latest';
-        updateSortButtonsUI('latest');
-        loadProperties();
-    };
-}
-
-function renderNearEmpty(msg) {
-    document.getElementById('propertyList').innerHTML =
-        '<div style="text-align:center;padding:50px 25px;">' +
-        '<i class="fa fa-location-dot" style="font-size:46px;opacity:0.2;display:block;margin-bottom:16px;color:#888;"></i>' +
-        '<div style="font-size:15px;font-weight:700;color:#555;margin-bottom:6px;">' + msg + '</div>' +
-        '<div style="font-size:12px;color:#999;">Tap "Latest" to browse all properties</div></div>';
+async function loadAllForNearest() {
+    if(!navigator.onLine) { showOfflineState(); return; }
+    document.getElementById('propertyList').innerHTML = `
+        <div style="text-align:center;padding:60px 20px;">
+            <div class="loading-spinner" style="border-top-color:#2e7d32;border-color:rgba(46,125,50,0.2);width:36px;height:36px;margin:0 auto 15px;"></div>
+            <div style="font-size:14px;color:#888;font-weight:600;">📍 Finding nearest properties...</div>
+        </div>`;
     document.getElementById('loadMoreContainer').style.display = 'none';
-}
-
-async function loadAllForNearest(isLoadMore) {
-    if (isLoading) return;
-    if (!navigator.onLine) { showOfflineState(); return; }
-
-    const locKey = userLocation ? userLocation.lat.toFixed(1) + ',' + userLocation.lng.toFixed(1) : '';
-    if (!isLoadMore && nearMode && isDataLoaded && nearLocKey === locKey) { applyFilterAndSearch(); return; }
-
-    const btn = document.getElementById('loadMoreBtn');
-    isLoading = true;
-    if (!isLoadMore) {
-        nearMode = true; nearLocKey = locKey; nearLast = null; nearHasMore = false;
-        document.getElementById('propertyList').innerHTML = `
-            <div style="text-align:center;padding:60px 20px;">
-                <div class="loading-spinner" style="border-top-color:#2e7d32;border-color:rgba(46,125,50,0.2);width:36px;height:36px;margin:0 auto 15px;"></div>
-                <div style="font-size:14px;color:#888;font-weight:600;">📍 Finding properties near you...</div>
-            </div>`;
-        document.getElementById('loadMoreContainer').style.display = 'none';
-    } else if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<span class="loading-spinner"></span>';
-    }
 
     try {
-        if (!isLoadMore) {
-            nearCity = nearestCity(await getCities());
-            showNearBar(nearCity);
-            if (!nearCity) {
-                allAds = []; displayedAds = []; hasMoreAds = false; isDataLoaded = true;
-                renderNearEmpty('No city page near you yet');
-                return;
-            }
-        }
-
-        let q = db.collection('properties')
-            .where('status', '==', 'active')
-            .where('city', 'in', cityNameVariants(nearCity.name))
-            .limit(ADS_PER_PAGE);
-        if (isLoadMore && nearLast) q = q.startAfter(nearLast);
-        const snap = await q.get();
-
-        const ads = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(ad => {
+        const snap = await db.collection('properties').where('status', '==', 'active').get();
+        const all = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(ad => {
             if (ad.isExpired === true) return false;
             if (ad.expiryDate && ad.expiryDate.toDate() < new Date()) return false;
             return true;
         });
-        if (snap.docs.length) nearLast = snap.docs[snap.docs.length - 1];
-        nearHasMore = snap.docs.length === ADS_PER_PAGE;
-        hasMoreAds = nearHasMore;
+        allAds = all;
+        hasMoreAds = false;
+        nearestFullyLoaded = true;
         isDataLoaded = true;
-
-        if (isLoadMore) {
-            const page = sortByProximity(ads);
-            allAds = [...allAds, ...ads];
-            displayedAds = [...displayedAds, ...page];
-            renderAds(page, true);
-        } else if (ads.length === 0) {
-            allAds = []; displayedAds = [];
-            renderNearEmpty('No properties near ' + sanitize(nearCity.name) + ' yet');
-        } else {
-            allAds = ads;
-            applyFilterAndSearch();
-        }
-        document.getElementById('loadMoreContainer').style.display = nearHasMore ? 'block' : 'none';
+        applyFilterAndSearch();
+        showToast('✅ Showing nearest properties!');
     } catch (e) {
-        console.error('Nearby load error:', e);
-        isDataLoaded = true;
-        renderNearEmpty('Could not load nearby properties. Please try again.');
-    } finally {
-        isLoading = false;
-        if (btn) { btn.disabled = false; btn.innerHTML = '<span id="loadMoreText">' + (getT().loadMore || 'Load More') + '</span>'; }
+        console.error('Nearest load error:', e);
+        showToast('Could not load nearest properties. Showing latest instead.');
+        activeSort = 'latest';
+        updateSortButtonsUI('latest');
+        loadProperties();
     }
-} 
+}
 
 function initLocationCard() {
     if (localStorage.getItem('locationCardDismissed')) return;
@@ -1779,7 +1619,17 @@ window.addEventListener('load', () => {
 
 let allCitiesCache = [];
 
-getCities().then(list => { allCitiesCache = list; });
+function preloadCitiesForSearch() {
+    db.collection('cities').where('isActive', '==', true).get()
+        .then(snap => {
+            allCitiesCache = snap.docs
+    .map(d => { const c = d.data(); return { ...c, slug: c.slug || d.id }; })
+    .filter(c => c.name);
+        })
+        .catch(err => console.warn('City preload error:', err));
+}
+
+preloadCitiesForSearch();
     
 let cityTree = null;
 let cityDrawerLoading = false;
@@ -1842,20 +1692,29 @@ function loadCityDrawerList() {
     if (cityTree) { cdShowCountries(); return; }
     if (cityDrawerLoading) return;
     cityDrawerLoading = true;
-    getCities().then(list => {
-        const tree = {};
-        list.forEach(c => {
-            const cName = String(c.country || '').trim() || 'Other';
-            const sName = String(c.state || '').trim() || 'Other';
-            const ck = cName.toLowerCase(), sk = sName.toLowerCase();
-            if (!tree[ck]) tree[ck] = { name: cName, states: {} };
-            if (!tree[ck].states[sk]) tree[ck].states[sk] = { name: sName, cities: [] };
-            tree[ck].states[sk].cities.push({ name: c.name, slug: c.slug });
+    db.collection('cities').where('isActive', '==', true).get()
+        .then(snap => {
+            const tree = {};
+            snap.docs.forEach(d => {
+                const c = d.data();
+                if (!c.name) return;
+                const slug = c.slug || d.id;
+                const cName = String(c.country || '').trim() || 'Other';
+                const sName = String(c.state || '').trim() || 'Other';
+                const ck = cName.toLowerCase(), sk = sName.toLowerCase();
+                if (!tree[ck]) tree[ck] = { name: cName, states: {} };
+                if (!tree[ck].states[sk]) tree[ck].states[sk] = { name: sName, cities: [] };
+                tree[ck].states[sk].cities.push({ name: c.name, slug: slug });
+            });
+            cityTree = tree;
+            cdShowCountries();
+        })
+        .catch(err => {
+            console.error('City drawer load error:', err);
+            cityDrawerLoading = false;
+            document.getElementById('citySubmenu').innerHTML =
+                '<div class="drawer-item" style="padding-left:35px;color:#c0392b;">Could not load cities</div>';
         });
-        cityTree = tree;
-        cityDrawerLoading = false;
-        cdShowCountries();
-    });
 }
     // Search/Enter key support
 document.getElementById('searchInput').addEventListener('keydown', function (e) {
