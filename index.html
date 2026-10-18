@@ -871,9 +871,9 @@ async function toggleFavorite(propId) {
 }
 
 function listenForNotifications(uid) {
-    db.collection("notifications").where("recipientId","==",uid).where("read","==",false).onSnapshot(snap=>{
+    db.collection("notifications").where("recipientId", "==", uid).where("read", "==", false).limit(20).onSnapshot(snap => {
         const b=document.getElementById('bellBadge');
-        if(snap.size>0){b.innerText=snap.size;b.style.display='flex';}else b.style.display='none';
+        if (snap.size > 0) {b.innerText = snap.size >= 20 ? '20+' : snap.size;b.style.display = 'flex';} else {b.style.display = 'none';
     });
 }
 
@@ -949,7 +949,6 @@ auth.onAuthStateChanged(user=>{
         if(adminIcon) adminIcon.style.display='none';
         if(adminSideBtn) adminSideBtn.style.display='none';
     }
-    runCleanupIfNeeded();
     locationReady.then(() => {
         if (userLocation) {
             activeSort = 'nearest';
@@ -1483,33 +1482,117 @@ function setSort(type) {
     applyFilterAndSearch();
 }
 
+// ===== NEAR ME: sirf 20 posts =====
+const CITIES_CACHE_KEY = 'tep_cities_v1';
+const CITIES_TTL = 6 * 60 * 60 * 1000;
+const NEAR_MIN_ADS = 8; // itni se kam mili toh latest dikhayenge
+let citiesPromise = null;
+let nearCityLoaded = false;
+
+function getCities() {
+    if (citiesPromise) return citiesPromise;
+    citiesPromise = (async () => {
+        try {
+            const raw = localStorage.getItem(CITIES_CACHE_KEY);
+            if (raw) {
+                const o = JSON.parse(raw);
+                if (o && Array.isArray(o.d) && Date.now() - o.t < CITIES_TTL) return o.d;
+            }
+        } catch (e) {}
+        const snap = await db.collection('cities').where('isActive', '==', true).get();
+        const list = snap.docs.map(d => {
+            const c = d.data();
+            return { name: c.name, slug: c.slug || d.id, lat: c.lat, lng: c.lng, country: c.country || '', state: c.state || '' };
+        }).filter(c => c.name);
+        try { localStorage.setItem(CITIES_CACHE_KEY, JSON.stringify({ t: Date.now(), d: list })); } catch (e) {}
+        return list;
+    })().catch(err => {
+        console.warn('Cities load error:', err);
+        citiesPromise = null;
+        return [];
+    });
+    return citiesPromise;
+}
+
+function nearestCity(cities) {
+    if (!userLocation) return null;
+    let best = null, bestD = Infinity;
+    cities.forEach(c => {
+        const lat = Number(c.lat), lng = Number(c.lng);
+        if (!lat || !lng) return;
+        const d = calculateDistance(userLocation.lat, userLocation.lng, lat, lng);
+        if (d < bestD) { bestD = d; best = c; }
+    });
+    return (best && bestD <= 100) ? best : null;
+}
+
+function cityNameVariants(name) {
+    const title = String(name).trim().toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    return [...new Set([name, name.toLowerCase(), name.toUpperCase(), title])];
+}
+
+function showNearCityBar(city) {
+    let bar = document.getElementById('nearCityBar');
+    if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'nearCityBar';
+        const list = document.getElementById('propertyList');
+        list.parentNode.insertBefore(bar, list);
+    }
+    bar.style.cssText = 'margin:12px;padding:12px 14px;background:white;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,0.06);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;';
+    bar.innerHTML = '<div style="font-size:13px;font-weight:700;color:#333;">📍 Near ' + sanitize(city.name) + '</div>' +
+        '<div style="display:flex;gap:8px;">' +
+        '<button id="nearCityGo" style="padding:7px 12px;border:none;border-radius:20px;background:#2e7d32;color:white;font-size:11px;font-weight:700;cursor:pointer;">All in city</button>' +
+        '<button id="nearCityAll" style="padding:7px 12px;border:1.5px solid #ddd;border-radius:20px;background:white;color:#555;font-size:11px;font-weight:700;cursor:pointer;">Latest everywhere</button>' +
+        '</div>';
+    document.getElementById('nearCityGo').onclick = () => { location.href = 'city.html?name=' + encodeURIComponent(normalizeSlug(city.slug)); };
+    document.getElementById('nearCityAll').onclick = () => {
+        bar.style.display = 'none';
+        nearCityLoaded = false;
+        activeSort = 'latest';
+        updateSortButtonsUI('latest');
+        loadProperties();
+    };
+}
+
 async function loadAllForNearest() {
-    if(!navigator.onLine) { showOfflineState(); return; }
+    if (!navigator.onLine) { showOfflineState(); return; }
+    if (nearCityLoaded && allAds.length) { applyFilterAndSearch(); return; }
+
     document.getElementById('propertyList').innerHTML = `
         <div style="text-align:center;padding:60px 20px;">
             <div class="loading-spinner" style="border-top-color:#2e7d32;border-color:rgba(46,125,50,0.2);width:36px;height:36px;margin:0 auto 15px;"></div>
-            <div style="font-size:14px;color:#888;font-weight:600;">📍 Finding nearest properties...</div>
+            <div style="font-size:14px;color:#888;font-weight:600;">📍 Finding properties near you...</div>
         </div>`;
     document.getElementById('loadMoreContainer').style.display = 'none';
 
     try {
-        const snap = await db.collection('properties').where('status', '==', 'active').get();
-        const all = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(ad => {
-            if (ad.isExpired === true) return false;
-            if (ad.expiryDate && ad.expiryDate.toDate() < new Date()) return false;
-            return true;
-        });
-        allAds = all;
-        hasMoreAds = false;
-        nearestFullyLoaded = true;
-        isDataLoaded = true;
-        applyFilterAndSearch();
-        showToast('✅ Showing nearest properties!');
+        const cities = await getCities();
+        const near = nearestCity(cities);
+        if (near) {
+            const snap = await db.collection('properties')
+                .where('status', '==', 'active')
+                .where('city', 'in', cityNameVariants(near.name))
+                .limit(20)
+                .get();
+            const ads = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(ad => {
+                if (ad.isExpired === true) return false;
+                if (ad.expiryDate && ad.expiryDate.toDate() < new Date()) return false;
+                return true;
+            });
+            if (ads.length >= NEAR_MIN_ADS) {
+                allAds = ads;
+                hasMoreAds = false;
+                isDataLoaded = true;
+                nearCityLoaded = true;
+                applyFilterAndSearch();
+                showNearCityBar(near);
+                return;
+            }
+        }
+        loadProperties(); // paas mein city nahi / kam listings → 20 latest
     } catch (e) {
-        console.error('Nearest load error:', e);
-        showToast('Could not load nearest properties. Showing latest instead.');
-        activeSort = 'latest';
-        updateSortButtonsUI('latest');
+        console.error('Near-me load error:', e);
         loadProperties();
     }
 }
@@ -1619,17 +1702,7 @@ window.addEventListener('load', () => {
 
 let allCitiesCache = [];
 
-function preloadCitiesForSearch() {
-    db.collection('cities').where('isActive', '==', true).get()
-        .then(snap => {
-            allCitiesCache = snap.docs
-    .map(d => { const c = d.data(); return { ...c, slug: c.slug || d.id }; })
-    .filter(c => c.name);
-        })
-        .catch(err => console.warn('City preload error:', err));
-}
-
-preloadCitiesForSearch();
+getCities().then(list => { allCitiesCache = list; });
     
 let cityTree = null;
 let cityDrawerLoading = false;
@@ -1692,29 +1765,20 @@ function loadCityDrawerList() {
     if (cityTree) { cdShowCountries(); return; }
     if (cityDrawerLoading) return;
     cityDrawerLoading = true;
-    db.collection('cities').where('isActive', '==', true).get()
-        .then(snap => {
-            const tree = {};
-            snap.docs.forEach(d => {
-                const c = d.data();
-                if (!c.name) return;
-                const slug = c.slug || d.id;
-                const cName = String(c.country || '').trim() || 'Other';
-                const sName = String(c.state || '').trim() || 'Other';
-                const ck = cName.toLowerCase(), sk = sName.toLowerCase();
-                if (!tree[ck]) tree[ck] = { name: cName, states: {} };
-                if (!tree[ck].states[sk]) tree[ck].states[sk] = { name: sName, cities: [] };
-                tree[ck].states[sk].cities.push({ name: c.name, slug: slug });
-            });
-            cityTree = tree;
-            cdShowCountries();
-        })
-        .catch(err => {
-            console.error('City drawer load error:', err);
-            cityDrawerLoading = false;
-            document.getElementById('citySubmenu').innerHTML =
-                '<div class="drawer-item" style="padding-left:35px;color:#c0392b;">Could not load cities</div>';
+    getCities().then(list => {
+        const tree = {};
+        list.forEach(c => {
+            const cName = String(c.country || '').trim() || 'Other';
+            const sName = String(c.state || '').trim() || 'Other';
+            const ck = cName.toLowerCase(), sk = sName.toLowerCase();
+            if (!tree[ck]) tree[ck] = { name: cName, states: {} };
+            if (!tree[ck].states[sk]) tree[ck].states[sk] = { name: sName, cities: [] };
+            tree[ck].states[sk].cities.push({ name: c.name, slug: c.slug });
         });
+        cityTree = tree;
+        cityDrawerLoading = false;
+        cdShowCountries();
+    });
 }
     // Search/Enter key support
 document.getElementById('searchInput').addEventListener('keydown', function (e) {
