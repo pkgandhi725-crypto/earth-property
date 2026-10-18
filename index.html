@@ -992,6 +992,10 @@ function showOfflineState() {
 function loadProperties(isLoadMore=false) {
     if(isLoading) return;
     if(!navigator.onLine) { showOfflineState(); return; }
+    if (!isLoadMore) {
+    lastVisible = null;
+    hasMoreAds = true;
+    }
     isLoading=true;
     const btn=document.getElementById('loadMoreBtn');
     if(isLoadMore&&btn){btn.disabled=true;btn.innerHTML='<span class="loading-spinner"></span>';}
@@ -1024,7 +1028,10 @@ function loadProperties(isLoadMore=false) {
         isDataLoaded=true;
 
         if(isLoadMore){
-            const toRender = userLocation ? sortByProximity(newAds) : newAds;
+            const toRender =
+    (userLocation && activeSort === 'nearest')
+        ? sortByProximity(newAds)
+        : newAds;
             renderAds(toRender, true);
         } else {
             renderAds(displayedAds, false);
