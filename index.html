@@ -1313,7 +1313,7 @@ if (matchedCity) {
     }
 
     // Search active — Firestore queries
-    if (val.length < 2) {
+    if (val.length < 3) {
         // Too short, just client-side filter
         filtered = filtered.filter(a =>
             (a.location || '').toLowerCase().includes(valLower) ||
@@ -1334,28 +1334,24 @@ if (matchedCity) {
         </div>`;
     document.getElementById('loadMoreContainer').style.display = 'none';
 
-    const valEnd = val + '\uf8ff';
-    const valCapitalized = val.charAt(0).toUpperCase() + val.slice(1).toLowerCase();
-    const valUpper = val.toUpperCase();
+        const titleCase = val.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 
-    const makeQuery = (field, startVal) =>
+    // "starts with" search, koi composite index nahi chahiye (status neeche client-side check hota hai)
+    const prefixQuery = (field, startVal) =>
         db.collection('properties')
-            .where('status', '==', 'active')
             .where(field, '>=', startVal)
             .where(field, '<=', startVal + '\uf8ff')
-            .limit(50)
-            .get();
+            .limit(15)
+            .get()
+            .catch(err => { console.warn('Search query failed:', field, err.message); return { docs: [] }; });
 
-    Promise.all([
-        makeQuery('country', val),
-        makeQuery('country', valCapitalized),
-        makeQuery('country', valUpper),
-        makeQuery('location', val),
-        makeQuery('location', valCapitalized),
-        makeQuery('location', valUpper),
-        makeQuery('title', val),
-        makeQuery('title', valCapitalized),
-    ]).then(snapshots => {
+    const tries = [['city', titleCase], ['city', val.toLowerCase()], ['location', titleCase], ['location', val], ['title', titleCase], ['country', titleCase]];
+    const seenQ = new Set();
+    const jobs = tries
+        .filter(([f, v]) => { const k = f + '|' + v; if (seenQ.has(k)) return false; seenQ.add(k); return true; })
+        .map(([f, v]) => prefixQuery(f, v));
+
+    Promise.all(jobs).then(snapshots => {
         const seen = new Set();
         let results = [];
 
@@ -1379,6 +1375,7 @@ if (matchedCity) {
             snap.docs.forEach(doc => {
                 if (!seen.has(doc.id)) {
                     const data = { id: doc.id, ...doc.data() };
+                    if (data.status && data.status !== 'active') return;
                     // Filter expired
                     if (data.isExpired === true) return;
                     if (data.expiryDate && data.expiryDate.toDate() < new Date()) return;
