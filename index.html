@@ -871,10 +871,19 @@ async function toggleFavorite(propId) {
 }
 
 function listenForNotifications(uid) {
-    db.collection("notifications").where("recipientId", "==", uid).where("read", "==", false).limit(20).onSnapshot(snap => {
-        const b=document.getElementById('bellBadge');
-        if (snap.size > 0) {b.innerText = snap.size >= 20 ? '20+' : snap.size;b.style.display = 'flex';} else {b.style.display = 'none';
-    });
+    db.collection("notifications")
+        .where("recipientId", "==", uid)
+        .where("read", "==", false)
+        .limit(20)
+        .onSnapshot(snap => {
+            const b = document.getElementById('bellBadge');
+            if (snap.size > 0) {
+                b.innerText = snap.size >= 20 ? '20+' : snap.size;
+                b.style.display = 'flex';
+            } else {
+                b.style.display = 'none';
+            }
+        });
 }
 
 async function assignEpIdIfNew(user) {
