@@ -1018,7 +1018,9 @@ function loadProperties(isLoadMore=false) {
             lastVisible=snap.docs[snap.docs.length-1];
             document.getElementById('loadMoreContainer').style.display='block';
         }
-        if(userLocation) displayedAds=sortByProximity(displayedAds);
+        if (userLocation && activeSort === 'nearest') {
+    displayedAds = sortByProximity(displayedAds);
+}
         isDataLoaded=true;
 
         if(isLoadMore){
