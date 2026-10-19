@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Geo Test</title>
+</head>
+<body style="font-family:sans-serif;padding:16px;font-size:16px;">
+<h3>Geo Test</h3>
+<pre id="out">Running...</pre>
+<script src="geo-utils.js"></script>
+<script>
+var out = document.getElementById('out');
+try {
+  var h = TEPGeo.geohashEncode(57.64911, 10.40744, 11);
+  var cells = TEPGeo.planNearbyCells(28.6139, 77.2090, 20, 5);
+  out.textContent =
+    'Test 1 (expected u4pruydqqvj):\n' + h + '\n' + (h === 'u4pruydqqvj' ? 'PASS' : 'FAIL') +
+    '\n\nTest 2 (expected about 70 to 90 cells):\n' + cells.length +
+    '\nNearest cell: ' + cells[0].prefix + ' (' + cells[0].minDistKm.toFixed(2) + ' km)' +
+    '\nFarthest cell: ' + cells[cells.length-1].minDistKm.toFixed(1) + ' km';
+} catch (e) {
+  out.textContent = 'ERROR: ' + e.message;
+}
+</script>
+</body>
+</html>
