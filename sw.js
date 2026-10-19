@@ -33,10 +33,9 @@ const NAV_TIMEOUT_MS = 5000; // if network takes longer than this on a page load
 const urlsToCache = [
   "/",
   "/index.html",
-  "/post.html",
   "/login.html",
-  "/signup.html",
-  "/myposts.html",
+  "/add-property.html",
+  "/my-ads.html",
   "/manifest.json",
   "/icon-192.png",
   "/icon-512.png",
