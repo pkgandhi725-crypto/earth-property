@@ -27,7 +27,7 @@ messaging.onBackgroundMessage(function(payload) {
 // (city.html, price-filter.js, geo-utils.js, index.html, etc.)
 // Bumping it forces old cached files to be purged on next app open —
 // without this, installed-app users can get stuck on stale code.
-const CACHE_NAME = "the-earth-property-v4";
+const CACHE_NAME = "the-earth-property-v5";
 const NAV_TIMEOUT_MS = 5000; // if network takes longer than this on a page load, fall back to cache
 
 const urlsToCache = [
