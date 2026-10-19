@@ -472,7 +472,8 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script> 
+<script src="geo-utils.js"></script>
 <script>
 const firebaseConfig={apiKey:"AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",authDomain:"earth-properties-c3c56.firebaseapp.com",projectId:"earth-properties-c3c56"};
 if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
@@ -1273,6 +1274,9 @@ async function submitProperty(){
     stateValue = await resolveState(cityValue, country, currentCoords.lat, currentCoords.lng);
     }
     const propertyData={title,price:priceValue,currency:currencyValue,priceUSD:toUSD(priceValue,currencyValue),phone,whatsapp,phoneCountry,whatsappCountry:(sameAsCallingNumber?phoneCountry:whatsappCountry),sameAsCallingNumber,purpose,size:document.getElementById('size').value,lotArea:document.getElementById('lotArea').value.trim(),floorArea:document.getElementById('floorArea').value.trim(),location,country,city:cityValue,state:stateValue,description:document.getElementById('desc').value.trim(),nearby:document.getElementById('nearby').value,images:finalImages,latitude:currentCoords.lat,longitude:currentCoords.lng,amenities:Array.from(selectedAmenities),status:"active",updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+        propertyData.geohash = (window.TEPGeo && currentCoords.lat != null && currentCoords.lng != null)
+        ? TEPGeo.geohashEncode(currentCoords.lat, currentCoords.lng, 9)
+        : null;
     if(purpose==='RentSell'||purpose==='CommercialRentSell'){propertyData.sellPrice=priceValue;propertyData.sellCurrency=currencyValue;propertyData.sellPriceUSD=toUSD(priceValue,currencyValue);propertyData.rentPrice=rentPriceValue;propertyData.rentCurrency=rentCurrencyValue;propertyData.rentPriceUSD=toUSD(rentPriceValue,rentCurrencyValue);}
     if(purpose==='Rent')propertyData.rentDetails={furnished:document.getElementById('furnished').value,bills:document.getElementById('bills').value,advance:document.getElementById('advance').value,maintenance:document.getElementById('maintenance').value};
     if(purpose==='Plot')propertyData.plotDetails={area:document.getElementById('plotArea').value,roadFacing:document.getElementById('plotRoadFacing').value,corner:document.getElementById('plotCorner').value};
