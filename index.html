@@ -914,6 +914,8 @@ function hideNavForGuest() { document.querySelectorAll('.guest-hidden').forEach(
 
 auth.onAuthStateChanged(user=>{
     currentUser=user;
+    isAdminUser = !!(user && user.uid === ADMIN_UID);
+    document.getElementById('sortBar').style.display = isAdminUser ? 'flex' : 'none';
     const logoutBtn=document.getElementById('logoutBtn');
     const adminIcon=document.getElementById('adminIcon');
     const adminSideBtn=document.getElementById('adminSideBtn');
@@ -960,13 +962,15 @@ auth.onAuthStateChanged(user=>{
         if(adminSideBtn) adminSideBtn.style.display='none';
     }
     runCleanupIfNeeded();
-    locationReady.then(() => {
+        locationReady.then(() => {
         if (userLocation) {
             activeSort = 'nearest';
             updateSortButtonsUI('nearest');
             loadAllForNearest();
-        } else {
+        } else if (isAdminUser) {
             loadProperties();
+        } else {
+            showNoLocationState();
         }
     });
 });
@@ -993,6 +997,7 @@ function showOfflineState() {
 }
 
 function loadProperties(isLoadMore=false) {
+    if(!isAdminUser) return;
     if(isLoading) return;
     if(!navigator.onLine) { showOfflineState(); return; }
     isLoading=true;
@@ -1021,11 +1026,11 @@ function loadProperties(isLoadMore=false) {
             lastVisible=snap.docs[snap.docs.length-1];
             document.getElementById('loadMoreContainer').style.display='block';
         }
-        if(userLocation) displayedAds=sortByProximity(displayedAds);
+                if(userLocation && activeSort==='nearest') displayedAds=sortByProximity(displayedAds);
         isDataLoaded=true;
 
         if(isLoadMore){
-            const toRender = userLocation ? sortByProximity(newAds) : newAds;
+        const toRender = (userLocation && activeSort==='nearest') ? sortByProximity(newAds) : newAds;
             renderAds(toRender, true);
         } else {
             renderAds(displayedAds, false);
@@ -1043,7 +1048,10 @@ function loadProperties(isLoadMore=false) {
     });
 }
 
-function loadMoreProperties() { if(hasMoreAds&&!isLoading) loadProperties(true); }
+function loadMoreProperties() {
+    if (activeSort === 'nearest') { if (nearbyPager && hasMoreAds) loadMoreNearby(true); return; }
+    if (isAdminUser && hasMoreAds && !isLoading) loadProperties(true);
+}
 
 function formatPrice(price, currency) {
     const sym = CURRENCY_SYMBOLS[currency] || currency || '₹';
@@ -1455,73 +1463,144 @@ function updateSortButtonsUI(type) {
 }
 
 function setSort(type) {
+    if (type === 'latest' && !isAdminUser) return;
     activeSort = type;
     updateSortButtonsUI(type);
     trackEvent('sort_click', { sort_type: type });
 
-    if (type === 'nearest') {
-        // Already have a location (GPS or IP, from auto-detect) — just re-sort/reload
-        if (userLocation) { loadAllForNearest(); return; }
-
-        if (!navigator.geolocation) {
-            showToast('📍 GPS not supported. Trying approximate location...');
-            tryIPLocation().then(loc => {
-                if (loc) { userLocation = { lat: loc.lat, lng: loc.lng }; locationSource = 'ip'; loadAllForNearest(); }
-                else { showToast('Could not detect your location.'); activeSort = 'latest'; updateSortButtonsUI('latest'); }
-            });
-            return;
-        }
-
-        showToast('📍 Fetching your location...');
-        navigator.geolocation.getCurrentPosition(
-            pos => {
-                userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-                locationSource = 'gps';
-                loadAllForNearest();
-            },
-            () => {
-                showToast('📍 GPS denied. Using approximate location...');
-                tryIPLocation().then(loc => {
-                    if (loc) { userLocation = { lat: loc.lat, lng: loc.lng }; locationSource = 'ip'; loadAllForNearest(); }
-                    else { showToast('Could not detect your location.'); activeSort = 'latest'; updateSortButtonsUI('latest'); }
-                });
-            }
-        );
+    if (type === 'latest') {
+        allAds = []; displayedAds = []; lastVisible = null; hasMoreAds = true; isDataLoaded = false;
+        document.getElementById('nearbyNote').style.display = 'none';
+        document.getElementById('nearbyEnd').style.display = 'none';
+        showListSpinner('Loading latest...');
+        loadProperties(false);
         return;
     }
 
-    applyFilterAndSearch();
+    if (userLocation) { loadAllForNearest(); return; }
+
+    if (!navigator.geolocation) {
+        showToast('📍 GPS not supported. Trying approximate location...');
+        tryIPLocation().then(loc => {
+            if (loc) { userLocation = { lat: loc.lat, lng: loc.lng }; locationSource = 'ip'; loadAllForNearest(); }
+            else { showToast('Could not detect your location.'); showNoLocationState(); }
+        });
+        return;
+    }
+
+    showToast('📍 Fetching your location...');
+    navigator.geolocation.getCurrentPosition(
+        pos => {
+            userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            locationSource = 'gps';
+            loadAllForNearest();
+        },
+        () => {
+            showToast('📍 GPS denied. Using approximate location...');
+            tryIPLocation().then(loc => {
+                if (loc) { userLocation = { lat: loc.lat, lng: loc.lng }; locationSource = 'ip'; loadAllForNearest(); }
+                else { showToast('Could not detect your location.'); showNoLocationState(); }
+            });
+        }
+    );
 }
 
-async function loadAllForNearest() {
-    if(!navigator.onLine) { showOfflineState(); return; }
+function showListSpinner(msg) {
     document.getElementById('propertyList').innerHTML = `
         <div style="text-align:center;padding:60px 20px;">
             <div class="loading-spinner" style="border-top-color:#2e7d32;border-color:rgba(46,125,50,0.2);width:36px;height:36px;margin:0 auto 15px;"></div>
-            <div style="font-size:14px;color:#888;font-weight:600;">📍 Finding nearest properties...</div>
+            <div style="font-size:14px;color:#888;font-weight:600;">${msg}</div>
         </div>`;
     document.getElementById('loadMoreContainer').style.display = 'none';
+}
 
+function nearbyFiltersActive() {
+    return activeFilter !== 'all'
+        || document.getElementById('searchInput').value.trim() !== ''
+        || (typeof activePriceRange !== 'undefined' && !!activePriceRange);
+}
+
+function updateNearbyNote() {
+    const el = document.getElementById('nearbyNote');
+    if (!el) return;
+    if (!userLocation || activeSort !== 'nearest') { el.style.display = 'none'; return; }
+    el.style.display = 'block';
+    el.innerHTML = locationSource === 'ip'
+        ? '📍 Showing properties near your approximate location. <a href="#" onclick="requestLocationPermission();return false;" style="color:#2e7d32;font-weight:700;">Use GPS</a> for better results.'
+        : '📍 Properties near you';
+}
+
+function showNoLocationState() {
+    isDataLoaded = true; isLoading = false;
+    document.getElementById('propertyList').innerHTML = `
+        <div style="text-align:center;padding:60px 30px;">
+            <i class="fa fa-location-dot" style="font-size:50px;opacity:0.25;display:block;margin-bottom:20px;color:#888;"></i>
+            <div style="font-size:17px;font-weight:700;color:#555;margin-bottom:8px;">Location needed</div>
+            <div style="font-size:13px;color:#999;margin-bottom:18px;line-height:1.5;">Allow location to see properties near you, or search for an area.</div>
+            <button onclick="requestLocationPermission()" style="background:#2e7d32;color:white;border:none;padding:11px 26px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;">📍 Allow Location</button>
+        </div>`;
+    document.getElementById('loadMoreContainer').style.display = 'none';
+}
+
+function showNearbyEmpty(done) {
+    isDataLoaded = true;
+    const title = done ? 'No properties found in this area.' : 'No properties found nearby yet.';
+    const hint = done ? 'Try searching for a location or browse by city.' : 'Tap Load More to search a wider area.';
+    document.getElementById('propertyList').innerHTML = `
+        <div style="text-align:center;padding:60px 30px;">
+            <i class="fa fa-location-dot" style="font-size:50px;opacity:0.25;display:block;margin-bottom:20px;color:#888;"></i>
+            <div style="font-size:17px;font-weight:700;color:#555;margin-bottom:8px;">${title}</div>
+            <div style="font-size:13px;color:#999;margin-bottom:18px;line-height:1.5;">${hint}</div>
+            <button onclick="toggleDrawer()" style="background:#2e7d32;color:white;border:none;padding:11px 26px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;">Explore by City</button>
+        </div>`;
+}
+
+async function loadAllForNearest() {
+    if (!navigator.onLine) { showOfflineState(); return; }
+    if (!userLocation) { showNoLocationState(); return; }
     try {
-        const snap = await db.collection('properties').where('status', '==', 'active').get();
-        const all = snap.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(ad => {
-            if (ad.isExpired === true) return false;
-            if (ad.expiryDate && ad.expiryDate.toDate() < new Date()) return false;
-            return true;
-        });
-        allAds = all;
-        hasMoreAds = false;
-        nearestFullyLoaded = true;
+        nearbyPager = TEPGeo.createNearbyPager(db, { lat: userLocation.lat, lng: userLocation.lng, radiusKm: NEARBY_RADIUS_KM, precision: 5 });
+    } catch (e) { console.error(e); showToast('Could not start nearby search.'); return; }
+    nearbyLoading = false;
+    allAds = []; displayedAds = []; hasMoreAds = true; isDataLoaded = false;
+    document.getElementById('nearbyEnd').style.display = 'none';
+    updateNearbyNote();
+    showListSpinner('📍 Finding properties near you...');
+    await loadMoreNearby(false);
+}
+
+async function loadMoreNearby(isLoadMore) {
+    if (nearbyLoading || !nearbyPager) return;
+    nearbyLoading = true;
+    const btn = document.getElementById('loadMoreBtn');
+    if (isLoadMore && btn) { btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span>'; }
+    try {
+        let res, guard = 0;
+        do { res = await nearbyPager.loadNext(NEARBY_PAGE_SIZE); guard++; }
+        while (res.items.length === 0 && !res.done && guard < 3);
+
         isDataLoaded = true;
-        applyFilterAndSearch();
-        showToast('✅ Showing nearest properties!');
-    } catch (e) {
-        console.error('Nearest load error:', e);
-        showToast('Could not load nearest properties. Showing latest instead.');
-        activeSort = 'latest';
-        updateSortButtonsUI('latest');
-        loadProperties();
+        hasMoreAds = !res.done;
+        allAds = allAds.concat(res.items);
+        displayedAds = allAds.slice();
+
+        if (allAds.length === 0) { showNearbyEmpty(res.done); }
+        else if (nearbyFiltersActive()) { applyFilterAndSearch(); }
+        else { renderAds(res.items, isLoadMore); }
+
+        document.getElementById('loadMoreContainer').style.display = res.done ? 'none' : 'block';
+        document.getElementById('nearbyEnd').style.display = (res.done && allAds.length > 0) ? 'block' : 'none';
+        trackEvent('nearby_load', { count: res.items.length, reads: res.reads });
+    } catch (err) {
+        console.error('Nearby load error:', err);
+        if (isLoadMore) { showToast('Could not load more properties.'); }
+        else {
+            isDataLoaded = true;
+            document.getElementById('propertyList').innerHTML = '<center style="margin-top:50px;color:#d32f2f;padding:20px;">❌ Error loading properties.<br><small>' + err.message + '</small></center>';
+        }
     }
+    nearbyLoading = false;
+    if (btn) { btn.disabled = false; btn.innerHTML = '<span id="loadMoreText">' + (getT().loadMore || 'Load More') + '</span>'; }
 }
 
 function initLocationCard() {
@@ -1743,7 +1822,8 @@ setTimeout(initLocationCard, 2000);
 window.addEventListener('online', () => {
     if (!isDataLoaded || document.getElementById('propertyList').innerHTML.includes('No Internet Connection')) {
         showToast('✅ Back online! Loading properties...');
-        loadProperties();
+        if (userLocation && activeSort === 'nearest') loadAllForNearest();
+        else if (isAdminUser) loadProperties();
     }
 });
 </script>
