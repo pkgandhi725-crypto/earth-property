@@ -1,3 +1,4 @@
+
 /* ==========================================================
    price-filter-integration.js — Earth Property (TEP)
    Wires the PriceFilter panel (price-filter.js) into index.html's
@@ -87,56 +88,194 @@ function applyPriceRangeFilter(arr) {
     });
 }
 
-// ---------- Full re-definition of applyFilterAndSearch (original + price filter) ----------
-// NOTE: property price is always stored in the `price` field regardless of
-// purpose (add-property.html sets priceValue -> price for every case,
-// including RentSell where price = sellPrice). So filtering on `a.price`
-// matches exactly what's shown on each card.
+// ---------- City search (paged, same query shape as the city page) ----------
+let citySearch = null;
+const SEARCH_PAGE_SIZE = 20;
+const SEARCH_CITY_ALIASES = {
+    gurgaon: 'gurugram', bombay: 'mumbai', bangalore: 'bengaluru', calcutta: 'kolkata',
+    madras: 'chennai', poona: 'pune', allahabad: 'prayagraj', baroda: 'vadodara',
+    trivandrum: 'thiruvananthapuram', cochin: 'kochi', pondicherry: 'puducherry',
+    mysore: 'mysuru', mangalore: 'mangaluru', banaras: 'varanasi', benares: 'varanasi'
+};
+
+function findSearchCity(val) {
+    let v = String(val || '').trim().toLowerCase();
+    if (v.length < 3) return null;
+    v = SEARCH_CITY_ALIASES[v] || v;
+    const exact = allCitiesCache.find(c => c.name.toLowerCase() === v);
+    if (exact) return exact;
+    const starts = allCitiesCache.filter(c => c.name.toLowerCase().startsWith(v));
+    return starts.length === 1 ? starts[0] : null;
+}
+
+function matchesPurpose(a) {
+    if (activeFilter === 'all') return true;
+    const p = (a.purpose || '').toLowerCase();
+    if (activeFilter === 'buy') return p === 'sell';
+    if (activeFilter === 'rent') return p === 'rent';
+    if (activeFilter === 'rentsell') return p === 'rentsell';
+    if (activeFilter === 'plot') return p === 'plot';
+    if (activeFilter === 'commercial') return p.startsWith('commercial');
+    if (activeFilter === 'pg') return p === 'pg' || p === 'pg/hostel';
+    return true;
+}
+
+function renderCitySearch() {
+    if (!citySearch) return;
+    let list = applyPriceRangeFilter(citySearch.items.filter(matchesPurpose));
+    displayedAds = list;
+    isDataLoaded = true;
+    renderAds(list);
+    document.getElementById('loadMoreContainer').style.display = citySearch.done ? 'none' : 'block';
+}
+
+async function loadCitySearchPage(isMore) {
+    const cs = citySearch;
+    if (!cs || cs.loading) return;
+    cs.loading = true;
+    const btn = document.getElementById('loadMoreBtn');
+    if (isMore && btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading-spinner"></span>';
+    }
+
+    try {
+        const n = cs.city.name;
+        let q = db.collection('properties')
+            .where('city', 'in', [n, n.toUpperCase(), n.toLowerCase()])
+            .where('isExpired', '==', false)
+            .orderBy('createdAt', 'desc')
+            .limit(SEARCH_PAGE_SIZE);
+
+        if (cs.last) q = q.startAfter(cs.last);
+
+        const snap = await q.get();
+        if (citySearch !== cs) return;
+
+        const now = new Date();
+        const items = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(a => {
+            if (a.status && a.status !== 'active') return false;
+            if (a.expiryDate && a.expiryDate.toDate() < now) return false;
+            return true;
+        });
+
+        if (snap.docs.length) cs.last = snap.docs[snap.docs.length - 1];
+        cs.done = snap.docs.length < SEARCH_PAGE_SIZE;
+        cs.items = cs.items.concat(items);
+
+        renderCitySearch();
+        trackEvent('search', { search_term: n });
+
+    } catch (err) {
+        console.error('City search error:', err);
+        if (citySearch === cs) {
+            isDataLoaded = true;
+            document.getElementById('propertyList').innerHTML =
+                '<center style="margin-top:50px;color:#d32f2f;padding:20px;">❌ Search failed.<br><small>' +
+                err.message +
+                '</small></center>';
+        }
+    } finally {
+        cs.loading = false;
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<span id="loadMoreText">' + (getT().loadMore || 'Load More') + '</span>';
+        }
+    }
+}
+
+// ---------- Full re-definition of applyFilterAndSearch ----------
 function applyFilterAndSearch() {
     const val = document.getElementById('searchInput').value.trim();
     const valLower = val.toLowerCase();
+    const nearbyEnd = document.getElementById('nearbyEnd');
 
-    let filtered = [...allAds];
+    // City banner
+    const banner = document.getElementById('cityMatchBanner');
+    const matchedCity = val ? findSearchCity(val) : null;
 
-    if (activeFilter !== 'all') {
-        filtered = filtered.filter(a => {
-            const p = (a.purpose || '').toLowerCase();
-            if (activeFilter === 'buy') return p === 'sell';
-            if (activeFilter === 'rent') return p === 'rent';
-            if (activeFilter === 'rentsell') return p === 'rentsell';
-            if (activeFilter === 'plot') return p === 'plot';
-            if (activeFilter === 'commercial') return p === 'commercial';
-            if (activeFilter === 'pg') return p === 'pg' || p === 'pg/hostel';
-            return true;
-        });
+    if (matchedCity) {
+        document.getElementById('cityMatchName').innerText = matchedCity.name;
+        banner.style.display = 'flex';
+        banner.onclick = () => {
+            trackEvent('city_banner_click', {
+                city: matchedCity.name,
+                slug: matchedCity.slug
+            });
+            location.href = 'city.html?name=' + encodeURIComponent(normalizeSlug(matchedCity.slug));
+        };
+    } else {
+        banner.style.display = 'none';
     }
 
-    filtered = applyPriceRangeFilter(filtered);
+    // 1) Known city -> paged city query (20 per load)
+    if (matchedCity) {
+        nearbyEnd.style.display = 'none';
+        document.getElementById('nearbyNote').style.display = 'none';
 
+        if (!citySearch || citySearch.city.slug !== matchedCity.slug) {
+            citySearch = {
+                city: matchedCity,
+                items: [],
+                last: null,
+                done: false,
+                loading: false
+            };
+            showListSpinner('Searching ' + matchedCity.name + '...');
+            loadCitySearchPage(false);
+        } else {
+            renderCitySearch();
+        }
+        return;
+    }
+
+    citySearch = null;
+
+    let filtered = applyPriceRangeFilter(allAds.filter(matchesPurpose));
+
+    // 2) No search text -> normal feed
     if (!val) {
         if (activeSort === 'nearest' && userLocation) {
             filtered = sortByProximity(filtered);
         } else {
-            filtered = filtered.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+            filtered = filtered.sort((a, b) =>
+                (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
+            );
         }
+
         displayedAds = filtered;
-        renderAds(displayedAds);
+
+        if (allAds.length === 0 && activeSort === 'nearest' && !hasMoreAds) {
+            showNearbyEmpty(true);
+        } else {
+            renderAds(displayedAds);
+        }
+
         document.getElementById('loadMoreContainer').style.display = hasMoreAds ? 'block' : 'none';
+        nearbyEnd.style.display =
+            (!hasMoreAds && allAds.length > 0 && activeSort === 'nearest') ? 'block' : 'none';
+        updateNearbyNote();
         return;
     }
 
-    if (val.length < 2) {
+    nearbyEnd.style.display = 'none';
+
+    // 3) Short text -> only filter what is already loaded (no Firestore reads)
+    if (val.length < 3) {
         filtered = filtered.filter(a =>
             (a.location || '').toLowerCase().includes(valLower) ||
             (a.title || '').toLowerCase().includes(valLower) ||
+            (a.city || '').toLowerCase().includes(valLower) ||
             (a.country || '').toLowerCase().includes(valLower)
         );
+
         displayedAds = filtered;
         renderAds(displayedAds);
         document.getElementById('loadMoreContainer').style.display = 'none';
         return;
     }
 
+    // 4) Area / country / title text -> prefix search
     document.getElementById('propertyList').innerHTML = `
         <div style="text-align:center;padding:60px 20px;">
             <div class="loading-spinner" style="border-top-color:#2e7d32;border-color:rgba(46,125,50,0.2);width:36px;height:36px;margin:0 auto 15px;"></div>
@@ -172,6 +311,7 @@ function applyFilterAndSearch() {
             if (
                 (a.location || '').toLowerCase().includes(valLower) ||
                 (a.title || '').toLowerCase().includes(valLower) ||
+                (a.city || '').toLowerCase().includes(valLower) ||
                 (a.country || '').toLowerCase().includes(valLower) ||
                 (a.description || '').toLowerCase().includes(valLower)
             ) {
@@ -194,26 +334,10 @@ function applyFilterAndSearch() {
             });
         });
 
-        if (activeFilter !== 'all') {
-            results = results.filter(a => {
-                const p = (a.purpose || '').toLowerCase();
-                if (activeFilter === 'buy') return p === 'sell';
-                if (activeFilter === 'rent') return p === 'rent';
-                if (activeFilter === 'rentsell') return p === 'rentsell';
-                if (activeFilter === 'plot') return p === 'plot';
-                if (activeFilter === 'commercial') return p === 'commercial';
-                if (activeFilter === 'pg') return p === 'pg' || p === 'pg/hostel';
-                return true;
-            });
-        }
-
-        results = applyPriceRangeFilter(results);
-
-        if (activeSort === 'nearest' && userLocation) {
-            results = sortByProximity(results);
-        } else {
-            results = results.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-        }
+        results = applyPriceRangeFilter(results.filter(matchesPurpose));
+        results = results.sort((a, b) =>
+            (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
+        );
 
         displayedAds = results;
         renderAds(displayedAds);
@@ -227,7 +351,8 @@ function applyFilterAndSearch() {
             (a.title || '').toLowerCase().includes(valLower) ||
             (a.country || '').toLowerCase().includes(valLower)
         );
-        displayedAds = applyPriceRangeFilter(fallback);
+
+        displayedAds = applyPriceRangeFilter(fallback.filter(matchesPurpose));
         renderAds(displayedAds);
     });
 }
