@@ -311,24 +311,16 @@
         <div style="display:flex; align-items:center; gap:10px;">
             <div style="font-size:28px;">📍</div>
             <div>
-                <div style="font-weight:700; font-size:14px; color:#333;">See properties near you!</div>
-                <div style="font-size:12px; color:#777; margin-top:2px;">Allow location to show nearest listings first</div>
+                <div id="locCardTitle" style="font-weight:700; font-size:14px; color:#333;">See properties near you!</div>
+                <div id="locCardDesc" style="font-size:12px; color:#777; margin-top:2px;">Allow location to show nearest listings first</div>
             </div>
         </div>
         <div onclick="dismissLocationCard()" style="font-size:20px; color:#bbb; cursor:pointer; padding:4px;">×</div>
     </div>
     <div style="display:flex; gap:8px; margin-top:12px;">
-        <button onclick="requestLocationPermission()" style="flex:1; padding:10px; background:#2e7d32; color:white; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer;">📍 Allow Location</button>
+        <button id="locCardAllowBtn" onclick="requestLocationPermission()" style="flex:1; padding:10px; background:#2e7d32; color:white; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer;">📍 Allow Location</button>
         <button onclick="dismissLocationCard()" style="padding:10px 16px; background:#f5f5f5; color:#666; border:none; border-radius:10px; font-size:13px; font-weight:600; cursor:pointer;">Later</button>
     </div>
-</div>
-
-<div id="cityMatchBanner" style="display:none; margin:12px; background:linear-gradient(135deg,#2e7d32,#1b5e20); border-radius:14px; padding:14px 16px; cursor:pointer; box-shadow:0 4px 12px rgba(46,125,50,0.25); align-items:center; justify-content:space-between;">
-    <div style="color:#fff;">
-        <div style="font-size:11px; opacity:0.85; font-weight:600;">📍 City page available</div>
-        <div id="cityMatchName" style="font-size:15px; font-weight:800; margin-top:2px;"></div>
-    </div>
-    <div style="background:#fff; color:#1b5e20; padding:8px 14px; border-radius:20px; font-size:12px; font-weight:800;">Visit →</div>
 </div>
     
 <!-- Skeleton -->
@@ -1049,6 +1041,7 @@ function loadProperties(isLoadMore=false) {
 }
 
 function loadMoreProperties() {
+    if (typeof citySearch !== 'undefined' && citySearch) { loadCitySearchPage(true); return; }
     if (activeSort === 'nearest') { if (nearbyPager && hasMoreAds) loadMoreNearby(true); return; }
     if (isAdminUser && hasMoreAds && !isLoading) loadProperties(true);
 }
@@ -1425,7 +1418,7 @@ if (matchedCity) {
     });
 }
 
-function filterAds() { clearTimeout(searchTimeout); searchTimeout=setTimeout(applyFilterAndSearch,300); }
+function filterAds() { clearTimeout(searchTimeout); searchTimeout=setTimeout(applyFilterAndSearch,700); }
 
 function contact(num,type,title) {
     if(!num||num==='undefined'||num==='null'||String(num).trim()===''){showToast('No contact number available');return;}
@@ -1544,14 +1537,17 @@ function showNoLocationState() {
 
 function showNearbyEmpty(done) {
     isDataLoaded = true;
-    const title = done ? 'No properties found in this area.' : 'No properties found nearby yet.';
-    const hint = done ? 'Try searching for a location or browse by city.' : 'Tap Load More to search a wider area.';
+    const approx = locationSource === 'ip';
+    const title = !done ? 'No properties found nearby yet.' : (approx ? 'No properties found near your approximate location.' : 'No properties found in this area.');
+    const hint = !done ? 'Tap Load More to search a wider area.' : (approx ? 'Your location may be inaccurate. Use GPS, or search for your city.' : 'Try searching for a location or browse by city.');
+    const gpsBtn = (done && approx) ? '<button onclick="requestLocationPermission()" style="background:#1976d2;color:white;border:none;padding:11px 22px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;margin:0 4px 8px;">📍 Use GPS</button>' : '';
     document.getElementById('propertyList').innerHTML = `
         <div style="text-align:center;padding:60px 30px;">
             <i class="fa fa-location-dot" style="font-size:50px;opacity:0.25;display:block;margin-bottom:20px;color:#888;"></i>
             <div style="font-size:17px;font-weight:700;color:#555;margin-bottom:8px;">${title}</div>
             <div style="font-size:13px;color:#999;margin-bottom:18px;line-height:1.5;">${hint}</div>
-            <button onclick="toggleDrawer()" style="background:#2e7d32;color:white;border:none;padding:11px 26px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;">Explore by City</button>
+            ${gpsBtn}
+            <button onclick="toggleDrawer()" style="background:#2e7d32;color:white;border:none;padding:11px 22px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;margin:0 4px 8px;">Explore by City</button>
         </div>`;
 }
 
@@ -1603,18 +1599,39 @@ async function loadMoreNearby(isLoadMore) {
     if (btn) { btn.disabled = false; btn.innerHTML = '<span id="loadMoreText">' + (getT().loadMore || 'Load More') + '</span>'; }
 }
 
+function showLocationCardState(state) {
+    const title = document.getElementById('locCardTitle');
+    const desc = document.getElementById('locCardDesc');
+    const btn = document.getElementById('locCardAllowBtn');
+    if (state === 'denied') {
+        title.textContent = 'Location is blocked';
+        desc.textContent = 'Tap the lock icon next to the address bar, open Permissions, allow Location, then reload.';
+        btn.textContent = '🔄 Reload';
+        btn.onclick = () => location.reload();
+    } else {
+        title.textContent = 'See properties near you!';
+        desc.textContent = 'Allow location to show nearest listings first';
+        btn.textContent = '📍 Allow Location';
+        btn.onclick = requestLocationPermission;
+    }
+    document.getElementById('locationCard').style.display = 'block';
+}
+
 function initLocationCard() {
-    if (localStorage.getItem('locationCardDismissed')) return;
-    if (!navigator.geolocation) return;
+    if (sessionStorage.getItem('locationCardDismissed')) return;
+    if (locationSource === 'gps' || !navigator.geolocation) return;
+    if (!navigator.permissions) { showLocationCardState('prompt'); return; }
     navigator.permissions.query({ name: 'geolocation' }).then(result => {
-        if (result.state === 'prompt') document.getElementById('locationCard').style.display = 'block';
-    }).catch(() => { if (!userLocation) document.getElementById('locationCard').style.display = 'block'; });
+        if (result.state === 'granted') return;
+        showLocationCardState(result.state === 'denied' ? 'denied' : 'prompt');
+    }).catch(() => showLocationCardState('prompt'));
 }
 
 function requestLocationPermission() {
-    document.getElementById('locationCard').style.display = 'none';
+    if (!navigator.geolocation) { showToast('Location is not supported on this device.'); return; }
     navigator.geolocation.getCurrentPosition(
         pos => {
+            document.getElementById('locationCard').style.display = 'none';
             userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
             locationSource = 'gps';
             activeSort = 'nearest';
@@ -1622,13 +1639,18 @@ function requestLocationPermission() {
             loadAllForNearest();
             showToast('📍 Location allowed! Showing nearest properties first.');
         },
-        () => { showToast('Location access denied.'); }
+        err => {
+            if (err.code === 1) { showToast('Location is blocked. Enable it in your browser settings.'); showLocationCardState('denied'); }
+            else if (err.code === 2) { showToast('Could not get your location. Turn on GPS and try again.'); }
+            else { showToast('Location request timed out. Try again.'); }
+        },
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }
     );
 }
 
 function dismissLocationCard() {
     document.getElementById('locationCard').style.display = 'none';
-    localStorage.setItem('locationCardDismissed', '1');
+    sessionStorage.setItem('locationCardDismissed', '1');
 }
 
 // =============================================
@@ -1816,7 +1838,7 @@ document.getElementById('searchInput').addEventListener('keydown', function (e) 
 });
 loadLanguageDropdown();
 applyLanguage();
-setTimeout(initLocationCard, 2000);
+locationReady.then(() => initLocationCard());
 
 // ✅ Auto-retry when connection comes back
 window.addEventListener('online', () => {
