@@ -33,11 +33,52 @@ function mapActiveFilterToPurpose() {
     }
 }
 
-// ---------- Re-definition of setFilter (original + auto price panel) ----------
-// Tapping a purpose button shows purpose-filtered results immediately,
-// then opens the matching price-range panel so the person can narrow further.
+// Firestore purpose filter for the nearby query
+function purposeWheresForFilter() {
+    switch (activeFilter) {
+        case 'buy': return [['purpose', '==', 'Sell']];
+        case 'rent': return [['purpose', '==', 'Rent']];
+        case 'rentsell': return [['purpose', '==', 'RentSell']];
+        case 'plot': return [['purpose', '==', 'Plot']];
+        case 'pg': return [['purpose', 'in', ['PG', 'pg/hostel']]];
+        case 'commercial': return [['purpose', 'in', ['CommercialSell', 'CommercialRent', 'CommercialRentSell']]];
+        default: return [];
+    }
+}
+
+// Price filter leaves too few matches -> quietly load the next page (max 3 extra pages)
+function autoFillIfNeeded(depth) {
+    if (depth >= 3) return;
+    if (citySearch || activeSort !== 'nearest' || !nearbyPager || !hasMoreAds || nearbyLoading) return;
+    if (!activePriceRange) return;
+    const visible = applyPriceRangeFilter(allAds.filter(matchesPurpose)).length;
+    if (visible < 10) loadMoreNearby(true, depth + 1);
+}
+
+function autoFillCity(depth) {
+    const cs = citySearch;
+    if (!cs || cs.loading || cs.done || depth >= 3) return;
+    if (activeFilter === 'all' && !activePriceRange) return;
+    const visible = applyPriceRangeFilter(cs.items.filter(matchesPurpose)).length;
+    if (visible < 10) loadCitySearchPage(true, depth + 1);
+}
+
+function reloadForFilter() {
+    const searching = document.getElementById('searchInput').value.trim() !== '';
+    if (searching) { applyFilterAndSearch(); autoFillCity(0); return; }
+    if (activeSort === 'nearest' && userLocation) { loadAllForNearest(); return; }
+    if (!userLocation && !isAdminUser) return;
+    applyFilterAndSearch();
+}
+
+function refreshAfterPriceChange() {
+    applyFilterAndSearch();
+    if (citySearch) autoFillCity(0); else autoFillIfNeeded(0);
+}
+
 function setFilter(type) {
     activeFilter = type;
+    activePriceRange = null; // old range belongs to the old category
     ['all', 'buy', 'rent', 'rentsell', 'plot', 'commercial', 'pg'].forEach(f => {
         const b = document.getElementById('filter-' + f);
         if (!b) return;
@@ -45,25 +86,18 @@ function setFilter(type) {
     });
     trackEvent('filter_click', { filter_type: type });
 
-    if (type === 'all') {
-        activePriceRange = null; // reset price filter too when going back to All
-        applyFilterAndSearch();
-        return;
-    }
+    reloadForFilter();
 
-    // Show purpose-only results right away (don't make user wait on the panel)
-    applyFilterAndSearch();
+    if (type === 'all') return;
 
-    // Then open the price range panel for this category
-    const purpose = mapActiveFilterToPurpose();
-    PriceFilter.open(purpose, function (range) {
+    PriceFilter.open(mapActiveFilterToPurpose(), function (range) {
         activePriceRange = range; // null if user tapped "Clear Selection"
         trackEvent('price_filter_apply', {
             filter_type: type,
             min: range ? range.min : null,
             max: range ? (range.max ?? 'open') : null
         });
-        applyFilterAndSearch();
+        refreshAfterPriceChange();
     });
 }
 
@@ -78,12 +112,20 @@ function updatePriceButtonUI() {
 }
 
 // Applies the selected price range to any array of property docs
+function priceInINR(a) {
+    const amt = Number(a.price || 0);
+    const cur = a.currency || 'INR';
+    if (cur === 'INR') return amt;
+    const rate = (typeof exchangeRates !== 'undefined' && exchangeRates) ? exchangeRates[cur] : null;
+    return rate ? amt / rate : amt;
+}
+
 function applyPriceRangeFilter(arr) {
     if (!activePriceRange) return arr;
     return arr.filter(a => {
-        const price = Number(a.price || 0);
+        const price = priceInINR(a);
         if (typeof activePriceRange.min === 'number' && price < activePriceRange.min) return false;
-        if (typeof activePriceRange.max === 'number' && activePriceRange.max !== null && price > activePriceRange.max) return false;
+        if (typeof activePriceRange.max === 'number' && price > activePriceRange.max) return false;
         return true;
     });
 }
@@ -129,7 +171,8 @@ function renderCitySearch() {
     document.getElementById('loadMoreContainer').style.display = citySearch.done ? 'none' : 'block';
 }
 
-async function loadCitySearchPage(isMore) {
+async function loadCitySearchPage(isMore, depth) {
+    depth = depth || 0;
     const cs = citySearch;
     if (!cs || cs.loading) return;
     cs.loading = true;
@@ -182,6 +225,8 @@ async function loadCitySearchPage(isMore) {
             btn.innerHTML = '<span id="loadMoreText">' + (getT().loadMore || 'Load More') + '</span>';
         }
     }
+
+    if (citySearch === cs) autoFillCity(depth);
 }
 
 // ---------- Full re-definition of applyFilterAndSearch ----------
