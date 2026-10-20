@@ -1547,7 +1547,11 @@ function showNearbyEmpty(done) {
     isDataLoaded = true;
     const approx = locationSource === 'ip';
     const title = !done ? 'No properties found nearby yet.' : (approx ? 'No properties found near your approximate location.' : 'No properties found in this area.');
-    const hint = !done ? 'Tap Load More to search a wider area.' : (approx ? 'Your location may be inaccurate. Use GPS, or search for your city.' : 'Try searching for a location or browse by city.');
+    let hint;
+    if (!done) hint = 'Tap Load More to search a wider area.';
+    else if (activeFilter !== 'all') hint = 'Try a different filter, or tap All.';
+    else if (approx) hint = 'Your location may be inaccurate. Use GPS, or search for your city.';
+    else hint = 'Try searching for a location or browse by city.';
     const gpsBtn = (done && approx) ? '<button onclick="requestLocationPermission()" style="background:#1976d2;color:white;border:none;padding:11px 22px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;margin:0 4px 8px;">📍 Use GPS</button>' : '';
     document.getElementById('propertyList').innerHTML = `
         <div style="text-align:center;padding:60px 30px;">
@@ -1563,7 +1567,11 @@ async function loadAllForNearest() {
     if (!navigator.onLine) { showOfflineState(); return; }
     if (!userLocation) { showNoLocationState(); return; }
     try {
-        nearbyPager = TEPGeo.createNearbyPager(db, { lat: userLocation.lat, lng: userLocation.lng, radiusKm: NEARBY_RADIUS_KM, precision: 5 });
+        nearbyPager = TEPGeo.createNearbyPager(db, {
+    lat: userLocation.lat, lng: userLocation.lng,
+    radiusKm: NEARBY_RADIUS_KM, precision: 5,
+    wheres: (typeof purposeWheresForFilter === 'function') ? purposeWheresForFilter() : []
+});
     } catch (e) { console.error(e); showToast('Could not start nearby search.'); return; }
     nearbyLoading = false;
     allAds = []; displayedAds = []; hasMoreAds = true; isDataLoaded = false;
@@ -1573,15 +1581,20 @@ async function loadAllForNearest() {
     await loadMoreNearby(false);
 }
 
-async function loadMoreNearby(isLoadMore) {
+async function loadMoreNearby(isLoadMore, fillDepth) {
+    fillDepth = fillDepth || 0;
     if (nearbyLoading || !nearbyPager) return;
     nearbyLoading = true;
+    const pager = nearbyPager;
     const btn = document.getElementById('loadMoreBtn');
     if (isLoadMore && btn) { btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span>'; }
     try {
         let res, guard = 0;
-        do { res = await nearbyPager.loadNext(NEARBY_PAGE_SIZE); guard++; }
-        while (res.items.length === 0 && !res.done && guard < 3);
+        do { res = await pager.loadNext(NEARBY_PAGE_SIZE); guard++; }
+        while (res.items.length === 0 && !res.done && guard < 3 && pager === nearbyPager);
+
+        // filter/location changed while loading -> drop this old result
+        if (pager !== nearbyPager) return;
 
         isDataLoaded = true;
         hasMoreAds = !res.done;
@@ -1592,8 +1605,10 @@ async function loadMoreNearby(isLoadMore) {
         else if (nearbyFiltersActive()) { applyFilterAndSearch(); }
         else { renderAds(res.items, isLoadMore); }
 
-        document.getElementById('loadMoreContainer').style.display = res.done ? 'none' : 'block';
-        document.getElementById('nearbyEnd').style.display = (res.done && allAds.length > 0) ? 'block' : 'none';
+        if (!(typeof citySearch !== 'undefined' && citySearch)) {
+            document.getElementById('loadMoreContainer').style.display = res.done ? 'none' : 'block';
+            document.getElementById('nearbyEnd').style.display = (res.done && allAds.length > 0) ? 'block' : 'none';
+        }
         trackEvent('nearby_load', { count: res.items.length, reads: res.reads });
     } catch (err) {
         console.error('Nearby load error:', err);
@@ -1605,6 +1620,7 @@ async function loadMoreNearby(isLoadMore) {
     }
     nearbyLoading = false;
     if (btn) { btn.disabled = false; btn.innerHTML = '<span id="loadMoreText">' + (getT().loadMore || 'Load More') + '</span>'; }
+    if (typeof autoFillIfNeeded === 'function') autoFillIfNeeded(fillDepth);
 }
 
 function showLocationCardState(state) {
