@@ -280,6 +280,7 @@ function applyFilterAndSearch() {
 
     // 2) No search text -> normal feed
     if (!val) {
+        if (!userLocation && !isAdminUser) { showNoLocationState(); return; }
         if (activeSort === 'nearest' && userLocation) {
             filtered = sortByProximity(filtered);
         } else {
