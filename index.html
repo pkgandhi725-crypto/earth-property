@@ -1594,7 +1594,10 @@ async function loadMoreNearby(isLoadMore, fillDepth) {
         while (res.items.length === 0 && !res.done && guard < 3 && pager === nearbyPager);
 
         // filter/location changed while loading -> drop this old result
-        if (pager !== nearbyPager) return;
+                if (pager !== nearbyPager) {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<span id="loadMoreText">' + (getT().loadMore || 'Load More') + '</span>'; }
+            return;
+        }
 
         isDataLoaded = true;
         hasMoreAds = !res.done;
