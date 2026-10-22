@@ -193,6 +193,9 @@
         <p style="font-size:0.8rem;color:var(--gray);">Finding properties...</p>
       </div>
     </div>
+        <div id="loadMoreWrap" style="display:none; text-align:center; padding:6px 0 4px;">
+      <button class="btn-more" id="loadMoreBtn">Load More</button>
+        </div>
     <div class="empty-state" id="emptyState">
       <div class="empty-icon">🏠</div>
       <h3 style="font-family:'DM Serif Display',serif;font-size:1.1rem;margin-bottom:8px;">No listings yet</h3>
@@ -213,7 +216,7 @@
   </footer>
 
   <script type="module">
-    const { collection, query, where, orderBy, getDocs } = window._firestoreModules || {};
+    const { collection, query, where, orderBy, limit, startAfter, getDocs, getCountFromServer } = window._firestoreModules || {};
 
     function escHtml(str) {
       if (!str) return '';
