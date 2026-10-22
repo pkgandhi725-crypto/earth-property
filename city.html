@@ -25,7 +25,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, query, where, orderBy, limit, startAfter, getDocs, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js"; 
 
     const firebaseConfig = {
       apiKey: "AIzaSyDJ_qGtz1lx_orG4brwp4xUHWdrKctgJ50",
@@ -40,7 +40,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     window._db = db;
-    window._firestoreModules = { collection, query, where, orderBy, getDocs };
+    window._firestoreModules = { collection, query, where, orderBy, limit, startAfter, getDocs, getCountFromServer };
     window.dispatchEvent(new Event("firebaseReady"));
   </script>
 
