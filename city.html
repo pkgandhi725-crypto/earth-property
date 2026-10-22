@@ -252,12 +252,36 @@
       }
     }
 
+        const FALLBACK_RATES = {
+      USD: 0.012, GBP: 0.0095, EUR: 0.011, AED: 0.044, SAR: 0.045, PKR: 3.35, BDT: 1.31, SGD: 0.016,
+      MYR: 0.056, CAD: 0.016, AUD: 0.018, NGN: 19.5, GHS: 0.18, KES: 1.55, UGX: 44.5, RWF: 16.8,
+      NPR: 1.6, LKR: 3.7, ZAR: 0.22, PHP: 0.67, IDR: 190, THB: 0.43, VND: 295, TRY: 0.39, BRL: 0.062,
+      KWD: 0.0037, QAR: 0.044, OMR: 0.0046, CNY: 0.086, JPY: 1.8, KRW: 16.2, RUB: 1.09, CHF: 0.011, INR: 1
+    };
+    let ratesCache = null;
+    function getRates() {
+      if (ratesCache) return ratesCache;
+      try {
+        const cached = localStorage.getItem('tep_exchange_rates');
+        if (cached) { ratesCache = JSON.parse(cached); return ratesCache; }
+      } catch (e) {}
+      ratesCache = FALLBACK_RATES;
+      return ratesCache;
+    }
+    function priceInINR(d) {
+      const amt = Number(d.price || 0);
+      const cur = d.currency || 'INR';
+      if (cur === 'INR') return amt;
+      const rate = getRates()[cur];
+      return rate ? amt / rate : amt;
+    }
+
     function applyPriceRangeFilter(arr) {
       if (!activePriceRange) return arr;
       return arr.filter(p => {
-        const price = Number(p.data.price || 0);
+        const price = priceInINR(p.data);
         if (typeof activePriceRange.min === 'number' && price < activePriceRange.min) return false;
-        if (typeof activePriceRange.max === 'number' && activePriceRange.max !== null && price > activePriceRange.max) return false;
+        if (typeof activePriceRange.max === 'number' && price > activePriceRange.max) return false;
         return true;
       });
     }
@@ -318,70 +342,125 @@
         </div>`;
     }
 
+        const PAGE_SIZE = 20;
+    let cityVariants = [];
+    let listState = { items: [], last: null, done: false, loading: false };
+    let loadToken = 0;
+
+    function purposesForFilter(f) {
+      switch (f) {
+        case 'Rent': return ['Rent'];
+        case 'Sell': return ['Sell'];
+        case 'Plot': return ['Plot'];
+        case 'PG': return ['PG', 'pg/hostel'];
+        case 'Commercial': return ['CommercialSell', 'CommercialRent', 'CommercialRentSell'];
+        default: return [];
+      }
+    }
+
+    function buildListingsQuery(cursor) {
+      const parts = [
+        where('city', 'in', cityVariants),
+        where('isExpired', '==', false)
+      ];
+      const purposes = purposesForFilter(activeFilter);
+      if (purposes.length === 1) parts.push(where('purpose', '==', purposes[0]));
+      else if (purposes.length > 1) parts.push(where('purpose', 'in', purposes));
+      parts.push(orderBy('createdAt', 'desc'));
+      if (cursor) parts.push(startAfter(cursor));
+      parts.push(limit(PAGE_SIZE));
+      return query(collection(window._db, 'properties'), ...parts);
+    }
+
+    function updateLoadMoreUI() {
+      const wrap = document.getElementById('loadMoreWrap');
+      const btn = document.getElementById('loadMoreBtn');
+      wrap.style.display = listState.done ? 'none' : 'block';
+      btn.disabled = listState.loading;
+      btn.textContent = listState.loading ? 'Loading...' : 'Load More';
+    }
+
     function renderListings() {
       const container = document.getElementById('listingsContainer');
       const emptyState = document.getElementById('emptyState');
       const countEl = document.getElementById('listingCount');
 
-      let filtered = activeFilter === 'all' ? allListings : allListings.filter(p => p.data.purpose === activeFilter);
-      filtered = applyPriceRangeFilter(filtered);
+      const filtered = applyPriceRangeFilter(listState.items);
+      const n = filtered.length;
+      countEl.textContent = listState.done ? `${n} listing${n !== 1 ? 's' : ''}` : `Showing ${n}`;
 
-      if (activeSort === 'nearest' && userLocation) {
-        filtered = window.TEPGeo.sortByProximity(filtered, userLocation.lat, userLocation.lng, p => p.data.latitude, p => p.data.longitude);
-      }
-
-      countEl.textContent = `${filtered.length} listing${filtered.length !== 1 ? 's' : ''}`;
-      document.getElementById('heroCount').textContent = allListings.length || '0';
-
-      if (filtered.length === 0) {
-        container.innerHTML = '';
-        emptyState.style.display = 'block';
+      if (n === 0) {
+        container.innerHTML = listState.done ? '' : '<div class="loading-state"><div class="spinner"></div></div>';
+        emptyState.style.display = (listState.done && !listState.loading) ? 'block' : 'none';
       } else {
         emptyState.style.display = 'none';
         container.innerHTML = `<div class="cards-grid">${filtered.map(renderCard).join('')}</div>`;
       }
+      updateLoadMoreUI();
     }
 
-    async function loadListings() {
+    async function loadPage(isMore, depth) {
+      depth = depth || 0;
+      const st = listState;
+      if (st.loading) return;
+      st.loading = true;
+      const token = loadToken;
+      updateLoadMoreUI();
       try {
-        const db = window._db;
-        const cityVariants = [cityData.name, cityData.name.toLowerCase(), cityData.name.toUpperCase(), toTitleCase(cityData.name)];
-        let results = [];
-        const seen = new Set();
-
-        for (const variant of [...new Set(cityVariants)]) {
-          const q = query(collection(db, 'properties'), where('city', '==', variant));
-          const snap = await getDocs(q);
-          snap.docs.forEach(doc => {
-            if (seen.has(doc.id)) return;
-            const data = doc.data();
-            if (data.isExpired === true) return;
-            if (data.status && data.status !== 'active') return;
-            seen.add(doc.id);
-            results.push({ id: doc.id, data });
-          });
-        }
-
-        // Legacy fallback: nothing found via city field, search location string
-        if (results.length === 0) {
-          const allSnap = await getDocs(query(collection(db, 'properties')));
-          const needle = cityData.name.toLowerCase();
-          allSnap.docs.forEach(doc => {
-            const data = doc.data();
-            if (data.isExpired === true) return;
-            const loc = (data.location || '').toLowerCase();
-            if (loc.includes(needle)) results.push({ id: doc.id, data });
-          });
-        }
-
-        allListings = results;
-        document.getElementById('loadingState').style.display = 'none';
-        renderListings();
+        const snap = await getDocs(buildListingsQuery(st.last));
+        if (token !== loadToken) return; // filter changed meanwhile
+        const now = new Date();
+        const items = snap.docs.map(d => ({ id: d.id, data: d.data() })).filter(p => {
+          const d = p.data;
+          if (d.status && d.status !== 'active') return false;
+          if (d.expiryDate && d.expiryDate.toDate() < now) return false;
+          return true;
+        });
+        if (snap.docs.length) st.last = snap.docs[snap.docs.length - 1];
+        st.done = snap.docs.length < PAGE_SIZE;
+        st.items = st.items.concat(items);
       } catch (err) {
         console.error('Firestore error:', err);
-        document.getElementById('loadingState').innerHTML = `<p style="color:#c0392b;font-size:0.82rem;">Could not load listings. Please refresh.</p>`;
+        if (token === loadToken) {
+          st.done = true;
+          st.loading = false;
+          document.getElementById('listingsContainer').innerHTML =
+            '<p style="color:#c0392b;font-size:0.82rem;padding:20px 0;">Could not load listings. Please refresh.<br><small>' + escHtml(err.message) + '</small></p>';
+          updateLoadMoreUI();
+        }
+        return;
       }
+      st.loading = false;
+      renderListings();
+      autoFill(depth);
     }
+
+    // Price range leaves too few matches -> quietly load the next page (max 3 extra pages)
+    function autoFill(depth) {
+      if (!activePriceRange || listState.done || listState.loading || depth >= 3) return;
+      if (applyPriceRangeFilter(listState.items).length < 10) loadPage(true, depth + 1);
+    }
+
+    async function startListings() {
+      loadToken++;
+      listState = { items: [], last: null, done: false, loading: false };
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('loadMoreWrap').style.display = 'none';
+      document.getElementById('listingCount').textContent = 'Loading...';
+      document.getElementById('listingsContainer').innerHTML =
+        '<div class="loading-state"><div class="spinner"></div><p style="font-size:0.8rem;color:var(--gray);">Finding properties...</p></div>';
+      await loadPage(false, 0);
+    }
+
+    async function loadTotalCount() {
+      try {
+        const q = query(collection(window._db, 'properties'), where('city', 'in', cityVariants), where('isExpired', '==', false));
+        const snap = await getCountFromServer(q);
+        document.getElementById('heroCount').textContent = snap.data().count;
+      } catch (err) { console.warn('Count error:', err); }
+    }
+
+    document.getElementById('loadMoreBtn').addEventListener('click', () => loadPage(true, 0));
 
     async function loadNearbyCities() {
       try {
