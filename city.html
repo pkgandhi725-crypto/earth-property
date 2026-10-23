@@ -462,13 +462,25 @@
 
     document.getElementById('loadMoreBtn').addEventListener('click', () => loadPage(true, 0));
 
+        async function getActiveCities() {
+      const KEY = 'tep_cities_cache_v1', TTL = 12 * 3600 * 1000;
+      try {
+        const raw = localStorage.getItem(KEY);
+        if (raw) {
+          const c = JSON.parse(raw);
+          if (c && Array.isArray(c.list) && Date.now() - c.t < TTL) return c.list;
+        }
+      } catch (e) {}
+      const snap = await getDocs(query(collection(window._db, 'cities'), where('isActive', '==', true)));
+      const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      try { localStorage.setItem(KEY, JSON.stringify({ t: Date.now(), list })); } catch (e) {}
+      return list;
+    }
+
     async function loadNearbyCities() {
       try {
-        const db = window._db;
-        const snap = await getDocs(query(collection(db, 'cities'), where('isActive', '==', true)));
-        const others = snap.docs
-          .map(doc => ({ id: doc.id, ...doc.data() }))
-          .filter(c => c.id !== citySlug && c.slug !== citySlug && c.lat && c.lng);
+        const all = await getActiveCities();
+        const others = all.filter(c => c.id !== citySlug && c.slug !== citySlug && c.lat && c.lng);
 
         if (!cityData.lat || !cityData.lng || others.length === 0) return;
 
@@ -543,18 +555,23 @@
         `<p style="font-size:0.85rem;color:var(--gray);text-align:center;">This city page doesn't exist yet.<br><a href="/" style="color:var(--gold);">Go to Homepage →</a></p>`;
     }
 
-    document.getElementById('filterTabs').addEventListener('click', (e) => {
+        document.getElementById('filterTabs').addEventListener('click', (e) => {
       const btn = e.target.closest('.filter-btn');
       if (!btn) return;
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       activeFilter = btn.dataset.filter;
+      activePriceRange = null; // old range belongs to the old tab
 
-      if (activeFilter === 'all') {
-        activePriceRange = null;
+      startListings();
+      if (activeFilter === 'all') return;
+
+      window.PriceFilter.open(mapFilterToPriceCategory(activeFilter), (range) => {
+        activePriceRange = range; // null if user tapped "Clear Selection"
         renderListings();
-        return;
-      }
+        autoFill(0);
+      });
+    });
 
       // Show purpose-filtered results immediately, then open price-range panel
       renderListings();
@@ -593,7 +610,9 @@
         cityData = { slug: citySlug, ...snap.data() };
         populateSEO();
         populateHero();
-        await loadListings();
+                cityVariants = [...new Set([cityData.name, cityData.name.toLowerCase(), cityData.name.toUpperCase(), toTitleCase(cityData.name)])];
+        loadTotalCount();
+        await startListings();
         loadNearbyCities();
       } catch (err) {
         console.error('City load error:', err);
