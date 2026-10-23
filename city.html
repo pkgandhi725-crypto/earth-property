@@ -573,15 +573,6 @@
       });
     });
 
-      // Show purpose-filtered results immediately, then open price-range panel
-      renderListings();
-      const category = mapFilterToPriceCategory(activeFilter);
-      window.PriceFilter.open(category, (range) => {
-        activePriceRange = range; // null if user tapped "Clear Selection"
-        renderListings();
-      });
-    });
-
     document.getElementById('sortLatestBtn').addEventListener('click', () => {
       activeSort = 'latest';
       document.getElementById('sortLatestBtn').classList.add('active');
