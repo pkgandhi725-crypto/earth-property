@@ -81,6 +81,11 @@
     </div>
 </div>
 
+<div style="text-align:center; margin:-8px 0 16px;">
+    <button id="statsBtn" onclick="showStats()" style="flex:unset; width:auto; padding:8px 18px; background:#e3f2fd; color:#1976d2; border-radius:20px; font-size:12px;">
+        <i class="fa fa-chart-simple"></i> Show Stats
+    </button>
+</div>    
 <div style="text-align:center; margin-bottom:20px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
     <a href="admin-verify.html" class="verify-link">
         <i class="fa fa-certificate"></i> Verification Requests
@@ -105,17 +110,18 @@
 <!-- Properties Section -->
 <div id="propertiesSection" class="admin-section">
     <div class="controls">
-        <input type="text" id="searchBox" class="search-box" placeholder="🔍 Search by Title, Location, Phone, EP ID or Owner...">
+        <input type="text" id="searchBox" class="search-box" placeholder="🔍 TEP ID (e.g. TEP1003) or city / area...">
+        <div style="display:flex; gap:10px; margin-bottom:12px;">
+            <button class="edit-btn" onclick="runSearch()"><i class="fa fa-search"></i> Search</button>
+            <button class="view-btn" onclick="loadLatest()"><i class="fa fa-clock"></i> Load Latest</button>
+        </div>
         <div class="filter-row">
             <button class="filter-btn active" onclick="filterByStatus('all', event)">All Posts</button>
             <button class="filter-btn" onclick="filterByStatus('active', event)">Active Only</button>
             <button class="filter-btn" onclick="filterByStatus('expired', event)">Expired Only</button>
         </div>
     </div>
-    <div id="list" class="loading">
-        <i class="fa fa-database"></i>
-        <p>Loading properties...</p>
-    </div>
+    <div id="list" class="empty-state"></div>
 </div>
 
 <!-- Feedbacks Section -->
@@ -152,7 +158,7 @@ const ADMIN_UID = "WOY9f67DachGVTuhR4tSJ1BHozx1";
 let allProperties = [];
 let currentFilter = 'all';
 let currentPage = 1;
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 let feedbacksLoaded = false;
 let supportLoaded = false;
 
@@ -195,94 +201,202 @@ auth.onAuthStateChanged((user) => {
     if (!user || user.uid !== ADMIN_UID) {
         window.location.href = "index.html";
     } else {
-        loadProperties();
+        ['totalAds', 'activeAds', 'expiredAds'].forEach(id => document.getElementById(id).innerText = '—');
+        renderProperties();
     }
 });
 
-function loadProperties() {
-    db.collection("properties").onSnapshot(async (snap) => {
-        const list = document.getElementById("list");
+// =====================================================
+// Properties: nothing loads until the admin asks for it
+// =====================================================
+const ownerCache = {};
+let propState = { items: [], last: null, done: true, loading: false, mode: 'idle', ownerId: null, note: '' };
 
-        if (snap.empty) {
-            list.innerHTML = `<div class="empty-state"><i class="fa fa-home"></i><h3>No Properties Found</h3><p>No properties have been posted yet.</p></div>`;
+function toTitleCaseAdmin(s) {
+    return String(s || '').trim().toLowerCase().split(' ').filter(Boolean)
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
+function newPropState(mode) {
+    propState = { items: [], last: null, done: false, loading: false, mode: mode, ownerId: null, note: '' };
+    allProperties = propState.items;
+    return propState;
+}
+
+function mapPropDoc(docSnap) {
+    const d = docSnap.data();
+    const purpose = d.purpose || 'Sell';
+    const days = (purpose === 'Rent' || purpose === 'PG' || purpose === 'CommercialRent') ? 30 : 180;
+    const baseDate = d.renewedAt ? d.renewedAt.toDate() : (d.createdAt ? d.createdAt.toDate() : new Date());
+    const expDate = new Date(baseDate);
+    expDate.setDate(expDate.getDate() + days);
+    const info = ownerCache[d.ownerId] || {};
+    const fmt = ts => ts.toDate().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    return {
+        id: docSnap.id,
+        title: d.title || 'Untitled',
+        location: d.location || 'N/A',
+        country: d.country || '',
+        price: d.price || 0,
+        currency: d.currency || 'INR',
+        phone: d.phone || 'N/A',
+        purpose: purpose,
+        ownerId: d.ownerId || '',
+        ownerName: info.name || '',
+        ownerEmail: info.email || '',
+        ownerEpId: d.ownerEpId || info.epId || '',
+        postDate: d.createdAt ? fmt(d.createdAt) : 'Unknown',
+        expiryDate: d.expiryDate ? fmt(d.expiryDate) : 'N/A',
+        isExpired: new Date() > expDate,
+        isVerified: d.isVerified || false,
+        images: d.images || [],
+        _sec: d.createdAt ? d.createdAt.seconds : 0
+    };
+}
+
+async function loadLatest() {
+    document.getElementById('searchBox').value = '';
+    newPropState('latest');
+    await loadPropsPage();
+}
+
+async function loadPropsPage() {
+    const st = propState;
+    if (st.loading || st.done) return;
+    st.loading = true;
+    renderProperties();
+    try {
+        let q = db.collection('properties');
+        if (st.mode === 'tep') q = q.where('ownerId', '==', st.ownerId);
+        q = q.orderBy('createdAt', 'desc').limit(PAGE_SIZE);
+        if (st.last) q = q.startAfter(st.last);
+        const snap = await q.get();
+        if (propState !== st) return;
+        snap.docs.forEach(ds => st.items.push(mapPropDoc(ds)));
+        if (snap.docs.length) st.last = snap.docs[snap.docs.length - 1];
+        st.done = snap.docs.length < PAGE_SIZE;
+    } catch (e) {
+        console.error('Load error:', e);
+        st.done = true;
+        st.note = 'Error: ' + e.message;
+    }
+    st.loading = false;
+    renderProperties();
+}
+
+async function runSearch() {
+    const raw = document.getElementById('searchBox').value.trim();
+    if (!raw) { loadLatest(); return; }
+    if (raw.length < 2) { alert('Type at least 2 characters.'); return; }
+    const compact = raw.replace(/\s+/g, '');
+    if (/^tep\d+$/i.test(compact)) await searchByTepId(compact.toUpperCase());
+    else await searchByArea(raw);
+}
+
+async function searchByTepId(tep) {
+    const st = newPropState('tep');
+    st.loading = true;
+    renderProperties();
+    try {
+        const u = await db.collection('users').where('epId', '==', tep).limit(1).get();
+        if (propState !== st) return;
+        if (u.empty) {
+            st.loading = false; st.done = true;
+            st.note = 'No user found with ID ' + tep;
+            renderProperties();
             return;
         }
-
-        allProperties = [];
-        let activeCount = 0;
-        let expiredCount = 0;
-
-        for (const docSnap of snap.docs) {
-            const d = docSnap.data();
-            const id = docSnap.id;
-
-            let ownerName = "Unknown", ownerEmail = "", ownerEpId = "";
-            try {
-                if (d.ownerId) {
-                    const ownerDoc = await db.collection("users").doc(d.ownerId).get();
-                    if (ownerDoc.exists) {
-                        const od = ownerDoc.data();
-                        ownerName = od.displayName || od.name || od.email?.split('@')[0] || "User";
-                        ownerEmail = od.email || "";
-                        ownerEpId = od.epId || "";
-                    }
-                }
-            } catch (e) { console.error("Owner fetch error:", e); }
-
-            const purpose = d.purpose || 'Sell';
-            const limit = (purpose === 'Rent' || purpose === 'PG' || purpose === 'CommercialRent') ? 30 : 180;
-            const baseDate = d.renewedAt ? d.renewedAt.toDate() : (d.createdAt ? d.createdAt.toDate() : new Date());
-            const expDate = new Date(baseDate);
-            expDate.setDate(expDate.getDate() + limit);
-            const isExpired = new Date() > expDate;
-
-            if (isExpired) expiredCount++; else activeCount++;
-
-            let postDate = "Unknown";
-            if (d.createdAt) {
-                postDate = d.createdAt.toDate().toLocaleDateString('en-IN', {
-                    day: 'numeric', month: 'short', year: 'numeric'
-                });
-            }
-
-            let expiryDate = "N/A";
-            if (d.expiryDate) {
-                expiryDate = d.expiryDate.toDate().toLocaleDateString('en-IN', {
-                    day: 'numeric', month: 'short', year: 'numeric'
-                });
-            }
-
-            allProperties.push({
-                id,
-                title: d.title || "Untitled",
-                location: d.location || "N/A",
-                country: d.country || "",
-                price: d.price || 0,
-                currency: d.currency || 'INR',
-                phone: d.phone || "N/A",
-                purpose,
-                ownerId: d.ownerId || "",
-                ownerName,
-                ownerEmail,
-                ownerEpId,
-                postDate,
-                expiryDate,
-                isExpired,
-                isVerified: d.isVerified || false,
-                images: d.images || [],
-                searchText: `${d.title} ${d.location} ${d.phone} ${ownerName} ${ownerEmail} ${ownerEpId}`.toLowerCase()
-            });
-        }
-
-        document.getElementById("totalAds").innerText = allProperties.length;
-        document.getElementById("activeAds").innerText = activeCount;
-        document.getElementById("expiredAds").innerText = expiredCount;
-        document.getElementById("propertiesTabCount").innerText = allProperties.length;
-
-        currentPage = 1;
+        const ud = u.docs[0], od = ud.data();
+        ownerCache[ud.id] = {
+            name: od.displayName || od.name || (od.email || '').split('@')[0] || 'User',
+            email: od.email || '',
+            epId: od.epId || tep
+        };
+        st.ownerId = ud.id;
+        st.loading = false;
+        await loadPropsPage();
+    } catch (e) {
+        console.error('TEP search error:', e);
+        st.loading = false; st.done = true;
+        st.note = 'Error: ' + e.message;
         renderProperties();
-    });
+    }
 }
+
+async function searchByArea(term) {
+    const st = newPropState('area');
+    st.loading = true;
+    renderProperties();
+    try {
+        const cap = term.charAt(0).toUpperCase() + term.slice(1).toLowerCase();
+        const variants = [...new Set([term, cap, term.toUpperCase(), toTitleCaseAdmin(term)])];
+        const jobs = [];
+        ['city', 'location', 'country'].forEach(f => variants.forEach(v =>
+            jobs.push(db.collection('properties').where(f, '>=', v).where(f, '<=', v + '\uf8ff').limit(PAGE_SIZE).get())
+        ));
+        const snaps = await Promise.all(jobs);
+        if (propState !== st) return;
+        const seen = new Set();
+        snaps.forEach(snap => snap.docs.forEach(ds => {
+            if (seen.has(ds.id)) return;
+            seen.add(ds.id);
+            st.items.push(mapPropDoc(ds));
+        }));
+        st.items.sort((a, b) => b._sec - a._sec);
+        st.note = 'First matches for "' + term + '" (up to ' + PAGE_SIZE + ' per field). Be more specific to narrow down.';
+    } catch (e) {
+        console.error('Area search error:', e);
+        st.note = 'Error: ' + e.message;
+    }
+    st.loading = false;
+    st.done = true;
+    renderProperties();
+}
+
+async function ensureOwner(p) {
+    if (p.ownerName || !p.ownerId) return;
+    if (!ownerCache[p.ownerId]) {
+        try {
+            const od = await db.collection('users').doc(p.ownerId).get();
+            if (od.exists) {
+                const o = od.data();
+                ownerCache[p.ownerId] = {
+                    name: o.displayName || o.name || (o.email || '').split('@')[0] || 'User',
+                    email: o.email || '',
+                    epId: o.epId || ''
+                };
+            }
+        } catch (e) { console.error('Owner fetch error:', e); }
+    }
+    const info = ownerCache[p.ownerId];
+    if (info) {
+        p.ownerName = info.name;
+        p.ownerEmail = info.email;
+        p.ownerEpId = p.ownerEpId || info.epId;
+    }
+}
+
+async function showStats() {
+    const btn = document.getElementById('statsBtn');
+    btn.disabled = true;
+    btn.textContent = 'Counting...';
+    try {
+        const col = db.collection('properties');
+        const [t, a, e] = await Promise.all([
+            col.count().get(),
+            col.where('isExpired', '==', false).count().get(),
+            col.where('isExpired', '==', true).count().get()
+        ]);
+        document.getElementById('totalAds').innerText = t.data().count;
+        document.getElementById('activeAds').innerText = a.data().count;
+        document.getElementById('expiredAds').innerText = e.data().count;
+        btn.innerHTML = '<i class="fa fa-rotate"></i> Refresh Stats';
+    } catch (err) {
+        alert('Could not count: ' + err.message);
+        btn.innerHTML = '<i class="fa fa-chart-simple"></i> Show Stats';
+    }
+    btn.disabled = false;
+} 
 
 function showTab(tab) {
     document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
@@ -399,25 +513,39 @@ function loadSupportTickets() {
 
 function renderProperties() {
     const list = document.getElementById("list");
-    const searchTerm = document.getElementById('searchBox').value.toLowerCase().trim();
+    const st = propState;
+    document.getElementById('propertiesTabCount').innerText = st.items.length;
 
-    let filtered = allProperties.filter(p => {
-        if (currentFilter === 'active' && p.isExpired) return false;
-        if (currentFilter === 'expired' && !p.isExpired) return false;
-        if (searchTerm && !p.searchText.includes(searchTerm)) return false;
-        return true;
-    });
-
-    if (filtered.length === 0) {
-        list.innerHTML = `<div class="empty-state"><i class="fa fa-search"></i><h3>No Results Found</h3><p>Try different search terms or filters.</p></div>`;
+    if (st.mode === 'idle') {
+        list.className = 'empty-state';
+        list.innerHTML = `<i class="fa fa-database"></i><h3>Properties not loaded</h3><p>Tap "Load Latest" for the newest ${PAGE_SIZE}, or search by TEP ID / city / area.</p>`;
+        return;
+    }
+    if (st.loading && st.items.length === 0) {
+        list.className = 'loading';
+        list.innerHTML = '<i class="fa fa-spinner fa-spin"></i><p>Loading...</p>';
         return;
     }
 
-    const paginated = filtered.slice(0, currentPage * PAGE_SIZE);
-    const showingCount = paginated.length;
-    const totalCount = filtered.length;
+    const filtered = st.items.filter(p => {
+        if (currentFilter === 'active' && p.isExpired) return false;
+        if (currentFilter === 'expired' && !p.isExpired) return false;
+        return true;
+    });
 
-    const cardsHtml = paginated.map(p => {
+    const noteHtml = st.note ? `<div class="all-shown">${escapeHtml(st.note)}</div>` : '';
+    const footer = !st.done
+        ? `<div class="load-more-wrap"><button class="load-more-btn" onclick="loadMoreProperties()" ${st.loading ? 'disabled' : ''}>${st.loading ? 'Loading...' : '<i class="fa fa-chevron-down"></i> Load More (' + st.items.length + ' loaded)'}</button></div>`
+        : `<div class="all-shown">✓ ${st.items.length} listing${st.items.length !== 1 ? 's' : ''} loaded</div>`;
+
+    if (filtered.length === 0) {
+        list.className = 'empty-state';
+        list.innerHTML = `<i class="fa fa-search"></i><h3>No Results</h3><p>${st.done ? 'Nothing found.' : 'Load more to see further results.'}</p>` + noteHtml + footer;
+        return;
+    }
+
+    list.className = '';
+    const cardsHtml = filtered.map(p => {
         const thumb = getThumb(p.images);
         const imgHtml = thumb
             ? `<img src="${escapeHtml(thumb)}" alt="property photo" class="card-thumb" loading="lazy">`
@@ -455,7 +583,7 @@ function renderProperties() {
 
                 <div class="info-row">
                     <i class="fa fa-user"></i>
-                    <strong>${escapeHtml(p.ownerName)}</strong>
+                    ${p.ownerName ? `<strong>${escapeHtml(p.ownerName)}</strong>` : '<span style="color:#999;">Owner: tap View</span>'}
                     ${p.ownerEpId ? `<span class="ep-badge">${escapeHtml(p.ownerEpId)}</span>` : ''}
                     ${p.ownerEmail ? `<span style="color:#aaa; font-size:11px;">${escapeHtml(p.ownerEmail)}</span>` : ''}
                 </div>
@@ -487,33 +615,20 @@ function renderProperties() {
         </div>`;
     }).join('');
 
-    const paginationHtml = showingCount < totalCount
-        ? `<div class="load-more-wrap">
-            <button class="load-more-btn" onclick="loadMoreProperties()">
-                <i class="fa fa-chevron-down"></i> Load More (${showingCount}/${totalCount})
-            </button>
-           </div>`
-        : `<div class="all-shown">✓ All ${totalCount} listing${totalCount !== 1 ? 's' : ''} shown</div>`;
-
-    list.innerHTML = cardsHtml + paginationHtml;
+    list.innerHTML = cardsHtml + noteHtml + footer;
 }
 
-function loadMoreProperties() {
-    currentPage++;
-    renderProperties();
-}
+function loadMoreProperties() { loadPropsPage(); }
 
 function filterByStatus(status, event) {
     currentFilter = status;
-    currentPage = 1;
     document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
     if (event && event.target) event.target.classList.add('active');
     renderProperties();
 }
 
-document.getElementById('searchBox').addEventListener('input', () => {
-    currentPage = 1;
-    renderProperties();
+document.getElementById('searchBox').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') runSearch();
 });
 
 function copyPropertyId(id) {
@@ -524,10 +639,10 @@ function copyPropertyId(id) {
     });
 }
 
-function viewProperty(id) {
+async function viewProperty(id) {
     const p = allProperties.find(x => x.id === id);
     if (!p) return;
-
+    await ensureOwner(p);
     const thumb = getThumb(p.images);
     const imgHtml = thumb
         ? `<img src="${escapeHtml(thumb)}" alt="property" style="width:100%;height:200px;object-fit:cover;border-radius:10px;margin-bottom:20px;display:block;">`
@@ -603,6 +718,9 @@ async function deletePost(id, title) {
     if (!confirm(`Delete this property permanently?\n\nTitle: ${title}\n\nThis cannot be undone.`)) return;
     try {
         await db.collection("properties").doc(id).delete();
+        const i = propState.items.findIndex(p => p.id === id);
+        if (i >= 0) propState.items.splice(i, 1);
+        renderProperties();
         alert("Property deleted successfully!");
     } catch (e) {
         alert("Error: " + e.message);
@@ -616,9 +734,9 @@ async function adminRenewAd(id, purpose, btn) {
     btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
 
     try {
-        const limit = (purpose === 'Rent' || purpose === 'PG' || purpose === 'CommercialRent') ? 30 : 180;
+        const days = (purpose === 'Rent' || purpose === 'PG' || purpose === 'CommercialRent') ? 30 : 180;
         const newExpiry = new Date();
-        newExpiry.setDate(newExpiry.getDate() + limit);
+        newExpiry.setDate(newExpiry.getDate() + days);
 
         await db.collection("properties").doc(id).update({
             isExpired: false,
@@ -626,11 +744,14 @@ async function adminRenewAd(id, purpose, btn) {
             expiryDate: firebase.firestore.Timestamp.fromDate(newExpiry)
         });
 
-        btn.innerHTML = '<i class="fa fa-check"></i> Renewed';
-        btn.style.background = "#4caf50";
-        btn.style.color = "white";
+        const p = propState.items.find(x => x.id === id);
+        if (p) {
+            p.isExpired = false;
+            p.expiryDate = newExpiry.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+        renderProperties();
         setTimeout(() => alert("Ad renewed successfully!"), 100);
-    } catch(e) {
+    } catch (e) {
         alert("Error: " + e.message);
         btn.disabled = false;
         btn.innerHTML = originalText;
