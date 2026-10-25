@@ -607,7 +607,7 @@ function renderProperties() {
                     ${p.isExpired ? `<button class="renew-btn" onclick="adminRenewAd('${p.id}', '${p.purpose}', this)">
                         <i class="fa fa-rotate-right"></i> Renew
                     </button>` : ''}
-                    <button class="del-btn" onclick="deletePost('${p.id}', '${escapeHtml(p.title)}')">
+                    <button class="del-btn" onclick="deletePost('${p.id}')">
                         <i class="fa fa-trash-alt"></i> Delete
                     </button>
                 </div>
@@ -714,7 +714,9 @@ function editProperty(id) {
     window.open(`add-property.html?edit=${id}`, '_blank');
 }
 
-async function deletePost(id, title) {
+async function deletePost(id) {
+    const item = propState.items.find(p => p.id === id);
+    const title = item ? item.title : '';
     if (!confirm(`Delete this property permanently?\n\nTitle: ${title}\n\nThis cannot be undone.`)) return;
     try {
         await db.collection("properties").doc(id).delete();
