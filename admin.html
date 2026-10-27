@@ -114,6 +114,7 @@
         <div style="display:flex; gap:10px; margin-bottom:12px;">
             <button class="edit-btn" onclick="runSearch()"><i class="fa fa-search"></i> Search</button>
             <button class="view-btn" onclick="loadLatest()"><i class="fa fa-clock"></i> Load Latest</button>
+            <button class="del-btn" onclick="loadExpired()"><i class="fa fa-hourglass-end"></i> Load Expired</button>
         </div>
         <div class="filter-row">
             <button class="filter-btn active" onclick="filterByStatus('all', event)">All Posts</button>
@@ -260,6 +261,12 @@ async function loadLatest() {
     await loadPropsPage();
 }
 
+async function loadExpired() {
+    document.getElementById('searchBox').value = '';
+    newPropState('expired');
+    await loadPropsPage();
+}
+    
 async function loadPropsPage() {
     const st = propState;
     if (st.loading || st.done) return;
@@ -267,7 +274,8 @@ async function loadPropsPage() {
     renderProperties();
     try {
         let q = db.collection('properties');
-        if (st.mode === 'tep') q = q.where('ownerId', '==', st.ownerId);
+                if (st.mode === 'tep') q = q.where('ownerId', '==', st.ownerId);
+        else if (st.mode === 'expired') q = q.where('isExpired', '==', true);
         q = q.orderBy('createdAt', 'desc').limit(PAGE_SIZE);
         if (st.last) q = q.startAfter(st.last);
         const snap = await q.get();
