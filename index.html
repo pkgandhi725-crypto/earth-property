@@ -544,6 +544,7 @@ function convertPrice(amount, fromCurrency) {
 })();
 
 async function runCleanupIfNeeded() {
+        if (!isAdminUser) return;
     try {
         const lastRun = localStorage.getItem(CLEANUP_KEY);
         const todayStr = new Date().toISOString().split('T')[0];
@@ -1570,7 +1571,7 @@ async function loadAllForNearest() {
         nearbyPager = TEPGeo.createNearbyPager(db, {
     lat: userLocation.lat, lng: userLocation.lng,
     radiusKm: NEARBY_RADIUS_KM, precision: 5,
-    wheres: (typeof purposeWheresForFilter === 'function') ? purposeWheresForFilter() : []
+        wheres: [['isExpired', '==', false]].concat((typeof purposeWheresForFilter === 'function') ? purposeWheresForFilter() : [])
 });
     } catch (e) { console.error(e); showToast('Could not start nearby search.'); return; }
     nearbyLoading = false;
