@@ -107,7 +107,7 @@ firebase.auth().onAuthStateChanged(user => {
                   total++;
                   const data = doc.data();
                   const purpose = data.purpose || 'Sell';
-                  const limit = (purpose === 'Rent' || purpose === 'Lease') ? 30 : 180;
+                  const limit = (purpose === 'Rent' || purpose === 'PG' || purpose === 'CommercialRent' || purpose === 'Lease') ? 30 : 180;
 
                   const baseDate = data.renewedAt ? data.renewedAt.toDate() : (data.createdAt ? data.createdAt.toDate() : new Date());
                   const expDate = new Date(baseDate);
@@ -200,7 +200,7 @@ async function renewAd(id, purpose, btn) {
     btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
 
     try {
-        const limit = (purpose === 'Rent' || purpose === 'Lease') ? 30 : 180;
+        const limit = (purpose === 'Rent' || purpose === 'PG' || purpose === 'CommercialRent' || purpose === 'Lease') ? 30 : 180;
         const newExpiry = new Date();
         newExpiry.setDate(newExpiry.getDate() + limit);
 
