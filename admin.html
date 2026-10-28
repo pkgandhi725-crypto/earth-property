@@ -85,6 +85,9 @@
     <button id="statsBtn" onclick="showStats()" style="flex:unset; width:auto; padding:8px 18px; background:#e3f2fd; color:#1976d2; border-radius:20px; font-size:12px;">
         <i class="fa fa-chart-simple"></i> Show Stats
     </button>
+        <button id="syncBtn" onclick="syncExpiredFlags()" style="flex:unset; width:auto; padding:8px 18px; background:#fff3e0; color:#f57c00; border-radius:20px; font-size:12px; margin-left:8px;">
+        <i class="fa fa-rotate"></i> Sync Expired
+        </button>
 </div>    
 <div style="text-align:center; margin-bottom:20px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
     <a href="admin-verify.html" class="verify-link">
@@ -405,6 +408,38 @@ async function showStats() {
     }
     btn.disabled = false;
 } 
+
+ async function syncExpiredFlags() {
+    if (!confirm('Mark all date-expired listings as expired in the database?')) return;
+    const btn = document.getElementById('syncBtn');
+    const original = btn.innerHTML;
+    btn.disabled = true;
+    btn.textContent = 'Syncing...';
+    let total = 0;
+    try {
+        const nowTs = firebase.firestore.Timestamp.now();
+        while (true) {
+            const snap = await db.collection('properties')
+                .where('isExpired', '==', false)
+                .where('expiryDate', '<', nowTs)
+                .limit(200)
+                .get();
+            if (snap.empty) break;
+            const batch = db.batch();
+            snap.docs.forEach(ds => batch.update(ds.ref, { isExpired: true }));
+            await batch.commit();
+            total += snap.size;
+            btn.textContent = 'Synced ' + total + '...';
+            if (snap.size < 200) break;
+        }
+        alert('Done. ' + total + ' listing(s) marked as expired.');
+    } catch (e) {
+        console.error('Sync error:', e);
+        alert('Error: ' + e.message);
+    }
+    btn.disabled = false;
+    btn.innerHTML = original;
+    }
 
 function showTab(tab) {
     document.querySelectorAll('.admin-section').forEach(s => s.style.display = 'none');
