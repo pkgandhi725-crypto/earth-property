@@ -409,6 +409,28 @@ async function showStats() {
     btn.disabled = false;
 } 
 
+ async function repairDeletionDates() {
+    const snap = await db.collection('properties')
+        .where('renewedAt', '>=', firebase.firestore.Timestamp.fromMillis(0))
+        .get();
+    let fixed = 0;
+    let batch = db.batch();
+    let inBatch = 0;
+    for (const ds of snap.docs) {
+        const d = ds.data();
+        if (!d.expiryDate) continue;
+        const need = new Date(d.expiryDate.toDate());
+        need.setDate(need.getDate() + 30);
+        if (!d.deletionDate || d.deletionDate.toDate() < need) {
+            batch.update(ds.ref, { deletionDate: firebase.firestore.Timestamp.fromDate(need) });
+            fixed++; inBatch++;
+            if (inBatch === 400) { await batch.commit(); batch = db.batch(); inBatch = 0; }
+        }
+    }
+    if (inBatch > 0) await batch.commit();
+    return fixed;
+    }
+
  async function syncExpiredFlags() {
     if (!confirm('Mark all date-expired listings as expired in the database?')) return;
     const btn = document.getElementById('syncBtn');
@@ -432,7 +454,8 @@ async function showStats() {
             btn.textContent = 'Synced ' + total + '...';
             if (snap.size < 200) break;
         }
-        alert('Done. ' + total + ' listing(s) marked as expired.');
+                const fixedDates = await repairDeletionDates();
+        alert('Done. ' + total + ' listing(s) marked as expired. ' + fixedDates + ' deletion date(s) repaired.');
     } catch (e) {
         console.error('Sync error:', e);
         alert('Error: ' + e.message);
@@ -783,10 +806,14 @@ async function adminRenewAd(id, purpose, btn) {
         const newExpiry = new Date();
         newExpiry.setDate(newExpiry.getDate() + days);
 
+                const newDeletion = new Date(newExpiry);
+        newDeletion.setDate(newDeletion.getDate() + 30);
+
         await db.collection("properties").doc(id).update({
             isExpired: false,
             renewedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            expiryDate: firebase.firestore.Timestamp.fromDate(newExpiry)
+            expiryDate: firebase.firestore.Timestamp.fromDate(newExpiry),
+            deletionDate: firebase.firestore.Timestamp.fromDate(newDeletion)
         });
 
         const p = propState.items.find(x => x.id === id);
