@@ -204,12 +204,15 @@ async function renewAd(id, purpose, btn) {
         const newExpiry = new Date();
         newExpiry.setDate(newExpiry.getDate() + limit);
 
+                const newDeletion = new Date(newExpiry);
+        newDeletion.setDate(newDeletion.getDate() + 30);
+
         await db.collection("properties").doc(id).update({
             isExpired: false,
             renewedAt: firebase.firestore.FieldValue.serverTimestamp(),
-            expiryDate: firebase.firestore.Timestamp.fromDate(newExpiry)
+            expiryDate: firebase.firestore.Timestamp.fromDate(newExpiry),
+            deletionDate: firebase.firestore.Timestamp.fromDate(newDeletion)
         });
-
         btn.innerHTML = '<i class="fa fa-check"></i> ' + t.renewSuccess.split(' ')[0];
         btn.style.background = "#4caf50";
         alert(t.renewSuccess);
