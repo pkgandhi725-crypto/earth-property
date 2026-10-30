@@ -719,6 +719,7 @@ let sameAsCallingNumber = true;
 
 // Leaflet vars
 let leafletMap=null,leafletMarker=null;
+function normLng(l){return ((Number(l)+180)%360+360)%360-180;}
 
 // ---- AMENITIES ----
 const AMENITIES_LIST = [
@@ -1134,7 +1135,7 @@ function initMap(lat,lng){
     updatePinInfo(latF,lngF);
 }
 
-function updateCoordsFromMap(lat,lng){currentCoords={lat,lng};document.getElementById('manualLat').value=lat.toFixed(6);document.getElementById('manualLng').value=lng.toFixed(6);updatePinInfo(lat,lng);}
+function updateCoordsFromMap(lat,lng){lng=normLng(lng);currentCoords={lat,lng};document.getElementById('manualLat').value=lat.toFixed(6);document.getElementById('manualLng').value=lng.toFixed(6);updatePinInfo(lat,lng);}
 function updatePinInfo(lat,lng){currentCoords={lat:parseFloat(lat),lng:parseFloat(lng)};document.getElementById('mapPinText').textContent='Pin set: '+parseFloat(lat).toFixed(5)+', '+parseFloat(lng).toFixed(5)+' — Drag pin to adjust';document.getElementById('mapPinInfo').style.display='block';}
 
 async function geocodeAddress(){
@@ -1273,6 +1274,7 @@ async function submitProperty(){
     document.getElementById('postBtn').innerText="Processing...";
     stateValue = await resolveState(cityValue, country, currentCoords.lat, currentCoords.lng);
     }
+    if(currentCoords.lng!=null)currentCoords.lng=normLng(currentCoords.lng);
     const propertyData={title,price:priceValue,currency:currencyValue,priceUSD:toUSD(priceValue,currencyValue),phone,whatsapp,phoneCountry,whatsappCountry:(sameAsCallingNumber?phoneCountry:whatsappCountry),sameAsCallingNumber,purpose,size:document.getElementById('size').value,lotArea:document.getElementById('lotArea').value.trim(),floorArea:document.getElementById('floorArea').value.trim(),location,country,city:cityValue,state:stateValue,description:document.getElementById('desc').value.trim(),nearby:document.getElementById('nearby').value,images:finalImages,latitude:currentCoords.lat,longitude:currentCoords.lng,amenities:Array.from(selectedAmenities),status:"active",updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
         propertyData.geohash = (window.TEPGeo && currentCoords.lat != null && currentCoords.lng != null)
         ? TEPGeo.geohashEncode(currentCoords.lat, currentCoords.lng, 9)
