@@ -224,6 +224,18 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://theearthproperty.com/city.html?name=india-haryana-sector-25</loc>
+    <lastmod>2026-11-03</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://theearthproperty.com/city.html?name=india-haryana-sector-26</loc>
+    <lastmod>2026-11-03</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://theearthproperty.com/city.html?name=india-karnataka-bangalore</loc>
     <lastmod>2026-11-03</lastmod>
     <changefreq>daily</changefreq>
@@ -291,6 +303,12 @@
   </url>
   <url>
     <loc>https://theearthproperty.com/city.html?name=indonesia-bali-bali</loc>
+    <lastmod>2026-11-03</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://theearthproperty.com/city.html?name=indonesia-bali-pejeng-kangin-gianyar</loc>
     <lastmod>2026-11-03</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
