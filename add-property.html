@@ -15,6 +15,7 @@
         label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; color: #444; }
         input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 13px; outline: none; transition: 0.3s; }
         input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 5px rgba(46,125,50,0.2); }
+        input:disabled{background:#f0f0f0;cursor:not-allowed;}
         .section-title { font-size: 16px; font-weight: 700; color: var(--primary); margin: 25px 0 15px; border-bottom: 2px solid var(--accent); padding-bottom: 5px; }
         .country-search-wrap { position: relative; }
         .country-search-wrap input { padding-right: 36px; }
@@ -243,17 +244,23 @@
             </div>
             <input type="hidden" id="selectedCountry" value="">
         </div>
-        <div class="form-group" style="margin-bottom:10px;">
-    <label style="font-size:13px;">Address</label>
-    <div class="address-search-wrap">
-        <input type="text" id="location" placeholder="Start typing area, city, street..." autocomplete="off" oninput="onAddressInput()" onblur="hideAddressDropdown()">
-        <div class="country-dropdown" id="addressDropdown"></div>
+        <div class="form-group" style="margin-bottom:12px;">
+    <label style="font-size:13px;">City <span style="color:#d32f2f;">*</span></label>
+    <div class="country-search-wrap">
+        <input type="text" id="city" placeholder="Select country first..." autocomplete="off" disabled oninput="filterCities()" onfocus="showCityDropdown()" onblur="hideCityDropdown()">
+        <button class="clear-btn" id="cityClearBtn" onclick="clearCity()" type="button">×</button>
+        <div class="country-dropdown" id="cityDropdown"></div>
     </div>
+    <input type="hidden" id="citySlug" value="">
+    <input type="hidden" id="cityIsNew" value="">
+    <input type="hidden" id="detectedState" value="">
 </div>
 <div class="form-group" style="margin-bottom:10px;">
-    <label style="font-size:13px;">City <span style="color:#d32f2f;">*</span></label>
-    <input type="text" id="city" placeholder="e.g. Gurugram, Mumbai, Dubai">
-    <input type="hidden" id="detectedState" value="">
+    <label style="font-size:13px;">Address</label>
+    <div class="address-search-wrap">
+        <input type="text" id="location" placeholder="Select city first..." disabled autocomplete="off" oninput="onAddressInput()" onblur="hideAddressDropdown()">
+        <div class="country-dropdown" id="addressDropdown"></div>
+    </div>
 </div>
         <button type="button" class="get-map-btn" id="btnGetMap" onclick="geocodeAddress()">
             <span id="getMapBtnIcon">🗺️</span><span id="getMapBtnText">Get on Map</span>
@@ -996,11 +1003,132 @@ function updatePhoneCode(countryName, countryFlag) {
     applyPhoneCountryCode(countryName, countryFlag);
 }
 
+    // ===== CITY PICKER =====
+const BAD_CITY_RE=/^(sector|sec|phase|block|ward|zone)\b[\s.\-]*([0-9]+|[a-z]\b)/i;
+function isBadCityName(n){return BAD_CITY_RE.test(String(n||'').trim());}
+const NOT_A_CITY_TYPES=['village','hamlet','suburb','neighbourhood','neighborhood','quarter','locality','isolated_dwelling','farm','residential','city_block','borough'];
+let cityList=[],cityListCountry='',shownCities=[],selectedCityObj=null;
+const cityCache={};
+function escHtml(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function cleanCityName(n){return String(n||'').replace(/\b(kommun|municipality|district|tehsil|tahsil|taluka|county)\b/ig,'').replace(/\s+/g,' ').trim();}
+function kmBetween(a,b,c,d){
+    const R=6371,r=x=>x*Math.PI/180,dLat=r(c-a),dLng=r(d-b);
+    const h=Math.sin(dLat/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dLng/2)**2;
+    return 2*R*Math.asin(Math.sqrt(h));
+}
+function nearestListedCity(lat,lng,maxKm){
+    let best=null,bd=1e9;
+    cityList.forEach(c=>{
+        if(typeof c.lat!=='number'||typeof c.lng!=='number')return;
+        const d=kmBetween(lat,lng,c.lat,c.lng);
+        if(d<bd){bd=d;best=c;}
+    });
+    return (best&&bd<=maxKm)?{city:best,km:bd}:null;
+}
+async function loadCitiesForCountry(country){
+    if(cityCache[country]){cityList=cityCache[country];return;}
+    try{
+        const snap=await db.collection('cities').where('country','==',country).where('isActive','==',true).get();
+        cityList=snap.docs.map(d=>({id:d.id,...d.data()})).filter(c=>c.name&&!isBadCityName(c.name));
+        cityList.sort((a,b)=>a.name.localeCompare(b.name));
+        cityCache[country]=cityList;
+    }catch(e){console.warn('cities load failed',e);cityList=[];}
+}
+async function onCountryForCity(country){
+    if(country===cityListCountry)return;
+    cityListCountry=country;
+    clearCity(true);
+    const ci=document.getElementById('city');
+    ci.disabled=true;ci.placeholder='Loading cities...';
+    await loadCitiesForCountry(country);
+    if(document.getElementById('selectedCountry').value!==country)return;
+    ci.disabled=false;ci.placeholder='Search or select your city...';
+}
+function lockCityPicker(){
+    clearCity(true);
+    cityListCountry='';cityList=[];
+    const ci=document.getElementById('city');
+    ci.disabled=true;ci.placeholder='Select country first...';
+}
+function resetCitySelection(){
+    document.getElementById('citySlug').value='';
+    document.getElementById('cityIsNew').value='';
+    document.getElementById('detectedState').value='';
+    selectedCityObj=null;
+    const loc=document.getElementById('location');
+    loc.disabled=true;loc.placeholder='Select city first...';
+}
+function clearCity(silent){
+    document.getElementById('city').value='';
+    document.getElementById('cityClearBtn').style.display='none';
+    resetCitySelection();
+    if(!silent)document.getElementById('city').focus();
+}
+function filterCities(){
+    if(document.getElementById('citySlug').value)resetCitySelection();
+    document.getElementById('cityClearBtn').style.display=document.getElementById('city').value?'block':'none';
+    renderCityDropdown();
+}
+function showCityDropdown(){if(!document.getElementById('city').disabled)renderCityDropdown();}
+function hideCityDropdown(){setTimeout(()=>{document.getElementById('cityDropdown').style.display='none';},200);}
+function renderCityDropdown(){
+    const dd=document.getElementById('cityDropdown');
+    const q=document.getElementById('city').value.toLowerCase().trim();
+    shownCities=(q?cityList.filter(c=>c.name.toLowerCase().includes(q)):cityList).slice(0,50);
+    let html=shownCities.map((c,i)=>`<div class="c-item" onmousedown="selectCity(${i})"><span class="flag">🏙️</span> ${escHtml(c.name)}${c.state?' <small style="color:#999;">· '+escHtml(c.state)+'</small>':''}</div>`).join('');
+    html+=`<div class="c-item" onmousedown="openNewCity()" style="color:#1565c0;font-weight:600;"><span class="flag">➕</span> My city is not listed</div>`;
+    dd.innerHTML=html;dd.style.display='block';
+}
+function selectCity(i){const c=shownCities[i];if(c)applyCity(c,false);}
+function applyCity(c,isNew){
+    selectedCityObj=c;
+    document.getElementById('city').value=c.name;
+    document.getElementById('citySlug').value=c.id;
+    document.getElementById('cityIsNew').value=isNew?'1':'';
+    document.getElementById('detectedState').value=c.state||'';
+    document.getElementById('cityClearBtn').style.display='block';
+    document.getElementById('cityDropdown').style.display='none';
+    const loc=document.getElementById('location');
+    loc.disabled=false;loc.placeholder='Start typing area, street...';
+}
+async function openNewCity(){
+    const country=document.getElementById('selectedCountry').value;
+    const raw=document.getElementById('city').value.trim();
+    document.getElementById('cityDropdown').style.display='none';
+    if(!raw){showToast('Type your city name first, then tap "My city is not listed"','info');return;}
+    const name=cleanCityName(raw);
+    if(!name||isBadCityName(name)){showToast('Sector, block or area names cannot be a city. Type your main city or town name.','error');return;}
+    const hit=cityList.find(c=>c.name.toLowerCase()===name.toLowerCase());
+    if(hit){applyCity(hit,false);return;}
+    showToast('Checking city...','info');
+    let g=null;
+    try{
+        const r=await fetch(`https://us1.locationiq.com/v1/search?key=${LOCATIONIQ_KEY}&q=${encodeURIComponent(name+', '+country)}&format=json&limit=1&addressdetails=1&accept-language=en`);
+        const d=await r.json();
+        g=Array.isArray(d)&&d[0]?d[0]:null;
+    }catch(e){}
+    if(!g){showToast('Could not verify this city. Check the spelling.','error');return;}
+    const lat=parseFloat(g.lat),lng=parseFloat(g.lon);
+    const near=nearestListedCity(lat,lng,30);
+    if(NOT_A_CITY_TYPES.includes(g.type)){
+        if(near){
+            if(confirm(`"${name}" looks like a small place. Post under ${near.city.name} (about ${Math.round(near.km)} km away)?`))applyCity(near.city,false);
+        }else{showToast('This looks like a village or area. Please type the nearest big city or town.','error');}
+        return;
+    }
+    const a=g.address||{};
+    const state=a.state||a.state_district||'';
+    const clean=toTitleCase(name);
+    const slug=[normalizeSlug(country),normalizeSlug(state),normalizeSlug(clean)].filter(Boolean).join('-');
+    applyCity({id:slug,name:clean,state,country,lat,lng},true);
+    showToast('✓ New city will be added: '+clean,'success');
+}
+
 function filterCountries(){const q=document.getElementById('countrySearch').value.toLowerCase().trim();const dd=document.getElementById('countryDropdown');const cb=document.getElementById('countryClearBtn');cb.style.display=q?'block':'none';renderDropdown(q?COUNTRIES.filter(c=>c.name.toLowerCase().includes(q)):COUNTRIES);dd.style.display='block';}
 function showCountryDropdown(){const q=document.getElementById('countrySearch').value.toLowerCase().trim();renderDropdown(q?COUNTRIES.filter(c=>c.name.toLowerCase().includes(q)):COUNTRIES);document.getElementById('countryDropdown').style.display='block';}
 function hideCountryDropdown(){setTimeout(()=>{document.getElementById('countryDropdown').style.display='none';},200);}
 function renderDropdown(list){const dd=document.getElementById('countryDropdown');const sel=document.getElementById('selectedCountry').value;if(list.length===0){dd.innerHTML='<div style="padding:12px;text-align:center;color:#999;font-size:13px;">No country found</div>';return;}dd.innerHTML=list.map(c=>`<div class="c-item ${sel===c.name?'active':''}" onmousedown="selectCountry('${c.name}','${c.flag}')"><span class="flag">${c.flag}</span> ${c.name}</div>`).join('');}
-function selectCountry(name,flag){document.getElementById('countrySearch').value=flag+' '+name;document.getElementById('selectedCountry').value=name;document.getElementById('countryClearBtn').style.display='block';document.getElementById('countryDropdown').style.display='none';updatePhoneCode(name,flag);}
+function selectCountry(name,flag){document.getElementById('countrySearch').value=flag+' '+name;document.getElementById('selectedCountry').value=name;document.getElementById('countryClearBtn').style.display='block';document.getElementById('countryDropdown').style.display='none';updatePhoneCode(name,flag);onCountryForCity(name);}
 function clearCountry(){
     document.getElementById('countrySearch').value='';
     document.getElementById('selectedCountry').value='';
@@ -1010,6 +1138,7 @@ function clearCountry(){
     document.getElementById('phoneCodeBadge').textContent='🌍 +?';
     document.getElementById('phoneHintText').textContent='Select a country to auto-set the phone code 🌍';
     syncWhatsappCode();
+    lockCityPicker();
 }
 function switchSlotMode(slot,mode){slotMode[slot]=mode;const pb=document.getElementById(`togglePhoto${slot}`);const vb=document.getElementById(`toggleVideo${slot}`);const pd=document.getElementById(`photoMode${slot}`);const vd=document.getElementById(`videoMode${slot}`);if(mode==='photo'){pb.classList.add('active');vb.classList.remove('active');pd.style.display='block';vd.style.display='none';if(uploadedImages[slot]&&uploadedImages[slot].type==='video')uploadedImages[slot]=null;}else{vb.classList.add('active');pb.classList.remove('active');pd.style.display='none';vd.style.display='block';if(uploadedImages[slot]&&uploadedImages[slot].type!=='video')removeImage(slot);const vui=document.getElementById(`videoVerifiedUI${slot}`);const lui=document.getElementById(`videoLockedUI${slot}`);if(currentUserVerified){if(vui)vui.style.display='block';if(lui)lui.style.display='none';}else{if(vui)vui.style.display='none';if(lui)lui.style.display='block';}}}
 function getYouTubeId(url){const m=url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);return m?m[1]:null;}
@@ -1141,7 +1270,7 @@ function updatePinInfo(lat,lng){currentCoords={lat:parseFloat(lat),lng:parseFloa
 async function geocodeAddress(){
     const address=document.getElementById('location').value.trim();
     const country=document.getElementById('selectedCountry').value.trim();
-    const query=[address,country].filter(Boolean).join(', ');
+    const query=[address,document.getElementById('city').value.trim(),country].filter(Boolean).join(', ');
     if(!query){showToast('Please fill address first','error');return;}
     const btn=document.getElementById('btnGetMap');
     const btnText=document.getElementById('getMapBtnText');
@@ -1198,10 +1327,8 @@ function selectAddressSuggestion(i){
     if(s.address){
         const a=s.address;
         const countryName=a.country||'';
-        const cityVal=a.city||a.town||a.village||a.county||'';
-        if(a.state)document.getElementById('detectedState').value=a.state;
-        if(countryName){const found=COUNTRIES.find(c=>c.name.toLowerCase()===countryName.toLowerCase());if(found)selectCountry(found.name,found.flag);}
-        if(cityVal)document.getElementById('city').value=cityVal;
+        if(a.state&&!document.getElementById('detectedState').value)document.getElementById('detectedState').value=a.state;
+        if(countryName&&!document.getElementById('selectedCountry').value){const found=COUNTRIES.find(c=>c.name.toLowerCase()===countryName.toLowerCase());if(found)selectCountry(found.name,found.flag);}
     }
 }
 
@@ -1256,7 +1383,7 @@ async function submitProperty(){
     {
     document.getElementById('postBtn').disabled=true;
     document.getElementById('postBtn').innerText="Processing...";
-        const cityManuallyEdited = !!editId;
+        const cityManuallyEdited = true;
     if (!cityManuallyEdited) {
         const canon = await canonicalizeCity(cityValue, country, currentCoords.lat, currentCoords.lng);
         if (canon.city && !isNonLatin(canon.city) && (canon.strong || isNonLatin(cityValue))) {
@@ -1319,18 +1446,31 @@ function confirmGPSCapture(){
             const res=await fetch(url);
             const data=await res.json();
             if(data&&data.address){
-                const a=data.address;
-                const countryName=a.country||'';
-                const state=a.state||a.state_district||'';
-                const city=a.city||a.town||a.village||'';
-                const area=a.suburb||a.neighbourhood||a.county||'';
-                if(state)document.getElementById('detectedState').value=state;
-                if(countryName){const found=COUNTRIES.find(c=>c.name.toLowerCase()===countryName.toLowerCase());if(found)selectCountry(found.name,found.flag);else{document.getElementById('countrySearch').value=countryName;document.getElementById('selectedCountry').value=countryName;document.getElementById('countryClearBtn').style.display='block';updatePhoneCode(countryName,'🌍');}}
-                const parts=[area,city,state].filter(Boolean);
-                if(parts.length>0)document.getElementById('location').value=parts.join(', ');
-                if(city) document.getElementById('city').value = city;
-                showToast('✓ Address auto-filled from GPS!','success');
-            }else{showToast('✓ GPS Captured! Please type your address.','success');}
+    const a=data.address;
+    const countryName=a.country||'';
+    const state=a.state||a.state_district||'';
+    const city=a.city||a.town||a.village||'';
+    const area=a.suburb||a.neighbourhood||a.county||'';
+
+    if(state&&!document.getElementById('detectedState').value)document.getElementById('detectedState').value=state;
+
+    if(countryName&&!document.getElementById('selectedCountry').value){
+        const found=COUNTRIES.find(c=>c.name.toLowerCase()===countryName.toLowerCase());
+        if(found)selectCountry(found.name,found.flag);
+        else{
+            document.getElementById('countrySearch').value=countryName;
+            document.getElementById('selectedCountry').value=countryName;
+            document.getElementById('countryClearBtn').style.display='block';
+            updatePhoneCode(countryName,'🌍');
+            onCountryForCity(countryName);
+        }
+    }
+
+    const parts=[area,city,state].filter(Boolean);
+    if(parts.length>0&&!document.getElementById('location').disabled)document.getElementById('location').value=parts.join(', ');
+
+    showToast('✓ Address auto-filled from GPS!','success');
+}else{showToast('✓ GPS Captured! Please type your address.','success');}
         }catch(e){showToast('✓ GPS Captured! Please type your address.','success');}
         btnText.textContent='GPS Captured ✓';
     },function(error){
