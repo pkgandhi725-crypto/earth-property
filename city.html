@@ -20,8 +20,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
 
   <!-- Shared geo/price utilities (plain script, loads before the module below) -->
-  <script src="geo-utils.js"></script>
-  <script src="price-filter.js"></script>
+  <script src="/geo-utils.js"></script>
+  <script src="/price-filter.js"></script>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -230,7 +230,7 @@
     }
 
     const params = new URLSearchParams(window.location.search);
-    const citySlug = normalizeSlug(params.get('name') || '');
+    const citySlug = normalizeSlug(params.get('name') || (location.pathname.match(/^\/city\/([^\/]+)/) || [])[1] || '');
 
     let cityData = null;
     let allListings = [];
@@ -503,7 +503,9 @@
     function populateSEO() {
       const title = cityData.seoTitle || `Property in ${cityData.name} | The Earth Property`;
       const desc = cityData.seoDescription || `Find verified properties in ${cityData.name} – flats, rooms, plots, commercial. No broker. Direct owner listings.`;
-      const url = `https://theearthproperty.com/city.html?name=${citySlug}`;
+      const url = location.pathname.startsWith('/city/')
+     ? `https://theearthproperty.com/city/${citySlug}/`
+     : `https://theearthproperty.com/city.html?name=${citySlug}`;
 
       document.getElementById('pageTitle').textContent = title;
       document.title = title;
