@@ -4,18 +4,29 @@ const PROJECT = 'earth-properties-c3c56';
 const BASE = 'https://theearthproperty.com';
 const FILE = 'sitemap.xml';
 
+// Jin cities ke static pages ban chuke hain (/city/<slug>/).
+// Baaki cities abhi purane city.html?name=... URL pe rahengi.
+const STATIC_PAGE_SLUGS = [
+  'india-haryana-panchkula',
+  'india-haryana-gurugram'
+];
+
 async function getCitySlugs() {
   const slugs = [];
   let pageToken = '';
   do {
     const url =
       `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents/cities` +
-      `?pageSize=300&mask.fieldPaths=name` +
+      `?pageSize=300&mask.fieldPaths=name&mask.fieldPaths=isActive` +
       (pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : '');
     const res = await fetch(url);
     if (!res.ok) throw new Error('Firestore fetch failed: ' + res.status);
     const data = await res.json();
-    (data.documents || []).forEach(d => slugs.push(d.name.split('/').pop()));
+    (data.documents || []).forEach(d => {
+      const active = d.fields && d.fields.isActive;
+      if (active && active.booleanValue === false) return; // inactive city skip
+      slugs.push(d.name.split('/').pop());
+    });
     pageToken = data.nextPageToken || '';
   } while (pageToken);
   return slugs;
@@ -27,12 +38,16 @@ async function getCitySlugs() {
 
   const old = fs.existsSync(FILE) ? fs.readFileSync(FILE, 'utf8') : '';
   const entries = old.match(/<url>[\s\S]*?<\/url>/g) || [];
-  const staticEntries = entries.filter(e => !e.includes('city.html?name='));
+  // Purani city entries (dono format) hata do, baaki static entries rakho
+  const staticEntries = entries.filter(e => !e.includes('city.html?name=') && !e.includes('/city/'));
 
   const today = new Date().toISOString().slice(0, 10);
-  const cityEntries = slugs.sort().map(s =>
-    `  <url>\n    <loc>${BASE}/city.html?name=${encodeURIComponent(s)}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>`
-  );
+  const cityEntries = slugs.sort().map(s => {
+    const loc = STATIC_PAGE_SLUGS.includes(s)
+      ? `${BASE}/city/${encodeURIComponent(s)}/`
+      : `${BASE}/city.html?name=${encodeURIComponent(s)}`;
+    return `  <url>\n    <loc>${loc}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>`;
+  });
 
   const xml =
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
