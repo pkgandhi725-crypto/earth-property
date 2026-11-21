@@ -3,6 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+(function(){
+  var m = location.search.match(/[?&]name=([^&]+)/);
+  var S = ['india-haryana-panchkula','india-haryana-gurugram'];
+  if (m && location.pathname === '/city.html' && S.indexOf(m[1]) > -1) location.replace('/city/' + m[1] + '/');
+})();
+  </script>
 
   <title id="pageTitle">Property in Panchkula | The Earth Property</title>
   <meta id="metaDesc" name="description" content="Find verified properties in Panchkula – flats, rooms, plots, commercial. No broker. Direct owner listings." />
@@ -228,6 +235,7 @@
 
     const params = new URLSearchParams(window.location.search);
     const citySlug = normalizeSlug(params.get('name') || (location.pathname.match(/^\/city\/([^\/]+)/) || [])[1] || '');
+    const STATIC_CITY_SLUGS = ['india-haryana-panchkula', 'india-haryana-gurugram'];
 
     let cityData = null;
     let allListings = [];
@@ -489,7 +497,7 @@
         if (withDist.length === 0) return;
 
         document.getElementById('nearbyChips').innerHTML = withDist
-          .map(c => `<a href="/city.html?name=${escHtml(c.slug)}" class="nearby-chip">${escHtml(c.name)}</a>`)
+          .map(c => `<a href="${STATIC_CITY_SLUGS.includes(c.slug) ? '/city/' + escHtml(c.slug) + '/' : '/city.html?name=' + escHtml(c.slug)}" class="nearby-chip">${escHtml(c.name)}</a>`)
           .join('');
         document.getElementById('nearbySection').style.display = 'block';
       } catch (err) {
