@@ -348,7 +348,13 @@
     <div style="font-weight:700; color:#555;">You've seen all properties in this area.</div>
     <div>Search or use Explore by City to see more.</div>
     </div>
-
+<div id="popularCities" style="margin:20px 12px 10px; padding:16px; background:white; border-radius:14px; box-shadow:0 4px 12px rgba(0,0,0,0.08);">
+    <div style="font-weight:800; font-size:14px; color:#333; margin-bottom:10px;">Popular cities</div>
+    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+        <a href="/city/india-haryana-panchkula/" style="background:#e8f5e9; color:#2e7d32; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:700; text-decoration:none;">Panchkula</a>
+        <a href="/city/india-haryana-gurugram/" style="background:#e8f5e9; color:#2e7d32; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:700; text-decoration:none;">Gurugram</a>
+    </div>
+</div>
 <nav class="bottom-nav">
     <a href="index.html" class="nav-item active"><i class="fa fa-home"></i><div id="navExplore">Explore</div></a>
     <a href="my-ads.html" class="nav-item guest-hidden" id="navMyAdsBtn"><i class="fa fa-layer-group"></i><div id="navMyAds">My Ads</div></a>
@@ -1276,7 +1282,7 @@ if (matchedCity) {
     banner.style.display = 'flex';
     banner.onclick = () => {
     trackEvent('city_banner_click', { city: matchedCity.name, slug: matchedCity.slug });
-    location.href = 'city.html?name=' + encodeURIComponent(normalizeSlug(matchedCity.slug));
+    location.href = cityUrl(matchedCity.slug);
 };
 } else {
     banner.style.display = 'none';
@@ -1755,7 +1761,11 @@ window.addEventListener('load', () => {
     function normalizeSlug(str) {
     return String(str || '').trim().toLowerCase().replace(/\s+/g, '-');
 }
-
+const STATIC_CITY_SLUGS = ['india-haryana-panchkula', 'india-haryana-gurugram'];
+function cityUrl(slug) {
+    const s = normalizeSlug(slug);
+    return STATIC_CITY_SLUGS.includes(s) ? '/city/' + s + '/' : 'city.html?name=' + encodeURIComponent(s);
+    }
 let allCitiesCache = [];
 
 function preloadCitiesForSearch() {
@@ -1820,7 +1830,7 @@ document.getElementById('citySubmenu').addEventListener('click', function (e) {
     const row = e.target.closest('.drawer-item');
     if (!row) return;
     const d = row.dataset;
-    if (d.slug) { location.href = 'city.html?name=' + encodeURIComponent(normalizeSlug(d.slug)); return; }
+    if (d.slug) { location.href = cityUrl(d.slug); return; }
     if (d.back === 'countries') { cdShowCountries(); return; }
     if (d.back === 'states') { cdShowStates(d.country); return; }
     if (d.country && d.state) { cdShowCities(d.country, d.state); return; }
